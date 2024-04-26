@@ -1,0 +1,9 @@
+ [
+    { "id": 1, "nombre": "Usuario 1", "correo": "usuario1@example.com","nombres":"juan 01", "apellidos":" perez 01","rol":"Administrador", "estado": true, "parentId": 64, "roleId": 2 },
+    { "id": 2, "nombre": "Usuario 2", "correo": "usuario2@example.com","nombres":"juan 02", "apellidos":" perez 02","rol":"Finanzas", "estado": false, "parentId": 64, "roleId": 3 },
+    { "id": 3, "nombre": "Usuario 3", "correo": "usuario3@example.com","nombres":"juan 03", "apellidos":" perez 03","rol":"Tesorería", "estado": true, "parentId": 64, "roleId": 4 },
+    { "id": 4, "nombre": "Usuario 4", "correo": "usuario4@example.com","nombres":"juan 04", "apellidos":" perez 04","rol":"Logistica", "estado": false, "parentId": 64, "roleId": 1 },
+    { "id": 5, "nombre": "Usuario 5", "correo": "usuario5@example.com","nombres":"juan 05", "apellidos":" perez 05","rol":"Ventas", "estado": true, "parentId": 64, "roleId": 3 }
+
+
+  ]
