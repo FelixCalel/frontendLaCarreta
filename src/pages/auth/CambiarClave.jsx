@@ -62,7 +62,6 @@ const handleSubmit = async (e) => {
           description: 'Hubo un error al cambiar la contraseña. Por favor, inténtalo de nuevo más tarde.',
           status: 'error',
           duration: 5000,
-          status: 'warning',
           isClosable: true,
         });
       }
