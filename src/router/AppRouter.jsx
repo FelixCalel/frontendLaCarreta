@@ -1,58 +1,67 @@
 import { Route, Routes } from "react-router-dom";
-import  {PortalRouter}  from "./PortalRouter";
+import { PortalRouter } from "./PortalRouter";
 import { PrivateRoute } from "./PrivateRoute";
 import { PublicRoute } from "./PublicRoute";
 import { PortalPagePublic } from "./PortalPagePublic";
 import { useDispatch, useSelector } from "react-redux";
 import CheckingAuth from "../ui/components/CheckingAuth";
-import { useEffect, useMemo } from "react";
-import { logout,login, obtenerDatosLogeado } from "../store/auth";
+import { useEffect } from "react";
+import { logout, login, obtenerDatosLogeado } from "../store/auth";
 import { isAuthenticated } from "../providers/endpoints";
 import { Dashboard } from "../pages";
-
-
+import { ProveedoresPageRouter } from "./ProveedoresPageRouter"; // Asegúrate de que esta ruta sea correcta
 
 export const AppRouter = () => {
+  const dispatch = useDispatch();
+  const status = useSelector((state) => state.auth);
+  const isAuthenticating = isAuthenticated();
 
-    const distpach = useDispatch();
-
-    const  status  =  useSelector( (state) => state.auth);
-    const isAuthenticating = isAuthenticated();
- 
-    
-    
-     useEffect(()=>{
-        ( !isAuthenticating === true )
-        ?  distpach( logout()  )
-        : distpach(login(obtenerDatosLogeado()) )
-     
-     },[])
-
-    if ( status.status === 'checking'){
-        return <CheckingAuth />
+  useEffect(() => {
+    if (!isAuthenticating) {
+      dispatch(logout());
+    } else {
+      dispatch(login(obtenerDatosLogeado()));
     }
-return (
-    <>
-      <Routes >
-      <Route path="*" element={<Routes>
-                <Route path="/admin/dashboard" element={<Dashboard />} />
-              
-            </Routes>} />
-        {/* <Route path="/*" element={<Routes path="/admin/dashboard" element={ <Dashboard />} />} />  */}
-        <Route path="/auth/*" element={<PublicRoute>
-        
+  }, [dispatch, isAuthenticating]);
+
+  if (status.status === "checking") {
+    return <CheckingAuth />;
+  }
+
+  return (
+    <Routes>
+      {/* Rutas Públicas */}
+      <Route
+        path="/auth/*"
+        element={
+          <PublicRoute>
             <PortalPagePublic />
-            </PublicRoute> } 
-        />
-        
-        <Route path="/admin/*" element={<PrivateRoute>
-            
+          </PublicRoute>
+        }
+      />
+
+      {/* Rutas Privadas */}
+      <Route
+        path="/admin/*"
+        element={
+          <PrivateRoute>
             <PortalRouter />
+          </PrivateRoute>
+        }
+      />
 
-        </PrivateRoute>} />
+      {/* Rutas de Proveedores */}
+      <Route path="/proveedores/*" element={<ProveedoresPageRouter />} />
 
-        
-
-    </Routes></>
-)
-}
+      {/* Ruta predeterminada */}
+      <Route
+        path="*"
+        element={
+          <Routes>
+            <Route path="/admin/dashboard" element={<Dashboard />} />
+          </Routes>
+        }
+      />
+    </Routes>
+  );
+};

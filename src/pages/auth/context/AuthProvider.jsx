@@ -1,12 +1,11 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useReducer } from 'react'
 import { AuthContext } from './AuthContext'
 import { authReducer } from './AuthReducer'
 
 import { types } from '../types'
 
-const initialState = {
-    logged: false,
-}
+
 const init = ()=>{
   const user = JSON.parse(localStorage.getItem('user'));
   return {
@@ -15,6 +14,7 @@ const init = ()=>{
   }
 }
 
+// eslint-disable-next-line react/prop-types
 export const AuthProvider = ({ children }) => {
     
   const [authstate, dispatch] = useReducer( authReducer, {}, init)

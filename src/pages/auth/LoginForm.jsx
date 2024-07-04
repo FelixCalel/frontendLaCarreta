@@ -100,7 +100,7 @@ export const LoginForm = () => {
       align="center"
       justifyContent="center"
       backgroundImage={images[currentImageIndex]}
-     // backgroundColor={"gray.50"}
+      backgroundColor={"gray.50"}
       backgroundSize="cover"
       transition="background-image 1s ease-in-out" // Añade esta línea para la transición
       sx={{

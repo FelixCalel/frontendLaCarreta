@@ -1,13 +1,13 @@
 
 
 import { Navigate } from 'react-router-dom'
-import { AuthContext } from '../pages/auth/context/AuthContext'
-import { useContext } from 'react';
+
 import { useSelector } from 'react-redux';
 
 
 
 
+// eslint-disable-next-line react/prop-types
 export const PrivateRoute = ({ children }) => {
 
     const actualUsuario = useSelector( state => state.auth)

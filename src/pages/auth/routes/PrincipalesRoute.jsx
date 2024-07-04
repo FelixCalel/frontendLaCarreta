@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import React from 'react'
 import { Route } from 'react-router-dom'
 import Dashboard from '../../Dashboard'
@@ -15,7 +16,7 @@ import { RootLayout } from '../../layouts/RootLayout'
 export const PrincipalesRoute = () => {
   return (
     <>
-         <Route path='/' element={<RootLayout />} />
+        <Route path='/' element={<RootLayout />} />
         <Route index element={<Dashboard />} />
         <Route path="create" element={<Create />} />
         <Route path="notificaciones" element={<Notificaciones />} />

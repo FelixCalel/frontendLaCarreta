@@ -1,19 +1,19 @@
 
-import { Outlet, Routes } from "react-router-dom"
+import { Outlet } from "react-router-dom"
 import NavBar from "../../components/NavBar"
-import {Grid, GridItem, Box, Flex, Spacer, Text, Avatar } from "@chakra-ui/react"
+import {Grid, Box, Flex } from "@chakra-ui/react"
 
-import {Dashboard} from "../Dashboard"
+import {} from "../Dashboard"
 import { MenuPrincipal } from "../../components/MenuPrincipal"
 import Footer from "../../components/Dashboard/PiePagina"
 import { NavBarDashboard } from "../../components/NavBarDashboard"
 import { useEffect, useState } from "react"
-import { useSelector } from "react-redux"
+
 
 
 export const RootLayout = () =>{
-  const [nombresUsuario, setNombresUsuario] = useState('')
-  const {actualUsuario} = useSelector( state => state.auth)
+  const [, setNombresUsuario] = useState('')
+
 
   useEffect(()=>{
     const usuario= JSON.parse(localStorage.getItem('userData'))

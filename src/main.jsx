@@ -5,9 +5,7 @@ import {App} from './App';
 import { theme } from '../src/components/Dashboard/themes/themePY'
 import { AuthProvider } from './pages/auth/context';
 import { BrowserRouter } from 'react-router-dom';
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useEffect } from 'react';
+
 
 const container = document.getElementById('root');
 const root = createRoot(container); // Crea una raíz.
