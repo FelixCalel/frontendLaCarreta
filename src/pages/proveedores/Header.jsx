@@ -2,7 +2,7 @@ import { Box, Flex, Heading, HStack, Link } from '@chakra-ui/react';
 
 const Header = () => {
   return (
-    <Box bg="teal.500" px={4}>
+    <Box bg="teal.800" px={4}>
       <Flex h={16} alignItems="center" justifyContent="space-between">
         <Heading size="md" color="white">Modulo Proveedores - Solicitud</Heading>
         <HStack spacing={8} alignItems="center">
