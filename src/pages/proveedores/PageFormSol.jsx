@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
-import { Box, Button, FormControl, FormLabel, Input, Select, VStack, Tabs, TabList, TabPanels, Tab, TabPanel, Flex, Heading, Checkbox, Textarea, Text } from '@chakra-ui/react';
+import { Box, Button, FormControl, FormLabel, Input, Select, VStack, Tabs, TabList, TabPanels, Tab, TabPanel, Flex, Heading, Checkbox, Textarea, Text, Grid, GridItem } from '@chakra-ui/react';
 import Header from './Header';  // Asegúrate de que la ruta sea correcta
 import Footer from './Footer';  // Asegúrate de que la ruta sea correcta
+
+const CustomFormControl = ({ id, label, isRequired, isInvalid, children }) => (
+  <FormControl id={id} isRequired={isRequired} isInvalid={isInvalid} mb={4}>
+    <FormLabel fontWeight="bold">{label}</FormLabel>
+    {children}
+    {isInvalid && <Text color="red.500" fontSize="sm">Este campo es requerido</Text>}
+  </FormControl>
+);
 
 export const PageFormSol = () => {
   const [formData, setFormData] = useState({
@@ -70,7 +78,7 @@ export const PageFormSol = () => {
   const validateFields = (fields) => {
     const newErrors = {};
     fields.forEach((field) => {
-      if (!formData[field]) {
+      if (!formData[field] || (typeof formData[field] === 'string' && !formData[field].trim())) {
         newErrors[field] = true;
       }
     });
@@ -131,210 +139,179 @@ export const PageFormSol = () => {
   };
 
   return (
-    <Flex direction="column" minH="100vh">
+    <Flex direction="column" minH="100vh" bg="gray.100">
       <Header />
-      <Flex direction="column" flex="1" overflow="hidden">
-        <Flex flex="1" align="top" justify="center" p={4} width="100%">
-          <Box width="100%" mx="auto" borderWidth={1} borderRadius="md" boxShadow="md" overflow="hidden">
-            <Box bg="orange" color="white" py={2} px={4} borderRadius="md" mb={4}>
-              <Heading size="md">CREACION DE PROVEEDOR</Heading>
-            </Box>
-            <Tabs index={tabIndex} isFitted variant="enclosed">
-              <TabList mb="1em">
-                <Tab>Info Solicitante</Tab>
-                <Tab>Info Proveedor</Tab>
-                <Tab>Info Pago</Tab>
-                <Tab>Documentación</Tab>
-              </TabList>
-              <TabPanels>
-                <TabPanel>
-                  <Box borderWidth={1} borderRadius="md" p={4} mb={4}>
-                    <Heading size="sm">INFO SOLICITANTE</Heading>
-                  </Box>
-                  <VStack spacing={4} align="stretch">
-                    <FormControl id="nombreSolicitante" isRequired isInvalid={errors.nombreSolicitante}>
-                      <FormLabel>Nombre del Solicitante</FormLabel>
-                      <Input
-                        placeholder="Nombre del Solicitante"
-                        value={formData.nombreSolicitante}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.nombreSolicitante && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="empresa" isRequired isInvalid={errors.empresa}>
-                      <FormLabel>Empresa</FormLabel>
-                      <Select
-                        placeholder="Seleccione una empresa"
-                        value={formData.empresa}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      >
-                        <option value="Agropecuaria Popoyán, S.A.">Agropecuaria Popoyán, S.A.</option>
-                      </Select>
-                      {errors.empresa && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="correlativo" isRequired isInvalid={errors.correlativo}>
-                      <FormLabel>Correlativo</FormLabel>
-                      <Select
-                        placeholder="Buscar elementos"
-                        value={formData.correlativo}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      >
-                        <option value="123">123</option>
-                        <option value="214">214</option>
-                      </Select>
-                      {errors.correlativo && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <Flex justify="space-between" w="100%">
-                      <Button onClick={handlePreviousTab}>Anterior</Button>
-                      <Button colorScheme="green" onClick={handleNextTab}>Siguiente</Button>
-                    </Flex>
-                  </VStack>
-                </TabPanel>
-                <TabPanel>
-                  <Box borderWidth={1} borderRadius="md" p={4} mb={4}>
-                    <Heading size="sm">INFORMACIÓN DEL PROVEEDOR</Heading>
-                  </Box>
-                  <VStack spacing={4} align="stretch">
-                    <FormControl id="nombre" isRequired isInvalid={errors.nombre}>
-                      <FormLabel>Nombre</FormLabel>
-                      <Input
-                        placeholder="Nombre"
-                        value={formData.nombre}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.nombre && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="nombreExtranjero" isRequired isInvalid={errors.nombreExtranjero}>
-                      <FormLabel>Nombre de Extranjero</FormLabel>
-                      <Input
-                        placeholder="Nombre de Extranjero"
-                        value={formData.nombreExtranjero}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.nombreExtranjero && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="grupo" isRequired isInvalid={errors.grupo}>
-                      <FormLabel>Grupo</FormLabel>
-                      <Input
-                        placeholder="Grupo"
-                        value={formData.grupo}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.grupo && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="tipoProveedor" isRequired isInvalid={errors.tipoProveedor}>
-                      <FormLabel>Tipo de Proveedor</FormLabel>
-                      <Select
-                        placeholder="Seleccione el tipo de proveedor"
-                        value={formData.tipoProveedor}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      >
-                        <option value="Exterior">Exterior</option>
-                      </Select>
-                      {errors.tipoProveedor && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="pasaporte" isRequired isInvalid={errors.pasaporte}>
-                      <FormLabel>PASAPORTE</FormLabel>
-                      <Input
-                        placeholder="PASAPORTE"
-                        value={formData.pasaporte}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.pasaporte && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="rtn" isRequired isInvalid={errors.rtn}>
-                      <FormLabel>RTN</FormLabel>
-                      <Input
-                        placeholder="RTN"
-                        value={formData.rtn}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.rtn && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="retencion" isRequired isInvalid={errors.retencion}>
-                      <FormLabel>Indicadores de retención permitidos</FormLabel>
-                      <Select
-                        placeholder="Seleccione el indicador"
-                        value={formData.retencion}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      >
-                        <option value="ISR">ISR sobre productos financieros</option>
-                      </Select>
-                      {errors.retencion && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="nombreContacto" isRequired isInvalid={errors.nombreContacto}>
-                      <FormLabel>Nombre de Contacto</FormLabel>
-                      <Input
-                        placeholder="Nombre de Contacto"
-                        value={formData.nombreContacto}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.nombreContacto && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="telefono1" isRequired isInvalid={errors.telefono1}>
-                      <FormLabel>Teléfono 1 de Contacto</FormLabel>
-                      <Input
-                        placeholder="Teléfono 1 de Contacto"
-                        value={formData.telefono1}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.telefono1 && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="telefono2" isRequired isInvalid={errors.telefono2}>
-                      <FormLabel>Teléfono 2 de Contacto</FormLabel>
-                      <Input
-                        placeholder="Teléfono 2 de Contacto"
-                        value={formData.telefono2}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.telefono2 && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="correo" isRequired isInvalid={errors.correo}>
-                      <FormLabel>Correo Electrónico</FormLabel>
-                      <Input
-                        placeholder="Correo Electrónico"
-                        value={formData.correo}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.correo && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="productos" isRequired isInvalid={errors.productos}>
-                      <FormLabel>Productos que vende</FormLabel>
-                      <Input
-                        placeholder="Productos que vende"
-                        value={formData.productos}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.productos && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <Flex justify="space-between" w="100%">
-                      <Button onClick={handlePreviousTab}>Anterior</Button>
-                      <Button colorScheme="green" onClick={handleNextTab}>Siguiente</Button>
-                    </Flex>
-                  </VStack>
-                </TabPanel>
-                <TabPanel>
-                  <Box borderWidth={1} borderRadius="md" p={4} mb={4}>
-                    <Heading size="sm">INFORMACIÓN DE PAGO</Heading>
-                  </Box>
-                  <VStack spacing={4} align="stretch">
-                    <FormControl id="modoPago" isRequired isInvalid={errors.modoPago}>
-                      <FormLabel>Modo de pago</FormLabel>
+      <Flex direction="column" flex="1" p={4} width="100%">
+        <Box width="100%" mx="auto" borderWidth={1} borderRadius="md" boxShadow="md" bg="white" p={6}>
+          <Box bg="orange.400" color="white" py={2} px={4} borderRadius="md" mb={6} textAlign="center">
+            <Heading size="md">CREACION DE PROVEEDOR</Heading>
+          </Box>
+          <Tabs index={tabIndex} isFitted variant="enclosed">
+            <TabList mb="1em">
+              <Tab>Info Solicitante</Tab>
+              <Tab>Info Proveedor</Tab>
+              <Tab>Info Pago</Tab>
+              <Tab>Documentación</Tab>
+            </TabList>
+            <TabPanels>
+              <TabPanel>
+                <Box borderWidth={1} borderRadius="md" p={4} mb={4}>
+                  <Heading size="sm">INFO SOLICITANTE</Heading>
+                </Box>
+                <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+                  <CustomFormControl id="nombreSolicitante" label="Nombre del Solicitante" isRequired isInvalid={errors.nombreSolicitante}>
+                    <Input
+                      placeholder="Nombre del Solicitante"
+                      value={formData.nombreSolicitante}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="empresa" label="Empresa" isRequired isInvalid={errors.empresa}>
+                    <Select
+                      placeholder="Seleccione una empresa"
+                      value={formData.empresa}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    >
+                      <option value="Agropecuaria Popoyán, S.A.">Agropecuaria Popoyán, S.A.</option>
+                    </Select>
+                  </CustomFormControl>
+                  <CustomFormControl id="correlativo" label="Correlativo" isRequired isInvalid={errors.correlativo}>
+                    <Select
+                      placeholder="Buscar elementos"
+                      value={formData.correlativo}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    >
+                      <option value="123">123</option>
+                      <option value="214">214</option>
+                    </Select>
+                  </CustomFormControl>
+                </Grid>
+                <Flex justify="space-between" w="100%" mt={4}>
+                  <Button onClick={handlePreviousTab} colorScheme="teal">Anterior</Button>
+                  <Button colorScheme="teal" onClick={handleNextTab}>Siguiente</Button>
+                </Flex>
+              </TabPanel>
+              <TabPanel>
+                <Box borderWidth={1} borderRadius="md" p={4} mb={4}>
+                  <Heading size="sm">INFORMACIÓN DEL PROVEEDOR</Heading>
+                </Box>
+                <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+                  <CustomFormControl id="nombre" label="Nombre" isRequired isInvalid={errors.nombre}>
+                    <Input
+                      placeholder="Nombre"
+                      value={formData.nombre}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="nombreExtranjero" label="Nombre de Extranjero" isRequired isInvalid={errors.nombreExtranjero}>
+                    <Input
+                      placeholder="Nombre de Extranjero"
+                      value={formData.nombreExtranjero}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="grupo" label="Grupo" isRequired isInvalid={errors.grupo}>
+                    <Input
+                      placeholder="Grupo"
+                      value={formData.grupo}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="tipoProveedor" label="Tipo de Proveedor" isRequired isInvalid={errors.tipoProveedor}>
+                    <Select
+                      placeholder="Seleccione el tipo de proveedor"
+                      value={formData.tipoProveedor}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    >
+                      <option value="Exterior">Exterior</option>
+                    </Select>
+                  </CustomFormControl>
+                  <CustomFormControl id="pasaporte" label="PASAPORTE" isRequired isInvalid={errors.pasaporte}>
+                    <Input
+                      placeholder="PASAPORTE"
+                      value={formData.pasaporte}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="rtn" label="RTN" isRequired isInvalid={errors.rtn}>
+                    <Input
+                      placeholder="RTN"
+                      value={formData.rtn}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="retencion" label="Indicadores de retención permitidos" isRequired isInvalid={errors.retencion}>
+                    <Select
+                      placeholder="Seleccione el indicador"
+                      value={formData.retencion}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    >
+                      <option value="ISR">ISR sobre productos financieros</option>
+                    </Select>
+                  </CustomFormControl>
+                  <CustomFormControl id="nombreContacto" label="Nombre de Contacto" isRequired isInvalid={errors.nombreContacto}>
+                    <Input
+                      placeholder="Nombre de Contacto"
+                      value={formData.nombreContacto}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="telefono1" label="Teléfono 1 de Contacto" isRequired isInvalid={errors.telefono1}>
+                    <Input
+                      placeholder="Teléfono 1 de Contacto"
+                      value={formData.telefono1}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="telefono2" label="Teléfono 2 de Contacto" isRequired isInvalid={errors.telefono2}>
+                    <Input
+                      placeholder="Teléfono 2 de Contacto"
+                      value={formData.telefono2}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="correo" label="Correo Electrónico" isRequired isInvalid={errors.correo}>
+                    <Input
+                      placeholder="Correo Electrónico"
+                      value={formData.correo}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="productos" label="Productos que vende" isRequired isInvalid={errors.productos}>
+                    <Input
+                      placeholder="Productos que vende"
+                      value={formData.productos}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                </Grid>
+                <Flex justify="space-between" w="100%" mt={4}>
+                  <Button onClick={handlePreviousTab} colorScheme="teal">Anterior</Button>
+                  <Button colorScheme="teal" onClick={handleNextTab}>Siguiente</Button>
+                </Flex>
+              </TabPanel>
+              <TabPanel>
+                <Box borderWidth={1} borderRadius="md" p={4} mb={4}>
+                  <Heading size="sm">INFORMACIÓN DE PAGO</Heading>
+                </Box>
+                <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+                  <GridItem colSpan={2}>
+                    <CustomFormControl id="modoPago" label="Modo de pago" isRequired isInvalid={errors.modoPago}>
                       <Checkbox
                         isChecked={formData.modoPago.includes('Transferencia')}
                         onChange={(e) => handleInputChange({ target: { id: 'modoPago', value: e.target.checked ? 'Transferencia' : '' } })}
@@ -348,194 +325,172 @@ export const PageFormSol = () => {
                         Cheque
                       </Checkbox>
                       {errors.modoPago && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="numeroCuenta" isRequired isInvalid={errors.numeroCuenta}>
-                      <FormLabel>Número de cuenta</FormLabel>
-                      <Input
-                        placeholder="Número de cuenta"
-                        value={formData.numeroCuenta}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.numeroCuenta && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="tipoCuenta" isRequired isInvalid={errors.tipoCuenta}>
-                      <FormLabel>Tipo Cuenta</FormLabel>
-                      <Select
-                        placeholder="Buscar elementos"
-                        value={formData.tipoCuenta}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      >
-                        <option value="Ahorros">Ahorros</option>
-                        <option value="Corriente">Corriente</option>
-                      </Select>
-                      {errors.tipoCuenta && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="nombreCuentaCheque" isRequired isInvalid={errors.nombreCuentaCheque}>
-                      <FormLabel>Nombre de la Cuenta Cheque</FormLabel>
-                      <Input
-                        placeholder="Nombre de la Cuenta Cheque"
-                        value={formData.nombreCuentaCheque}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.nombreCuentaCheque && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="monto" isRequired isInvalid={errors.monto}>
-                      <FormLabel>Monto</FormLabel>
-                      <Input
-                        placeholder="Monto"
-                        value={formData.monto}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.monto && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="nombreCuentaTransferencia" isRequired isInvalid={errors.nombreCuentaTransferencia}>
-                      <FormLabel>Nombre de la Cuenta Transferencia</FormLabel>
-                      <Input
-                        placeholder="Nombre de la Cuenta Transferencia"
-                        value={formData.nombreCuentaTransferencia}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.nombreCuentaTransferencia && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="pais" isRequired isInvalid={errors.pais}>
-                      <FormLabel>País</FormLabel>
-                      <Select
-                        placeholder="Seleccione un país"
-                        value={formData.pais}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      >
-                        <option value="Guatemala">Guatemala</option>
-                      </Select>
-                      {errors.pais && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="banco" isRequired isInvalid={errors.banco}>
-                      <FormLabel>Banco</FormLabel>
-                      <Select
-                        placeholder="Seleccione un banco"
-                        value={formData.banco}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      >
-                        <option value="Banco Industrial">Banco Industrial</option>
-                      </Select>
-                      {errors.banco && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="moneda" isRequired isInvalid={errors.moneda}>
-                      <FormLabel>Moneda</FormLabel>
-                      <Select
-                        placeholder="Seleccione una moneda"
-                        value={formData.moneda}
-                        onChange={handleInputChange}
-                        errorBorderColor="red.300"
-                      >
-                        <option value="Quetzales">Quetzales</option>
-                      </Select>
-                      {errors.moneda && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="cartaAceptacion" isRequired isInvalid={errors.cartaAceptacion}>
-                      <FormLabel>Carta de Aceptación de Pago</FormLabel>
+                    </CustomFormControl>
+                  </GridItem>
+                  <CustomFormControl id="numeroCuenta" label="Número de cuenta" isRequired isInvalid={errors.numeroCuenta}>
+                    <Input
+                      placeholder="Número de cuenta"
+                      value={formData.numeroCuenta}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="tipoCuenta" label="Tipo Cuenta" isRequired isInvalid={errors.tipoCuenta}>
+                    <Select
+                      placeholder="Buscar elementos"
+                      value={formData.tipoCuenta}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    >
+                      <option value="Ahorros">Ahorros</option>
+                      <option value="Corriente">Corriente</option>
+                    </Select>
+                  </CustomFormControl>
+                  <CustomFormControl id="nombreCuentaCheque" label="Nombre de la Cuenta Cheque" isRequired isInvalid={errors.nombreCuentaCheque}>
+                    <Input
+                      placeholder="Nombre de la Cuenta Cheque"
+                      value={formData.nombreCuentaCheque}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="monto" label="Monto" isRequired isInvalid={errors.monto}>
+                    <Input
+                      placeholder="Monto"
+                      value={formData.monto}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="nombreCuentaTransferencia" label="Nombre de la Cuenta Transferencia" isRequired isInvalid={errors.nombreCuentaTransferencia}>
+                    <Input
+                      placeholder="Nombre de la Cuenta Transferencia"
+                      value={formData.nombreCuentaTransferencia}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="pais" label="País" isRequired isInvalid={errors.pais}>
+                    <Select
+                      placeholder="Seleccione un país"
+                      value={formData.pais}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    >
+                      <option value="Guatemala">Guatemala</option>
+                    </Select>
+                  </CustomFormControl>
+                  <CustomFormControl id="banco" label="Banco" isRequired isInvalid={errors.banco}>
+                    <Select
+                      placeholder="Seleccione un banco"
+                      value={formData.banco}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    >
+                      <option value="Banco Industrial">Banco Industrial</option>
+                    </Select>
+                  </CustomFormControl>
+                  <CustomFormControl id="moneda" label="Moneda" isRequired isInvalid={errors.moneda}>
+                    <Select
+                      placeholder="Seleccione una moneda"
+                      value={formData.moneda}
+                      onChange={handleInputChange}
+                      errorBorderColor="red.300"
+                    >
+                      <option value="Quetzales">Quetzales</option>
+                    </Select>
+                  </CustomFormControl>
+                  <GridItem colSpan={2}>
+                    <CustomFormControl id="cartaAceptacion" label="Carta de Aceptación de Pago" isRequired isInvalid={errors.cartaAceptacion}>
                       <Input
                         type="file"
                         onChange={handleFileChange}
                         errorBorderColor="red.300"
                       />
-                      {errors.cartaAceptacion && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <Flex justify="space-between" w="100%">
-                      <Button onClick={handlePreviousTab}>Anterior</Button>
-                      <Button colorScheme="green" onClick={handleNextTab}>Siguiente</Button>
-                    </Flex>
-                  </VStack>
-                </TabPanel>
-                <TabPanel>
-                  <Box borderWidth={1} borderRadius="md" p={4} mb={4}>
-                    <Heading size="sm">DOCUMENTACIÓN REQUERIDA</Heading>
-                  </Box>
-                  <VStack spacing={4} align="stretch">
-                    <FormControl id="rtu" isRequired isInvalid={errors.rtu}>
-                      <FormLabel>RTU</FormLabel>
+                    </CustomFormControl>
+                  </GridItem>
+                </Grid>
+                <Flex justify="space-between" w="100%" mt={4}>
+                  <Button onClick={handlePreviousTab} colorScheme="teal">Anterior</Button>
+                  <Button colorScheme="teal" onClick={handleNextTab}>Siguiente</Button>
+                </Flex>
+              </TabPanel>
+              <TabPanel>
+                <Box borderWidth={1} borderRadius="md" p={4} mb={4}>
+                  <Heading size="sm">DOCUMENTACIÓN REQUERIDA</Heading>
+                </Box>
+                <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+                  <CustomFormControl id="rtu" label="RTU" isRequired isInvalid={errors.rtu}>
+                    <Input
+                      type="file"
+                      onChange={handleFileChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="patenteComercio" label="PATENTE COMERCIO" isRequired isInvalid={errors.patenteComercio}>
+                    <Input
+                      type="file"
+                      onChange={handleFileChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="dpi" label="DPI" isRequired isInvalid={errors.dpi}>
+                    <Input
+                      type="file"
+                      onChange={handleFileChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <CustomFormControl id="pasaporteRTN" label="PASAPORTE O RTN" isRequired isInvalid={errors.pasaporteRTN}>
+                    <Input
+                      type="file"
+                      onChange={handleFileChange}
+                      errorBorderColor="red.300"
+                    />
+                  </CustomFormControl>
+                  <GridItem colSpan={2}>
+                    <CustomFormControl id="cotizacionFactura" label="COTIZACIÓN O FACTURA" isRequired isInvalid={errors.cotizacionFactura}>
                       <Input
                         type="file"
                         onChange={handleFileChange}
                         errorBorderColor="red.300"
                       />
-                      {errors.rtu && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="patenteComercio" isRequired isInvalid={errors.patenteComercio}>
-                      <FormLabel>PATENTE COMERCIO</FormLabel>
-                      <Input
-                        type="file"
-                        onChange={handleFileChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.patenteComercio && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="dpi" isRequired isInvalid={errors.dpi}>
-                      <FormLabel>DPI</FormLabel>
-                      <Input
-                        type="file"
-                        onChange={handleFileChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.dpi && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="pasaporteRTN" isRequired isInvalid={errors.pasaporteRTN}>
-                      <FormLabel>PASAPORTE O RTN</FormLabel>
-                      <Input
-                        type="file"
-                        onChange={handleFileChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.pasaporteRTN && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                    <FormControl id="cotizacionFactura" isRequired isInvalid={errors.cotizacionFactura}>
-                      <FormLabel>COTIZACIÓN O FACTURA</FormLabel>
-                      <Input
-                        type="file"
-                        onChange={handleFileChange}
-                        errorBorderColor="red.300"
-                      />
-                      {errors.cotizacionFactura && <Text color="red.500">Este campo es requerido</Text>}
-                    </FormControl>
-                  </VStack>
-                  <Text mt={4}>
-                    *Pasaporte o RTN y Cotización o Factura son Obligatorios.
-                  </Text>
-                  <Text>
-                    NOTA: Guarda el Archivo exactamente como se muestra en el ejemplo:
-                  </Text>
-                  <Text>
-                    - "Pasaporte - Nombre de la Cuenta" o "RTN - Nombre de la Cuenta"
-                  </Text>
-                  <Text>
-                    - "Cotización - Nombre de la Cuenta" o "Factura - Nombre de la Cuenta"
-                  </Text>
-                  <Text>
-                    - "RTU - Nombre de la Cuenta"
-                  </Text>
-                  <Text>
-                    - "DPI - Nombre de la Cuenta"
-                  </Text>
-                  <Text>
-                    - "Patente Comercio - Nombre de la Cuenta"
-                  </Text>
-                  <Flex justify="space-between" w="100%">
-                    <Button onClick={handlePreviousTab}>Anterior</Button>
-                    <Button mt={4} colorScheme="green" onClick={handleSubmit}>ENVIAR</Button>
-                  </Flex>
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
-          </Box>
-        </Flex>
-        <Footer />
+                    </CustomFormControl>
+                  </GridItem>
+                </Grid>
+                <Text mt={4}>
+                  *Pasaporte o RTN y Cotización o Factura son Obligatorios.
+                </Text>
+                <Text>
+                  NOTA: Guarda el Archivo exactamente como se muestra en el ejemplo:
+                </Text>
+                <Text>
+                  - "Pasaporte - Nombre de la Cuenta" o "RTN - Nombre de la Cuenta"
+                </Text>
+                <Text>
+                  - "Cotización - Nombre de la Cuenta" o "Factura - Nombre de la Cuenta"
+                </Text>
+                <Text>
+                  - "RTU - Nombre de la Cuenta"
+                </Text>
+                <Text>
+                  - "DPI - Nombre de la Cuenta"
+                </Text>
+                <Text>
+                  - "Patente Comercio - Nombre de la Cuenta"
+                </Text>
+                <Flex justify="space-between" w="100%" mt={4}>
+                  <Button onClick={handlePreviousTab} colorScheme="teal">Anterior</Button>
+                  <Button mt={4} colorScheme="teal" onClick={handleSubmit}>ENVIAR</Button>
+                </Flex>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+        </Box>
       </Flex>
+      <Footer />
     </Flex>
   );
 };
+
+export default PageFormSol;
