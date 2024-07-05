@@ -16,7 +16,7 @@ export const ProveedoresPageRouter = ( {children} ) => {
           <Route path="formSolicitud" element={<PageFormSol />} />
           <Route path="home" element={<PageProveedores />} />
       </ Route>
-          
+      <Content>{children}</Content>
       </Routes>    
       </>
     )
