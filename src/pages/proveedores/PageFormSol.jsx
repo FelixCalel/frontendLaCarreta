@@ -29,12 +29,12 @@ export const PageFormSol = () => {
     pais: '',
     banco: '',
     moneda: '',
-    cartaAceptacion: '',
-    rtu: '',
-    patenteComercio: '',
-    dpi: '',
-    pasaporteRTN: '',
-    cotizacionFactura: ''
+    cartaAceptacion: null,
+    rtu: null,
+    patenteComercio: null,
+    dpi: null,
+    pasaporteRTN: null,
+    cotizacionFactura: null
   });
 
   const [tabIndex, setTabIndex] = useState(0);
@@ -53,10 +53,24 @@ export const PageFormSol = () => {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const { id } = e.target;
+    const file = e.target.files[0];
+    setFormData((prevData) => ({
+      ...prevData,
+      [id]: file
+    }));
+
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [id]: !file
+    }));
+  };
+
   const validateFields = (fields) => {
     const newErrors = {};
     fields.forEach((field) => {
-      if (!formData[field].trim()) {
+      if (!formData[field]) {
         newErrors[field] = true;
       }
     });
@@ -92,12 +106,14 @@ export const PageFormSol = () => {
 
     if (validateFields(allFields)) {
       try {
+        const formDataToSend = new FormData();
+        Object.keys(formData).forEach(key => {
+          formDataToSend.append(key, formData[key]);
+        });
+
         const response = await fetch('https://tu-endpoint.com/api/form', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
+          body: formDataToSend,
         });
 
         if (response.ok) {
@@ -118,7 +134,7 @@ export const PageFormSol = () => {
     <Flex direction="column" minH="100vh">
       <Header />
       <Flex direction="column" flex="1" overflow="hidden">
-        <Flex flex="1" align="center" justify="center" p={4} width="100%">
+        <Flex flex="1" align="top" justify="center" p={4} width="100%">
           <Box width="100%" mx="auto" borderWidth={1} borderRadius="md" boxShadow="md" overflow="hidden">
             <Box bg="orange" color="white" py={2} px={4} borderRadius="md" mb={4}>
               <Heading size="md">CREACION DE PROVEEDOR</Heading>
@@ -171,7 +187,10 @@ export const PageFormSol = () => {
                       </Select>
                       {errors.correlativo && <Text color="red.500">Este campo es requerido</Text>}
                     </FormControl>
-                    <Button colorScheme="green" onClick={handleNextTab}>Siguiente</Button>
+                    <Flex justify="space-between" w="100%">
+                      <Button onClick={handlePreviousTab}>Anterior</Button>
+                      <Button colorScheme="green" onClick={handleNextTab}>Siguiente</Button>
+                    </Flex>
                   </VStack>
                 </TabPanel>
                 <TabPanel>
@@ -303,8 +322,10 @@ export const PageFormSol = () => {
                       />
                       {errors.productos && <Text color="red.500">Este campo es requerido</Text>}
                     </FormControl>
-                    <Button colorScheme="green" onClick={handleNextTab}>Siguiente</Button>
-                    <Button onClick={handlePreviousTab}>Anterior</Button>
+                    <Flex justify="space-between" w="100%">
+                      <Button onClick={handlePreviousTab}>Anterior</Button>
+                      <Button colorScheme="green" onClick={handleNextTab}>Siguiente</Button>
+                    </Flex>
                   </VStack>
                 </TabPanel>
                 <TabPanel>
@@ -419,17 +440,17 @@ export const PageFormSol = () => {
                     </FormControl>
                     <FormControl id="cartaAceptacion" isRequired isInvalid={errors.cartaAceptacion}>
                       <FormLabel>Carta de Aceptación de Pago</FormLabel>
-                      <Textarea
-                        placeholder="Adjuntar un archivo"
-                        value={formData.cartaAceptacion}
-                        onChange={handleInputChange}
+                      <Input
+                        type="file"
+                        onChange={handleFileChange}
                         errorBorderColor="red.300"
                       />
                       {errors.cartaAceptacion && <Text color="red.500">Este campo es requerido</Text>}
-                      <Button>Adjuntar un archivo</Button>
                     </FormControl>
-                    <Button colorScheme="green" onClick={handleNextTab}>Siguiente</Button>
-                    <Button onClick={handlePreviousTab}>Anterior</Button>
+                    <Flex justify="space-between" w="100%">
+                      <Button onClick={handlePreviousTab}>Anterior</Button>
+                      <Button colorScheme="green" onClick={handleNextTab}>Siguiente</Button>
+                    </Flex>
                   </VStack>
                 </TabPanel>
                 <TabPanel>
@@ -439,58 +460,48 @@ export const PageFormSol = () => {
                   <VStack spacing={4} align="stretch">
                     <FormControl id="rtu" isRequired isInvalid={errors.rtu}>
                       <FormLabel>RTU</FormLabel>
-                      <Textarea
-                        placeholder="No hay nada adjunto."
-                        value={formData.rtu}
-                        onChange={handleInputChange}
+                      <Input
+                        type="file"
+                        onChange={handleFileChange}
                         errorBorderColor="red.300"
                       />
                       {errors.rtu && <Text color="red.500">Este campo es requerido</Text>}
-                      <Button>Adjuntar un archivo</Button>
                     </FormControl>
                     <FormControl id="patenteComercio" isRequired isInvalid={errors.patenteComercio}>
                       <FormLabel>PATENTE COMERCIO</FormLabel>
-                      <Textarea
-                        placeholder="No hay nada adjunto."
-                        value={formData.patenteComercio}
-                        onChange={handleInputChange}
+                      <Input
+                        type="file"
+                        onChange={handleFileChange}
                         errorBorderColor="red.300"
                       />
                       {errors.patenteComercio && <Text color="red.500">Este campo es requerido</Text>}
-                      <Button>Adjuntar un archivo</Button>
                     </FormControl>
                     <FormControl id="dpi" isRequired isInvalid={errors.dpi}>
                       <FormLabel>DPI</FormLabel>
-                      <Textarea
-                        placeholder="No hay nada adjunto."
-                        value={formData.dpi}
-                        onChange={handleInputChange}
+                      <Input
+                        type="file"
+                        onChange={handleFileChange}
                         errorBorderColor="red.300"
                       />
                       {errors.dpi && <Text color="red.500">Este campo es requerido</Text>}
-                      <Button>Adjuntar un archivo</Button>
                     </FormControl>
                     <FormControl id="pasaporteRTN" isRequired isInvalid={errors.pasaporteRTN}>
                       <FormLabel>PASAPORTE O RTN</FormLabel>
-                      <Textarea
-                        placeholder="No hay nada adjunto."
-                        value={formData.pasaporteRTN}
-                        onChange={handleInputChange}
+                      <Input
+                        type="file"
+                        onChange={handleFileChange}
                         errorBorderColor="red.300"
                       />
                       {errors.pasaporteRTN && <Text color="red.500">Este campo es requerido</Text>}
-                      <Button>Adjuntar un archivo</Button>
                     </FormControl>
                     <FormControl id="cotizacionFactura" isRequired isInvalid={errors.cotizacionFactura}>
                       <FormLabel>COTIZACIÓN O FACTURA</FormLabel>
-                      <Textarea
-                        placeholder="No hay nada adjunto."
-                        value={formData.cotizacionFactura}
-                        onChange={handleInputChange}
+                      <Input
+                        type="file"
+                        onChange={handleFileChange}
                         errorBorderColor="red.300"
                       />
                       {errors.cotizacionFactura && <Text color="red.500">Este campo es requerido</Text>}
-                      <Button>Adjuntar un archivo</Button>
                     </FormControl>
                   </VStack>
                   <Text mt={4}>
@@ -514,8 +525,10 @@ export const PageFormSol = () => {
                   <Text>
                     - "Patente Comercio - Nombre de la Cuenta"
                   </Text>
-                  <Button mt={4} colorScheme="green" onClick={handleSubmit}>ENVIAR</Button>
-                  <Button onClick={handlePreviousTab}>Anterior</Button>
+                  <Flex justify="space-between" w="100%">
+                    <Button onClick={handlePreviousTab}>Anterior</Button>
+                    <Button mt={4} colorScheme="green" onClick={handleSubmit}>ENVIAR</Button>
+                  </Flex>
                 </TabPanel>
               </TabPanels>
             </Tabs>
