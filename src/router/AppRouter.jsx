@@ -11,8 +11,6 @@ import { isAuthenticated } from "../providers/endpoints";
 import { Dashboard } from "../pages";
 import { ProveedoresPageRouter } from "./ProveedoresPageRouter"; // Asegúrate de que esta ruta sea correcta
 
-import { PageFormSol }  from "../pages/proveedores/PageFormSol";
-
 export const AppRouter = () => {
   const dispatch = useDispatch();
   const status = useSelector((state) => state.auth);
@@ -53,17 +51,10 @@ export const AppRouter = () => {
       />
 
       {/* Rutas de Proveedores */}
-      <Route path="/proveedores/" element={<PageFormSol />} />
+      <Route path="/proveedores/*" element={<ProveedoresPageRouter />} />
 
       {/* Ruta predeterminada */}
-      <Route
-        path="*"
-        element={
-          <Routes>
-            <Route path="/admin/dashboard" element={<Dashboard />} />
-          </Routes>
-        }
-      />
+      <Route path="*" element={<Dashboard />} />
     </Routes>
   );
 };

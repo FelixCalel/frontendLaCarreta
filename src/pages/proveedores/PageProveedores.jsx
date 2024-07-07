@@ -4,3 +4,4 @@ export const PageProveedores= () => {
     <div>Pagina de Proveedores</div>
   )
 }
+export default PageProveedores;

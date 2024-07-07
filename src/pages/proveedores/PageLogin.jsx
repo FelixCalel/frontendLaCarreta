@@ -5,4 +5,6 @@ export const PageLogin= () => {
       </>
     )
   }
+
+  export default PageLogin;
   

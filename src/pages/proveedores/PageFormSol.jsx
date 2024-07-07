@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Button, Flex, Tabs, TabList, TabPanels, Tab, TabPanel, Heading } from '@chakra-ui/react';
-import Header from './Header';
-import Footer from './Footer';
 import InfoSolicitante from './InfoSolicitante';
 import InfoProveedor from './InfoProveedor';
 import InfoPago from './InfoPago';
@@ -145,7 +143,7 @@ export const PageFormSol = () => {
 
   return (
     <Flex direction="column" minH="100vh" bg="gray.100">
-      <Header />
+      
       <Flex direction="column" flex="1" p={4} width="100%">
         <Box width="100%" mx="auto" borderWidth={1} borderRadius="md" boxShadow="md" bg="white" p={6}>
           <Box bg="orange.400" color="white" py={2} px={4} borderRadius="md" mb={6} textAlign="center">
@@ -212,7 +210,6 @@ export const PageFormSol = () => {
           </Tabs>
         </Box>
       </Flex>
-      <Footer />
     </Flex>
   );
 };
