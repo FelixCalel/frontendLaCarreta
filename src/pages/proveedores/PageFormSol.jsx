@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Flex, Tabs, TabList, TabPanels, Tab, TabPanel, Heading } from '@chakra-ui/react';
+import { Box, Flex, Tabs, TabList, TabPanels, Tab, TabPanel, Heading } from '@chakra-ui/react';
 import InfoSolicitante from './InfoSolicitante';
 import InfoProveedor from './InfoProveedor';
 import InfoPago from './InfoPago';
