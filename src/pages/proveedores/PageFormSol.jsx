@@ -207,7 +207,7 @@ export const PageFormSol = ({ user }) => {
     <Flex direction="column" minH="100vh" bg="gray.100">
       <Flex direction="column" flex="1" p={4} width="100%">
         <Box width="100%" mx="auto" borderWidth={1} borderRadius="md" boxShadow="md" bg="white" p={6}>
-          <Box bg="orange.400" color="white" py={2} px={4} borderRadius="md" mb={6} textAlign="center">
+          <Box bg="#4CAF50" color="white" py={2} px={4} borderRadius="md" mb={6} textAlign="center">
             <Heading size="md">CREACION DE PROVEEDOR</Heading>
           </Box>
           <Tabs index={state.tabIndex} isFitted variant="enclosed" onChange={index => dispatch({ type: 'SET_TAB_INDEX', payload: index })}>

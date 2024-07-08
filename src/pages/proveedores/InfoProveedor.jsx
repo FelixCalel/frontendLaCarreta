@@ -41,8 +41,9 @@ export const InfoProveedor = ({ formData, handleInputChange, handleNextTab, hand
           value={formData.tipoProveedor}
           onChange={handleInputChange}
         >
-          <option value="Nacional">Nacional</option>
-          <option value="Exterior">Exterior</option>
+          <option value="Caja chica">Caja chica</option>
+          <option value="Proveedor">Proveedor</option>
+          <option value="Viat">Viat</option>
         </Select>
       </CustomFormControl>
       <CustomFormControl id="nombreContacto" label="Nombre del contacto">
@@ -55,11 +56,14 @@ export const InfoProveedor = ({ formData, handleInputChange, handleNextTab, hand
       </CustomFormControl>
       <CustomFormControl id="localidadProveedor" label="Localidad del proveedor">
         {/* Control personalizado para ingresar la localidad del proveedor */}
-        <Input
-          placeholder="Localidad del proveedor"
-          value={formData.localidadProveedor}
+        <Select
+          placeholder="Seleccione el tipo de proveedor"
+          value={formData.tipoProveedor}
           onChange={handleInputChange}
-        />
+        >
+          <option value="Nacional">Nacional</option>
+          <option value="Exterior">Exterior</option>
+        </Select>
       </CustomFormControl>
       <CustomFormControl id="correoContacto" label="Correo electrónico">
         {/* Control personalizado para ingresar el correo electrónico del contacto */}

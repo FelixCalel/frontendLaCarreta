@@ -21,7 +21,7 @@ export const InfoSolicitante = ({ formData, handleInputChange, handleNextTab, ha
             readOnly
             fontWeight="bold"
             fontSize="sm"
-            borderColor="orange.400"
+            borderColor="green.500"
             width="auto"
             minW="max-content"
           />
