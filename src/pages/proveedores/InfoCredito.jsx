@@ -1,44 +1,69 @@
-import React from 'react'; // Importa la biblioteca React.
+// InfoCredito.jsx
+import React, { useEffect } from 'react';
 import {
-  Box, Button, Input, Select, Flex, Heading, Grid 
-} from '@chakra-ui/react'; // Importa componentes de Chakra UI.
-import CustomFormControl from './CustomFormControl'; // Importa un componente personalizado.
+  Box, Button, Input, Select, Flex, Heading, Grid
+} from '@chakra-ui/react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchDropdownOptions, submitFormData } from '../../store/proveedores/InfoCredito/thunks';
+import { setFormData } from '../../store/proveedores/InfoCredito/InfoCreditoSlice';
+import CustomFormControl from './CustomFormControl';
 
-export const InfoCredito = ({ formData, handleInputChange, handleNextTab, handlePreviousTab }) => (
-  // Componente funcional que recibe las props formData, handleInputChange, handleNextTab y handlePreviousTab.
-  <div>
-    {/* Contenedor para la información de crédito */}
-    <Box borderWidth={1} borderRadius="md" p={4} mb={4}>
-      <Heading size="sm">INFORMACIÓN DE CRÉDITO</Heading>
-    </Box>
-    <Grid templateColumns="repeat(2, 1fr)" gap={6}>
-      {/* Utiliza un componente de cuadrícula para organizar los campos del formulario en dos columnas */}
-      <CustomFormControl id="plazo" label="Plazo">
-        {/* Control personalizado para seleccionar el plazo de crédito */}
-        <Select
-          placeholder="Seleccione el plazo"
-          value={formData.plazo}
-          onChange={handleInputChange}
-        >
-          <option value="30 días">30 días</option>
-          <option value="60 días">60 días</option>
-        </Select>
-      </CustomFormControl>
-      <CustomFormControl id="monto" label="Monto">
-        {/* Control personalizado para ingresar el monto de crédito */}
-        <Input
-          placeholder="Monto"
-          value={formData.monto}
-          onChange={handleInputChange}
-        />
-      </CustomFormControl>
-    </Grid>
-    <Flex justify="space-between" w="100%" mt={4}>
-      {/* Botones para navegar entre pestañas */}
-      <Button onClick={handlePreviousTab} colorScheme="teal">Anterior</Button>
-      <Button colorScheme="teal" onClick={handleNextTab}>Siguiente</Button>
-    </Flex>
-  </div>
-);
+const InfoCredito = ({ handleNextTab, handlePreviousTab }) => {
+  const dispatch = useDispatch();
+  const dropdownOptions = useSelector((state) => state.infoCredito.dropdownOptions || { plazos: [] });
+  const formData = useSelector((state) => state.infoCredito.formData || {});
+  const status = useSelector((state) => state.infoCredito.status);
+  const error = useSelector((state) => state.infoCredito.error);
 
-export default InfoCredito; // Exporta el componente por defecto.
+  useEffect(() => {
+    if (status === 'idle') {
+      dispatch(fetchDropdownOptions());
+    }
+  }, [status, dispatch]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    dispatch(setFormData({ [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    dispatch(submitFormData(formData));
+  };
+
+  return (
+    <div>
+      <Box borderWidth={1} borderRadius="md" p={4} mb={4}>
+        <Heading size="sm">INFORMACIÓN DE CRÉDITO</Heading>
+      </Box>
+      <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+        <CustomFormControl id="plazo" label="Plazo">
+          <Select
+            name="plazo"
+            placeholder="Seleccione el plazo"
+            value={formData.plazo || ''}
+            onChange={handleInputChange}
+          >
+            {(dropdownOptions.plazos || []).map(plazo => (
+              <option key={plazo} value={plazo}>{plazo}</option>
+            ))}
+          </Select>
+        </CustomFormControl>
+        <CustomFormControl id="monto" label="Monto">
+          <Input
+            name="monto"
+            placeholder="Monto"
+            value={formData.monto || ''}
+            onChange={handleInputChange}
+          />
+        </CustomFormControl>
+      </Grid>
+      <Flex justifyContent="space-between" w="100%" mt={4}>
+        <Button onClick={handlePreviousTab} colorScheme="teal">Anterior</Button>
+        <Button colorScheme="teal" onClick={handleNextTab}>Siguiente</Button>
+      </Flex>
+    </div>
+  );
+};
+
+export default InfoCredito;

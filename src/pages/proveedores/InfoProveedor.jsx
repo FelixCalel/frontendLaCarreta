@@ -1,119 +1,144 @@
-import React from 'react'; // Importa la biblioteca React.
+import React, { useEffect } from 'react';
 import {
-  Box, Button, Input, Select, Flex, Heading, Textarea, Grid, GridItem 
-} from '@chakra-ui/react'; // Importa componentes de Chakra UI.
-import CustomFormControl from './CustomFormControl'; // Importa un componente personalizado.
+  Box, Button, Input, Select, Flex, Heading, Textarea, Grid, GridItem
+} from '@chakra-ui/react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchDropdownOptions, submitFormData } from '../../store/proveedores/InfoProveedor/thunks'; // Verifica esta ruta
+import { setFormData } from '../../store/proveedores/InfoProveedor/InfoProveedorSlice'; // Verifica esta ruta
+import CustomFormControl from './CustomFormControl';
 
-export const InfoProveedor = ({ formData, handleInputChange, handleNextTab, handlePreviousTab }) => (
-  // Componente funcional que recibe las props formData, handleInputChange, handleNextTab y handlePreviousTab.
-  <div>
-    {/* Contenedor para la información del proveedor */}
-    <Box borderWidth={1} borderRadius="md" p={4} mb={4}>
-      <Heading size="sm">INFORMACIÓN DEL PROVEEDOR</Heading>
-    </Box>
-    <Grid templateColumns="repeat(2, 1fr)" gap={6}>
-      {/* Utiliza un componente de cuadrícula para organizar los campos del formulario en dos columnas */}
-      <GridItem colSpan={2}>
-        <CustomFormControl id="razonSocial" label="Razón social (nombre de la empresa)">
-          {/* Control personalizado para ingresar la razón social */}
+const InfoProveedor = ({ handleNextTab }) => {
+  const dispatch = useDispatch();
+  const dropdownOptions = useSelector((state) => state.infoProveedor.dropdownOptions);
+  const formData = useSelector((state) => state.infoProveedor.formData);
+  const status = useSelector((state) => state.infoProveedor.status);
+  const error = useSelector((state) => state.infoProveedor.error);
+
+  useEffect(() => {
+    if (status === 'idle') {
+      dispatch(fetchDropdownOptions());
+    }
+  }, [status, dispatch]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    dispatch(setFormData({ [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    dispatch(submitFormData(formData));
+  };
+
+  return (
+    <div>
+      <Box borderWidth={1} borderRadius="md" p={4} mb={4}>
+        <Heading size="sm">INFORMACIÓN DEL PROVEEDOR</Heading>
+      </Box>
+      <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+        <GridItem colSpan={2}>
+          <CustomFormControl id="razonSocial" label="Razón social (nombre de la empresa)">
+            <Input
+              name="razonSocial"
+              placeholder="Razón social"
+              value={formData.razonSocial}
+              onChange={handleInputChange}
+            />
+          </CustomFormControl>
+        </GridItem>
+        <CustomFormControl id="paisProveedor" label="País del proveedor">
+          <Select
+            name="paisProveedor"
+            placeholder="Seleccione un país"
+            value={formData.paisProveedor}
+            onChange={handleInputChange}
+          >
+            {dropdownOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </CustomFormControl>
+        <CustomFormControl id="tipoProveedor" label="Tipo de proveedor">
+          <Select
+            name="tipoProveedor"
+            placeholder="Seleccione el tipo de proveedor"
+            value={formData.tipoProveedor}
+            onChange={handleInputChange}
+          >
+            <option value="Caja chica">Caja chica</option>
+            <option value="Proveedor">Proveedor</option>
+            <option value="Viat">Viat</option>
+          </Select>
+        </CustomFormControl>
+        <CustomFormControl id="nombreContacto" label="Nombre del contacto">
           <Input
-            placeholder="Razón social"
-            value={formData.razonSocial}
+            name="nombreContacto"
+            placeholder="Nombre del contacto"
+            value={formData.nombreContacto}
             onChange={handleInputChange}
           />
         </CustomFormControl>
-      </GridItem>
-      <CustomFormControl id="paisProveedor" label="País del proveedor">
-        {/* Control personalizado para seleccionar el país del proveedor */}
-        <Select
-          placeholder="Seleccione un país"
-          value={formData.paisProveedor}
-          onChange={handleInputChange}
-        >
-          <option value="Guatemala">Guatemala</option>
-          <option value="México">México</option>
-        </Select>
-      </CustomFormControl>
-      <CustomFormControl id="tipoProveedor" label="Tipo de proveedor">
-        {/* Control personalizado para seleccionar el tipo de proveedor */}
-        <Select
-          placeholder="Seleccione el tipo de proveedor"
-          value={formData.tipoProveedor}
-          onChange={handleInputChange}
-        >
-          <option value="Caja chica">Caja chica</option>
-          <option value="Proveedor">Proveedor</option>
-          <option value="Viat">Viat</option>
-        </Select>
-      </CustomFormControl>
-      <CustomFormControl id="nombreContacto" label="Nombre del contacto">
-        {/* Control personalizado para ingresar el nombre del contacto */}
-        <Input
-          placeholder="Nombre del contacto"
-          value={formData.nombreContacto}
-          onChange={handleInputChange}
-        />
-      </CustomFormControl>
-      <CustomFormControl id="localidadProveedor" label="Localidad del proveedor">
-        {/* Control personalizado para ingresar la localidad del proveedor */}
-        <Select
-          placeholder="Seleccione el tipo de proveedor"
-          value={formData.localidadProveedor}
-          onChange={handleInputChange}
-        >
-          <option value="Nacional">Nacional</option>
-          <option value="Exterior">Exterior</option>
-        </Select>
-      </CustomFormControl>
-      <CustomFormControl id="correoContacto" label="Correo electrónico">
-        {/* Control personalizado para ingresar el correo electrónico del contacto */}
-        <Input
-          placeholder="Correo electrónico"
-          value={formData.correoContacto}
-          onChange={handleInputChange}
-        />
-      </CustomFormControl>
-      <CustomFormControl id="dpi" label={formData.tipoProveedor === 'Exterior' ? 'Pasaporte' : 'DPI'}>
-        {/* Control personalizado para ingresar el DPI o pasaporte del proveedor */}
-        <Input
-          placeholder={formData.tipoProveedor === 'Exterior' ? 'Pasaporte' : 'DPI'}
-          value={formData.dpi}
-          onChange={handleInputChange}
-        />
-      </CustomFormControl>
-      <CustomFormControl id="telefonoContacto" label="Teléfono de contacto">
-        {/* Control personalizado para ingresar el teléfono del contacto */}
-        <Input
-          placeholder="Teléfono de contacto"
-          value={formData.telefonoContacto}
-          onChange={handleInputChange}
-        />
-      </CustomFormControl>
-      <CustomFormControl id="nit" label={formData.tipoProveedor === 'Exterior' ? 'RTN' : 'NIT'}>
-        {/* Control personalizado para ingresar el NIT o RTN del proveedor */}
-        <Input
-          placeholder={formData.tipoProveedor === 'Exterior' ? 'RTN' : 'NIT'}
-          value={formData.nit}
-          onChange={handleInputChange}
-        />
-      </CustomFormControl>
-      <GridItem colSpan={2}>
-        <CustomFormControl id="productosPrincipales" label="Productos principales que nos vende">
-          {/* Control personalizado para ingresar los productos principales que vende el proveedor */}
-          <Textarea
-            placeholder="Productos principales"
-            value={formData.productosPrincipales}
+        <CustomFormControl id="localidadProveedor" label="Localidad del proveedor">
+          <Select
+            name="localidadProveedor"
+            placeholder="Seleccione la localidad del proveedor"
+            value={formData.localidadProveedor}
+            onChange={handleInputChange}
+          >
+            <option value="Nacional">Nacional</option>
+            <option value="Exterior">Exterior</option>
+          </Select>
+        </CustomFormControl>
+        <CustomFormControl id="correoContacto" label="Correo electrónico">
+          <Input
+            name="correoContacto"
+            placeholder="Correo electrónico"
+            value={formData.correoContacto}
             onChange={handleInputChange}
           />
         </CustomFormControl>
-      </GridItem>
-    </Grid>
-    <Flex justify="space-between" w="100%" mt={4}>
-      {/* Botones para navegar entre pestañas */}
-      <Button onClick={handlePreviousTab} colorScheme="teal">Anterior</Button>
-      <Button colorScheme="teal" onClick={handleNextTab}>Siguiente</Button>
-    </Flex>
-  </div>
-);
+        <CustomFormControl id="dpi" label={formData.tipoProveedor === 'Exterior' ? 'Pasaporte' : 'DPI'}>
+          <Input
+            name="dpi"
+            placeholder={formData.tipoProveedor === 'Exterior' ? 'Pasaporte' : 'DPI'}
+            value={formData.dpi}
+            onChange={handleInputChange}
+          />
+        </CustomFormControl>
+        <CustomFormControl id="telefonoContacto" label="Teléfono de contacto">
+          <Input
+            name="telefonoContacto"
+            placeholder="Teléfono de contacto"
+            value={formData.telefonoContacto}
+            onChange={handleInputChange}
+          />
+        </CustomFormControl>
+        <CustomFormControl id="nit" label={formData.tipoProveedor === 'Exterior' ? 'RTN' : 'NIT'}>
+          <Input
+            name="nit"
+            placeholder={formData.tipoProveedor === 'Exterior' ? 'RTN' : 'NIT'}
+            value={formData.nit}
+            onChange={handleInputChange}
+          />
+        </CustomFormControl>
+        <GridItem colSpan={2}>
+          <CustomFormControl id="productosPrincipales" label="Productos principales que nos vende">
+            <Textarea
+              name="productosPrincipales"
+              placeholder="Productos principales"
+              value={formData.productosPrincipales}
+              onChange={handleInputChange}
+            />
+          </CustomFormControl>
+        </GridItem>
+      </Grid>
+      <Flex justifyContent="flex-end" w="100%" mt={4}>
+        <Button colorScheme="teal" onClick={handleNextTab}>Siguiente</Button>
+      </Flex>
+    </div>
+  );
+};
 
-export default InfoProveedor; // Exporta el componente por defecto.
+export default InfoProveedor;
