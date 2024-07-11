@@ -58,7 +58,7 @@ export const InfoProveedor = ({ formData, handleInputChange, handleNextTab, hand
         {/* Control personalizado para ingresar la localidad del proveedor */}
         <Select
           placeholder="Seleccione el tipo de proveedor"
-          value={formData.tipoProveedor}
+          value={formData.localidadProveedor}
           onChange={handleInputChange}
         >
           <option value="Nacional">Nacional</option>
