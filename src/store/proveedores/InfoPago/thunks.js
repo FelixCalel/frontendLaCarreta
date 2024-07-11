@@ -6,10 +6,7 @@ export const fetchDropdownOptions = createAsyncThunk(
   'infoPago/fetchDropdownOptions',
   async () => {
     const response = await axios.get('http://localhost:3000/api/sys_paises/listar_pais');
-    return {
-      bancosPorPais: response.data.bancosPorPais || {},
-      monedasPorPais: response.data.monedasPorPais || {}
-    };
+    return response.data.map(pais => ({ value: pais.id, label: pais.nombre }));
   }
 );
 

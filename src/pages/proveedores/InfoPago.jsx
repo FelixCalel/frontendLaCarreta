@@ -1,19 +1,17 @@
-// InfoPago.jsx
 import React, { useEffect } from 'react';
 import {
   Box, Button, Input, Select, Flex, Heading, Checkbox, Text, Grid, GridItem
 } from '@chakra-ui/react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchDropdownOptions, submitFormData } from '../../store/proveedores/InfoPago/thunks';
+import { fetchDropdownOptions } from '../../store/proveedores/InfoPago/thunks';
 import { setFormData, setTipoPago } from '../../store/proveedores/InfoPago/InfoPagoSlice';
 import CustomFormControl from './CustomFormControl';
 
 const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
   const dispatch = useDispatch();
-  const dropdownOptions = useSelector((state) => state.infoPago.dropdownOptions || { bancosPorPais: {}, monedasPorPais: {} });
-  const formData = useSelector((state) => state.infoPago.formData || {});
+  const dropdownOptions = useSelector((state) => state.infoPago.dropdownOptions);
+  const formData = useSelector((state) => state.infoPago.formData);
   const status = useSelector((state) => state.infoPago.status);
-  const error = useSelector((state) => state.infoPago.error);
 
   useEffect(() => {
     if (status === 'idle') {
@@ -29,6 +27,8 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
   const handleTipoPagoChange = (tipoPago) => {
     dispatch(setTipoPago(tipoPago));
   };
+
+  const selectedPais = dropdownOptions.find(pais => pais.value === formData.paisBanco);
 
   return (
     <div>
@@ -63,8 +63,8 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
                     value={formData.paisBanco || ''}
                     onChange={handleInputChange}
                   >
-                    {Object.keys(dropdownOptions.bancosPorPais).map(pais => (
-                      <option key={pais} value={pais}>{pais}</option>
+                    {dropdownOptions.map(pais => (
+                      <option key={pais.value} value={pais.value}>{pais.label}</option>
                     ))}
                   </Select>
                 </CustomFormControl>
@@ -76,9 +76,9 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
                     placeholder="Seleccione un banco"
                     value={formData.banco || ''}
                     onChange={handleInputChange}
-                    disabled={!formData.paisBanco}
+                    disabled={!selectedPais}
                   >
-                    {(dropdownOptions.bancosPorPais[formData.paisBanco] || []).map(banco => (
+                    {selectedPais?.bancos.map(banco => (
                       <option key={banco} value={banco}>{banco}</option>
                     ))}
                   </Select>
@@ -91,9 +91,9 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
                     placeholder="Seleccione una moneda"
                     value={formData.moneda || ''}
                     onChange={handleInputChange}
-                    disabled={!formData.paisBanco}
+                    disabled={!selectedPais}
                   >
-                    {(dropdownOptions.monedasPorPais[formData.paisBanco] || []).map(moneda => (
+                    {selectedPais?.monedas.map(moneda => (
                       <option key={moneda} value={moneda}>{moneda}</option>
                     ))}
                   </Select>
@@ -136,8 +136,9 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
           </GridItem>
         </Grid>
       </Box>
-      <Flex justifyContent="flex-end" w="100%" mt={4}>
-        <Button colorScheme="teal" onClick={handleNextTab}>Siguiente</Button>
+      <Flex justifyContent="space-between" w="100%" mt={4}>
+        <Button onClick={handlePreviousTab} colorScheme="teal" size="sm">Anterior</Button>
+        <Button colorScheme="teal" onClick={handleNextTab} size="sm">Siguiente</Button>
       </Flex>
     </div>
   );
