@@ -3,21 +3,32 @@ import {
   Box, Button, Input, Select, Flex, Heading, Checkbox, Text, Grid, GridItem
 } from '@chakra-ui/react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchDropdownOptions } from '../../store/proveedores/InfoPago/thunks';
+import { fetchDropdownOptions, fetchBancoOptions, fetchMonedaOptions, fetchTipoCuentaOptions } from '../../store/proveedores/InfoPago/thunks';
 import { setFormData, setTipoPago } from '../../store/proveedores/InfoPago/InfoPagoSlice';
 import CustomFormControl from './CustomFormControl';
 
 const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
   const dispatch = useDispatch();
   const dropdownOptions = useSelector((state) => state.infoPago.dropdownOptions);
+  const bancoOptions = useSelector((state) => state.infoPago.bancoOptions);
+  const monedaOptions = useSelector((state) => state.infoPago.monedaOptions);
+  const tipoCuentaOptions = useSelector((state) => state.infoPago.tipoCuentaOptions);
   const formData = useSelector((state) => state.infoPago.formData);
   const status = useSelector((state) => state.infoPago.status);
 
   useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchDropdownOptions());
+      dispatch(fetchTipoCuentaOptions());
     }
   }, [status, dispatch]);
+
+  useEffect(() => {
+    if (formData.paisBanco) {
+      dispatch(fetchBancoOptions(formData.paisBanco));
+      dispatch(fetchMonedaOptions(formData.paisBanco));
+    }
+  }, [formData.paisBanco, dispatch]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -28,7 +39,14 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
     dispatch(setTipoPago(tipoPago));
   };
 
-  const selectedPais = dropdownOptions.find(pais => pais.value === formData.paisBanco);
+  const selectedBancos = formData.paisBanco === 'Guatemala' ? [
+    { value: 1, label: 'Banco Industrial' },
+    { value: 2, label: 'Banrural' },
+  ] : bancoOptions;
+
+  const selectedMonedas = formData.paisBanco === 'Guatemala' ? [
+    { value: 1, label: 'Quetzales' }
+  ] : monedaOptions;
 
   return (
     <div>
@@ -76,10 +94,9 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
                     placeholder="Seleccione un banco"
                     value={formData.banco || ''}
                     onChange={handleInputChange}
-                    disabled={!selectedPais}
                   >
-                    {selectedPais?.bancos.map(banco => (
-                      <option key={banco} value={banco}>{banco}</option>
+                    {selectedBancos.map(banco => (
+                      <option key={banco.value} value={banco.value}>{banco.label}</option>
                     ))}
                   </Select>
                 </CustomFormControl>
@@ -91,10 +108,9 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
                     placeholder="Seleccione una moneda"
                     value={formData.moneda || ''}
                     onChange={handleInputChange}
-                    disabled={!selectedPais}
                   >
-                    {selectedPais?.monedas.map(moneda => (
-                      <option key={moneda} value={moneda}>{moneda}</option>
+                    {selectedMonedas.map(moneda => (
+                      <option key={moneda.value} value={moneda.value}>{moneda.label}</option>
                     ))}
                   </Select>
                 </CustomFormControl>
@@ -107,8 +123,9 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
                     value={formData.tipoCuenta || ''}
                     onChange={handleInputChange}
                   >
-                    <option value="Ahorro">Ahorro</option>
-                    <option value="Monetaria">Monetaria</option>
+                    {tipoCuentaOptions.map(tipoCuenta => (
+                      <option key={tipoCuenta.value} value={tipoCuenta.value}>{tipoCuenta.label}</option>
+                    ))}
                   </Select>
                 </CustomFormControl>
               </GridItem>

@@ -18,7 +18,7 @@ const infoCreditoSlice = createSlice({
   name: 'infoCredito',
   initialState,
   reducers: {
-    setFormData: (state, action) => {
+    setFormData: (state, action) => { 
       state.formData = { ...state.formData, ...action.payload };
     },
   },

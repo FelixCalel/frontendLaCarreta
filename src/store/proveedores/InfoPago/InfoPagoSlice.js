@@ -1,14 +1,28 @@
+// store/proveedores/InfoPago/InfoPagoSlice.js
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchDropdownOptions } from './thunks';
+import { fetchDropdownOptions, fetchBancoOptions, fetchMonedaOptions, fetchTipoCuentaOptions, submitFormData } from './thunks';
+
+const initialState = {
+  dropdownOptions: [],
+  bancoOptions: [],
+  monedaOptions: [],
+  tipoCuentaOptions: [],
+  formData: {
+    tipoPago: '',
+    paisBanco: '',
+    banco: '',
+    moneda: '',
+    tipoCuenta: '',
+    numeroCuenta: '',
+    nombreCheque: ''
+  },
+  status: 'idle',
+  error: null,
+};
 
 const infoPagoSlice = createSlice({
   name: 'infoPago',
-  initialState: {
-    dropdownOptions: [],
-    formData: {},
-    status: 'idle',
-    error: null,
-  },
+  initialState,
   reducers: {
     setFormData: (state, action) => {
       state.formData = { ...state.formData, ...action.payload };
@@ -26,9 +40,38 @@ const infoPagoSlice = createSlice({
         state.status = 'succeeded';
         state.dropdownOptions = action.payload;
       })
-      .addCase(fetchDropdownOptions.rejected, (state, action) => {
+      .addCase(fetchDropdownOptions.rejected, (state) => {
         state.status = 'failed';
-        state.error = action.error.message;
+      })
+      .addCase(fetchBancoOptions.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchBancoOptions.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.bancoOptions = action.payload;
+      })
+      .addCase(fetchBancoOptions.rejected, (state) => {
+        state.status = 'failed';
+      })
+      .addCase(fetchMonedaOptions.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchMonedaOptions.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.monedaOptions = action.payload;
+      })
+      .addCase(fetchMonedaOptions.rejected, (state) => {
+        state.status = 'failed';
+      })
+      .addCase(fetchTipoCuentaOptions.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchTipoCuentaOptions.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.tipoCuentaOptions = action.payload;
+      })
+      .addCase(fetchTipoCuentaOptions.rejected, (state) => {
+        state.status = 'failed';
       });
   },
 });

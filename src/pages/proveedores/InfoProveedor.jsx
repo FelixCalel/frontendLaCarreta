@@ -1,24 +1,37 @@
-import React, { useEffect } from 'react';
+// src/components/InfoProveedor.js
+
+import React, { useEffect, useState } from 'react';
 import {
-  Box, Button, Input, Select, Flex, Heading, Textarea, Grid, GridItem
+  Box, Button, Input, Select, Flex, Heading, Grid, GridItem
 } from '@chakra-ui/react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchDropdownOptions, submitFormData } from '../../store/proveedores/InfoProveedor/thunks'; // Verifica esta ruta
-import { setFormData } from '../../store/proveedores/InfoProveedor/InfoProveedorSlice'; // Verifica esta ruta
+import { fetchDropdownOptions, fetchTipoProveedorOptions, fetchLocalidadProveedorOptions, submitFormData } from '../../store/proveedores/InfoProveedor/thunks';
+import { setFormData } from '../../store/proveedores/InfoProveedor/InfoProveedorSlice';
 import CustomFormControl from './CustomFormControl';
+import TagInput from '../../components/TagInput';
 
 const InfoProveedor = ({ handleNextTab }) => {
   const dispatch = useDispatch();
   const dropdownOptions = useSelector((state) => state.infoProveedor.dropdownOptions);
+  const tipoProveedorOptions = useSelector((state) => state.infoProveedor.tipoProveedorOptions);
+  const localidadProveedorOptions = useSelector((state) => state.infoProveedor.localidadProveedorOptions);
   const formData = useSelector((state) => state.infoProveedor.formData);
   const status = useSelector((state) => state.infoProveedor.status);
   const error = useSelector((state) => state.infoProveedor.error);
 
+  const [tags, setTags] = useState(formData.productosPrincipales || []);
+
   useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchDropdownOptions());
+      dispatch(fetchTipoProveedorOptions());
+      dispatch(fetchLocalidadProveedorOptions());
     }
   }, [status, dispatch]);
+
+  useEffect(() => {
+    dispatch(setFormData({ productosPrincipales: tags }));
+  }, [tags, dispatch]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -67,9 +80,11 @@ const InfoProveedor = ({ handleNextTab }) => {
             value={formData.tipoProveedor}
             onChange={handleInputChange}
           >
-            <option value="Caja chica">Caja chica</option>
-            <option value="Proveedor">Proveedor</option>
-            <option value="Viat">Viat</option>
+            {tipoProveedorOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </Select>
         </CustomFormControl>
         <CustomFormControl id="nombreContacto" label="Nombre del contacto">
@@ -87,8 +102,11 @@ const InfoProveedor = ({ handleNextTab }) => {
             value={formData.localidadProveedor}
             onChange={handleInputChange}
           >
-            <option value="Nacional">Nacional</option>
-            <option value="Exterior">Exterior</option>
+            {localidadProveedorOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </Select>
         </CustomFormControl>
         <CustomFormControl id="correoContacto" label="Correo electrónico">
@@ -125,12 +143,7 @@ const InfoProveedor = ({ handleNextTab }) => {
         </CustomFormControl>
         <GridItem colSpan={2}>
           <CustomFormControl id="productosPrincipales" label="Productos principales que nos vende">
-            <Textarea
-              name="productosPrincipales"
-              placeholder="Productos principales"
-              value={formData.productosPrincipales}
-              onChange={handleInputChange}
-            />
+            <TagInput tags={tags} setTags={setTags} />
           </CustomFormControl>
         </GridItem>
       </Grid>
