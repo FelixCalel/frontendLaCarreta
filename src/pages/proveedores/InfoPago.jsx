@@ -19,16 +19,11 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
   useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchDropdownOptions());
+      dispatch(fetchBancoOptions());
+      dispatch(fetchMonedaOptions());
       dispatch(fetchTipoCuentaOptions());
     }
   }, [status, dispatch]);
-
-  useEffect(() => {
-    if (formData.paisBanco) {
-      dispatch(fetchBancoOptions(formData.paisBanco));
-      dispatch(fetchMonedaOptions(formData.paisBanco));
-    }
-  }, [formData.paisBanco, dispatch]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -38,15 +33,6 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
   const handleTipoPagoChange = (tipoPago) => {
     dispatch(setTipoPago(tipoPago));
   };
-
-  const selectedBancos = formData.paisBanco === 'Guatemala' ? [
-    { value: 1, label: 'Banco Industrial' },
-    { value: 2, label: 'Banrural' },
-  ] : bancoOptions;
-
-  const selectedMonedas = formData.paisBanco === 'Guatemala' ? [
-    { value: 1, label: 'Quetzales' }
-  ] : monedaOptions;
 
   return (
     <div>
@@ -95,7 +81,7 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
                     value={formData.banco || ''}
                     onChange={handleInputChange}
                   >
-                    {selectedBancos.map(banco => (
+                    {bancoOptions.map(banco => (
                       <option key={banco.value} value={banco.value}>{banco.label}</option>
                     ))}
                   </Select>
@@ -109,7 +95,7 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
                     value={formData.moneda || ''}
                     onChange={handleInputChange}
                   >
-                    {selectedMonedas.map(moneda => (
+                    {monedaOptions.map(moneda => (
                       <option key={moneda.value} value={moneda.value}>{moneda.label}</option>
                     ))}
                   </Select>

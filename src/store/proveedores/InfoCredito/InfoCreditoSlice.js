@@ -1,26 +1,23 @@
-// InfoCreditoSlice.js
 import { createSlice } from '@reduxjs/toolkit';
 import { fetchDropdownOptions, submitFormData } from './thunks';
 
 const initialState = {
-  dropdownOptions: {
-    plazos: []
-  },
-  formData: {
-    plazo: '',
-    monto: ''
-  },
+  dropdownOptions: { plazos: [] },
+  formData: {},
   status: 'idle',
-  error: null,
+  error: null
 };
 
 const infoCreditoSlice = createSlice({
   name: 'infoCredito',
   initialState,
   reducers: {
-    setFormData: (state, action) => { 
-      state.formData = { ...state.formData, ...action.payload };
-    },
+    setFormData(state, action) {
+      state.formData = {
+        ...state.formData,
+        ...action.payload
+      };
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -28,8 +25,8 @@ const infoCreditoSlice = createSlice({
         state.status = 'loading';
       })
       .addCase(fetchDropdownOptions.fulfilled, (state, action) => {
-        state.status = 'succeeded';
         state.dropdownOptions = action.payload;
+        state.status = 'succeeded';
       })
       .addCase(fetchDropdownOptions.rejected, (state, action) => {
         state.status = 'failed';
@@ -45,7 +42,7 @@ const infoCreditoSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       });
-  },
+  }
 });
 
 export const { setFormData } = infoCreditoSlice.actions;

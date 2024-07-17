@@ -1,4 +1,3 @@
-// InfoCredito.jsx
 import React, { useEffect } from 'react';
 import {
   Box, Button, Input, Select, Flex, Heading, Grid
@@ -44,8 +43,8 @@ const InfoCredito = ({ handleNextTab, handlePreviousTab }) => {
             value={formData.plazo || ''}
             onChange={handleInputChange}
           >
-            {(dropdownOptions.plazos || []).map(plazo => (
-              <option key={plazo} value={plazo}>{plazo}</option>
+            {(dropdownOptions.plazos || []).map((plazo, index) => (
+              <option key={plazo.id || index} value={plazo.id || plazo}>{plazo.nombre || plazo}</option>
             ))}
           </Select>
         </CustomFormControl>
@@ -62,6 +61,7 @@ const InfoCredito = ({ handleNextTab, handlePreviousTab }) => {
         <Button onClick={handlePreviousTab} colorScheme="teal">Anterior</Button>
         <Button colorScheme="teal" onClick={handleNextTab}>Siguiente</Button>
       </Flex>
+      {error && <p>{error}</p>}
     </div>
   );
 };
