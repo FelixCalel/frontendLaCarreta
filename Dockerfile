@@ -1,16 +1,31 @@
-# Usa una imagen base oficial y más ligera de Node.js
-FROM node:18-alpine
+# Dockerfile de Desarrollo
+FROM node:18-alpine AS frontend-dev
 
-# Crea el directorio de trabajo dentro del contenedor
 WORKDIR /app
-
-COPY . .
-
-# Instala las dependencias
+COPY package.json package-lock.json ./
 RUN npm install
-    
-# Expone el puerto en el que correrá la aplicación
+COPY . .
 EXPOSE 5173
-
-# Define el comando para correr la aplicación
 CMD ["npm", "run", "dev", "--", "--host"]
+
+# Dockerfile de Stage
+FROM node:18-alpine AS frontend-stage
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+EXPOSE 80
+CMD ["npm", "run", "start"]
+
+# Dockerfile de Producción
+FROM node:18-alpine AS frontend-prod
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm install --production
+COPY . .
+RUN npm run build
+EXPOSE 80
+CMD ["npm", "run", "start"]

@@ -57,7 +57,7 @@ const InfoProveedor = ({ handleNextTab }) => {
       </Box>
       <Grid templateColumns="repeat(2, 1fr)" gap={6}>
         <GridItem colSpan={2}>
-          <CustomFormControl id="razonSocial" label="Razón o Denominacion Social">
+          <CustomFormControl id="razonSocial" label="Razón o Denominación Social">
             <Input
               name="razonSocial"
               placeholder="Razón social"
@@ -66,7 +66,7 @@ const InfoProveedor = ({ handleNextTab }) => {
             />
           </CustomFormControl>
         </GridItem>
-        <CustomFormControl id="paisProveedor" label="País del proveedor">
+        <CustomFormControl id="paisProveedor" label="País del proveedor ">
           <Select
             name="paisProveedor"
             placeholder="Seleccione un país"
@@ -149,7 +149,7 @@ const InfoProveedor = ({ handleNextTab }) => {
           />
         </CustomFormControl>
         <GridItem colSpan={2}>
-          <CustomFormControl id="productosPrincipales" label="Productos principales que nos vende">
+          <CustomFormControl id="productosPrincipales" label="Productos principales que nos vende ">
             <TagInput tags={tags} setTags={setTags} availableTags={tagsOptions} />
           </CustomFormControl>
         </GridItem>
