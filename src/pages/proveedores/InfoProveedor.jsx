@@ -5,32 +5,39 @@ import {
   Box, Button, Input, Select, Flex, Heading, Grid, GridItem
 } from '@chakra-ui/react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchDropdownOptions, fetchTipoProveedorOptions, fetchLocalidadProveedorOptions, submitFormData } from '../../store/proveedores/InfoProveedor/thunks';
+import { fetchDropdownOptions, fetchTipoProveedorOptions, fetchLocalidadProveedorOptions, fetchTagsOptions, submitFormData } from '../../store/proveedores/InfoProveedor/thunks';
 import { setFormData } from '../../store/proveedores/InfoProveedor/InfoProveedorSlice';
 import CustomFormControl from './CustomFormControl';
-import TagInput from '../../components/TagInput';
+import TagInput from './TagInput';
 
 const InfoProveedor = ({ handleNextTab }) => {
   const dispatch = useDispatch();
   const dropdownOptions = useSelector((state) => state.infoProveedor.dropdownOptions);
   const tipoProveedorOptions = useSelector((state) => state.infoProveedor.tipoProveedorOptions);
   const localidadProveedorOptions = useSelector((state) => state.infoProveedor.localidadProveedorOptions);
+  const tagsOptions = useSelector((state) => state.infoProveedor.tagsOptions);
   const formData = useSelector((state) => state.infoProveedor.formData);
   const status = useSelector((state) => state.infoProveedor.status);
   const error = useSelector((state) => state.infoProveedor.error);
 
-  const [tags, setTags] = useState(formData.productosPrincipales || []);
+  const [tags, setTags] = useState(
+    formData.productosPrincipales.map(tagId => {
+      const tag = tagsOptions.find(t => t.value === tagId);
+      return tag ? { label: tag.label, value: tag.value } : null;
+    }).filter(Boolean)
+  );
 
   useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchDropdownOptions());
       dispatch(fetchTipoProveedorOptions());
       dispatch(fetchLocalidadProveedorOptions());
+      dispatch(fetchTagsOptions());
     }
   }, [status, dispatch]);
 
   useEffect(() => {
-    dispatch(setFormData({ productosPrincipales: tags }));
+    dispatch(setFormData({ productosPrincipales: tags.map(tag => tag.value) }));
   }, [tags, dispatch]);
 
   const handleInputChange = (e) => {
@@ -143,12 +150,12 @@ const InfoProveedor = ({ handleNextTab }) => {
         </CustomFormControl>
         <GridItem colSpan={2}>
           <CustomFormControl id="productosPrincipales" label="Productos principales que nos vende">
-            <TagInput tags={tags} setTags={setTags} />
+            <TagInput tags={tags} setTags={setTags} availableTags={tagsOptions} />
           </CustomFormControl>
         </GridItem>
       </Grid>
       <Flex justifyContent="flex-end" w="100%" mt={4}>
-        <Button colorScheme="teal" onClick={handleNextTab}>Siguiente</Button>
+        <Button colorScheme="teal" onClick={handleSubmit}>Siguiente</Button>
       </Flex>
     </div>
   );

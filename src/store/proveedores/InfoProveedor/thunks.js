@@ -1,4 +1,5 @@
-// store/proveedores/InfoProveedor/thunks.js
+// src/store/proveedores/InfoProveedor/thunks.js
+
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
@@ -23,6 +24,26 @@ export const fetchLocalidadProveedorOptions = createAsyncThunk(
   async () => {
     const response = await axios.get('http://localhost:3000/api/localidades/'); 
     return response.data.map(localidad => ({ value: localidad.id, label: localidad.nombre }));
+  }
+);
+
+export const fetchTagsOptions = createAsyncThunk(
+  'infoProveedor/fetchTagsOptions',
+  async () => {
+    const response = await axios.get('http://localhost:3000/api/tags_productos_ventas/'); 
+    return response.data.map(tag => ({ value: tag.id, label: tag.nombre }));
+  }
+);
+
+export const saveTag = createAsyncThunk(
+  'infoProveedor/saveTag',
+  async (tagName) => {
+    const response = await axios.post('http://localhost:3000/api/tags_productos_ventas/crear', { 
+      nombre: tagName, 
+      descripcion: tagName, 
+      estado: true 
+    });
+    return { id: response.data.id, label: response.data.nombre };
   }
 );
 

@@ -1,12 +1,13 @@
 // src/store/proveedores/InfoProveedor/InfoProveedorSlice.js
 
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchDropdownOptions, fetchTipoProveedorOptions, fetchLocalidadProveedorOptions, submitFormData } from './thunks';
+import { fetchDropdownOptions, fetchTipoProveedorOptions, fetchLocalidadProveedorOptions, fetchTagsOptions, saveTag, submitFormData } from './thunks';
 
 const initialState = {
   dropdownOptions: [],
   tipoProveedorOptions: [],
   localidadProveedorOptions: [],
+  tagsOptions: [],
   formData: {
     razonSocial: '',
     paisProveedor: '',
@@ -63,6 +64,28 @@ const infoProveedorSlice = createSlice({
         state.localidadProveedorOptions = action.payload;
       })
       .addCase(fetchLocalidadProveedorOptions.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+      .addCase(fetchTagsOptions.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchTagsOptions.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.tagsOptions = action.payload;
+      })
+      .addCase(fetchTagsOptions.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+      .addCase(saveTag.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(saveTag.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.tagsOptions.push(action.payload);
+      })
+      .addCase(saveTag.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
       })
