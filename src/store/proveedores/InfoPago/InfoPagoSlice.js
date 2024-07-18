@@ -6,29 +6,24 @@ const initialState = {
   bancoOptions: [],
   monedaOptions: [],
   tipoCuentaOptions: [],
-  formData: {
-    tipoPago: '',
-    paisBanco: '',
-    banco: '',
-    moneda: '',
-    tipoCuenta: '',
-    numeroCuenta: '',
-    nombreCheque: '',
-  },
+  formData: {},
   status: 'idle',
-  error: null,
+  error: null
 };
 
 const infoPagoSlice = createSlice({
   name: 'infoPago',
   initialState,
   reducers: {
-    setFormData: (state, action) => {
-      state.formData = { ...state.formData, ...action.payload };
+    setFormData(state, action) {
+      state.formData = {
+        ...state.formData,
+        ...action.payload
+      };
     },
-    setTipoPago: (state, action) => {
+    setTipoPago(state, action) {
       state.formData.tipoPago = action.payload;
-    },
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -36,8 +31,8 @@ const infoPagoSlice = createSlice({
         state.status = 'loading';
       })
       .addCase(fetchDropdownOptions.fulfilled, (state, action) => {
-        state.status = 'succeeded';
         state.dropdownOptions = action.payload;
+        state.status = 'succeeded';
       })
       .addCase(fetchDropdownOptions.rejected, (state, action) => {
         state.status = 'failed';
@@ -47,8 +42,8 @@ const infoPagoSlice = createSlice({
         state.status = 'loading';
       })
       .addCase(fetchBancoOptions.fulfilled, (state, action) => {
-        state.status = 'succeeded';
         state.bancoOptions = action.payload;
+        state.status = 'succeeded';
       })
       .addCase(fetchBancoOptions.rejected, (state, action) => {
         state.status = 'failed';
@@ -58,8 +53,8 @@ const infoPagoSlice = createSlice({
         state.status = 'loading';
       })
       .addCase(fetchMonedaOptions.fulfilled, (state, action) => {
-        state.status = 'succeeded';
         state.monedaOptions = action.payload;
+        state.status = 'succeeded';
       })
       .addCase(fetchMonedaOptions.rejected, (state, action) => {
         state.status = 'failed';
@@ -69,8 +64,8 @@ const infoPagoSlice = createSlice({
         state.status = 'loading';
       })
       .addCase(fetchTipoCuentaOptions.fulfilled, (state, action) => {
-        state.status = 'succeeded';
         state.tipoCuentaOptions = action.payload;
+        state.status = 'succeeded';
       })
       .addCase(fetchTipoCuentaOptions.rejected, (state, action) => {
         state.status = 'failed';
@@ -86,7 +81,7 @@ const infoPagoSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       });
-  },
+  }
 });
 
 export const { setFormData, setTipoPago } = infoPagoSlice.actions;

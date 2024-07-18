@@ -1,7 +1,5 @@
 import React, { useEffect } from 'react';
-import {
-  Box, Button, Input, Select, Flex, Heading, Checkbox, Text, Grid, GridItem
-} from '@chakra-ui/react';
+import { Box, Button, Input, Select, Flex, Heading, Checkbox, Text, Grid, GridItem } from '@chakra-ui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDropdownOptions, fetchBancoOptions, fetchMonedaOptions, fetchTipoCuentaOptions } from '../../store/proveedores/InfoPago/thunks';
 import { setFormData, setTipoPago } from '../../store/proveedores/InfoPago/InfoPagoSlice';
@@ -19,11 +17,16 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
   useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchDropdownOptions());
-      dispatch(fetchBancoOptions());
-      dispatch(fetchMonedaOptions());
       dispatch(fetchTipoCuentaOptions());
     }
   }, [status, dispatch]);
+
+  useEffect(() => {
+    if (formData.paisBanco) {
+      dispatch(fetchBancoOptions(formData.paisBanco));
+      dispatch(fetchMonedaOptions(formData.paisBanco));  // Solicitar monedas basadas en el país seleccionado
+    }
+  }, [formData.paisBanco, dispatch]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -80,6 +83,7 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
                     placeholder="Seleccione un banco"
                     value={formData.banco || ''}
                     onChange={handleInputChange}
+                    isDisabled={!formData.paisBanco}
                   >
                     {bancoOptions.map(banco => (
                       <option key={banco.value} value={banco.value}>{banco.label}</option>
@@ -94,6 +98,7 @@ const InfoPago = ({ handleNextTab, handlePreviousTab }) => {
                     placeholder="Seleccione una moneda"
                     value={formData.moneda || ''}
                     onChange={handleInputChange}
+                    isDisabled={!formData.paisBanco}
                   >
                     {monedaOptions.map(moneda => (
                       <option key={moneda.value} value={moneda.value}>{moneda.label}</option>
