@@ -36,21 +36,26 @@ const TagInput = ({ tags, setTags, availableTags }) => {
   };
 
   const handleInputBlur = () => {
-    setTimeout(() => setSuggestions([]), 100); // Pequeño retraso para permitir clics en sugerencias
+    setTimeout(() => setSuggestions([]), 100);
   };
 
   const addTag = async (tag) => {
-    if (!tags.some(t => t.label === tag.label)) {
-      // Check if the tag already exists in availableTags before saving
-      let existingTag = availableTags.find(t => t.label === tag.label);
-      if (!existingTag) {
-        const result = await dispatch(saveTag(tag.label)).unwrap();
-        tag.value = result.id;
-      } else {
-        tag.value = existingTag.value;
-      }
+    let existingTag = availableTags.find(t => t.label === tag.label);
+
+    if (!existingTag) {
+      // El tag no existe, entonces lo guardamos en la base de datos
+      const result = await dispatch(saveTag(tag.label)).unwrap();
+      tag = { ...tag, value: result.id };
+    } else {
+      // El tag ya existe, simplemente obtenemos su valor
+      tag = { ...tag, value: existingTag.value };
+    }
+
+    // Si el tag no está ya en la lista de tags, lo añadimos
+    if (!tags.some(t => t.value === tag.value)) {
       setTags([...tags, tag]);
     }
+
     setInputValue('');
     setSuggestions([]);
   };

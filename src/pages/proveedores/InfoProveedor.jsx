@@ -57,7 +57,7 @@ const InfoProveedor = ({ handleNextTab }) => {
       </Box>
       <Grid templateColumns="repeat(2, 1fr)" gap={6}>
         <GridItem colSpan={2}>
-          <CustomFormControl id="razonSocial" label="Razón social (nombre de la empresa)">
+          <CustomFormControl id="razonSocial" label="Razón o Denominacion Social">
             <Input
               name="razonSocial"
               placeholder="Razón social"
