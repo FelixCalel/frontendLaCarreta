@@ -6,7 +6,7 @@ const initialState = {
   bancoOptions: [],
   monedaOptions: [],
   tipoCuentaOptions: [],
-  formData: {},
+  formData: {}, // Estado inicial vacío para manejar datos dinámicos
   status: 'idle',
   error: null
 };
@@ -18,7 +18,7 @@ const infoPagoSlice = createSlice({
     setFormData(state, action) {
       state.formData = {
         ...state.formData,
-        ...action.payload
+        ...action.payload // Maneja dinámicamente cualquier campo pasado en action.payload
       };
     },
     setTipoPago(state, action) {

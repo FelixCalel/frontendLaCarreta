@@ -1,5 +1,3 @@
-// src/components/InfoProveedor.js
-
 import React, { useEffect, useState } from 'react';
 import {
   Box, Button, Input, Select, Flex, Heading, Grid, GridItem
@@ -20,12 +18,16 @@ const InfoProveedor = ({ handleNextTab }) => {
   const status = useSelector((state) => state.infoProveedor.status);
   const error = useSelector((state) => state.infoProveedor.error);
 
-  const [tags, setTags] = useState(
-    formData.productosPrincipales.map(tagId => {
-      const tag = tagsOptions.find(t => t.value === tagId);
-      return tag ? { label: tag.label, value: tag.value } : null;
-    }).filter(Boolean)
-  );
+  const [tags, setTags] = useState([]);
+
+  useEffect(() => {
+    if (formData.productosPrincipales && tagsOptions.length > 0) {
+      setTags(formData.productosPrincipales.map(tagId => {
+        const tag = tagsOptions.find(t => t.value === tagId);
+        return tag ? { label: tag.label, value: tag.value } : null;
+      }).filter(Boolean));
+    }
+  }, [formData.productosPrincipales, tagsOptions]);
 
   useEffect(() => {
     if (status === 'idle') {
@@ -48,6 +50,7 @@ const InfoProveedor = ({ handleNextTab }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     dispatch(submitFormData(formData));
+    handleNextTab(); // Asegura que avanzas al siguiente tab después de enviar el formulario
   };
 
   return (
@@ -61,16 +64,26 @@ const InfoProveedor = ({ handleNextTab }) => {
             <Input
               name="razonSocial"
               placeholder="Razón social"
-              value={formData.razonSocial}
+              value={formData.razonSocial || ''}
               onChange={handleInputChange}
             />
           </CustomFormControl>
         </GridItem>
-        <CustomFormControl id="paisProveedor" label="País del proveedor ">
+        <GridItem colSpan={2}>
+          <CustomFormControl id="nombreComercial" label="Nombre Comercial">
+            <Input
+              name="nombreComercial"
+              placeholder="Nombre comercial"
+              value={formData.nombreComercial || ''}
+              onChange={handleInputChange}
+            />
+          </CustomFormControl>
+        </GridItem>
+        <CustomFormControl id="paisProveedor" label="País del proveedor">
           <Select
             name="paisProveedor"
             placeholder="Seleccione un país"
-            value={formData.paisProveedor}
+            value={formData.paisProveedor || ''}
             onChange={handleInputChange}
           >
             {dropdownOptions.map((option) => (
@@ -84,7 +97,7 @@ const InfoProveedor = ({ handleNextTab }) => {
           <Select
             name="tipoProveedor"
             placeholder="Seleccione el tipo de proveedor"
-            value={formData.tipoProveedor}
+            value={formData.tipoProveedor || ''}
             onChange={handleInputChange}
           >
             {tipoProveedorOptions.map((option) => (
@@ -98,7 +111,7 @@ const InfoProveedor = ({ handleNextTab }) => {
           <Input
             name="nombreContacto"
             placeholder="Nombre del contacto"
-            value={formData.nombreContacto}
+            value={formData.nombreContacto || ''}
             onChange={handleInputChange}
           />
         </CustomFormControl>
@@ -106,7 +119,7 @@ const InfoProveedor = ({ handleNextTab }) => {
           <Select
             name="localidadProveedor"
             placeholder="Seleccione la localidad del proveedor"
-            value={formData.localidadProveedor}
+            value={formData.localidadProveedor || ''}
             onChange={handleInputChange}
           >
             {localidadProveedorOptions.map((option) => (
@@ -120,7 +133,7 @@ const InfoProveedor = ({ handleNextTab }) => {
           <Input
             name="correoContacto"
             placeholder="Correo electrónico"
-            value={formData.correoContacto}
+            value={formData.correoContacto || ''}
             onChange={handleInputChange}
           />
         </CustomFormControl>
@@ -128,7 +141,7 @@ const InfoProveedor = ({ handleNextTab }) => {
           <Input
             name="dpi"
             placeholder={formData.tipoProveedor === 'Exterior' ? 'Pasaporte' : 'DPI'}
-            value={formData.dpi}
+            value={formData.dpi || ''}
             onChange={handleInputChange}
           />
         </CustomFormControl>
@@ -136,7 +149,7 @@ const InfoProveedor = ({ handleNextTab }) => {
           <Input
             name="telefonoContacto"
             placeholder="Teléfono de contacto"
-            value={formData.telefonoContacto}
+            value={formData.telefonoContacto || ''}
             onChange={handleInputChange}
           />
         </CustomFormControl>
@@ -144,12 +157,12 @@ const InfoProveedor = ({ handleNextTab }) => {
           <Input
             name="nit"
             placeholder={formData.tipoProveedor === 'Exterior' ? 'RTN' : 'NIT'}
-            value={formData.nit}
+            value={formData.nit || ''}
             onChange={handleInputChange}
           />
         </CustomFormControl>
         <GridItem colSpan={2}>
-          <CustomFormControl id="productosPrincipales" label="Productos principales que nos vende ">
+          <CustomFormControl id="productosPrincipales" label="Productos principales que nos vende">
             <TagInput tags={tags} setTags={setTags} availableTags={tagsOptions} />
           </CustomFormControl>
         </GridItem>
