@@ -8,7 +8,7 @@ import { setFormData } from '../../store/proveedores/InfoProveedor/InfoProveedor
 import CustomFormControl from './CustomFormControl';
 import TagInput from './TagInput';
 
-const InfoProveedor = ({ handleNextTab }) => {
+const InfoProveedor = ({ handleNextTab, seleccionarProveedor, seleccionarLocalidad }) => {
   const dispatch = useDispatch();
   const dropdownOptions = useSelector((state) => state.infoProveedor.dropdownOptions);
   const tipoProveedorOptions = useSelector((state) => state.infoProveedor.tipoProveedorOptions);
@@ -43,6 +43,13 @@ const InfoProveedor = ({ handleNextTab }) => {
   }, [tags, dispatch]);
 
   const handleInputChange = (e) => {
+    if (e.target.name === 'tipoProveedor') {
+      seleccionarProveedor(e.target.value);
+    }
+
+    if (e.target.name === 'localidadProveedor') {
+      seleccionarLocalidad(e.target.value);
+    }
     const { name, value } = e.target;
     dispatch(setFormData({ [name]: value }));
   };
@@ -69,26 +76,26 @@ const InfoProveedor = ({ handleNextTab }) => {
             />
           </CustomFormControl>
         </GridItem>
-        
-          <CustomFormControl id="nombreComercial" label="Nombre Comercial">
-            <Input
-              name="nombreComercial"
-              placeholder="Nombre comercial"
-              value={formData.nombreComercial || ''}
-              onChange={handleInputChange}
-            />
-          </CustomFormControl>
-        
-        
-          <CustomFormControl id="direccion" label="Dirección">
-            <Input
-              name="direccion"
-              placeholder="Dirección"
-              value={formData.direccion || ''}
-              onChange={handleInputChange}
-            />
-          </CustomFormControl>
-      
+
+        <CustomFormControl id="nombreComercial" label="Nombre Comercial">
+          <Input
+            name="nombreComercial"
+            placeholder="Nombre comercial"
+            value={formData.nombreComercial || ''}
+            onChange={handleInputChange}
+          />
+        </CustomFormControl>
+
+
+        <CustomFormControl id="direccion" label="Dirección">
+          <Input
+            name="direccion"
+            placeholder="Dirección"
+            value={formData.direccion || ''}
+            onChange={handleInputChange}
+          />
+        </CustomFormControl>
+
         <CustomFormControl id="paisProveedor" label="País del proveedor">
           <Select
             name="paisProveedor"

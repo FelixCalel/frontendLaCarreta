@@ -128,6 +128,18 @@ export const PageFormSol = ({ user }) => {
     dispatch({ type: 'SET_TAB_INDEX', payload: state.tabIndex + 1 });
   };
 
+  //Funcion par elegir proveedor y localidad
+  const seleccionarProveedor = (id) => {
+    console.log("Seleccione el id de este proveedor: ", id);
+    dispatch({ type: 'SET_FORM_DATA', payload: { tipoProveedor: id } });
+  }
+
+  //Funcion par elegir proveedor y localidad
+  const seleccionarLocalidad = (id) => {
+    console.log("Seleccione el id de esta localidad: ", id);
+    dispatch({ type: 'SET_FORM_DATA', payload: { localidadProveedor: id } });
+  }
+
   // Maneja el retroceso a la pestaña anterior.
   const handlePreviousTab = () => {
     if (state.tabIndex > 0) {
@@ -233,6 +245,8 @@ export const PageFormSol = ({ user }) => {
                   handleInputChange={handleInputChange}
                   handleNextTab={handleNextTab}
                   handlePreviousTab={handlePreviousTab}
+                  seleccionarProveedor={seleccionarProveedor}
+                  seleccionarLocalidad={seleccionarLocalidad}
                 />
               </TabPanel>
               <TabPanel>

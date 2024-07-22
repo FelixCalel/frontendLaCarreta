@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Box, Button, Input, Select, Flex, Heading, Grid, Table, Thead, Tbody, Tr, Th, Td, IconButton, Spinner 
+  Box, Button, Input, Select, Flex, Heading, Grid, Table, Thead, Tbody, Tr, Th, Td, IconButton, Spinner
 } from '@chakra-ui/react';
 import { DeleteIcon } from '@chakra-ui/icons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -21,7 +21,7 @@ const Documentacion = ({ handlePreviousTab, handleSubmit, tipoProveedorId, local
 
   useEffect(() => {
     console.log('Proveedor Id es:', tipoProveedorId);
-
+    console.log('Localidad Id es:', localidadId);
     if (tipoProveedorId && localidadId) {
       dispatch(fetchTiposDocumento({ tipoProveedorId, localidadId }));
     }
