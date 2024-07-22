@@ -9,33 +9,8 @@ import Documentacion from './Documentacion'; // Importa el componente Documentac
 // Estado inicial del formulario.
 const initialState = {
   formData: { // Datos del formulario.
-    nombreSolicitante: '',
-    empresaSolicitante: '',
-    fechaSolicitud: '',
-    paisProveedor: '',
-    razonSocial: '',
     tipoProveedor: '',
-    nit: '',
-    dpi: '',
     localidadProveedor: '',
-    nombreContacto: '',
-    telefonoContacto: '',
-    correoContacto: '',
-    productosPrincipales: '',
-    tipoPago: '',
-    banco: '',
-    tipoCuenta: '',
-    numeroCuenta: '',
-    nombreCheque: '',
-    moneda: '',
-    plazo: '',
-    monto: '',
-    cartaAceptacion: null,
-    rtu: null,
-    patenteComercio: null,
-    dpiDoc: null,
-    pasaporteRTN: null,
-    cotizacionFactura: null,
     // Campos adicionales para registro.
     usuarioCreador: '',
     fechaEnvio: '',
@@ -58,8 +33,6 @@ const reducer = (state, action) => {
       return { ...state, errors: { ...state.errors, ...action.payload } };
     case 'ADD_DOCUMENTO': // Agrega un documento a la lista.
       return { ...state, documentos: [...state.documentos, action.payload] };
-    case 'SET_ARCHIVO': // Actualiza la propiedad archivo en formData.
-      return { ...state, formData: { ...state.formData, archivo: action.payload } };
     case 'DELETE_DOCUMENTO': // Elimina un documento de la lista y actualiza los números.
       const documentosActualizados = state.documentos.filter(doc => doc.numero !== action.payload)
         .map((doc, index) => ({ ...doc, numero: index + 1 }));
@@ -103,16 +76,9 @@ export const PageFormSol = ({ user }) => {
       reader.onloadend = () => {
         // Actualiza el estado con la información del archivo.
         dispatch({
-          type: 'SET_ARCHIVO',
-          payload: {
-            nombre: file.name,
-            tipo: file.type,
-            tamaño: file.size,
-            contenido: reader.result
-          }
+          type: 'ADD_DOCUMENTO',
+          payload: { numero: state.documentos.length + 1, tipo: state.selectedTipoDocumento, nombre: file.name }
         });
-        // Añade el archivo a la lista de documentos.
-        dispatch({ type: 'ADD_DOCUMENTO', payload: { numero: state.documentos.length + 1, tipo: state.selectedTipoDocumento, nombre: file.name } });
       };
       reader.readAsDataURL(file); // Lee el contenido del archivo como una URL de datos (base64).
     }
@@ -128,13 +94,12 @@ export const PageFormSol = ({ user }) => {
     dispatch({ type: 'SET_TAB_INDEX', payload: state.tabIndex + 1 });
   };
 
-  //Funcion par elegir proveedor y localidad
+  // Funcion para elegir proveedor y localidad
   const seleccionarProveedor = (id) => {
     console.log("Seleccione el id de este proveedor: ", id);
     dispatch({ type: 'SET_FORM_DATA', payload: { tipoProveedor: id } });
   }
 
-  //Funcion par elegir proveedor y localidad
   const seleccionarLocalidad = (id) => {
     console.log("Seleccione el id de esta localidad: ", id);
     dispatch({ type: 'SET_FORM_DATA', payload: { localidadProveedor: id } });
@@ -161,21 +126,8 @@ export const PageFormSol = ({ user }) => {
       fechaEnvio
     };
 
-    // Convierte archivos a base64.
-    const documentosBase64 = await Promise.all(state.documentos.map(async (doc) => {
-      const file = formDataWithTimestamp[doc.tipo];
-      if (file) {
-        const base64 = await toBase64(file);
-        return { ...doc, base64 };
-      }
-      return doc;
-    }));
-
     // Excluir el campo archivo del JSON final.
-    const { archivo, ...dataToSave } = {
-      ...formDataWithTimestamp,
-      documentos: documentosBase64
-    };
+    const { archivo, ...dataToSave } = formDataWithTimestamp;
 
     // Guarda los datos como JSON.
     const dataStr = JSON.stringify(dataToSave, null, 2);
@@ -189,14 +141,6 @@ export const PageFormSol = ({ user }) => {
 
     dispatch({ type: 'SET_LOADING', payload: false });
   };
-
-  // Convierte un archivo a base64.
-  const toBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
 
   // Maneja el cambio del tipo de pago.
   const handleTipoPagoChange = (tipo) => {
