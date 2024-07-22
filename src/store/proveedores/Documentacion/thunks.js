@@ -1,28 +1,10 @@
-// thunks.js
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-export const uploadDocumento = createAsyncThunk(
-  'documentacion/uploadDocumento',
-  async ({ tipoDocumento, file }) => {
-    const formData = new FormData();
-    formData.append('tipoDocumento', tipoDocumento);
-    formData.append('file', file);
-
-    const response = await axios.post('http://localhost:3000/api/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
-
-    return response.data;
-  }
-);
-
-export const deleteDocumento = createAsyncThunk(
-  'documentacion/deleteDocumento',
-  async (numero) => {
-    await axios.delete(`http://localhost:3000/api/documentos/${numero}`);
-    return numero;
+export const fetchTiposDocumento = createAsyncThunk(
+  'documentacion/fetchTiposDocumento',
+  async ({ tipoProveedorId, localidadId }) => {
+    const response = await axios.get(`http://localhost:3000/api/tipo_documentos/?snTipoId=${tipoProveedorId}&snLocalidadId=${localidadId}`);
+    return response.data.map(documento => ({ value: documento.id, label: documento.nombre }));
   }
 );

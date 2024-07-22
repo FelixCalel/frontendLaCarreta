@@ -265,6 +265,8 @@ export const PageFormSol = ({ user }) => {
                   handlePreviousTab={handlePreviousTab}
                   handleSubmit={handleSubmit}
                   isLoading={state.isLoading}
+                  tipoProveedorId={state.formData.tipoProveedor}
+                  localidadId={state.formData.localidadProveedor}
                 />
               </TabPanel>
             </TabPanels>

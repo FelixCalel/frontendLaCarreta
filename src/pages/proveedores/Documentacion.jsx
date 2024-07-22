@@ -1,19 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Box, Button, Input, Select, Flex, Heading, Grid, Table, Thead, Tbody, Tr, Th, Td, IconButton 
+  Box, Button, Input, Select, Flex, Heading, Grid, Table, Thead, Tbody, Tr, Th, Td, IconButton, Spinner 
 } from '@chakra-ui/react';
 import { DeleteIcon } from '@chakra-ui/icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { setSelectedTipoDocumento, addDocumento } from '../../store/proveedores/Documentacion/DocumentacionSlice';
-import CustomFormControl from './CustomFormControl'; // Ajusta la ruta según la ubicación real del archivo
+import { setSelectedTipoDocumento, addDocumento, removeDocumento } from '../../store/proveedores/Documentacion/DocumentacionSlice';
+import { fetchTiposDocumento } from '../../store/proveedores/Documentacion/thunks';
+import CustomFormControl from './CustomFormControl';
 
-const Documentacion = ({ handlePreviousTab, handleSubmit }) => {
+const Documentacion = ({ handlePreviousTab, handleSubmit, tipoProveedorId, localidadId }) => {
   const dispatch = useDispatch();
   const documentos = useSelector((state) => state.documentacion.documentos);
+  const tiposDocumento = useSelector((state) => state.documentacion.tiposDocumento);
   const selectedTipoDocumento = useSelector((state) => state.documentacion.selectedTipoDocumento);
+  const tiposDocumentoStatus = useSelector((state) => state.documentacion.status);
+  const tiposDocumentoError = useSelector((state) => state.documentacion.error);
 
   const [selectedFile, setSelectedFile] = useState(null);
-  const [localDocumentos, setLocalDocumentos] = useState(documentos);
+  const [fileMap, setFileMap] = useState(new Map());
+
+  useEffect(() => {
+    console.log('Proveedor Id es:', tipoProveedorId);
+
+    if (tipoProveedorId && localidadId) {
+      dispatch(fetchTiposDocumento({ tipoProveedorId, localidadId }));
+    }
+  }, [dispatch, tipoProveedorId, localidadId]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -25,20 +37,24 @@ const Documentacion = ({ handlePreviousTab, handleSubmit }) => {
   const handleAddDocumento = () => {
     if (selectedFile && selectedTipoDocumento) {
       const newDoc = {
-        numero: localDocumentos.length + 1,
+        numero: documentos.length + 1,
         tipo: selectedTipoDocumento,
         nombre: selectedFile.name,
-        file: selectedFile,
       };
-      setLocalDocumentos([...localDocumentos, newDoc]);
       dispatch(addDocumento(newDoc));
+      setFileMap(new Map(fileMap.set(newDoc.numero, selectedFile))); // Guardar el archivo en el estado local
       setSelectedFile(null);
       dispatch(setSelectedTipoDocumento(''));
     }
   };
 
   const handleDeleteDocumento = (numero) => {
-    setLocalDocumentos(localDocumentos.filter(doc => doc.numero !== numero));
+    dispatch(removeDocumento(numero));
+    setFileMap(prevMap => {
+      const newMap = new Map(prevMap);
+      newMap.delete(numero);
+      return newMap;
+    });
   };
 
   const handleTipoDocumentoChange = (e) => {
@@ -47,9 +63,8 @@ const Documentacion = ({ handlePreviousTab, handleSubmit }) => {
 
   const handleSubmitForm = (e) => {
     e.preventDefault();
-    localDocumentos.forEach(doc => {
-      dispatch(uploadDocumento({ tipoDocumento: doc.tipo, file: doc.file }));
-    });
+    // Aquí podrías manejar la lógica de envío si es necesario
+    // Por ejemplo, enviar los archivos guardados en fileMap al servidor
     handleSubmit();
   };
 
@@ -60,19 +75,22 @@ const Documentacion = ({ handlePreviousTab, handleSubmit }) => {
       </Box>
       <Grid templateColumns="repeat(3, 1fr)" gap={6}>
         <CustomFormControl id="tipoDocumento" label="Seleccionar el tipo de documento a subir">
-          <Select
-            placeholder="Seleccione un tipo de documento"
-            value={selectedTipoDocumento}
-            onChange={handleTipoDocumentoChange}
-          >
-            <option value="CartaAceptacion">Carta de Aceptación de Pago</option>
-            <option value="RTU">RTU</option>
-            <option value="PatenteComercio">Patente de Comercio</option>
-            <option value="DPI">DPI</option>
-            <option value="PasaporteRTN">Pasaporte o RTN</option>
-            <option value="CotizacionFactura">Cotización o Factura</option>
-            <option value="Verificacion de omisos">Verificación de Omisos</option>
-          </Select>
+          {tiposDocumentoStatus === 'loading' ? (
+            <Spinner />
+          ) : tiposDocumentoError ? (
+            <Box color="red.500">Error al cargar los tipos de documentos</Box>
+          ) : (
+            <Select
+              id="tipoDocumento"
+              placeholder="Seleccione un tipo de documento"
+              value={selectedTipoDocumento}
+              onChange={handleTipoDocumentoChange}
+            >
+              {Array.isArray(tiposDocumento) && tiposDocumento.map((tipo) => (
+                <option key={tipo.value} value={tipo.value}>{tipo.label}</option>
+              ))}
+            </Select>
+          )}
         </CustomFormControl>
         <CustomFormControl id="archivo" label="Seleccionar archivo">
           <Flex alignItems="center">
@@ -113,7 +131,7 @@ const Documentacion = ({ handlePreviousTab, handleSubmit }) => {
             </Tr>
           </Thead>
           <Tbody>
-            {localDocumentos.map((doc, index) => (
+            {documentos.map((doc, index) => (
               <Tr key={index}>
                 <Td>{doc.numero}</Td>
                 <Td>{doc.tipo}</Td>

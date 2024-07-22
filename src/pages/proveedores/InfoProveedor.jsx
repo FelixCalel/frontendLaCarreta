@@ -69,7 +69,7 @@ const InfoProveedor = ({ handleNextTab }) => {
             />
           </CustomFormControl>
         </GridItem>
-        <GridItem colSpan={2}>
+        
           <CustomFormControl id="nombreComercial" label="Nombre Comercial">
             <Input
               name="nombreComercial"
@@ -78,7 +78,17 @@ const InfoProveedor = ({ handleNextTab }) => {
               onChange={handleInputChange}
             />
           </CustomFormControl>
-        </GridItem>
+        
+        
+          <CustomFormControl id="direccion" label="Dirección">
+            <Input
+              name="direccion"
+              placeholder="Dirección"
+              value={formData.direccion || ''}
+              onChange={handleInputChange}
+            />
+          </CustomFormControl>
+      
         <CustomFormControl id="paisProveedor" label="País del proveedor">
           <Select
             name="paisProveedor"

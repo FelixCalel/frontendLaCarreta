@@ -1,9 +1,9 @@
-// DocumentacionSlice.js
 import { createSlice } from '@reduxjs/toolkit';
-import { uploadDocumento, deleteDocumento } from './thunks';
+import { fetchTiposDocumento } from './thunks';
 
 const initialState = {
   documentos: [],
+  tiposDocumento: [],
   selectedTipoDocumento: '',
   status: 'idle',
   error: null,
@@ -19,34 +19,26 @@ const documentacionSlice = createSlice({
     addDocumento: (state, action) => {
       state.documentos.push(action.payload);
     },
+    removeDocumento: (state, action) => {
+      state.documentos = state.documentos.filter(doc => doc.numero !== action.payload);
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(uploadDocumento.pending, (state) => {
+      .addCase(fetchTiposDocumento.pending, (state) => {
         state.status = 'loading';
       })
-      .addCase(uploadDocumento.fulfilled, (state, action) => {
+      .addCase(fetchTiposDocumento.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.documentos.push(action.payload);
+        state.tiposDocumento = action.payload;
       })
-      .addCase(uploadDocumento.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.error.message;
-      })
-      .addCase(deleteDocumento.pending, (state) => {
-        state.status = 'loading';
-      })
-      .addCase(deleteDocumento.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.documentos = state.documentos.filter(doc => doc.numero !== action.payload);
-      })
-      .addCase(deleteDocumento.rejected, (state, action) => {
+      .addCase(fetchTiposDocumento.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
       });
   },
 });
 
-export const { setSelectedTipoDocumento, addDocumento } = documentacionSlice.actions;
+export const { setSelectedTipoDocumento, addDocumento, removeDocumento } = documentacionSlice.actions;
 
 export default documentacionSlice.reducer;
