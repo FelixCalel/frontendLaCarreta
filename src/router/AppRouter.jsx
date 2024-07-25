@@ -9,7 +9,8 @@ import { useEffect } from "react";
 import { logout, login, obtenerDatosLogeado } from "../store/auth";
 import { isAuthenticated } from "../providers/endpoints";
 import { Dashboard } from "../pages";
-import { ProveedoresPageRouter } from "./ProveedoresPageRouter"; // Asegúrate de que esta ruta sea correcta
+import { ProveedoresPageRouter } from "./ProveedoresPageRouter";
+import { PaginaPais } from "./PaisRoute"; // Asegúrate de que esta ruta sea correcta
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -52,6 +53,11 @@ export const AppRouter = () => {
 
       {/* Rutas de Proveedores */}
       <Route path="/proveedores/*" element={<ProveedoresPageRouter />} />
+
+
+      {/* Rutas de Pais */}
+      <Route path="/pais/*" element={<PaginaPais />} />
+
 
       {/* Ruta predeterminada */}
       <Route path="*" element={<Dashboard />} />

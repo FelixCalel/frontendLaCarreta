@@ -1,5 +1,5 @@
-import { useDispatch, useSelector } from 'react-redux';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import {  useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
 import {
   Alert,
@@ -17,10 +17,8 @@ import {
   Text,
   useColorModeValue,
 } from '@chakra-ui/react';
-import { Navigate, redirect, useNavigate } from 'react-router-dom';
-import { AuthContext } from './context/AuthContext';
-import { useForm } from '../../hooks/useForm';
-import { checkingAuthentication, startSignIn } from '../../store/auth';
+import { useNavigate } from 'react-router-dom';
+                                                                                                                        
 import { replace } from 'formik';
 
 
@@ -37,7 +35,6 @@ export const LoginForm = () => {
   })
      
 
-  const dispatch = useDispatch();
 
   let navigate = useNavigate();
 
@@ -74,7 +71,7 @@ export const LoginForm = () => {
     // document.getElementById('login-button').disabled = true;
     // Aquí manejarías el envío del formulario
 
-     dispatch(startSignIn({correo_electronico,password}))
+    //  dispatch(startSignIn({correo_electronico,password}))
 
        
  

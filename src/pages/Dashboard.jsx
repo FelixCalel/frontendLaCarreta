@@ -1,16 +1,16 @@
-import { SimpleGrid, Text,Box } from '@chakra-ui/react';
-import {ListaOrdenes} from '../components/Dashboard/ListaOrdenes'; // Asume que este es tu componente de órdenes de compra
-import {ListaFacturas} from '../components/Dashboard/ListaFacturas'; // Asume que este es tu componente de facturas registradas
-import {UltimosContactos} from '../components/Dashboard/UltimosContactos'; // Asume que este es tu componente de últimos contactos
-import {NavBarDashboard} from '../components/NavBarDashboard'
+import { SimpleGrid, Text, Box, Button } from '@chakra-ui/react';
+import { ListaOrdenes } from '../components/Dashboard/ListaOrdenes'; // Asume que este es tu componente de órdenes de compra
+import { ListaFacturas } from '../components/Dashboard/ListaFacturas'; // Asume que este es tu componente de facturas registradas
+import { UltimosContactos } from '../components/Dashboard/UltimosContactos'; // Asume que este es tu componente de últimos contactos
+import { NavBarDashboard } from '../components/NavBarDashboard';
 // Importa los datos JSON
 import orders from '../assets/datos/orders.json';
 import invoices from '../assets/datos/invoices.json';
 import contacts from '../assets/datos/contacts.json';
 import BarChartComponent from '../components/Dashboard/graficas';
 import PieChartComponent from '../components/Dashboard/graficaspie';
-import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 const data = [
   {
@@ -28,27 +28,31 @@ const data2 = [
   { name: 'Grupo C', value: 300 },
   { name: 'Grupo D', value: 200 },
 ];
-  
-export  function Dashboard(){
 
-  const actualUsuario = useSelector( state => state.auth)
+export function Dashboard() {
 
+  const actualUsuario = useSelector(state => state.auth);
+  const navigate = useNavigate();
 
-  return(
+  const handleButtonClick = () => {
+    navigate('/pais/listar'); // Cambia la ruta según sea necesario
+  };
+
+  return (
     <>
-     <Box>
-          <Text fontWeight={'bold'}>Hola, {actualUsuario.displayName} !! </Text>
-        </Box>
+      <Box>
+        <Text fontWeight={'bold'}>Hola, {actualUsuario.displayName} !! </Text>
+      </Box>
+      <Button onClick={handleButtonClick} colorScheme="teal" mb={4}>
+        Ir a Página de Países
+      </Button>
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing="20px">
-       
-      <BarChartComponent data={data} />
-      <PieChartComponent data={data2} />
-      <ListaOrdenes orders={orders} />
-      <ListaFacturas invoices={invoices} />
-      <UltimosContactos contacts={contacts} />
-    </SimpleGrid>
-  
+        <BarChartComponent data={data} />
+        <PieChartComponent data={data2} />
+        <ListaOrdenes orders={orders} />
+        <ListaFacturas invoices={invoices} />
+        <UltimosContactos contacts={contacts} />
+      </SimpleGrid>
     </>
-   
-  )
+  );
 }

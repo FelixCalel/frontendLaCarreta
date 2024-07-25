@@ -1,57 +1,55 @@
-import { BellIcon } from "@chakra-ui/icons";
-import { Box, Flex, Text, Heading, Button, Spacer,HStack, Image, IconButton, Avatar } from "@chakra-ui/react";
+import { BellIcon, SearchIcon } from "@chakra-ui/icons";
+import { Box, Flex, IconButton, Image, Spacer, HStack } from "@chakra-ui/react";
 import { MenuPerfil } from "./MenuPerfil";
 import SearchBar from "./Dashboard/SearchBar";
 import { Link } from "react-router-dom";
-import AvatarUsuario from './AvatarUsuario'
+import AvatarUsuario from './AvatarUsuario';
 
 export default function NavBar() {
 
-
   return (
-
-    <Flex as="nav" p="8px" alignItems={"center"} borderBottom="1px"  top={"0"} left={"0"}>
-        <Box>
-           {/* Logo */}
+    <Flex as="nav" p={{ base: "2px 4px", md: "4px 8px" }} alignItems={"center"} borderBottom="1px" top={"0"} left={"0"} width="100%" flexWrap="nowrap">
+      <Box display="flex" alignItems="center" ml={{ base: "5px", md: "10px" }}>
+        {/* Logo */}
         <Image 
-          src="/images/logo_popoyan.png" 
-          alt="Popoyán "
-           boxSize="195px"
-           htmlWidth="auto" // Asegura que el ancho sea automático y mantenga la proporción
-           height={{ base: "42px", md: "33px", lg: "65px" }} // Altura responsive
-           />
-       </Box>
+          src="/images/logo.png" // Aca va la imagen del logo
+          alt="La Carreta"
+          objectFit="contain" // Asegura que la imagen mantenga sus proporciones
+          width={{ base: "50px", md: "70px", lg: "90px" }} // Ancho responsive más grande
+          height="auto" // Altura automática
+        />
+      </Box>
        
-        <Box flex={1} justifySelf="center">
-        <SearchBar />
-        </Box>
-        <Spacer />
-            <HStack spacing={"20px"}>
-                
-            <Link to="/notificaciones">
+      <Box flex={1} justifySelf="center" mx={{ base: "5px", md: "10px" }} display="flex" justifyContent="center">
+        {/* Icono de búsqueda para pantallas pequeñas */}
+        <Box display={{ base: "block", md: "none" }}>
+          <Link to="/buscar">
             <IconButton
               variant='solid'
-              fontSize='20px'
-              icon={<BellIcon/>}
-              
+              aria-label="Buscar"
+              icon={<SearchIcon />}
             />
-            </Link>
+          </Link>
+        </Box>
+        {/* Barra de búsqueda completa para pantallas más grandes */}
+        <Box display={{ base: "none", md: "block" }} flex={1}>
+          <SearchBar />
+        </Box>
+      </Box>
+      
+      <Spacer />
+      <HStack spacing={{ base: "10px", md: "20px" }} pr={{ base: "5px", md: "10px" }}>
+        <Link to="/notificaciones">
+          <IconButton
+            variant='solid'
+            fontSize={{ base: "16px", md: "20px" }}
+            icon={<BellIcon />}
+          />
+        </Link>
             
-            {/* <Box>
-              { user?.nombres }
-            </Box> */}
-            <MenuPerfil />
-            <AvatarUsuario />
-            </HStack>
+        <MenuPerfil />
+        <AvatarUsuario />
+      </HStack>
     </Flex>
-    // <Flex bg={"gra.200"} justify={"space-between"} wrap={"wrap"} gap={"2"}>
-    //     <Box w="150px" h="50px" bg="red">1</Box>
-    //     <Box w="150px" h="50px" bg="blue">2</Box>
-    //     <Box w="150px" h="50px" bg="green">3</Box>
-    //     <Box w="150px" h="50px" flexGrow={"1"} bg="yellow">4</Box>
-    //     <Box w="150px" h="50px" flexGrow={"2"} bg="gray">5</Box>
-        
-    // </Flex>
   )
 }
-

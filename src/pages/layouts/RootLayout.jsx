@@ -25,7 +25,7 @@ export const RootLayout = () =>{
     return (
         <Grid minH="100vh" templateRows="auto 1fr auto" templateColumns="repeat(5, 1fr)">
         {/* NavBar */}
-        <Box gridRow="1" gridColumn="1 / -1" bg="white" p={4} color="black">
+        <Box gridRow="1" gridColumn="1 / -1" bg="white" color="black">
           <NavBar />
         </Box>
 

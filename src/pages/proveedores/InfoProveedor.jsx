@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box, Button, Input, Select, Flex, Heading, Grid, GridItem
 } from '@chakra-ui/react';
@@ -16,7 +16,7 @@ const InfoProveedor = ({ handleNextTab, seleccionarProveedor, seleccionarLocalid
   const tagsOptions = useSelector((state) => state.infoProveedor.tagsOptions);
   const formData = useSelector((state) => state.infoProveedor.formData);
   const status = useSelector((state) => state.infoProveedor.status);
-  const error = useSelector((state) => state.infoProveedor.error);
+  // const error = useSelector((state) => state.infoProveedor.error);
 
   const [tags, setTags] = useState([]);
 
