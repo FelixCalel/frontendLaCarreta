@@ -5,7 +5,9 @@ export const tablaPais = createAsyncThunk(
   'paises/fetchPaises',
   async () => {
     const response = await axios.get('http://localhost:3000/pais/todos');
-    return response.data;
+    const data = response.data;
+    data.sort((a, b) => a.id - b.id); // Ordena los datos por id
+    return data;
   }
 );
 
@@ -40,4 +42,3 @@ export const togglePaisStatus = createAsyncThunk(
     return response.data;
   }
 );
-
