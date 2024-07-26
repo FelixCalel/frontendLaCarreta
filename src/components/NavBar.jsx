@@ -3,7 +3,6 @@ import { Box, Flex, IconButton, Image, Spacer, HStack } from "@chakra-ui/react";
 import { MenuPerfil } from "./MenuPerfil";
 import SearchBar from "./Dashboard/SearchBar";
 import { Link } from "react-router-dom";
-import AvatarUsuario from './AvatarUsuario';
 
 export default function NavBar() {
 
@@ -36,7 +35,6 @@ export default function NavBar() {
           <SearchBar />
         </Box>
       </Box>
-      
       <Spacer />
       <HStack spacing={{ base: "10px", md: "20px" }} pr={{ base: "5px", md: "10px" }}>
         <Link to="/notificaciones">
@@ -48,7 +46,6 @@ export default function NavBar() {
         </Link>
             
         <MenuPerfil />
-        <AvatarUsuario />
       </HStack>
     </Flex>
   )

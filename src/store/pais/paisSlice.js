@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { tablaPais } from './thunks'; // Asegúrate de la ruta correcta
+import { tablaPais, addNewPais, deletePais, updatePais, togglePaisStatus } from './thunks';
 
 const paisSlice = createSlice({
   name: 'paises',
@@ -21,6 +21,24 @@ const paisSlice = createSlice({
       .addCase(tablaPais.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
+      })
+      .addCase(addNewPais.fulfilled, (state, action) => {
+        state.data.push(action.payload);
+      })
+      .addCase(deletePais.fulfilled, (state, action) => {
+        state.data = state.data.filter(pais => pais.id !== action.payload);
+      })
+      .addCase(updatePais.fulfilled, (state, action) => {
+        const index = state.data.findIndex(pais => pais.id === action.payload.id);
+        if (index !== -1) {
+          state.data[index] = action.payload;
+        }
+      })
+      .addCase(togglePaisStatus.fulfilled, (state, action) => {
+        const index = state.data.findIndex(pais => pais.id === action.payload.id);
+        if (index !== -1) {
+          state.data[index].isActive = action.payload.isActive;
+        }
       });
   }
 });

@@ -1,12 +1,16 @@
-import { useEffect } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
+import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text, Button, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Input, FormControl, FormLabel, Switch, IconButton } from '@chakra-ui/react';
+import { EditIcon } from '@chakra-ui/icons';
 import { format } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
-import { tablaPais } from '../../store/pais/thunks';
+import { tablaPais, addNewPais, deletePais, updatePais, togglePaisStatus } from '../../store/pais/thunks';
 
 const PageFormPais = () => {
   const dispatch = useDispatch();
   const { data, status, error } = useSelector((state) => state.paises);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [currentPais, setCurrentPais] = useState({ id: '', nombre: '' });
 
   useEffect(() => {
     if (status === 'idle') {
@@ -14,8 +18,50 @@ const PageFormPais = () => {
     }
   }, [dispatch, status]);
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentPais({ ...currentPais, [name]: value });
+  };
+
+  const handleSubmit = () => {
+    if (isEditMode) {
+      dispatch(updatePais(currentPais)).then(() => {
+        onClose();
+        dispatch(tablaPais());
+      });
+    } else {
+      dispatch(addNewPais(currentPais)).then(() => {
+        onClose();
+        dispatch(tablaPais());
+      });
+    }
+  };
+
+  const handleDelete = (id) => {
+    dispatch(deletePais(id)).then(() => {
+      dispatch(tablaPais());
+    });
+  };
+
+  const handleToggleStatus = (id, isActive) => {
+    dispatch(togglePaisStatus({ id, isActive })).then(() => {
+      dispatch(tablaPais());
+    });
+  };
+
+  const handleEdit = (pais) => {
+    setCurrentPais(pais);
+    setIsEditMode(true);
+    onOpen();
+  };
+
   const formatDate = (dateString) => {
-    return format(new Date(dateString), 'dd/MM/yyyy HH:mm:ss');
+    try {
+      return dateString ? format(new Date(dateString), 'dd-MM-yyyy HH:mm:ss') : 'Fecha inválida';
+    } catch (error) {
+      console.error("Fecha inválida:", dateString);
+      return "Fecha inválida";
+    }
   };
 
   if (status === 'loading') {
@@ -37,6 +83,7 @@ const PageFormPais = () => {
   return (
     <Box padding="20px">
       <Text fontSize="2xl" mb="20px">Página de Paises</Text>
+      <Button colorScheme="green" onClick={() => { setIsEditMode(false); setCurrentPais({ nombre: '' }); onOpen(); }} mb="20px">Agregar País</Button>
       <Table variant="striped" colorScheme="teal">
         <Thead>
           <Tr>
@@ -44,6 +91,8 @@ const PageFormPais = () => {
             <Th>NOMBRE</Th>
             <Th>Fecha de Creación</Th>
             <Th>Fecha de Actualización</Th>
+            <Th>Activo</Th>
+            <Th>Acciones</Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -53,10 +102,41 @@ const PageFormPais = () => {
               <Td>{pais.nombre}</Td>
               <Td>{formatDate(pais.createdAt)}</Td>
               <Td>{formatDate(pais.updatedAt)}</Td>
+              <Td>
+                <Switch isChecked={pais.isActive} onChange={() => handleToggleStatus(pais.id, !pais.isActive)} />
+              </Td>
+              <Td>
+                <Button colorScheme="red" onClick={() => handleDelete(pais.id)} mr={2}>Eliminar</Button>
+                <IconButton icon={<EditIcon />} onClick={() => handleEdit(pais)} />
+              </Td>
             </Tr>
           ))}
         </Tbody>
       </Table>
+
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>{isEditMode ? 'Actualizar País' : 'Agregar Nuevo País'}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>Nombre del País</FormLabel>
+              <Input
+                name="nombre"
+                value={currentPais.nombre}
+                onChange={handleInputChange}
+              />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
+              {isEditMode ? 'Actualizar' : 'Guardar'}
+            </Button>
+            <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
