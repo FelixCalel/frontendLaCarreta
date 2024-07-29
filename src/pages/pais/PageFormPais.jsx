@@ -1,29 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Box,
-  Spinner,
-  Text,
-  Button,
-  useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Input,
-  FormControl,
-  FormLabel,
-  Switch,
-  IconButton
-} from '@chakra-ui/react';
+import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text, Button, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Input, FormControl, FormLabel, Switch, IconButton } from '@chakra-ui/react';
 import { EditIcon } from '@chakra-ui/icons';
 import { format } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
@@ -35,17 +11,12 @@ const PageFormPais = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentPais, setCurrentPais] = useState({ id: '', nombre: '' });
-  const [localData, setLocalData] = useState([]);
 
   useEffect(() => {
     if (status === 'idle') {
       dispatch(tablaPais());
     }
   }, [dispatch, status]);
-
-  useEffect(() => {
-    setLocalData(data.slice().sort((a, b) => a.id - b.id));
-  }, [data]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -56,23 +27,25 @@ const PageFormPais = () => {
     if (isEditMode) {
       dispatch(updatePais(currentPais)).then(() => {
         onClose();
+        dispatch(tablaPais());
       });
     } else {
       dispatch(addNewPais(currentPais)).then(() => {
         onClose();
+        dispatch(tablaPais());
       });
     }
   };
 
   const handleDelete = (id) => {
     dispatch(deletePais(id)).then(() => {
-      setLocalData(localData.filter(pais => pais.id !== id));
+      dispatch(tablaPais());
     });
   };
 
   const handleToggleStatus = (id, isActive) => {
     dispatch(togglePaisStatus({ id, isActive })).then(() => {
-      setLocalData(localData.map(pais => pais.id === id ? { ...pais, isActive } : pais));
+      dispatch(tablaPais());
     });
   };
 
@@ -111,37 +84,35 @@ const PageFormPais = () => {
     <Box padding="20px">
       <Text fontSize="2xl" mb="20px">Página de Paises</Text>
       <Button colorScheme="green" onClick={() => { setIsEditMode(false); setCurrentPais({ nombre: '' }); onOpen(); }} mb="20px">Agregar País</Button>
-      <Box overflowX="auto">
-        <Table variant="striped" colorScheme="teal">
-          <Thead>
-            <Tr>
-              <Th>ID</Th>
-              <Th>NOMBRE</Th>
-              <Th>Fecha de Creación</Th>
-              <Th>Fecha de Actualización</Th>
-              <Th>Estado</Th>
-              <Th>Acciones</Th>
+      <Table variant="striped" colorScheme="teal">
+        <Thead>
+          <Tr>
+            <Th>ID</Th>
+            <Th>NOMBRE</Th>
+            <Th>Fecha de Creación</Th>
+            <Th>Fecha de Actualización</Th>
+            <Th>Estado</Th>
+            <Th>Acciones</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {data.map((pais) => (
+            <Tr key={pais.id}>
+              <Td>{pais.id}</Td>
+              <Td>{pais.nombre}</Td>
+              <Td>{formatDate(pais.createdAt)}</Td>
+              <Td>{formatDate(pais.updatedAt)}</Td>
+              <Td>
+                <Switch isChecked={pais.isActive} onChange={() => handleToggleStatus(pais.id, !pais.isActive)} />
+              </Td>
+              <Td>
+                <Button colorScheme="red" onClick={() => handleDelete(pais.id)} mr={2}>Eliminar</Button>
+                <IconButton icon={<EditIcon />} onClick={() => handleEdit(pais)} />
+              </Td>
             </Tr>
-          </Thead>
-          <Tbody>
-            {localData.map((pais) => (
-              <Tr key={pais.id}>
-                <Td>{pais.id}</Td>
-                <Td>{pais.nombre}</Td>
-                <Td>{formatDate(pais.createdAt)}</Td>
-                <Td>{formatDate(pais.updatedAt)}</Td>
-                <Td>
-                  <Switch isChecked={pais.isActive} onChange={() => handleToggleStatus(pais.id, !pais.isActive)} />
-                </Td>
-                <Td>
-                  <Button colorScheme="red" onClick={() => handleDelete(pais.id)} mr={2}>Eliminar</Button>
-                  <IconButton icon={<EditIcon />} onClick={() => handleEdit(pais)} />
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </Box>
+          ))}
+        </Tbody>
+      </Table>
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
