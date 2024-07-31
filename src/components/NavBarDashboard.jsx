@@ -9,16 +9,16 @@ export const NavBarDashboard = () => {
   return (
     <Box  mb={5}>
     <Breadcrumb>
-        <BreadcrumbItem>
+        {/* <BreadcrumbItem>
             <BreadcrumbLink href='#'>Empresas</BreadcrumbLink>
         </BreadcrumbItem>
 
         <BreadcrumbItem>
             <BreadcrumbLink href='#'>Docs</BreadcrumbLink>
-        </BreadcrumbItem>
+        </BreadcrumbItem> */}
 
         <BreadcrumbItem isCurrentPage>
-            <BreadcrumbLink href='#'>Historial</BreadcrumbLink>
+            <BreadcrumbLink href='#'>Pagina de Paises</BreadcrumbLink>
         </BreadcrumbItem>
      </Breadcrumb>
      </Box>

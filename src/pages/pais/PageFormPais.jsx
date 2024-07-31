@@ -82,7 +82,6 @@ const PageFormPais = () => {
 
   return (
     <Box padding="20px">
-      <Text fontSize="2xl" mb="20px">Página de Paises</Text>
       <Button colorScheme="green" onClick={() => { setIsEditMode(false); setCurrentPais({ nombre: '' }); onOpen(); }} mb="20px">Agregar País</Button>
       <Table variant="striped" colorScheme="teal">
         <Thead>
