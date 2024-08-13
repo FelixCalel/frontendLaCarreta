@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   Box,
@@ -33,7 +33,7 @@ export const RecuperarClave = () => {
     }, 5000); // Cambia la imagen cada 5 segundos
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [images.length]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

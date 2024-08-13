@@ -62,7 +62,7 @@ export const LoginForm = () => {
     }, 5000); // Cambia la imagen cada 5 segundos
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [images.length]);
 
   const handleSubmit =  (e) => {
     e.preventDefault();
@@ -156,8 +156,7 @@ export const LoginForm = () => {
                 aria-required="true"
                 onChange={(e) => setPassword(e.target.value)}
                 value={password}
-               
-               
+                              
               />
             </FormControl>
             <Checkbox isChecked={isEmployee} onChange={(e) => setIsEmployee(e.target.checked)}>

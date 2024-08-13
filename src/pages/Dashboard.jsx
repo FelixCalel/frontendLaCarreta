@@ -2,7 +2,6 @@ import { SimpleGrid, Text, Box, Button } from '@chakra-ui/react';
 import { ListaOrdenes } from '../components/Dashboard/ListaOrdenes'; // Asume que este es tu componente de órdenes de compra
 import { ListaFacturas } from '../components/Dashboard/ListaFacturas'; // Asume que este es tu componente de facturas registradas
 import { UltimosContactos } from '../components/Dashboard/UltimosContactos'; // Asume que este es tu componente de últimos contactos
-import { NavBarDashboard } from '../components/NavBarDashboard';
 // Importa los datos JSON
 import orders from '../assets/datos/orders.json';
 import invoices from '../assets/datos/invoices.json';

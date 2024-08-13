@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Flex, IconButton, Text, VStack, Tooltip, useBreakpointValue } from '@chakra-ui/react';
 import { Link } from 'react-router-dom'; // Importa Link de React Router
 import { HamburgerIcon } from '@chakra-ui/icons';
 import { AiFillDashboard } from 'react-icons/ai';
 import { FaFileInvoice } from 'react-icons/fa';
 import { MdAddShoppingCart } from 'react-icons/md';
+import PropTypes from 'prop-types';
 
 // Componente MenuItem actualizado para incluir enlaces
 const MenuItem = ({ icon, label, to, isExpanded }) => {
@@ -30,6 +31,13 @@ const MenuItem = ({ icon, label, to, isExpanded }) => {
       {menuItemContent}
     </Tooltip>
   );
+};
+
+MenuItem.propTypes = {
+  icon: PropTypes.node.isRequired,
+  label: PropTypes.string.isRequired,
+  to: PropTypes.string.isRequired,
+  isExpanded: PropTypes.bool.isRequired,
 };
 
 const MenuPrincipalD = () => {

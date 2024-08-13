@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   Box,
@@ -17,14 +17,14 @@ import axios from 'axios';
 export const ActivarUsuarioDep = () => {
   const url = window.location.href;
   const tokenMatch = url.match(/\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)$/);
-  const [error, setError] = useState(false);
+  const [setError] = useState(false);
   const [nombres, setNombres] = useState('');
-  const [token, setToken] = useState('');
+  const [setToken] = useState('');
   const [correo_electronico, setCorreoElectronico] = useState('');
   const [apellidos, setApellidos] = useState('');
   const [celular, setCelular] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [email, setEmail] = useState('');
+  const [setEmail] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [nuevaClave, setNuevaClave] = useState('');
   const [confirmarClave, setConfirmarClave] = useState('');
@@ -46,7 +46,7 @@ export const ActivarUsuarioDep = () => {
     }, 5000); // Cambia la imagen cada 5 segundos
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [images.length]);
 
   useEffect(() => {
     // Extraer parámetros de la URL
