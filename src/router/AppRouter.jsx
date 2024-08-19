@@ -58,6 +58,9 @@ export const AppRouter = () => {
       {/* Rutas de Pais */}
       <Route path="/pais/*" element={<PaginaPais />} />
 
+      <Route path="/login/*" element={<PaginaPais />} />
+
+
 
       {/* Ruta predeterminada */}
       <Route path="*" element={<Dashboard />} />
