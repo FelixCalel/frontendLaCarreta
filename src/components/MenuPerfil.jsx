@@ -9,12 +9,16 @@ export const MenuPerfil = () => {
   const dispatch = useDispatch();
 
   const onLogout = () => {
+    // Limpiar la autenticación del usuario en localStorage
     localStorage.setItem('isAuthenticated', 'false');
     localStorage.setItem('userData', '');
 
+    // Despachar la acción logout
     dispatch(logout());
+
+    // Redirigir al usuario a la página de login
     navigate('/auth/login', {
-      replace: true
+      replace: true // Remplaza la ruta actual en el historial de navegación
     });
   }
 

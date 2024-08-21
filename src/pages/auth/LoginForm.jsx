@@ -1,12 +1,11 @@
-import {  useSelector } from 'react-redux';
+import axios from 'axios';
+import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
-
 import {
   Alert,
   AlertIcon,
   Box,
   Button,
-  Checkbox,
   Flex,
   FormControl,
   FormLabel,
@@ -14,107 +13,60 @@ import {
   Input,
   Link,
   Stack,
-  Text,
   useColorModeValue,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-                                                                                                                        
-import { replace } from 'formik';
-
-
-
 
 export const LoginForm = () => {
- 
-  // const [usuario, setUsuario] = useState(null);
   const actualUsuario = useSelector(usuario => usuario.auth);
- 
-  useEffect(() => {
-    if(actualUsuario === 'authenticated')
-     return navigate("/admin/dashboard", replace)
-  })
-     
-
-
-  let navigate = useNavigate();
-
+  const navigate = useNavigate();
 
   const [correo_electronico, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isEmployee, setIsEmployee] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [error, setError] = useState(actualUsuario.errorMessage);
+  const [error, setError] = useState('');
 
-  
-
-   // Array de URLs de imágenes
-   const images = [
-    'url("./src/assets/images/fnd_py01.jpg")',
-    'url("./src/assets/images/fnd_py02.jpg")',
-    'url("./src/assets/images/fnd_py03.jpg")',
-    'url("./src/assets/images/fnd_py04.jpg")',
-  ];
-
-  
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCurrentImageIndex((currentImageIndex) => (currentImageIndex + 1) % images.length);
-    }, 5000); // Cambia la imagen cada 5 segundos
+    if (actualUsuario === 'authenticated') {
+      return navigate("/auth/home", { replace: true });
+    }
+  }, [actualUsuario, navigate]);
 
-    return () => clearInterval(intervalId);
-  }, [images.length]);
-
-  const handleSubmit =  (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Deshabilitar el botón
-    // document.getElementById('login-button').disabled = true;
-    // Aquí manejarías el envío del formulario
+    try {
+      console.log("Enviando solicitud al backend...");
+      const response = await axios.post('http://localhost:3000/usuarios/login', {
+        correo_electronico,
+        password,
+      });
 
-    //  dispatch(startSignIn({correo_electronico,password}))
+      console.log("Respuesta recibida del backend:", response);
 
-       
- 
-  
-      if(actualUsuario.status == 'authenticated' ){
-              console.log("redirecciona a dashboard")
-               //  navigate("/admin/dashboard", replace)
-            navigate("/admin/dashboard", replace)
+      if (response.data && response.data.token) {
+        console.log("Login exitoso, redireccionando a /auth/home...");
+        // Guardar el token en el almacenamiento local o en el estado de la aplicación
+        localStorage.setItem('token', response.data.token);
+
+        // Redirigir a la nueva página de inicio
+        navigate("/auth/home", { replace: true });
+      } else {
+        console.log("Credenciales incorrectas.");
+        setError('Credenciales incorrectas');
       }
-      if(actualUsuario.status === 'not-authenticated' ){
-
-        console.log("muestra error")
-            setError(actualUsuario.errorMessage);
-           navigate("auth/login", replace)
-      }
-
+    } catch (err) {
+      console.error("Error en la solicitud de login:", err);
+      setError('Error al iniciar sesión. Por favor, intenta de nuevo.');
+    }
   };
- 
+
   return (
     <Flex
       minHeight="100vh"
       width="full"
       align="center"
       justifyContent="center"
-      backgroundImage={images[currentImageIndex]}
-      backgroundColor={"gray.50"}
-      backgroundSize="cover"
-      transition="background-image 1s ease-in-out" // Añade esta línea para la transición
-      sx={{
-        // Asegúrate de que el cambio de imagen sea suave
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0,
-          backgroundImage: images[currentImageIndex],
-          backgroundSize: 'cover',
-          filter: 'blur(8px)', // Añade un efecto de desenfoque si lo deseas
-          zIndex: -1,
-        }
-      }}
+      backgroundColor="gray.50"
     >
       <Box
         p={8}
@@ -125,16 +77,9 @@ export const LoginForm = () => {
         backgroundColor={useColorModeValue('whiteAlpha.800', 'gray.700')}
       >
         <Box lineHeight={1} pb={6} textAlign={"center"}>
-         <Heading as='section' pb={5} textAlign={"center"} size="lg" mb="0.2" lineHeight="tight" > Iniciar sesión</Heading>
-         <Text mt="-4" lineHeight="short">Portal de proveedores Popoyán</Text>
+          <Heading as='section' pb={5} textAlign={"center"} size="lg" mb="0.2" lineHeight="tight">Iniciar sesión</Heading>
         </Box>
-   
-          
-        <form onSubmit={handleSubmit}
-        >
-       
-        
-      <Stack spacing={4}></Stack>
+        <form onSubmit={handleSubmit}>
           <Stack spacing={4}>
             <FormControl>
               <FormLabel>Email</FormLabel>
@@ -151,27 +96,20 @@ export const LoginForm = () => {
               <Input
                 type="password"
                 placeholder="Ingresa tu contraseña"
-                // id='login-button'
                 required
-                aria-required="true"
                 onChange={(e) => setPassword(e.target.value)}
                 value={password}
-                              
               />
             </FormControl>
-            <Checkbox isChecked={isEmployee} onChange={(e) => setIsEmployee(e.target.checked)}>
-              ¿Empleado?
-            </Checkbox>
             {error && (
-            <Alert status="error" variant="subtle">
-              <AlertIcon />
-              {error}
-            </Alert>
-          )}
+              <Alert status="error" variant="subtle">
+                <AlertIcon />
+                {error}
+              </Alert>
+            )}
             <Stack spacing={6}>
               <Button
                 type="submit"
-                // disabled= { isAuthenticating }
                 colorScheme="green"
               >
                 Iniciar sesión
@@ -179,12 +117,12 @@ export const LoginForm = () => {
               <Button
                 variant="outline"
                 colorScheme="green"
-                onClick={() =>{ navigate('/auth/registro') }  }
+                onClick={() => navigate('/auth/registro')}
               >
                 Registro
               </Button>
             </Stack>
-            <Link color="teal.500" href="#" onClick={() => navigate('/auth/recuperar_clave')}  textAlign={"center"} >
+            <Link color="teal.500" href="#" onClick={() => navigate('/auth/recuperar_clave')} textAlign={"center"}>
               Se me olvidó la contraseña
             </Link>
           </Stack>
@@ -193,5 +131,3 @@ export const LoginForm = () => {
     </Flex>
   );
 };
-
-

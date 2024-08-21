@@ -38,13 +38,6 @@ export const singIn = async ( { correo_electronico, password})=>{
                               }
 
                       })
-           
-
-           
-    
-   
-  
-
 
 }
 

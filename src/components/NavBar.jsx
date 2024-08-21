@@ -1,22 +1,24 @@
-import { BellIcon, SearchIcon } from "@chakra-ui/icons";
 import { Box, Flex, IconButton, Image, Spacer, HStack } from "@chakra-ui/react";
+import { BellIcon, SearchIcon } from "@chakra-ui/icons"; // Importa BellIcon y SearchIcon
 import { MenuPerfil } from "./MenuPerfil";
 import SearchBar from "./Dashboard/SearchBar";
 import { Link } from "react-router-dom";
 
 export default function NavBar() {
-
   return (
     <Flex as="nav" p={{ base: "2px 4px", md: "4px 8px" }} alignItems={"center"} borderBottom="1px" top={"0"} left={"0"} width="100%" flexWrap="nowrap">
       <Box display="flex" alignItems="center" ml={{ base: "5px", md: "10px" }}>
-        {/* Logo */}
-        <Image 
-          src="/images/logo.png" // Aca va la imagen del logo
-          alt="La Carreta"
-          objectFit="contain" // Asegura que la imagen mantenga sus proporciones
-          width={{ base: "50px", md: "70px", lg: "90px" }} // Ancho responsive más grande
-          height="auto" // Altura automática
-        />
+        {/* Logo envuelto en un Link que redirige a /auth/home */}
+        <Link to="/auth/home">
+          <Image 
+            src="/images/logo.png" // Aca va la imagen del logo
+            alt="La Carreta"
+            objectFit="contain" // Asegura que la imagen mantenga sus proporciones
+            width={{ base: "50px", md: "70px", lg: "90px" }} // Ancho responsive más grande
+            height="auto" // Altura automática
+            cursor="pointer" // Cambia el cursor a pointer para indicar que es clicable
+          />
+        </Link>
       </Box>
        
       <Box flex={1} justifySelf="center" mx={{ base: "5px", md: "10px" }} display="flex" justifyContent="center">
@@ -48,5 +50,5 @@ export default function NavBar() {
         <MenuPerfil />
       </HStack>
     </Flex>
-  )
+  );
 }

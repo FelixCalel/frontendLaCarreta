@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Box, Flex, IconButton, Text, VStack, Tooltip, useBreakpointValue } from '@chakra-ui/react';
-import { Link } from 'react-router-dom'; // Importa Link de React Router
+import { Link } from 'react-router-dom';
 import { HamburgerIcon } from '@chakra-ui/icons';
 import { AiFillDashboard } from 'react-icons/ai';
-import { FaFileInvoice } from 'react-icons/fa';
+import { FaFileInvoice, FaGlobe } from 'react-icons/fa';  // Agregando FaGlobe para "País"
 import { MdAddShoppingCart } from 'react-icons/md';
 import PropTypes from 'prop-types';
 
-// Componente MenuItem actualizado para incluir enlaces
+// Componente MenuItem para cada ítem del menú
 const MenuItem = ({ icon, label, to, isExpanded }) => {
   const menuItemContent = (
     <Flex align="center" p="2" justifyContent={isExpanded ? 'flex-start' : 'center'}>
@@ -75,6 +75,12 @@ const MenuPrincipalD = () => {
           icon={<FaFileInvoice style={{ fontSize: '20px' }} />} 
           label="Facturas" 
           to="/admin/facturas" 
+          isExpanded={isExpanded}
+        />
+        <MenuItem 
+          icon={<FaGlobe style={{ fontSize: '20px' }} />} // Añadiendo el ítem para "País"
+          label="País" 
+          to="/pais/listar" 
           isExpanded={isExpanded}
         />
       </VStack>

@@ -1,43 +1,26 @@
+import axios from "axios";
 import { useDispatch, useSelector } from 'react-redux';
-import React, { useEffect, useState } from 'react';
-import { useForm } from '../../hooks/useForm'
+import { useEffect, useState } from 'react';
 import {
   Box,
   Button,
-  Checkbox,
   Flex,
   FormControl,
   FormLabel,
   Input,
-  Stack,
   SimpleGrid,
   useColorModeValue,
   Heading,
-  Center,
   Alert,
   AlertIcon,
+  VStack,
 } from '@chakra-ui/react';
-import { Link } from 'react-router-dom';
-import { startCreatingUser } from '../../store/auth';
-
+import { Link, useNavigate } from 'react-router-dom';
 
 export const RegisterForm = () => {
-  const disptach = useDispatch();
-  const actualUsuario = useSelector(usuario => usuario.auth);
-  
-  useEffect(() => {
-    if(actualUsuario === 'authenticated')
-     return navigate("/admin/dashboard", replace)
-  })
-
-  const { nombres, apellidos, nombreProveedorEmpresa, correoElectronico, nit, contrasenia, confirmacionContrasenia} = useForm({
-          nombres: '',
-          apellidos: '',
-          nombreProveedorEmpresa: '',
-          correoElectronico: '',
-          nit: ''
-  })
-
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const actualUsuario = useSelector(state => state.auth);
   const [formData, setFormData] = useState({
     nombres: '',
     apellidos: '',
@@ -46,193 +29,232 @@ export const RegisterForm = () => {
     contrasenia: '',
     confirmacionContrasenia: '',
     nit: '',
-    esEmpleado: false,
   });
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-   // Array de URLs de imágenes
-   const images = [
-    'url("./src/assets/images/fnd_py01.jpg")',
-    'url("./src/assets/images/fnd_py02.jpg")',
-    'url("./src/assets/images/fnd_py03.jpg")',
-    'url("./src/assets/images/fnd_py04.jpg")',
-  ];
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
-  const [error, setError] = useState(actualUsuario.errorMessage);
-
-  
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCurrentImageIndex((currentImageIndex) => (currentImageIndex + 1) % images.length);
-    }, 5000); // Cambia la imagen cada 5 segundos
-
-    return () => clearInterval(intervalId);
-  }, []);
+    if (actualUsuario === 'authenticated') {
+      return navigate("/admin/dashboard", { replace: true });
+    }
+  }, [actualUsuario, navigate]);
 
   const handleChange = (e) => {
-    const { name, value, checked, type } = e.target;
-    setFormData((prev) => ({
+    const { name, value } = e.target;
+    setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    disptach(startCreatingUser(formData))
-    setError(actualUsuario.errorMessage);
+    if (formData.contrasenia !== formData.confirmacionContrasenia) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
+    try {
+      const response = await registerUser(formData);
+      if (response.ok) {
+        setMessage("Usuario creado correctamente. Por favor, verifica tu correo electrónico.");
+      } else {
+        setError(response.errorMessage);
+      }
+    } catch (err) {
+      setError("Error al registrar el usuario");
+    }
   };
 
   return (
     <Flex
-    minHeight="100vh"
-    width="full"
-    align="center"
-    justifyContent="center"
-     backgroundImage={images[currentImageIndex]}
-   // backgroundColor={"gray.50"}
-    backgroundSize="cover"
-    transition="background-image 1s ease-in-out" // Añade esta línea para la transición
-    sx={{
-      // Asegúrate de que el cambio de imagen sea suave
-      '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0,
-        // backgroundImage: images[currentImageIndex],
-        backgroundColor: "brand.50",
-        backgroundSize: 'cover',
-        filter: 'blur(8px)', // Añade un efecto de desenfoque si lo deseas
-        zIndex: -1,
-      }
-    }}
+      minHeight="100vh"
+      align="center"
+      justify="center"
+      bgGradient="linear(to-r, teal.500, green.500)"
+      padding="20px"
     >
-      
       <Box
         p={8}
-        width="full"
-        maxWidth="800px" // Ajustado para acomodar dos columnas
+        width={{ base: 'full', md: '500px' }}
         borderRadius="lg"
-        boxShadow="lg"
-        backgroundColor={useColorModeValue('whiteAlpha.800', 'gray.700')}
+        boxShadow="xl"
+        bg={useColorModeValue('white', 'gray.800')}
       >
-        <Heading as='section' pb={5} textAlign={"center"} > Registro para Proveedores</Heading>
+        <Heading as='h2' size="lg" textAlign="center" mb={6} color="teal.600">
+          Registro para Usuarios
+        </Heading>
         <form onSubmit={handleSubmit}>
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
-            <FormControl isRequired>
+          <VStack spacing={4}>
+            <FormControl id="nombres" isRequired>
               <FormLabel>Nombres</FormLabel>
               <Input
                 name="nombres"
                 type="text"
                 placeholder="Ingresa tus nombres"
-                onChange={handleChange}
                 value={formData.nombres}
+                onChange={handleChange}
+                focusBorderColor="teal.400"
+                borderRadius="md"
+                boxShadow="sm"
+                size="lg"
               />
             </FormControl>
-            <FormControl isRequired>
+            <FormControl id="apellidos" isRequired>
               <FormLabel>Apellidos</FormLabel>
               <Input
                 name="apellidos"
                 type="text"
                 placeholder="Ingresa tus apellidos"
-                onChange={handleChange}
                 value={formData.apellidos}
+                onChange={handleChange}
+                focusBorderColor="teal.400"
+                borderRadius="md"
+                boxShadow="sm"
+                size="lg"
               />
             </FormControl>
-            <FormControl isRequired>
+            <FormControl id="nombreProveedorEmpresa" isRequired>
               <FormLabel>Nombre del Proveedor o Empresa</FormLabel>
               <Input
                 name="nombreProveedorEmpresa"
                 type="text"
                 placeholder="Ingresa el nombre del proveedor o empresa"
-                onChange={handleChange}
                 value={formData.nombreProveedorEmpresa}
+                onChange={handleChange}
+                focusBorderColor="teal.400"
+                borderRadius="md"
+                boxShadow="sm"
+                size="lg"
               />
             </FormControl>
-            <FormControl isRequired>
+            <FormControl id="nit" isRequired>
               <FormLabel>NIT</FormLabel>
               <Input
                 name="nit"
                 type="text"
                 placeholder="Ingresa el NIT"
-                onChange={handleChange}
                 value={formData.nit}
+                onChange={handleChange}
+                focusBorderColor="teal.400"
+                borderRadius="md"
+                boxShadow="sm"
+                size="lg"
               />
             </FormControl>
-            <FormControl isRequired>
+            <FormControl id="correoElectronico" isRequired>
               <FormLabel>Correo Electrónico</FormLabel>
               <Input
                 name="correoElectronico"
                 type="email"
                 placeholder="Ingresa tu correo electrónico"
-                onChange={handleChange}
                 value={formData.correoElectronico}
+                onChange={handleChange}
+                focusBorderColor="teal.400"
+                borderRadius="md"
+                boxShadow="sm"
+                size="lg"
               />
             </FormControl>
-            <FormControl isRequired>
+            <FormControl id="contrasenia" isRequired>
               <FormLabel>Contraseña</FormLabel>
               <Input
                 name="contrasenia"
                 type="password"
                 placeholder="Ingresa tu contraseña"
-                onChange={handleChange}
                 value={formData.contrasenia}
+                onChange={handleChange}
+                focusBorderColor="teal.400"
+                borderRadius="md"
+                boxShadow="sm"
+                size="lg"
               />
             </FormControl>
-            <FormControl isRequired>
+            <FormControl id="confirmacionContrasenia" isRequired>
               <FormLabel>Confirmación de Contraseña</FormLabel>
               <Input
                 name="confirmacionContrasenia"
                 type="password"
-                placeholder="Confirma tu contraseia"
-                onChange={handleChange}
+                placeholder="Confirma tu contraseña"
                 value={formData.confirmacionContrasenia}
+                onChange={handleChange}
+                focusBorderColor="teal.400"
+                borderRadius="md"
+                boxShadow="sm"
+                size="lg"
               />
             </FormControl>
-         
-            <FormControl>
-              <Checkbox
-                name="esEmpleado"
-                isChecked={formData.esEmpleado}
-                onChange={handleChange}
-                pt={7} // Alinea verticalmente el checkbox con su etiqueta correspondiente en la columna
-              >
-                ¿Es empleado?
-              </Checkbox>
-             
-            </FormControl>
-          
-          </SimpleGrid>
-          <Box width="full" pb={4} pt={4} spacing={5}>
-              {error && (
-                <Alert status="error" variant="subtle">
-                  <AlertIcon />
-                  {error}
-                </Alert>
-          
-              )}
+          </VStack>
+          {error && (
+            <Box width="full" mt={4}>
+              <Alert status="error" variant="left-accent" borderRadius="md">
+                <AlertIcon />
+                {error}
+              </Alert>
             </Box>
+          )}
+          {message && (
+            <Box width="full" mt={4}>
+              <Alert status="success" variant="left-accent" borderRadius="md">
+                <AlertIcon />
+                {message}
+              </Alert>
+            </Box>
+          )}
           <Button
             type="submit"
-            colorScheme="green"
-            mt={4} // Margen superior para separar del grid
+            colorScheme="teal"
+            variant="solid"
+            size="lg"
+            mt={6}
             width="full"
+            bgGradient="linear(to-r, teal.400, green.400)"
+            _hover={{ bgGradient: "linear(to-r, teal.500, green.500)" }}
+            boxShadow="md"
           >
             Registrar
           </Button>
-         
+          <Flex justifyContent="center" mt={5}>
+            <Link color="teal.500" to="/auth/login">
+              Volver al inicio de sesión
+            </Link>
+          </Flex>
         </form>
-        <Flex justifyContent="center" mt={5}>
-              <Link color="teal.500" to="/auth/login" >
-                Volver al inicio de sesión
-              </Link>
-            </Flex>
       </Box>
     </Flex>
   );
 };
 
+async function registerUser(data) {
+  const username = `${data.nombres}.${data.apellidos}`;
+  const telefono = '123456789';
+  const celular = '123131313';
+  const estado = true;
 
+  const userData = {
+    username,
+    password: data.contrasenia,
+    nombres: data.nombres,
+    apellidos: data.apellidos,
+    nit: data.nit,
+    nombre_empresa: data.nombreProveedorEmpresa,
+    correo_electronico: data.correoElectronico,
+    telefono,
+    celular,
+    estado,
+    correo_validado: false
+  };
+
+  try {
+    const response = await axios.post('http://localhost:3000/usuarios/registro', userData);
+    return {
+      ok: true,
+      usuario: response.data.usuario
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      errorMessage: error.response?.data?.error || "Error al registrar el usuario"
+    };
+  }
+}
