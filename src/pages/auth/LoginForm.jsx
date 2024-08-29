@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import {
@@ -11,18 +10,23 @@ import {
   FormLabel,
   Heading,
   Input,
+  InputGroup,
+  InputRightElement,
   Link,
   Stack,
   useColorModeValue,
 } from '@chakra-ui/react';
+import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export const LoginForm = () => {
   const actualUsuario = useSelector(usuario => usuario.auth);
   const navigate = useNavigate();
 
-  const [correo_electronico, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [correo, setEmail] = useState('');
+  const [contrasena, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -37,18 +41,15 @@ export const LoginForm = () => {
     try {
       console.log("Enviando solicitud al backend...");
       const response = await axios.post('http://localhost:3000/usuarios/login', {
-        correo_electronico,
-        password,
+        correo,
+        contrasena,
       });
 
       console.log("Respuesta recibida del backend:", response);
 
       if (response.data && response.data.token) {
         console.log("Login exitoso, redireccionando a /auth/home...");
-        // Guardar el token en el almacenamiento local o en el estado de la aplicación
         localStorage.setItem('token', response.data.token);
-
-        // Redirigir a la nueva página de inicio
         navigate("/auth/home", { replace: true });
       } else {
         console.log("Credenciales incorrectas.");
@@ -56,7 +57,19 @@ export const LoginForm = () => {
       }
     } catch (err) {
       console.error("Error en la solicitud de login:", err);
-      setError('Error al iniciar sesión. Por favor, intenta de nuevo.');
+
+      if (err.response && err.response.data && err.response.data.error) {
+        const backendMessage = err.response.data.error;
+        if (backendMessage.includes('Por favor verifica tu correo electrónico')) {
+          setError('Por favor verifica tu correo electrónico antes de iniciar sesión.');
+        } else if (backendMessage.includes('Este usuario no existe')) {
+          setError('Este usuario no existe. Por favor, crea una cuenta.');
+        } else {
+          setError('Error al iniciar sesión. Por favor, intenta de nuevo.');
+        }
+      } else {
+        setError('Error al iniciar sesión. Por favor, intenta de nuevo.');
+      }
     }
   };
 
@@ -87,19 +100,32 @@ export const LoginForm = () => {
                 type="email"
                 placeholder="Ingresa tu email"
                 onChange={(e) => setEmail(e.target.value)}
-                value={correo_electronico}
+                value={correo}
                 required
               />
             </FormControl>
             <FormControl>
               <FormLabel>Contraseña</FormLabel>
-              <Input
-                type="password"
-                placeholder="Ingresa tu contraseña"
-                required
-                onChange={(e) => setPassword(e.target.value)}
-                value={password}
-              />
+              <InputGroup>
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Ingresa tu contraseña"
+                  required
+                  onChange={(e) => setPassword(e.target.value)}
+                  value={contrasena}
+                />
+                <InputRightElement width="4.5rem">
+                  <Button
+                    h="1.75rem"
+                    size="sm"
+                    onMouseDown={() => setShowPassword(true)}
+                    onMouseUp={() => setShowPassword(false)}
+                    onMouseLeave={() => setShowPassword(false)}
+                  >
+                    {showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                  </Button>
+                </InputRightElement>
+              </InputGroup>
             </FormControl>
             {error && (
               <Alert status="error" variant="subtle">

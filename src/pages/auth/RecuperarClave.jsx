@@ -50,8 +50,6 @@ export const RecuperarClave = () => {
       setMensaje('Hubo un error: '+ error);
     }
    
-    
-    
   };
 
   return (

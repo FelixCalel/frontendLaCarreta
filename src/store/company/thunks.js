@@ -37,8 +37,8 @@ export const updateCompany = createAsyncThunk(
 
 export const toggleCompanyStatus = createAsyncThunk(
   'companies/toggleCompanyStatus',
-  async ({ id, isActive }) => {
-    const response = await axios.patch(`http://localhost:3000/company/actualizar-estado/${id}`, { isActive });
+  async ({ id, estaActivo }) => {
+    const response = await axios.patch(`http://localhost:3000/company/actualizar-estado/${id}`, { estaActivo });
     return response.data;
   }
 );

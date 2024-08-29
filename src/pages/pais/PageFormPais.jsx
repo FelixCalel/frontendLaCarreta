@@ -43,8 +43,8 @@ const PageFormPais = () => {
     });
   };
 
-  const handleToggleStatus = (id, isActive) => {
-    dispatch(togglePaisStatus({ id, isActive })).then(() => {
+  const handleToggleStatus = (id, estaActivo) => {
+    dispatch(togglePaisStatus({ id, estaActivo })).then(() => {
       dispatch(tablaPais());
     });
   };
@@ -63,6 +63,8 @@ const PageFormPais = () => {
       return "Fecha inválida";
     }
   };
+  
+  
 
   if (status === 'loading') {
     return (
@@ -99,10 +101,10 @@ const PageFormPais = () => {
             <Tr key={pais.id}>
               <Td>{pais.id}</Td>
               <Td>{pais.nombre}</Td>
-              <Td>{formatDate(pais.createdAt)}</Td>
-              <Td>{formatDate(pais.updatedAt)}</Td>
+              <Td>{formatDate(pais.creadoEl)}</Td>
+              <Td>{formatDate(pais.actualizadoEl)}</Td>
               <Td>
-                <Switch isChecked={pais.isActive} onChange={() => handleToggleStatus(pais.id, !pais.isActive)} />
+                <Switch isChecked={pais.estaActivo} onChange={() => handleToggleStatus(pais.id, !pais.estaActivo)} />
               </Td>
               <Td>
                 <Button colorScheme="red" onClick={() => handleDelete(pais.id)} mr={2}>Eliminar</Button>

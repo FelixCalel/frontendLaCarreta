@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import {
   Box,
@@ -8,37 +8,51 @@ import {
   FormControl,
   FormLabel,
   Input,
-  SimpleGrid,
-  useColorModeValue,
+  VStack,
   Heading,
   Alert,
   AlertIcon,
-  VStack,
+  Link,
+  useToast,
+  InputGroup,
+  InputRightElement,
+  Divider,
 } from '@chakra-ui/react';
-import { Link, useNavigate } from 'react-router-dom';
+import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
+import { useNavigate } from 'react-router-dom';
 
 export const RegisterForm = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const actualUsuario = useSelector(state => state.auth);
+  
   const [formData, setFormData] = useState({
-    nombres: '',
-    apellidos: '',
-    nombreProveedorEmpresa: '',
-    correoElectronico: '',
-    contrasenia: '',
-    confirmacionContrasenia: '',
-    nit: '',
+    nombre: '',
+    apellido: '',
+    correo: '',
+    telefono: '',
+    contrasena: '',
+    confirmacionContrasena: '',
+    estadoActivo: true,
+    correoValidado: false
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const toast = useToast();
 
   useEffect(() => {
     if (actualUsuario === 'authenticated') {
       return navigate("/admin/dashboard", { replace: true });
     }
   }, [actualUsuario, navigate]);
+
+  useEffect(() => {
+    if (formData.contrasena === formData.confirmacionContrasena) {
+      setError(''); // Limpia el error si las contraseñas coinciden
+    }
+  }, [formData.contrasena, formData.confirmacionContrasena]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,13 +64,21 @@ export const RegisterForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.contrasenia !== formData.confirmacionContrasenia) {
+    if (formData.contrasena !== formData.confirmacionContrasena) {
       setError("Las contraseñas no coinciden");
       return;
     }
     try {
       const response = await registerUser(formData);
       if (response.ok) {
+        toast({
+          title: "Usuario creado.",
+          description: "Usuario creado correctamente. Por favor, verifica tu correo electrónico.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+          position: "top",
+        });
         setMessage("Usuario creado correctamente. Por favor, verifica tu correo electrónico.");
       } else {
         setError(response.errorMessage);
@@ -71,118 +93,130 @@ export const RegisterForm = () => {
       minHeight="100vh"
       align="center"
       justify="center"
-      bgGradient="linear(to-r, teal.500, green.500)"
+      bg="gray.100"
       padding="20px"
     >
       <Box
         p={8}
-        width={{ base: 'full', md: '500px' }}
+        width={{ base: 'full', md: '450px' }}
         borderRadius="lg"
-        boxShadow="xl"
-        bg={useColorModeValue('white', 'gray.800')}
+        boxShadow="lg"
+        bg="white"
       >
-        <Heading as='h2' size="lg" textAlign="center" mb={6} color="teal.600">
+        <Heading as='h2' size="lg" textAlign="center" mb={6} color="green.800">
           Registro para Usuarios
         </Heading>
         <form onSubmit={handleSubmit}>
           <VStack spacing={4}>
-            <FormControl id="nombres" isRequired>
-              <FormLabel>Nombres</FormLabel>
+            <FormControl id="nombre" isRequired>
+              <FormLabel>Nombre</FormLabel>
               <Input
-                name="nombres"
+                name="nombre"
                 type="text"
-                placeholder="Ingresa tus nombres"
-                value={formData.nombres}
+                placeholder="Ingresa tu nombre"
+                value={formData.nombre}
                 onChange={handleChange}
-                focusBorderColor="teal.400"
+                focusBorderColor="green.500"
                 borderRadius="md"
-                boxShadow="sm"
                 size="lg"
               />
             </FormControl>
-            <FormControl id="apellidos" isRequired>
-              <FormLabel>Apellidos</FormLabel>
+            <FormControl id="apellido" isRequired>
+              <FormLabel>Apellido</FormLabel>
               <Input
-                name="apellidos"
+                name="apellido"
                 type="text"
-                placeholder="Ingresa tus apellidos"
-                value={formData.apellidos}
+                placeholder="Ingresa tu apellido"
+                value={formData.apellido}
                 onChange={handleChange}
-                focusBorderColor="teal.400"
+                focusBorderColor="green.500"
                 borderRadius="md"
-                boxShadow="sm"
                 size="lg"
               />
             </FormControl>
-            <FormControl id="nombreProveedorEmpresa" isRequired>
-              <FormLabel>Nombre del Proveedor o Empresa</FormLabel>
-              <Input
-                name="nombreProveedorEmpresa"
-                type="text"
-                placeholder="Ingresa el nombre del proveedor o empresa"
-                value={formData.nombreProveedorEmpresa}
-                onChange={handleChange}
-                focusBorderColor="teal.400"
-                borderRadius="md"
-                boxShadow="sm"
-                size="lg"
-              />
-            </FormControl>
-            <FormControl id="nit" isRequired>
-              <FormLabel>NIT</FormLabel>
-              <Input
-                name="nit"
-                type="text"
-                placeholder="Ingresa el NIT"
-                value={formData.nit}
-                onChange={handleChange}
-                focusBorderColor="teal.400"
-                borderRadius="md"
-                boxShadow="sm"
-                size="lg"
-              />
-            </FormControl>
-            <FormControl id="correoElectronico" isRequired>
+
+            <Divider my={4} borderColor="gray.300" />
+
+            <FormControl id="correo" isRequired>
               <FormLabel>Correo Electrónico</FormLabel>
               <Input
-                name="correoElectronico"
+                name="correo"
                 type="email"
                 placeholder="Ingresa tu correo electrónico"
-                value={formData.correoElectronico}
+                value={formData.correo}
                 onChange={handleChange}
-                focusBorderColor="teal.400"
+                focusBorderColor="green.500"
                 borderRadius="md"
-                boxShadow="sm"
                 size="lg"
               />
             </FormControl>
-            <FormControl id="contrasenia" isRequired>
+            <FormControl id="telefono" isRequired>
+              <FormLabel>Teléfono</FormLabel>
+              <Input
+                name="telefono"
+                type="text"
+                placeholder="Ingresa tu teléfono"
+                value={formData.telefono}
+                onChange={handleChange}
+                focusBorderColor="green.500"
+                borderRadius="md"
+                size="lg"
+              />
+            </FormControl>
+
+            <Divider my={4} borderColor="gray.300" />
+
+            <FormControl id="contrasena" isRequired>
               <FormLabel>Contraseña</FormLabel>
-              <Input
-                name="contrasenia"
-                type="password"
-                placeholder="Ingresa tu contraseña"
-                value={formData.contrasenia}
-                onChange={handleChange}
-                focusBorderColor="teal.400"
-                borderRadius="md"
-                boxShadow="sm"
-                size="lg"
-              />
+              <InputGroup>
+                <Input
+                  name="contrasena"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Ingresa tu contraseña"
+                  value={formData.contrasena}
+                  onChange={handleChange}
+                  focusBorderColor="green.500"
+                  borderRadius="md"
+                  size="lg"
+                />
+                <InputRightElement width="4.5rem">
+                  <Button
+                    h="1.75rem"
+                    size="sm"
+                    onMouseDown={() => setShowPassword(true)}
+                    onMouseUp={() => setShowPassword(false)}
+                    onMouseLeave={() => setShowPassword(false)}
+                  >
+                    {showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                  </Button>
+                </InputRightElement>
+              </InputGroup>
             </FormControl>
-            <FormControl id="confirmacionContrasenia" isRequired>
+            <FormControl id="confirmacionContrasena" isRequired>
               <FormLabel>Confirmación de Contraseña</FormLabel>
-              <Input
-                name="confirmacionContrasenia"
-                type="password"
-                placeholder="Confirma tu contraseña"
-                value={formData.confirmacionContrasenia}
-                onChange={handleChange}
-                focusBorderColor="teal.400"
-                borderRadius="md"
-                boxShadow="sm"
-                size="lg"
-              />
+              <InputGroup>
+                <Input
+                  name="confirmacionContrasena"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirma tu contraseña"
+                  value={formData.confirmacionContrasena}
+                  onChange={handleChange}
+                  focusBorderColor="green.500"
+                  borderRadius="md"
+                  size="lg"
+                />
+                <InputRightElement width="4.5rem">
+                  <Button
+                    h="1.75rem"
+                    size="sm"
+                    onMouseDown={() => setShowConfirmPassword(true)}
+                    onMouseUp={() => setShowConfirmPassword(false)}
+                    onMouseLeave={() => setShowConfirmPassword(false)}
+                  >
+                    {showConfirmPassword ? <ViewOffIcon /> : <ViewIcon />}
+                  </Button>
+                </InputRightElement>
+              </InputGroup>
             </FormControl>
           </VStack>
           {error && (
@@ -203,19 +237,15 @@ export const RegisterForm = () => {
           )}
           <Button
             type="submit"
-            colorScheme="teal"
-            variant="solid"
+            colorScheme="green"
             size="lg"
             mt={6}
             width="full"
-            bgGradient="linear(to-r, teal.400, green.400)"
-            _hover={{ bgGradient: "linear(to-r, teal.500, green.500)" }}
-            boxShadow="md"
           >
             Registrar
           </Button>
           <Flex justifyContent="center" mt={5}>
-            <Link color="teal.500" to="/auth/login">
+            <Link as="a" href="/auth/login" color="green.600">
               Volver al inicio de sesión
             </Link>
           </Flex>
@@ -226,23 +256,14 @@ export const RegisterForm = () => {
 };
 
 async function registerUser(data) {
-  const username = `${data.nombres}.${data.apellidos}`;
-  const telefono = '123456789';
-  const celular = '123131313';
-  const estado = true;
-
   const userData = {
-    username,
-    password: data.contrasenia,
-    nombres: data.nombres,
-    apellidos: data.apellidos,
-    nit: data.nit,
-    nombre_empresa: data.nombreProveedorEmpresa,
-    correo_electronico: data.correoElectronico,
-    telefono,
-    celular,
-    estado,
-    correo_validado: false
+    nombre: data.nombre,
+    apellido: data.apellido,
+    correo: data.correo,
+    telefono: parseInt(data.telefono, 10),
+    contrasena: data.contrasena,
+    estadoActivo: data.estadoActivo,
+    correoValidado: data.correoValidado
   };
 
   try {

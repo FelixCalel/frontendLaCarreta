@@ -40,7 +40,7 @@ const companySlice = createSlice({
       .addCase(toggleCompanyStatus.fulfilled, (state, action) => {
         const index = state.data.findIndex(company => company.id === action.payload.id);
         if (index !== -1) {
-          state.data[index].isActive = action.payload.isActive;
+          state.data[index].estaActivo = action.payload.estaActivo;
         }
         state.data.sort((a, b) => a.id - b.id); // Ordena después de actualizar el estado
       });

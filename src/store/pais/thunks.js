@@ -37,8 +37,8 @@ export const updatePais = createAsyncThunk(
 
 export const togglePaisStatus = createAsyncThunk(
   'paises/togglePaisStatus',
-  async ({ id, isActive }) => {
-    const response = await axios.patch(`http://localhost:3000/pais/actualizar-estado/${id}`, { isActive });
+  async ({ id, estaActivo }) => {
+    const response = await axios.patch(`http://localhost:3000/pais/actualizar-estado/${id}`, { estaActivo });
     return response.data;
   }
 );
