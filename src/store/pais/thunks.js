@@ -6,7 +6,7 @@ export const tablaPais = createAsyncThunk(
   async () => {
     const response = await axios.get('http://localhost:3000/pais/todos');
     const data = response.data;
-    data.sort((a, b) => a.id - b.id); // Ordena los datos por id
+    data.sort((a, b) => a.id - b.id); 
     return data;
   }
 );

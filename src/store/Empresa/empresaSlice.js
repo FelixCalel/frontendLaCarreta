@@ -1,12 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { tablaEmpresa, addNewEmpresa, deleteEmpresa, updateEmpresa, toggleEmpresaStatus } from './thunks';
+import { tablaEmpresa, addNewEmpresa, deleteEmpresa, updateEmpresa, toggleEmpresaStatus, tablaPais } from './thunks';
 
 const empresaSlice = createSlice({
   name: 'empresas',
   initialState: {
     data: [],
     status: 'idle',
-    error: null
+    error: null,
+    paises: [],  // Añadimos un array para los países
+    paisesStatus: 'idle',
+    paisesError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -43,6 +46,18 @@ const empresaSlice = createSlice({
           state.data[index].estaActivo = action.payload.estaActivo;
         }
         state.data.sort((a, b) => a.id - b.id); // Ordena después de actualizar el estado
+      })
+      // Manejo del estado para los países
+      .addCase(tablaPais.pending, (state) => {
+        state.paisesStatus = 'loading';
+      })
+      .addCase(tablaPais.fulfilled, (state, action) => {
+        state.paisesStatus = 'succeeded';
+        state.paises = action.payload;
+      })
+      .addCase(tablaPais.rejected, (state, action) => {
+        state.paisesStatus = 'failed';
+        state.paisesError = action.error.message;
       });
   }
 });

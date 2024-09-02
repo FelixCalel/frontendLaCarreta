@@ -1,26 +1,30 @@
 import { useEffect, useState } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text, Button, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Input, FormControl, FormLabel, Switch, IconButton } from '@chakra-ui/react';
+import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text, Button, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Input, FormControl, FormLabel, Switch, Select, IconButton } from '@chakra-ui/react';
 import { EditIcon } from '@chakra-ui/icons';
 import { format } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
-import { tablaEmpresa, addNewEmpresa, deleteEmpresa, updateEmpresa, toggleEmpresaStatus } from '../../store/Empresa/thunks';
+import { tablaEmpresa, addNewEmpresa, deleteEmpresa, updateEmpresa, toggleEmpresaStatus, tablaPais } from '../../store/Empresa/thunks';
 
 const PageFormEmpresa = () => {
   const dispatch = useDispatch();
-  const { data, status, error } = useSelector((state) => state.empresas);
+  const { data, status, error, paises, paisesStatus, paisesError } = useSelector((state) => state.empresas);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentEmpresa, setCurrentEmpresa] = useState({ id: '', nombre: '' });
+  const [currentEmpresa, setCurrentEmpresa] = useState({ id: '', nombre: '', alias: '', estaActivo: true, baseDatos: '', ipBaseDatos: '', paisId: '' });
 
   useEffect(() => {
     if (status === 'idle') {
       dispatch(tablaEmpresa());
     }
-  }, [dispatch, status]);
+    if (paisesStatus === 'idle') {
+      dispatch(tablaPais());  // Despachar tablaPais para obtener los países
+    }
+  }, [dispatch, status, paisesStatus]);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentEmpresa({ ...currentEmpresa, [name]: value });
+    const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : (name === 'paisId' ? parseInt(value, 10) : value);  // Convierte paisId a número
+    setCurrentEmpresa({ ...currentEmpresa, [name]: newValue });
   };
 
   const handleSubmit = () => {
@@ -63,10 +67,8 @@ const PageFormEmpresa = () => {
       return "Fecha inválida";
     }
   };
-  
-  
 
-  if (status === 'loading') {
+  if (status === 'loading' || paisesStatus === 'loading') {  
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
         <Spinner size="xl" />
@@ -74,18 +76,23 @@ const PageFormEmpresa = () => {
     );
   }
 
-  if (status === 'failed') {
+  if (status === 'failed' || paisesStatus === 'failed') { 
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-        <Text fontSize="2xl" color="red.500">Error al cargar los datos: {error}</Text>
+        <Text fontSize="2xl" color="red.500">Error al cargar los datos: {error || paisesError}</Text>
       </Box>
     );
   }
 
+  const paisMap = paises.reduce((acc, pais) => {
+    acc[pais.id] = pais.nombre;
+    return acc;
+  }, {});
+
   return (
-    <Box padding="20px">
-      <Button colorScheme="green" onClick={() => { setIsEditMode(false); setCurrentEmpresa({ nombre: '' }); onOpen(); }} mb="20px">Agregar Empresa</Button>
-      <Table variant="striped" colorScheme="teal">
+    <Box padding="20px" overflowX="auto">
+      <Button colorScheme="green" onClick={() => { setIsEditMode(false); setCurrentEmpresa({ nombre: '', alias: '', estaActivo: true, baseDatos: '', ipBaseDatos: '', paisId: '' }); onOpen(); }} mb="20px">Agregar Empresa</Button>
+      <Table variant="striped" colorScheme="teal" size="sm">
         <Thead>
           <Tr>
             <Th>ID</Th>
@@ -96,6 +103,7 @@ const PageFormEmpresa = () => {
             <Th>Estado</Th>
             <Th>Base de datos</Th>
             <Th>IP SAP</Th>
+            <Th>País</Th> 
             <Th>Acciones</Th>
           </Tr>
         </Thead>
@@ -108,10 +116,11 @@ const PageFormEmpresa = () => {
               <Td>{formatDate(empresa.creadoEl)}</Td>
               <Td>{formatDate(empresa.actualizadoEl)}</Td>
               <Td>
-                <Switch isChecked={empresa.estaActivo} onChange={() => handleToggleStatus(empresa.id, !empresa.estaActivo)} />
+                <Switch name="estaActivo" isChecked={empresa.estaActivo} onChange={() => handleToggleStatus(empresa.id, !empresa.estaActivo)} />
               </Td>
-              <Td>{formatDate(empresa.baseDatos)}</Td>
-              <Td>{formatDate(empresa.ipBaseDatos)}</Td>
+              <Td>{empresa.baseDatos}</Td>
+              <Td>{empresa.ipBaseDatos}</Td>
+              <Td>{paisMap[empresa.paisId] || 'Sin país'}</Td>
               <Td>
                 <Button colorScheme="red" onClick={() => handleDelete(empresa.id)} mr={2}>Eliminar</Button>
                 <IconButton icon={<EditIcon />} onClick={() => handleEdit(empresa)} />
@@ -127,13 +136,60 @@ const PageFormEmpresa = () => {
           <ModalHeader>{isEditMode ? 'Actualizar Empresa' : 'Agregar Nueva Empresa'}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <FormControl>
+            <FormControl mb={3}>
               <FormLabel>Nombre de la Empresa</FormLabel>
               <Input
                 name="nombre"
                 value={currentEmpresa.nombre}
                 onChange={handleInputChange}
               />
+            </FormControl>
+            <FormControl mb={3}>
+              <FormLabel>Alias</FormLabel>
+              <Input
+                name="alias"
+                value={currentEmpresa.alias}
+                onChange={handleInputChange}
+              />
+            </FormControl>
+            <FormControl display="flex" alignItems="center" mb={3}>
+              <FormLabel mb="0">Activo</FormLabel>
+              <Switch
+                name="estaActivo"
+                isChecked={currentEmpresa.estaActivo}
+                onChange={handleInputChange}
+              />
+            </FormControl>
+            <FormControl mb={3}>
+              <FormLabel>Base de datos</FormLabel>
+              <Input
+                name="baseDatos"
+                value={currentEmpresa.baseDatos}
+                onChange={handleInputChange}
+              />
+            </FormControl>
+            <FormControl mb={3}>
+              <FormLabel>IP SAP</FormLabel>
+              <Input
+                name="ipBaseDatos"
+                value={currentEmpresa.ipBaseDatos}
+                onChange={handleInputChange}
+              />
+            </FormControl>
+            <FormControl mb={3}>
+              <FormLabel>País</FormLabel>
+              <Select
+                name="paisId"
+                value={currentEmpresa.paisId}
+                onChange={handleInputChange}
+              >
+                <option value="" disabled>Seleccione un país</option>
+                {paises.map((pais) => (
+                  <option key={pais.id} value={pais.id}>
+                    {pais.nombre}
+                  </option>
+                ))}
+              </Select>
             </FormControl>
           </ModalBody>
           <ModalFooter>
