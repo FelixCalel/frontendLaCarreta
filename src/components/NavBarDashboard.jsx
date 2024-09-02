@@ -1,10 +1,6 @@
 import { Box, Breadcrumb, BreadcrumbItem, BreadcrumbLink } from "@chakra-ui/react"
 
 
-
-
-
-
 export const NavBarDashboard = () => {
   return (
     <Box  mb={5}>
@@ -13,7 +9,7 @@ export const NavBarDashboard = () => {
             <BreadcrumbLink href='#'>Empresas</BreadcrumbLink>
         </BreadcrumbItem>
 
-        <BreadcrumbItem>
+        <BreadcrumbItem>    
             <BreadcrumbLink href='#'>Docs</BreadcrumbLink>
         </BreadcrumbItem> */}
 

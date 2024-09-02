@@ -9,7 +9,7 @@ import infoPagoReducer from './proveedores/InfoPago/InfoPagoSlice';
 import infoCreditoReducer from './proveedores/InfoCredito/InfoCreditoSlice';
 import documentacionReducer from './proveedores/Documentacion/DocumentacionSlice';
 import paisesReducer from './pais/paisSlice';
-
+import empresaReducer from './Empresa/empresaSlice'
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +20,7 @@ export const store = configureStore({
     infoPago: infoPagoReducer,
     infoCredito: infoCreditoReducer,
     documentacion: documentacionReducer,
-    paises: paisesReducer,  //Agregamos el reducer para los paises.  //Agregamos el reducer para los paises.  //Agregamos el reducer para los paises.  //Agregamos el reducer para los paises.  //Agregamos el reducer para los paises.  //Agregamos el reducer para los paises.  //Agregamos el reducer para los paises.
+    paises: paisesReducer,
+    empresa: empresaReducer  
   },
 })

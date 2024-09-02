@@ -12,7 +12,6 @@ export const PortalRouter = () => {
       {/* <Route path="/*" element={<Dashboard />} > */}
       <Route path="/*" element={<RootLayout />}>
         <Route index element={<Dashboard />} />
-        
         <Route path="dashboard" element={<Dashboard />} /> 
         <Route path="perfil" element={<PagePerfil />} />
         <Route path="empresas" element={<PageEmpresa />} />
@@ -22,6 +21,7 @@ export const PortalRouter = () => {
         <Route path="ordenes" element={<PageOrdenes />} />
         <Route path="facturas" element={<PageFacturas />} />
         <Route path="logout" element={<Logout /> }></Route>
+
         {/* Más rutas anidadas si es necesario */}
       </Route>
       {/* </Route>  */}

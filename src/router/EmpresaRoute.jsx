@@ -9,8 +9,7 @@ const HomePage = () => {
       <Flex flex="1" direction="row">
         <MenuPrincipalD />
         <Box flex="1" p={4}>
-          <h1>Bienvenido a la Página de Inicio</h1>
-          <p>Aca deberia ir información de Bienvenida...</p>
+          <h1>Bienvenido a la Página de Empresa</h1>
         </Box>
       </Flex>
     </Flex>

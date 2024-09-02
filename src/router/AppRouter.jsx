@@ -41,7 +41,7 @@ export const AppRouter = () => {
           </PublicRoute>
         }
       />
-
+      
       {/* Nueva ruta para el HomePage */}
       <Route path="/auth/home" element={<HomePage />} />
 
@@ -57,10 +57,13 @@ export const AppRouter = () => {
 
       {/* Rutas de Proveedores */}
       <Route path="/proveedores/*" element={<ProveedoresPageRouter />} />
+      <Route path="/empresa/listar" element={<HomePage />} />
+
+
 
       {/* Rutas de Pais */}
       <Route path="/pais/*" element={<PaginaPais />} />
-
+      <Route path="/empresa/*" element={<PaginaPais />} />
       <Route path="/login/*" element={<PaginaPais />} />
 
       {/* Ruta predeterminada */}

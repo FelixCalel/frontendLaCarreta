@@ -3,7 +3,7 @@ import { Box, Flex, IconButton, Text, VStack, Tooltip, useBreakpointValue } from
 import { Link } from 'react-router-dom';
 import { HamburgerIcon } from '@chakra-ui/icons';
 import { AiFillDashboard } from 'react-icons/ai';
-import { FaFileInvoice, FaGlobe } from 'react-icons/fa';  // Agregando FaGlobe para "País"
+import { FaGlobe, FaBuilding } from 'react-icons/fa';  // Cambiamos a FaBuilding para "Empresas"
 import { MdAddShoppingCart } from 'react-icons/md';
 import PropTypes from 'prop-types';
 
@@ -72,13 +72,13 @@ const MenuPrincipalD = () => {
           isExpanded={isExpanded}
         />
         <MenuItem 
-          icon={<FaFileInvoice style={{ fontSize: '20px' }} />} 
-          label="Facturas" 
-          to="/admin/facturas" 
+          icon={<FaBuilding style={{ fontSize: '20px' }} />}  // Cambiado el ícono para "Empresas"
+          label="Empresas" 
+          to="/empresa/listar"  
           isExpanded={isExpanded}
         />
         <MenuItem 
-          icon={<FaGlobe style={{ fontSize: '20px' }} />} // Añadiendo el ítem para "País"
+          icon={<FaGlobe style={{ fontSize: '20px' }} />} 
           label="País" 
           to="/pais/listar" 
           isExpanded={isExpanded}
