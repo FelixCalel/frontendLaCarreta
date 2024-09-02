@@ -14,7 +14,7 @@ export const NavBarDashboard = () => {
         </BreadcrumbItem> */}
 
         <BreadcrumbItem isCurrentPage>
-            <BreadcrumbLink href='#'>Pagina de Paises</BreadcrumbLink>
+            <BreadcrumbLink href='#'>Pagina de Empresas</BreadcrumbLink>
         </BreadcrumbItem>
      </Breadcrumb>
      </Box>

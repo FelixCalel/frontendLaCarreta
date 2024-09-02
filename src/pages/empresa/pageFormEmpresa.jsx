@@ -3,7 +3,7 @@ import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text, Button, useDisclos
 import { EditIcon } from '@chakra-ui/icons';
 import { format } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
-import { tablaEmpresa, addNewEmpresa, deleteEmpresa, updateEmpresa, toggleEmpresaStatus } from '../../store/empresa/thunks';
+import { tablaEmpresa, addNewEmpresa, deleteEmpresa, updateEmpresa, toggleEmpresaStatus } from '../../store/Empresa/thunks';
 
 const PageFormEmpresa = () => {
   const dispatch = useDispatch();
@@ -90,9 +90,12 @@ const PageFormEmpresa = () => {
           <Tr>
             <Th>ID</Th>
             <Th>NOMBRE</Th>
+            <Th>ALIAS</Th>
             <Th>Fecha de Creación</Th>
             <Th>Fecha de Actualización</Th>
             <Th>Estado</Th>
+            <Th>Base de datos</Th>
+            <Th>IP SAP</Th>
             <Th>Acciones</Th>
           </Tr>
         </Thead>
@@ -101,11 +104,14 @@ const PageFormEmpresa = () => {
             <Tr key={empresa.id}>
               <Td>{empresa.id}</Td>
               <Td>{empresa.nombre}</Td>
+              <Td>{empresa.alias}</Td>
               <Td>{formatDate(empresa.creadoEl)}</Td>
               <Td>{formatDate(empresa.actualizadoEl)}</Td>
               <Td>
                 <Switch isChecked={empresa.estaActivo} onChange={() => handleToggleStatus(empresa.id, !empresa.estaActivo)} />
               </Td>
+              <Td>{formatDate(empresa.baseDatos)}</Td>
+              <Td>{formatDate(empresa.ipBaseDatos)}</Td>
               <Td>
                 <Button colorScheme="red" onClick={() => handleDelete(empresa.id)} mr={2}>Eliminar</Button>
                 <IconButton icon={<EditIcon />} onClick={() => handleEdit(empresa)} />

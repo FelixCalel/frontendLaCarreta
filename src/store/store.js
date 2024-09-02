@@ -21,6 +21,6 @@ export const store = configureStore({
     infoCredito: infoCreditoReducer,
     documentacion: documentacionReducer,
     paises: paisesReducer,
-    empresa: empresaReducer  
+    empresas: empresaReducer  
   },
 })

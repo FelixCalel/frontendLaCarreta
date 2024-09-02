@@ -11,7 +11,9 @@ import { isAuthenticated } from "../providers/endpoints";
 import { Dashboard } from "../pages";
 import { ProveedoresPageRouter } from "./ProveedoresPageRouter";
 import { PaginaPais } from "./PaisRoute";
+import { PaginaEmpresa } from "./EmpresaRoute";
 import HomePage from "../pages/auth/HomePage"; // Importar la nueva página
+
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -57,14 +59,12 @@ export const AppRouter = () => {
 
       {/* Rutas de Proveedores */}
       <Route path="/proveedores/*" element={<ProveedoresPageRouter />} />
-      <Route path="/empresa/listar" element={<HomePage />} />
-
 
 
       {/* Rutas de Pais */}
       <Route path="/pais/*" element={<PaginaPais />} />
-      <Route path="/empresa/*" element={<PaginaPais />} />
-      <Route path="/login/*" element={<PaginaPais />} />
+      <Route path="/empresa/*" element={<PaginaEmpresa />} />
+      {/* <Route path="/login/*" element={<PaginaPais />} /> */}
 
       {/* Ruta predeterminada */}
       <Route path="*" element={<Dashboard />} />

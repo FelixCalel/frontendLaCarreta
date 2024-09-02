@@ -64,18 +64,18 @@ const MenuPrincipalD = () => {
           label="Dashboard" 
           to="/admin/" 
           isExpanded={isExpanded}
-        />
+        /> 
         <MenuItem 
           icon={<MdAddShoppingCart style={{ fontSize: '20px' }} />} 
           label="Compras" 
           to="/admin/ordenes" 
-          isExpanded={isExpanded}
+          isExpanded={isExpanded} 
         />
         <MenuItem 
-          icon={<FaBuilding style={{ fontSize: '20px' }} />}  // Cambiado el ícono para "Empresas"
+          icon={<FaBuilding style={{ fontSize: '20px' }} />} 
           label="Empresas" 
-          to="/empresa/listar"  
-          isExpanded={isExpanded}
+          to="/empresa/listar"  // Cambia esta línea
+          isExpanded={isExpanded} 
         />
         <MenuItem 
           icon={<FaGlobe style={{ fontSize: '20px' }} />} 
