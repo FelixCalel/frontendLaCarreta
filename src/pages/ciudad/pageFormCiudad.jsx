@@ -3,19 +3,19 @@ import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text, Button, useDisclos
 import { EditIcon } from '@chakra-ui/icons';
 import { format } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
-import { tablaEmpresa, addNewEmpresa, deleteEmpresa, updateEmpresa, toggleEmpresaStatus, tablaPais } from '../../store/Empresa/thunks';
+import { tablaCiudad, addNewCiudad, deleteCiudad, updateCiudad, toggleCiudadStatus, tablaPais } from '../../store/Ciudad/thunks';
 
-const PageFormEmpresa = () => {
+const PageFormCiudad = () => {
   const dispatch = useDispatch();
-  const { data, status, error, paises, paisesStatus, paisesError } = useSelector((state) => state.empresas);
+  const { data, status, error, paises, paisesStatus, paisesError } = useSelector((state) => state.ciudades);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentEmpresa, setCurrentEmpresa] = useState({ id: '', nombre: '', alias: '', estaActivo: true, baseDatos: '', ipBaseDatos: '', paisId: '' });
+  const [currentCiudad, setCurrentCiudad] = useState({ id: '', nombre: '', estaActivo: true, paisId: '' });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (status === 'idle') {
-      dispatch(tablaEmpresa());
+      dispatch(tablaCiudad());
     }
     if (paisesStatus === 'idle') {
       dispatch(tablaPais());
@@ -25,17 +25,14 @@ const PageFormEmpresa = () => {
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === 'checkbox' ? checked : (name === 'paisId' ? parseInt(value, 10) : value);
-    setCurrentEmpresa({ ...currentEmpresa, [name]: newValue });
+    setCurrentCiudad({ ...currentCiudad, [name]: newValue });
     setErrors({ ...errors, [name]: '' }); // Limpiar el error al cambiar el valor
   };
 
   const validateFields = () => {
     let formErrors = {};
-    if (!currentEmpresa.nombre) formErrors.nombre = 'El nombre es obligatorio';
-    if (!currentEmpresa.alias) formErrors.alias = 'El alias es obligatorio';
-    if (!currentEmpresa.baseDatos) formErrors.baseDatos = 'La base de datos es obligatoria';
-    if (!currentEmpresa.ipBaseDatos) formErrors.ipBaseDatos = 'La IP SAP es obligatoria';
-    if (!currentEmpresa.paisId) formErrors.paisId = 'El país es obligatorio';
+    if (!currentCiudad.nombre) formErrors.nombre = 'El nombre es obligatorio';
+    if (!currentCiudad.paisId) formErrors.paisId = 'El país es obligatorio';
     return formErrors;
   };
 
@@ -47,32 +44,32 @@ const PageFormEmpresa = () => {
     }
 
     if (isEditMode) {
-      dispatch(updateEmpresa(currentEmpresa)).then(() => {
+      dispatch(updateCiudad(currentCiudad)).then(() => {
         onClose();
-        dispatch(tablaEmpresa());
+        dispatch(tablaCiudad());
       });
     } else {
-      dispatch(addNewEmpresa(currentEmpresa)).then(() => {
+      dispatch(addNewCiudad(currentCiudad)).then(() => {
         onClose();
-        dispatch(tablaEmpresa());
+        dispatch(tablaCiudad());
       });
     }
   };
 
   const handleDelete = (id) => {
-    dispatch(deleteEmpresa(id)).then(() => {
-      dispatch(tablaEmpresa());
+    dispatch(deleteCiudad(id)).then(() => {
+      dispatch(tablaCiudad());
     });
   };
 
   const handleToggleStatus = (id, estaActivo) => {
-    dispatch(toggleEmpresaStatus({ id, estaActivo })).then(() => {
-      dispatch(tablaEmpresa());
+    dispatch(toggleCiudadStatus({ id, estaActivo })).then(() => {
+      dispatch(tablaCiudad());
     });
   };
 
-  const handleEdit = (empresa) => {
-    setCurrentEmpresa(empresa);
+  const handleEdit = (ciudad) => {
+    setCurrentCiudad(ciudad);
     setIsEditMode(true);
     onOpen();
   };
@@ -109,39 +106,33 @@ const PageFormEmpresa = () => {
 
   return (
     <Box padding="20px" overflowX="auto">
-      <Button colorScheme="green" onClick={() => { setIsEditMode(false); setCurrentEmpresa({ nombre: '', alias: '', estaActivo: true, baseDatos: '', ipBaseDatos: '', paisId: '' }); onOpen(); }} mb="20px">Agregar Empresa</Button>
+      <Button colorScheme="green" onClick={() => { setIsEditMode(false); setCurrentCiudad({ nombre: '', estaActivo: true, paisId: '' }); onOpen(); }} mb="20px">Agregar Ciudad</Button>
       <Table variant="striped" colorScheme="teal" size="sm">
         <Thead>
           <Tr>
             <Th>ID</Th>
-            <Th>NOMBRE</Th>
-            <Th>ALIAS</Th>
+            <Th>CIUDAD</Th>
             <Th>Fecha de Creación</Th>
             <Th>Fecha de Actualización</Th>
             <Th>Estado</Th>
-            <Th>Base de datos</Th>
-            <Th>IP SAP</Th>
             <Th>País</Th>
             <Th>Acciones</Th>
           </Tr>
         </Thead>
         <Tbody>
-          {data.map((empresa) => (
-            <Tr key={empresa.id}>
-              <Td>{empresa.id}</Td>
-              <Td>{empresa.nombre}</Td>
-              <Td>{empresa.alias}</Td>
-              <Td>{formatDate(empresa.creadoEl)}</Td>
-              <Td>{formatDate(empresa.actualizadoEl)}</Td>
+          {data.map((ciudad) => (
+            <Tr key={ciudad.id}>
+              <Td>{ciudad.id}</Td>
+              <Td>{ciudad.nombre}</Td>
+              <Td>{formatDate(ciudad.creadoEl)}</Td>
+              <Td>{formatDate(ciudad.actualizadoEl)}</Td>
               <Td>
-                <Switch name="estaActivo" isChecked={empresa.estaActivo} onChange={() => handleToggleStatus(empresa.id, !empresa.estaActivo)} />
+                <Switch name="estaActivo" isChecked={ciudad.estaActivo} onChange={() => handleToggleStatus(ciudad.id, !ciudad.estaActivo)} />
               </Td>
-              <Td>{empresa.baseDatos}</Td>
-              <Td>{empresa.ipBaseDatos}</Td>
-              <Td>{paisMap[empresa.paisId] || 'Sin país'}</Td>
+              <Td>{paisMap[ciudad.paisId] || 'Sin país'}</Td>
               <Td>
-                <Button colorScheme="red" onClick={() => handleDelete(empresa.id)} mr={2}>Eliminar</Button>
-                <IconButton icon={<EditIcon />} onClick={() => handleEdit(empresa)} />
+                <Button colorScheme="red" onClick={() => handleDelete(ciudad.id)} mr={2}>Eliminar</Button>
+                <IconButton icon={<EditIcon />} onClick={() => handleEdit(ciudad)} />
               </Td>
             </Tr>
           ))}
@@ -151,58 +142,31 @@ const PageFormEmpresa = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{isEditMode ? 'Actualizar Empresa' : 'Agregar Nueva Empresa'}</ModalHeader>
+          <ModalHeader>{isEditMode ? 'Actualizar Ciudad' : 'Agregar Nueva Ciudad'}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl mb={3} isInvalid={errors.nombre} isRequired>
-              <FormLabel>Nombre de la Empresa</FormLabel>
+              <FormLabel>Nombre de la Ciudad</FormLabel>
               <Input
                 name="nombre"
-                value={currentEmpresa.nombre}
+                value={currentCiudad.nombre}
                 onChange={handleInputChange}
               />
               {errors.nombre && <FormErrorMessage>{errors.nombre}</FormErrorMessage>}
-            </FormControl>
-            <FormControl mb={3} isInvalid={errors.alias} isRequired>
-              <FormLabel>Alias</FormLabel>
-              <Input
-                name="alias"
-                value={currentEmpresa.alias}
-                onChange={handleInputChange}
-              />
-              {errors.alias && <FormErrorMessage>{errors.alias}</FormErrorMessage>}
             </FormControl>
             <FormControl display="flex" alignItems="center" mb={3}>
               <FormLabel mb="0">Activo</FormLabel>
               <Switch
                 name="estaActivo"
-                isChecked={currentEmpresa.estaActivo}
+                isChecked={currentCiudad.estaActivo}
                 onChange={handleInputChange}
               />
-            </FormControl>
-            <FormControl mb={3} isInvalid={errors.baseDatos} isRequired>
-              <FormLabel>Base de datos</FormLabel>
-              <Input
-                name="baseDatos"
-                value={currentEmpresa.baseDatos}
-                onChange={handleInputChange}
-              />
-              {errors.baseDatos && <FormErrorMessage>{errors.baseDatos}</FormErrorMessage>}
-            </FormControl>
-            <FormControl mb={3} isInvalid={errors.ipBaseDatos} isRequired>
-              <FormLabel>IP SAP</FormLabel>
-              <Input
-                name="ipBaseDatos"
-                value={currentEmpresa.ipBaseDatos}
-                onChange={handleInputChange}
-              />
-              {errors.ipBaseDatos && <FormErrorMessage>{errors.ipBaseDatos}</FormErrorMessage>}
             </FormControl>
             <FormControl mb={3} isInvalid={errors.paisId} isRequired>
               <FormLabel>País</FormLabel>
               <Select
                 name="paisId"
-                value={currentEmpresa.paisId}
+                value={currentCiudad.paisId}
                 onChange={handleInputChange}
               >
                 <option value="" disabled>Seleccione un país</option>
@@ -227,4 +191,4 @@ const PageFormEmpresa = () => {
   );
 };
 
-export default PageFormEmpresa;
+export default PageFormCiudad;

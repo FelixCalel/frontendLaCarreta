@@ -1,4 +1,4 @@
-import { Box, Breadcrumb, BreadcrumbItem, BreadcrumbLink } from "@chakra-ui/react"
+import { Box, Breadcrumb, BreadcrumbItem } from "@chakra-ui/react"
 
 
 export const NavBarDashboard = () => {
@@ -14,7 +14,7 @@ export const NavBarDashboard = () => {
         </BreadcrumbItem> */}
 
         <BreadcrumbItem isCurrentPage>
-            <BreadcrumbLink href='#'>Pagina de Empresas</BreadcrumbLink>
+            {/* <BreadcrumbLink href='#'>Pagina de Empresas</BreadcrumbLink> */}
         </BreadcrumbItem>
      </Breadcrumb>
      </Box>

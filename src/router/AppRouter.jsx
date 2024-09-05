@@ -9,11 +9,13 @@ import { useEffect } from "react";
 import { logout, login, obtenerDatosLogeado } from "../store/auth";
 import { isAuthenticated } from "../providers/endpoints";
 import { Dashboard } from "../pages";
-import { ProveedoresPageRouter } from "./ProveedoresPageRouter";
+// import { ProveedoresPageRouter } from "./ProveedoresPageRouter";
 import { PaginaPais } from "./PaisRoute";
 import { PaginaEmpresa } from "./EmpresaRoute";
-import HomePage from "../pages/auth/HomePage"; // Importar la nueva página
-
+import { PaginaCiudad } from "./CiudaRouter";
+import { PaginaTienda } from "./TiendaRouter";
+import  { PaginaRuta } from "./RutaRouter";
+import HomePage from "../pages/auth/HomePage"; 
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -57,13 +59,17 @@ export const AppRouter = () => {
         }
       />
 
-      {/* Rutas de Proveedores */}
-      <Route path="/proveedores/*" element={<ProveedoresPageRouter />} />
+      {/* Rutas de Proveedores
+      <Route path="/proveedores/*" element={<ProveedoresPageRouter />} /> */}
 
 
       {/* Rutas de Pais */}
       <Route path="/pais/*" element={<PaginaPais />} />
       <Route path="/empresa/*" element={<PaginaEmpresa />} />
+      <Route path="/ciudad/*" element={<PaginaCiudad />} />
+      <Route path="/tienda/*" element={<PaginaTienda />} />
+      <Route path="/ruta/*" element={<PaginaRuta />} />
+
       {/* <Route path="/login/*" element={<PaginaPais />} /> */}
 
       {/* Ruta predeterminada */}

@@ -4,8 +4,10 @@ import { Link } from 'react-router-dom';
 import { HamburgerIcon } from '@chakra-ui/icons';
 import { AiFillDashboard } from 'react-icons/ai';
 import { FaGlobe, FaBuilding } from 'react-icons/fa';  // Cambiamos a FaBuilding para "Empresas"
-import { MdAddShoppingCart } from 'react-icons/md';
+import { MdLocationCity } from 'react-icons/md';
 import PropTypes from 'prop-types';
+import { FaStore } from 'react-icons/fa';
+import { MdDirections } from 'react-icons/md';
 
 // Componente MenuItem para cada ítem del menú
 const MenuItem = ({ icon, label, to, isExpanded }) => {
@@ -42,10 +44,12 @@ MenuItem.propTypes = {
 
 const MenuPrincipalD = () => {
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const [isExpanded, setIsExpanded] = useState(!isMobile);
+  const [isExpanded, setIsExpanded] = useState(false); 
 
   useEffect(() => {
-    setIsExpanded(!isMobile);
+    if (isMobile) {
+      setIsExpanded(false);
+    }
   }, [isMobile]);
 
   return (
@@ -65,16 +69,28 @@ const MenuPrincipalD = () => {
           to="/admin/" 
           isExpanded={isExpanded}
         /> 
+          <MenuItem 
+          icon={<MdDirections style={{ fontSize: '20px' }} />} 
+          label="Rutas" 
+          to="/ruta/listar" 
+          isExpanded={isExpanded}
+        />
         <MenuItem 
-          icon={<MdAddShoppingCart style={{ fontSize: '20px' }} />} 
-          label="Compras" 
-          to="/admin/ordenes" 
+          icon={<MdLocationCity style={{ fontSize: '20px' }} />} 
+          label="Ciudad" 
+          to="/ciudad/listar" 
+          isExpanded={isExpanded} 
+        />
+          <MenuItem 
+          icon={<FaStore style={{ fontSize: '20px' }} />} 
+          label="Tienda" 
+          to="/tienda/listar" 
           isExpanded={isExpanded} 
         />
         <MenuItem 
           icon={<FaBuilding style={{ fontSize: '20px' }} />} 
           label="Empresas" 
-          to="/empresa/listar"  // Cambia esta línea
+          to="/empresa/listar" 
           isExpanded={isExpanded} 
         />
         <MenuItem 
