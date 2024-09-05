@@ -77,13 +77,13 @@ const MenuPrincipalD = () => {
         />
         <MenuItem 
           icon={<MdLocationCity style={{ fontSize: '20px' }} />} 
-          label="Ciudad" 
+          label="Departamento" 
           to="/ciudad/listar" 
           isExpanded={isExpanded} 
         />
           <MenuItem 
           icon={<FaStore style={{ fontSize: '20px' }} />} 
-          label="Tienda" 
+          label="Sucursal" 
           to="/tienda/listar" 
           isExpanded={isExpanded} 
         />

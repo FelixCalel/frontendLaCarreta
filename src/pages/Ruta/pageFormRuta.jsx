@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text, Button, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Input, FormControl, FormLabel, FormErrorMessage, Switch, Select, IconButton } from '@chakra-ui/react';
+import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text, Button, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Input, FormControl, FormLabel, FormErrorMessage, Switch, IconButton } from '@chakra-ui/react';
 import { EditIcon } from '@chakra-ui/icons';
 import { format } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
 import { tablaRuta, addNewRuta, deleteRuta, updateRuta, toggleRutaStatus } from '../../store/Ruta/thunks';
+import PaisSelector from './componente/PaisSelector';
 
 const PageFormRuta = () => {
   const dispatch = useDispatch();
@@ -113,7 +114,7 @@ const PageFormRuta = () => {
             <Th>Fecha de Creación</Th>
             <Th>Fecha de Actualización</Th>
             <Th>Estado</Th>
-            <Th>Ruta</Th>
+            <Th>PAIS</Th>
             <Th>Acciones</Th>
           </Tr>
         </Thead>
@@ -161,19 +162,8 @@ const PageFormRuta = () => {
               />
             </FormControl>
             <FormControl mb={3} isInvalid={errors.rutaId} isRequired>
-              <FormLabel>Ruta</FormLabel>
-              <Select
-                name="rutaId"
-                value={currentRuta.rutaId}
-                onChange={handleInputChange}
-              >
-                <option value="" disabled>Seleccione una ruta</option>
-                {rutas.map((ruta) => (
-                  <option key={ruta.id} value={ruta.id}>
-                    {ruta.nombre}
-                  </option>
-                ))}
-              </Select>
+              <FormLabel>Pais</FormLabel>
+              <PaisSelector/>
               {errors.rutaId && <FormErrorMessage>{errors.rutaId}</FormErrorMessage>}
             </FormControl>
           </ModalBody>
