@@ -28,6 +28,15 @@ const PageFormRuta = () => {
     setErrors({ ...errors, [name]: '' }); // Limpiar el error al cambiar el valor
   };
 
+  const handlePaisChange = (paisId) => {
+    setCurrentRuta({ ...currentRuta, rutaId: paisId });
+    setErrors({ ...errors, rutaId: '' });  // Limpia el error cuando se selecciona un país
+  };
+  
+  // Luego, en el modal o formulario:
+  <PaisSelector onPaisChange={handlePaisChange} />
+  
+
   const validateFields = () => {
     let formErrors = {};
     if (!currentRuta.nombre) formErrors.nombre = 'El nombre es obligatorio';
@@ -37,11 +46,12 @@ const PageFormRuta = () => {
 
   const handleSubmit = () => {
     const formErrors = validateFields();
+    console.log(currentRuta);  // Verifica los valores de `currentRuta` aquí
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
       return;
     }
-
+  
     if (isEditMode) {
       dispatch(updateRuta(currentRuta)).then(() => {
         onClose();
@@ -54,6 +64,7 @@ const PageFormRuta = () => {
       });
     }
   };
+  
 
   const handleDelete = (id) => {
     dispatch(deleteRuta(id)).then(() => {
@@ -163,7 +174,7 @@ const PageFormRuta = () => {
             </FormControl>
             <FormControl mb={3} isInvalid={errors.rutaId} isRequired>
               <FormLabel>Pais</FormLabel>
-              <PaisSelector/>
+              <PaisSelector onPaisChange={handlePaisChange} />
               {errors.rutaId && <FormErrorMessage>{errors.rutaId}</FormErrorMessage>}
             </FormControl>
           </ModalBody>

@@ -1,51 +1,104 @@
-import { useEffect, useState } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text, Button, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Input, FormControl, FormLabel, FormErrorMessage, Switch, Select, IconButton } from '@chakra-ui/react';
-import { EditIcon } from '@chakra-ui/icons';
-import { format } from 'date-fns';
-import { useDispatch, useSelector } from 'react-redux';
-import { tablaTienda, addNewTienda, deleteTienda, updateTienda, toggleTiendaStatus, tablaDeudor } from '../../store/Tienda/thunks';
-// import { tablaCiudad } from '../../store/Ciudad/thunks';
-import CiudadSelector  from './componentes/CiudadSelector';
-import RutaSelector from './componentes/RutaSelector'
+import { useEffect, useState } from "react";
+import {
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Box,
+  Spinner,
+  Text,
+  Button,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Input,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
+  Switch,
+  IconButton,
+} from "@chakra-ui/react";
+import { EditIcon } from "@chakra-ui/icons";
+import { format } from "date-fns";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  tablaTienda,
+  addNewTienda,
+  deleteTienda,
+  updateTienda,
+  toggleTiendaStatus,
+} from "../../store/Tienda/thunks";
+import CiudadSelector from "./componentes/CiudadSelector";
+import RutaSelector from "./componentes/RutaSelector";
+import DeuSelector from "./componentes/DeuSelector";
 
 const PageFormTienda = () => {
   const dispatch = useDispatch();
-  const { data, status, error, ciudades, rutas, deudores, ciudadesStatus, rutasStatus, deudoresStatus } = useSelector((state) => state.tiendas);
+  const {
+    data,
+    status,
+    error,
+    ciudades,
+    rutas,
+    deudores,
+    ciudadesStatus,
+    rutasStatus,
+    deudoresStatus,
+  } = useSelector((state) => state.tiendas);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentTienda, setCurrentTienda] = useState({ id: '', nombre: '', descuento: 0, estaActivo: true, deudorId: '', ciudadId: '', rutaId: '', usuarioCreadoPorId: '' });
+  const [currentTienda, setCurrentTienda] = useState({
+    id: "",
+    nombre: "",
+    descuento: 0,
+    estaActivo: "true",
+    deudorId: "",
+    ciudadId: "",
+    rutaId: "",
+    usuarioCreadoPorId: "",
+  });
   const [errors, setErrors] = useState({});
+  const [, setSelectedDeu] = useState(currentTienda.deudorId);
 
   useEffect(() => {
-    if (status === 'idle') {
+    if (status === "idle") {
       dispatch(tablaTienda());
     }
-    // if {
-      // const ciudades = dispatch(tablaCiudad(ciudades));
-    // }
-    // if (rutasStatus === 'idle') {
-    //   dispatch(tablaRuta());
-    // }
-    if (deudoresStatus === 'idle') {
-      dispatch(tablaDeudor());
-    }
-  }, [dispatch, status, ciudadesStatus, rutasStatus, deudoresStatus]);
+  }, [dispatch, status]);
+
+  useEffect(() => {
+    setSelectedDeu(currentTienda.deudorId);
+  }, [currentTienda.deudorId]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : (name === 'deudorId' || name === 'ciudadId' || name === 'rutaId' ? parseInt(value, 10) : value);
+    const newValue = type === "checkbox" ? checked : value;
     setCurrentTienda({ ...currentTienda, [name]: newValue });
-    setErrors({ ...errors, [name]: '' }); 
+    setErrors({ ...errors, [name]: "" });
   };
+
+
 
   const validateFields = () => {
     let formErrors = {};
-    if (!currentTienda.nombre) formErrors.nombre = 'El nombre es obligatorio';
-    if (currentTienda.descuento === undefined) formErrors.descuento = 'El descuento es obligatorio';
-    if (!currentTienda.deudorId) formErrors.deudorId = 'El deudor es obligatorio';
-    if (!currentTienda.ciudadId) formErrors.ciudadId = 'La ciudad es obligatoria';
-    if (!currentTienda.rutaId) formErrors.rutaId = 'La ruta es obligatoria';
-    if (!currentTienda.usuarioCreadoPorId) formErrors.usuarioCreadoPorId = 'El ID del usuario creador es obligatorio';
+    if (!currentTienda.nombre) formErrors.nombre = "El nombre es obligatorio";
+    if (currentTienda.descuento === undefined)
+      formErrors.descuento = "El descuento es obligatorio";
+    if (!currentTienda.deudorId)
+      formErrors.deudorId = "El deudor es obligatorio";
+    if (!currentTienda.ciudadId)
+      formErrors.ciudadId = "La ciudad es obligatoria";
+    if (!currentTienda.rutaId) formErrors.rutaId = "La ruta es obligatoria";
+    if (!currentTienda.usuarioCreadoPorId)
+      formErrors.usuarioCreadoPorId =
+        "El ID del usuario creador es obligatorio";
     return formErrors;
   };
 
@@ -89,25 +142,49 @@ const PageFormTienda = () => {
 
   const formatDate = (dateString) => {
     try {
-      return dateString ? format(new Date(dateString), 'dd-MM-yyyy HH:mm:ss') : 'Fecha inválida';
+      return dateString
+        ? format(new Date(dateString), "dd-MM-yyyy HH:mm:ss")
+        : "Fecha inválida";
     } catch (error) {
       console.error("Fecha inválida:", dateString);
       return "Fecha inválida";
     }
   };
 
-  if (status === 'loading' || ciudadesStatus === 'loading' || rutasStatus === 'loading' || deudoresStatus === 'loading') {
+  if (
+    status === "loading" ||
+    ciudadesStatus === "loading" ||
+    rutasStatus === "loading" ||
+    deudoresStatus === "loading"
+  ) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Spinner size="xl" />
       </Box>
     );
   }
 
-  if (status === 'failed' || ciudadesStatus === 'failed' || rutasStatus === 'failed' || deudoresStatus === 'failed') {
+  if (
+    status === "failed" ||
+    ciudadesStatus === "failed" ||
+    rutasStatus === "failed" ||
+    deudoresStatus === "failed"
+  ) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-        <Text fontSize="2xl" color="red.500">Error al cargar los datos: {error}</Text>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <Text fontSize="2xl" color="red.500">
+          Error al cargar los datos: {error}
+        </Text>
       </Box>
     );
   }
@@ -127,9 +204,34 @@ const PageFormTienda = () => {
     return acc;
   }, {});
 
+  const handleDeuSelect = (deudor) => {
+    setCurrentTienda(prevState => ({
+      ...prevState,
+      deudorId: deudor.id,
+    }));
+  };
+
   return (
     <Box padding="20px" overflowX="auto">
-      <Button colorScheme="green" onClick={() => { setIsEditMode(false); setCurrentTienda({ nombre: '', descuento: 0, estaActivo: true, deudorId: '', ciudadId: '', rutaId: '', usuarioCreadoPorId: '' }); onOpen(); }} mb="20px">Agregar Tienda</Button>
+      <Button
+        colorScheme="green"
+        onClick={() => {
+          setIsEditMode(false);
+          setCurrentTienda({
+            nombre: "",
+            descuento: 0,
+            estaActivo: "true",
+            deudorId: "",
+            ciudadId: "",
+            rutaId: "",
+            usuarioCreadoPorId: "",
+          });
+          onOpen();
+        }}
+        mb="20px"
+      >
+        Agregar Tienda
+      </Button>
       <Table variant="striped" colorScheme="teal" size="sm">
         <Thead>
           <Tr>
@@ -154,14 +256,32 @@ const PageFormTienda = () => {
               <Td>{formatDate(tienda.creadoEl)}</Td>
               <Td>{formatDate(tienda.actualizadoEl)}</Td>
               <Td>
-                <Switch name="estaActivo" isChecked={tienda.estaActivo} onChange={() => handleToggleStatus(tienda.id, !tienda.estaActivo)} />
+                <Switch
+                  name="estaActivo"
+                  isChecked={tienda.estaActivo === "true"}
+                  onChange={() =>
+                    handleToggleStatus(
+                      tienda.id,
+                      tienda.estaActivo === "true" ? "false" : "true"
+                    )
+                  }
+                />
               </Td>
-              <Td>{deudorMap[tienda.deudorId] || 'Sin deudor'}</Td>
-              <Td>{ciudadMap[tienda.ciudadId] || 'Sin ciudad'}</Td>
-              <Td>{rutaMap[tienda.rutaId] || 'Sin ruta'}</Td>
+              <Td>{deudorMap[tienda.deudorId] || "Sin deudor"}</Td>
+              <Td>{ciudadMap[tienda.ciudadId] || "Sin ciudad"}</Td>
+              <Td>{rutaMap[tienda.rutaId] || "Sin ruta"}</Td>
               <Td>
-                <Button colorScheme="red" onClick={() => handleDelete(tienda.id)} mr={2}>Eliminar</Button>
-                <IconButton icon={<EditIcon />} onClick={() => handleEdit(tienda)} />
+                <Button
+                  colorScheme="red"
+                  onClick={() => handleDelete(tienda.id)}
+                  mr={2}
+                >
+                  Eliminar
+                </Button>
+                <IconButton
+                  icon={<EditIcon />}
+                  onClick={() => handleEdit(tienda)}
+                />
               </Td>
             </Tr>
           ))}
@@ -171,7 +291,9 @@ const PageFormTienda = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{isEditMode ? 'Actualizar Tienda' : 'Agregar Nueva Tienda'}</ModalHeader>
+          <ModalHeader>
+            {isEditMode ? "Actualizar Tienda" : "Agregar Nueva Tienda"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl mb={3} isInvalid={errors.nombre} isRequired>
@@ -181,57 +303,68 @@ const PageFormTienda = () => {
                 value={currentTienda.nombre}
                 onChange={handleInputChange}
               />
-              {errors.nombre && <FormErrorMessage>{errors.nombre}</FormErrorMessage>}
+              {errors.nombre && (
+                <FormErrorMessage>{errors.nombre}</FormErrorMessage>
+              )}
             </FormControl>
             <FormControl mb={3} isInvalid={errors.descuento} isRequired>
               <FormLabel>Descuento</FormLabel>
               <Input
                 name="descuento"
+                type="number"
                 value={currentTienda.descuento}
                 onChange={handleInputChange}
               />
-              {errors.descuento && <FormErrorMessage>{errors.descuento}</FormErrorMessage>}
+              {errors.descuento && (
+                <FormErrorMessage>{errors.descuento}</FormErrorMessage>
+              )}
             </FormControl>
             <FormControl display="flex" alignItems="center" mb={3}>
               <FormLabel mb="0">Activo</FormLabel>
               <Switch
                 name="estaActivo"
-                isChecked={currentTienda.estaActivo}
+                isChecked={currentTienda.estaActivo === "true"}
                 onChange={handleInputChange}
               />
             </FormControl>
             <FormControl mb={3} isInvalid={errors.deudorId} isRequired>
               <FormLabel>Deudor</FormLabel>
-              <Select
-                name="deudorId"
-                value={currentTienda.deudorId}
-                onChange={handleInputChange}
-              >
-                <option value="" disabled>Seleccione un deudor</option>
-                {deudores.map((deudor) => (
-                  <option key={deudor.id} value={deudor.id}>
-                    {deudor.nombre}
-                  </option>
-                ))}
-              </Select>
-              {errors.deudorId && <FormErrorMessage>{errors.deudorId}</FormErrorMessage>}
+              <DeuSelector
+                deudores={deudores}
+                onSelect={handleDeuSelect}
+              />
+              {errors.deudorId && (
+                <FormErrorMessage>{errors.deudorId}</FormErrorMessage>
+              )}
             </FormControl>
             <FormControl mb={3} isInvalid={errors.ciudadId} isRequired>
               <FormLabel>Ciudad</FormLabel>
-              <CiudadSelector/>
-              {errors.ciudadId && <FormErrorMessage>{errors.ciudadId}</FormErrorMessage>}
+              <CiudadSelector
+                value={currentTienda.ciudadId}
+                onChange={(e) => handleInputChange(e)}
+              />
+              {errors.ciudadId && (
+                <FormErrorMessage>{errors.ciudadId}</FormErrorMessage>
+              )}
             </FormControl>
             <FormControl mb={3} isInvalid={errors.rutaId} isRequired>
               <FormLabel>Ruta</FormLabel>
-              <RutaSelector/>
-              {errors.rutaId && <FormErrorMessage>{errors.rutaId}</FormErrorMessage>}
+              <RutaSelector
+                value={currentTienda.rutaId}
+                onChange={(e) => handleInputChange(e)}
+              />
+              {errors.rutaId && (
+                <FormErrorMessage>{errors.rutaId}</FormErrorMessage>
+              )}
             </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
-              {isEditMode ? 'Actualizar' : 'Guardar'}
+              {isEditMode ? "Actualizar" : "Guardar"}
             </Button>
-            <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+            <Button variant="ghost" onClick={onClose}>
+              Cancelar
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

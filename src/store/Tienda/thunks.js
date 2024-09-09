@@ -74,7 +74,7 @@ export const tablaRuta = createAsyncThunk(
 export const tablaDeudor = createAsyncThunk(
   'deudores/fetchDeudores',
   async () => {
-    const response = await axios.get('http://localhost:3000/deudor/todos');
+    const response = await axios.get('http://localhost:3000/deus/todos');
     const data = response.data;
     data.sort((a, b) => a.id - b.id); // Ordena los datos por id
     return data;
