@@ -59,34 +59,4 @@ export const toggleTiendaStatus = createAsyncThunk(
 //   }
 // );
 
-// Fetch all Rutas
-export const tablaRuta = createAsyncThunk(
-  'rutas/fetchRutas',
-  async () => {
-    const response = await axios.get('http://localhost:3000/ruta/todos');
-    const data = response.data;
-    data.sort((a, b) => a.id - b.id); // Ordena los datos por id
-    return data;
-  }
-);
 
-// Fetch all Deudores
-export const tablaDeudor = createAsyncThunk(
-  'deudores/fetchDeudores',
-  async () => {
-    const response = await axios.get('http://localhost:3000/deus/todos');
-    const data = response.data;
-    data.sort((a, b) => a.id - b.id); // Ordena los datos por id
-    return data;
-  }
-);
-
-export const tablaPais = createAsyncThunk(
-  'deudores/fetchDeudores',
-  async () => {
-    const response = await axios.get('http://localhost:3000/pais/todos');
-    const data = response.data;
-    data.sort((a, b) => a.id - b.id); // Ordena los datos por id
-    return data;
-  }
-);

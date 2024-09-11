@@ -37,6 +37,7 @@ import {
 } from "../../store/Tienda/thunks";
 import CiudadSelector from "./componentes/CiudadSelector";
 import RutaSelector from "./componentes/RutaSelector";
+// Componente DeuSelector actualizado
 import DeuSelector from "./componentes/DeuSelector";
 
 const PageFormTienda = () => {
@@ -47,7 +48,6 @@ const PageFormTienda = () => {
     error,
     ciudades,
     rutas,
-    deudores,
     ciudadesStatus,
     rutasStatus,
     deudoresStatus,
@@ -83,8 +83,6 @@ const PageFormTienda = () => {
     setCurrentTienda({ ...currentTienda, [name]: newValue });
     setErrors({ ...errors, [name]: "" });
   };
-
-
 
   const validateFields = () => {
     let formErrors = {};
@@ -199,17 +197,7 @@ const PageFormTienda = () => {
     return acc;
   }, {});
 
-  const deudorMap = deudores.reduce((acc, deudor) => {
-    acc[deudor.id] = deudor.nombre;
-    return acc;
-  }, {});
 
-  const handleDeuSelect = (deudor) => {
-    setCurrentTienda(prevState => ({
-      ...prevState,
-      deudorId: deudor.id,
-    }));
-  };
 
   return (
     <Box padding="20px" overflowX="auto">
@@ -267,7 +255,7 @@ const PageFormTienda = () => {
                   }
                 />
               </Td>
-              <Td>{deudorMap[tienda.deudorId] || "Sin deudor"}</Td>
+              <Td></Td>
               <Td>{ciudadMap[tienda.ciudadId] || "Sin ciudad"}</Td>
               <Td>{rutaMap[tienda.rutaId] || "Sin ruta"}</Td>
               <Td>
@@ -307,6 +295,7 @@ const PageFormTienda = () => {
                 <FormErrorMessage>{errors.nombre}</FormErrorMessage>
               )}
             </FormControl>
+
             <FormControl mb={3} isInvalid={errors.descuento} isRequired>
               <FormLabel>Descuento</FormLabel>
               <Input
@@ -319,6 +308,7 @@ const PageFormTienda = () => {
                 <FormErrorMessage>{errors.descuento}</FormErrorMessage>
               )}
             </FormControl>
+
             <FormControl display="flex" alignItems="center" mb={3}>
               <FormLabel mb="0">Activo</FormLabel>
               <Switch
@@ -327,31 +317,40 @@ const PageFormTienda = () => {
                 onChange={handleInputChange}
               />
             </FormControl>
+
+            {/* Campo de Deudor */}
             <FormControl mb={3} isInvalid={errors.deudorId} isRequired>
               <FormLabel>Deudor</FormLabel>
-              <DeuSelector
-                deudores={deudores}
-                onSelect={handleDeuSelect}
-              />
-              {errors.deudorId && (
-                <FormErrorMessage>{errors.deudorId}</FormErrorMessage>
-              )}
+              <DeuSelector/>
+             
             </FormControl>
+
             <FormControl mb={3} isInvalid={errors.ciudadId} isRequired>
               <FormLabel>Ciudad</FormLabel>
               <CiudadSelector
                 value={currentTienda.ciudadId}
-                onChange={(e) => handleInputChange(e)}
+                onChange={(e) =>
+                  setCurrentTienda((prev) => ({
+                    ...prev,
+                    ciudadId: e.target.value, // Actualizar el ID de la ciudad seleccionada
+                  }))
+                }
               />
               {errors.ciudadId && (
                 <FormErrorMessage>{errors.ciudadId}</FormErrorMessage>
               )}
             </FormControl>
+
             <FormControl mb={3} isInvalid={errors.rutaId} isRequired>
               <FormLabel>Ruta</FormLabel>
               <RutaSelector
                 value={currentTienda.rutaId}
-                onChange={(e) => handleInputChange(e)}
+                onChange={(e) =>
+                  setCurrentTienda((prev) => ({
+                    ...prev,
+                    rutaId: e.target.value, // Actualizar el ID de la ruta seleccionada
+                  }))
+                }
               />
               {errors.rutaId && (
                 <FormErrorMessage>{errors.rutaId}</FormErrorMessage>

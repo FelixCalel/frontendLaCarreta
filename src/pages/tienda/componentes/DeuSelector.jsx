@@ -1,57 +1,73 @@
-import { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import { Input, List, ListItem, Box } from '@chakra-ui/react';
-const DeuSelector = ({ deudores, onSelect }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredDeudores, setFilteredDeudores] = useState([]);
+import { useEffect } from "react";
+import { Flex, FormHelperText,  } from "@chakra-ui/react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  AutoComplete,
+  AutoCompleteInput,
+  AutoCompleteItem,
+  AutoCompleteList,
+} from "@choc-ui/chakra-autocomplete";
 
-  // Filtrar deudores basado en el término de búsqueda
-  useEffect(() => {
-    if (searchTerm) {
-      // Filtra deudores por nombre o correlativo
-      const filtered = deudores.filter(deudor =>
-        deudor.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        deudor.correlativo.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredDeudores(filtered);
-    } else {
-      setFilteredDeudores([]);
-    }
-  }, [searchTerm, deudores]);
+import { tablaDeudores } from "../../../store/Deus/thunks";
 
+//const DeuSuggestions = ({ value, onSelect }) => {
+ // const [inputValue, setInputValue] = useState(value || '');  // Maneja el valor del input
+ // const [isFocused, setIsFocused] = useState(false);  // Estado para manejar el foco en el input
+ // const dispatch = useDispatch();
+
+  // Obtener el estado global desde Redux
+  //const { deudores = [], status } = useSelector((state) => state.deudores || { deudores: [], status: 'idle' });
+
+  // Cada vez que el input cambia, ejecutamos la búsqueda
+ // const handleInputChange = (e) => {
+  //  const value = e.target.value;
+  //  setInputValue(value);
+
+  //  if (value.trim() !== '') {
+    //  dispatch(buscarDeudores(value));
+  //  }
+ // };
+
+ 
+  const DeuSelector = () => {
+    
+    const dispatch = useDispatch();
+    const deus = useSelector((state) => state.deudores);
+    
+    
+  console.log('deudores', deus.deudores.nombre);
+    useEffect(() => {
+      dispatch(tablaDeudores());
+    }, [dispatch]);
+
+    
+  
   return (
-    <Box>
-      <Input
-        placeholder="Buscar por nombre o correlativo"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-      {filteredDeudores.length > 0 && (
-        <List spacing={3} mt={2}>
-          {filteredDeudores.map(deudor => (
-            <ListItem
-              key={deudor.id}
-              onClick={() => {
-                onSelect(deudor);
-                setSearchTerm(''); // Limpiar búsqueda
-              }}
-              cursor="pointer"
-              _hover={{ bg: 'gray.100' }}
+    <Flex pt="48" justify="center" align="center" w="full">
+ 
+      <AutoComplete openOnFocus>
+        <AutoCompleteInput variant="filled" />
+        <AutoCompleteList>
+          {deus.deudores.map((deu) => (
+            <AutoCompleteItem
+              key={`option-${deu.id}`}
+              value={deu.nombre}
+              textTransform="capitalize"
             >
-              {deudor.nombre} - {deudor.correlativo}
-            </ListItem>
+              {deu.nombre}
+            </AutoCompleteItem>
           ))}
-        </List>
-      )}
-    </Box>
+        </AutoCompleteList>
+      </AutoComplete>
+      <FormHelperText>Who do you support.</FormHelperText>
+   
+  </Flex>
   );
-};
 
-DeuSelector.propTypes = {
-  deudores: PropTypes.array.isRequired,
-  value: PropTypes.string,
-  onChange: PropTypes.func,
-  onSelect: PropTypes.func.isRequired,
-};
+  };
+//DeuSuggestions.propTypes = {
+ // value: PropTypes.string,  // El valor inicial es opcional
+ // onSelect: PropTypes.func.isRequired,  // onSelect es obligatorio y debe ser una función
+//};
 
 export default DeuSelector;
