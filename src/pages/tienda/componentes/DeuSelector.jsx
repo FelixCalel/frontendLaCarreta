@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import PropTypes from "prop-types"; // Importar PropTypes para la validación de props
 import { Flex, FormHelperText } from "@chakra-ui/react";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -10,13 +11,17 @@ import {
 
 import { tablaDeudores } from "../../../store/Deus/thunks";
 
-const DeuSelector = () => {
+const DeuSelector = ({ onSelect }) => {
   const dispatch = useDispatch();
   const deus = useSelector((state) => state.deudores);
 
   useEffect(() => {
     dispatch(tablaDeudores());
   }, [dispatch]);
+
+  const handleSelectDeudor = (deudor) => {
+    onSelect(deudor.id); // Pasar el id del deudor seleccionado al componente padre
+  };
 
   return (
     <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
@@ -28,6 +33,7 @@ const DeuSelector = () => {
               key={`option-${deu.id}`}
               value={`${deu.nombre} - ${deu.correlativo}`}
               textTransform="capitalize"
+              onClick={() => handleSelectDeudor(deu)} // Al hacer clic, selecciona el deudor
             >
               {`${deu.nombre} - ${deu.correlativo}`}
             </AutoCompleteItem>
@@ -37,6 +43,11 @@ const DeuSelector = () => {
       <FormHelperText mt="2">Seleccione el deudor para esta tienda</FormHelperText>
     </Flex>
   );
+};
+
+// Validación de PropTypes
+DeuSelector.propTypes = {
+  onSelect: PropTypes.func.isRequired, // Aseguramos que onSelect sea una función y es obligatorio
 };
 
 export default DeuSelector;

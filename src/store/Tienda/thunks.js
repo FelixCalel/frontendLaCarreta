@@ -15,11 +15,16 @@ export const tablaTienda = createAsyncThunk(
 // Add new Tienda
 export const addNewTienda = createAsyncThunk(
   'tiendas/addNewTienda',
-  async (newTienda) => {
-    const response = await axios.post('http://localhost:3000/tienda/create', newTienda);
-    return response.data;
+  async (newTienda, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('http://localhost:3000/tienda/create', newTienda);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data || 'Error al crear la tienda');
+    }
   }
 );
+
 
 // Delete Tienda
 export const deleteTienda = createAsyncThunk(

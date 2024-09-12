@@ -33,7 +33,6 @@ import {
   addNewTienda,
   deleteTienda,
   updateTienda,
-  toggleTiendaStatus,
 } from "../../store/Tienda/thunks";
 import CiudadSelector from "./componentes/CiudadSelector";
 import RutaSelector from "./componentes/RutaSelector";
@@ -46,8 +45,8 @@ const PageFormTienda = () => {
     data,
     status,
     error,
-    ciudades,
-    rutas,
+    // ciudades,
+    // rutas,
     ciudadesStatus,
     rutasStatus,
     deudoresStatus,
@@ -78,25 +77,29 @@ const PageFormTienda = () => {
   }, [currentTienda.deudorId]);
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, type, checked, value } = e.target;
     const newValue = type === "checkbox" ? checked : value;
-    setCurrentTienda({ ...currentTienda, [name]: newValue });
-    setErrors({ ...errors, [name]: "" });
+
+    setCurrentTienda((prevState) => ({
+      ...prevState,
+      [name]: newValue,
+    }));
   };
 
   const validateFields = () => {
     let formErrors = {};
     if (!currentTienda.nombre) formErrors.nombre = "El nombre es obligatorio";
-    if (currentTienda.descuento === undefined)
-      formErrors.descuento = "El descuento es obligatorio";
+    if (
+      currentTienda.descuento !== undefined &&
+      isNaN(currentTienda.descuento)
+    ) {
+      formErrors.descuento = "El descuento debe ser un número";
+    }
     if (!currentTienda.deudorId)
       formErrors.deudorId = "El deudor es obligatorio";
     if (!currentTienda.ciudadId)
       formErrors.ciudadId = "La ciudad es obligatoria";
     if (!currentTienda.rutaId) formErrors.rutaId = "La ruta es obligatoria";
-    if (!currentTienda.usuarioCreadoPorId)
-      formErrors.usuarioCreadoPorId =
-        "El ID del usuario creador es obligatorio";
     return formErrors;
   };
 
@@ -126,16 +129,17 @@ const PageFormTienda = () => {
     });
   };
 
-  const handleToggleStatus = (id, estaActivo) => {
-    dispatch(toggleTiendaStatus({ id, estaActivo })).then(() => {
-      dispatch(tablaTienda());
-    });
-  };
-
   const handleEdit = (tienda) => {
     setCurrentTienda(tienda);
     setIsEditMode(true);
     onOpen();
+  };
+
+  const handleDeudorSelect = (deudorId) => {
+    setCurrentTienda((prevState) => ({
+      ...prevState,
+      deudorId, // Actualizar el ID del deudor seleccionado
+    }));
   };
 
   const formatDate = (dateString) => {
@@ -187,17 +191,17 @@ const PageFormTienda = () => {
     );
   }
 
-  const ciudadMap = ciudades.reduce((acc, ciudad) => {
-    acc[ciudad.id] = ciudad.nombre;
-    return acc;
-  }, {});
+  // const ciudadMap = ciudades.reduce((acc, ciudad) => {
+  //   console.log(acc);
+  //   console.log(ciudad);
+  //   acc[ciudad.id] = ciudad.id;
+  //   return acc;
+  // }, {});
 
-  const rutaMap = rutas.reduce((acc, ruta) => {
-    acc[ruta.id] = ruta.nombre;
-    return acc;
-  }, {});
-
-
+  // const rutaMap = rutas.reduce((acc, ruta) => {
+  //   acc[ruta.id] = ruta.id;
+  //   return acc;
+  // }, {});
 
   return (
     <Box padding="20px" overflowX="auto">
@@ -246,18 +250,15 @@ const PageFormTienda = () => {
               <Td>
                 <Switch
                   name="estaActivo"
-                  isChecked={tienda.estaActivo === "true"}
-                  onChange={() =>
-                    handleToggleStatus(
-                      tienda.id,
-                      tienda.estaActivo === "true" ? "false" : "true"
-                    )
-                  }
+                  isChecked={Boolean(currentTienda.estaActivo)}
+                  onChange={(e) => handleInputChange(e)}
                 />
               </Td>
-              <Td></Td>
-              <Td>{ciudadMap[tienda.ciudadId] || "Sin ciudad"}</Td>
-              <Td>{rutaMap[tienda.rutaId] || "Sin ruta"}</Td>
+              {/* <Td>{ciudadMap[tienda.ciudadId] || "Sin ciudad"}</Td> */}
+              {/* <Td>{rutaMap[tienda.rutaId] || "Sin ruta"}</Td> */}
+              <Td>{tienda.deudorId}</Td>
+              <Td>{tienda.nombreCiudad}</Td>
+              <Td>{tienda.nombreRuta}</Td>
               <Td>
                 <Button
                   colorScheme="red"
@@ -321,8 +322,13 @@ const PageFormTienda = () => {
             {/* Campo de Deudor */}
             <FormControl mb={3} isInvalid={errors.deudorId} isRequired>
               <FormLabel>Deudor</FormLabel>
-              <DeuSelector/>
-             
+              <DeuSelector
+                value={currentTienda.deudorId}
+                onSelect={handleDeudorSelect} // Maneja la selección del deudor
+              />
+              {errors.deudorId && (
+                <FormErrorMessage>{errors.deudorId}</FormErrorMessage>
+              )}
             </FormControl>
 
             <FormControl mb={3} isInvalid={errors.ciudadId} isRequired>

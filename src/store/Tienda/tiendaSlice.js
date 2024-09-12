@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createSelector } from '@reduxjs/toolkit';
 import { tablaTienda, addNewTienda, deleteTienda, updateTienda, toggleTiendaStatus } from './thunks';
 
 const tiendaSlice = createSlice({
@@ -53,9 +53,14 @@ const tiendaSlice = createSlice({
           state.data[index].estaActivo = action.payload.estaActivo;
         }
         state.data.sort((a, b) => a.id - b.id); // Ordena después de actualizar el estado
-      })
-      
+      });
   }
 });
+
+// Selector para obtener tiendas ordenadas por ID
+export const selectOrderedTiendas = createSelector(
+  (state) => state.tiendas.data,  // Obtenemos el estado `data` de las tiendas
+  (data) => data.slice().sort((a, b) => a.id - b.id)  // Retornamos los datos ordenados
+);
 
 export default tiendaSlice.reducer;

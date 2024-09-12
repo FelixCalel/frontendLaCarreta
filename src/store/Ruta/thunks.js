@@ -7,7 +7,6 @@ export const tablaRuta = createAsyncThunk(
   async () => {
     const response = await axios.get('http://localhost:3000/ruta/todos');
     const data = response.data;
-    console.log("data: " + JSON.stringify(data));
     data.sort((a, b) => a.id - b.id); 
     return data;
   }
