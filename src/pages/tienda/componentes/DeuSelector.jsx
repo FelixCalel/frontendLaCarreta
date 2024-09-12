@@ -31,11 +31,11 @@ const DeuSelector = ({ onSelect }) => {
           {deus.deudores.map((deu) => (
             <AutoCompleteItem
               key={`option-${deu.id}`}
-              value={`${deu.nombre} - ${deu.correlativo}`}
+              value={`${deu.correlativo} - ${deu.nombre}`}
               textTransform="capitalize"
-              onClick={() => handleSelectDeudor(deu)} // Al hacer clic, selecciona el deudor
+              onClick={() => handleSelectDeudor(deu)}
             >
-              {`${deu.nombre} - ${deu.correlativo}`}
+              {`${deu.correlativo} - ${deu.nombre}`}
             </AutoCompleteItem>
           ))}
         </AutoCompleteList>

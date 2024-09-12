@@ -15,12 +15,18 @@ export const tablaTienda = createAsyncThunk(
 // Add new Tienda
 export const addNewTienda = createAsyncThunk(
   'tiendas/addNewTienda',
-  async (newTienda, { rejectWithValue }) => {
+  async (newTienda) => {
+    newTienda.ciudadId = parseInt(newTienda.ciudadId);
+    newTienda.deudorId = parseInt(newTienda.deudorId);
+    newTienda.rutaId = parseInt(newTienda.rutaId);
+
+    console.log('Hola', newTienda);
     try {
       const response = await axios.post('http://localhost:3000/tienda/create', newTienda);
+      console.log('Hola 2',newTienda);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data || 'Error al crear la tienda');
+      return (error.response.data || 'Error al crear la tienda');
     }
   }
 );

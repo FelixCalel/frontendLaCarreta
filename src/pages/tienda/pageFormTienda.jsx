@@ -212,11 +212,11 @@ const PageFormTienda = () => {
           setCurrentTienda({
             nombre: "",
             descuento: 0,
-            estaActivo: "true",
-            deudorId: "",
-            ciudadId: "",
-            rutaId: "",
-            usuarioCreadoPorId: "",
+            estaActivo: true,
+            deudorId: null,
+            ciudadId: null,
+            rutaId: null,
+            usuarioCreadoPorId: null,
           });
           onOpen();
         }}
@@ -256,7 +256,7 @@ const PageFormTienda = () => {
               </Td>
               {/* <Td>{ciudadMap[tienda.ciudadId] || "Sin ciudad"}</Td> */}
               {/* <Td>{rutaMap[tienda.rutaId] || "Sin ruta"}</Td> */}
-              <Td>{tienda.deudorId}</Td>
+              <Td>{tienda.nombreDeu}</Td>
               <Td>{tienda.nombreCiudad}</Td>
               <Td>{tienda.nombreRuta}</Td>
               <Td>
