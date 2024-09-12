@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import PropTypes from "prop-types"; // Importa PropTypes para la validación de props
+import PropTypes from "prop-types";
 import { useSelector, useDispatch } from "react-redux";
 import { tablaCiudad } from "../../../store/Ciudad/thunks";
 
