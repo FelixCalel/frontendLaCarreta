@@ -16,7 +16,10 @@ export const tablaRuta = createAsyncThunk(
 export const addNewRuta = createAsyncThunk(
   'rutas/addNewRutas',
   async (newRuta) => {
+    newRuta.paisId = parseInt(newRuta.paisId);
+    console.log("Data", newRuta);
     const response = await axios.post('http://localhost:3000/ruta/create', newRuta);
+    console.log("Registro: ",newRuta);
     return response.data;
   }
 );

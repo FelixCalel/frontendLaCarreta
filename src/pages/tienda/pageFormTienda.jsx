@@ -254,8 +254,6 @@ const PageFormTienda = () => {
                   onChange={(e) => handleInputChange(e)}
                 />
               </Td>
-              {/* <Td>{ciudadMap[tienda.ciudadId] || "Sin ciudad"}</Td> */}
-              {/* <Td>{rutaMap[tienda.rutaId] || "Sin ruta"}</Td> */}
               <Td>{tienda.nombreDeu}</Td>
               <Td>{tienda.nombreCiudad}</Td>
               <Td>{tienda.nombreRuta}</Td>

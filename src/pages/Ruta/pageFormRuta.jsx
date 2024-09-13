@@ -8,10 +8,10 @@ import PaisSelector from './componente/PaisSelector';
 
 const PageFormRuta = () => {
   const dispatch = useDispatch();
-  const { data, status, error, rutas, rutasStatus, rutasError } = useSelector((state) => state.rutas);
+  const { data, status, error, rutasStatus, rutasError } = useSelector((state) => state.rutas);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentRuta, setCurrentRuta] = useState({ id: '', nombre: '', estaActivo: true, rutaId: '' });
+  const [currentRuta, setCurrentRuta] = useState({ id: '', nombre: '', estaActivo: true, paisId: '' });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -23,14 +23,14 @@ const PageFormRuta = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : (name === 'rutaId' ? parseInt(value, 10) : value);
+    const newValue = type === 'checkbox' ? checked : (name === 'paisId' ? parseInt(value, 10) : value);
     setCurrentRuta({ ...currentRuta, [name]: newValue });
     setErrors({ ...errors, [name]: '' }); // Limpiar el error al cambiar el valor
   };
 
   const handlePaisChange = (paisId) => {
-    setCurrentRuta({ ...currentRuta, rutaId: paisId });
-    setErrors({ ...errors, rutaId: '' });  // Limpia el error cuando se selecciona un país
+    setCurrentRuta({ ...currentRuta, paisId: paisId });
+    setErrors({ ...errors, paisId: '' });  // Limpia el error cuando se selecciona un país
   };
   
   // Luego, en el modal o formulario:
@@ -40,7 +40,7 @@ const PageFormRuta = () => {
   const validateFields = () => {
     let formErrors = {};
     if (!currentRuta.nombre) formErrors.nombre = 'El nombre es obligatorio';
-    if (!currentRuta.rutaId) formErrors.rutaId = 'La ruta es obligatoria';
+    if (!currentRuta.paisId) formErrors.paisId = 'La ruta es obligatoria';
     return formErrors;
   };
 
@@ -109,14 +109,9 @@ const PageFormRuta = () => {
     );
   }
 
-  const rutaMap = rutas.reduce((acc, ruta) => {
-    acc[ruta.id] = ruta.nombre;
-    return acc;
-  }, {});
-
   return (
     <Box padding="20px" overflowX="auto">
-      <Button colorScheme="green" onClick={() => { setIsEditMode(false); setCurrentRuta({ nombre: '', estaActivo: true, rutaId: '' }); onOpen(); }} mb="20px">Agregar Ruta</Button>
+      <Button colorScheme="green" onClick={() => { setIsEditMode(false); setCurrentRuta({ nombre: '', estaActivo: true, paisId: '' }); onOpen(); }} mb="20px">Agregar Ruta</Button>
       <Table variant="striped" colorScheme="teal" size="sm">
         <Thead>
           <Tr>
@@ -139,7 +134,7 @@ const PageFormRuta = () => {
               <Td>
                 <Switch name="estaActivo" isChecked={ruta.estaActivo} onChange={() => handleToggleStatus(ruta.id, !ruta.estaActivo)} />
               </Td>
-              <Td>{rutaMap[ruta.rutaId] || 'Sin ruta'}</Td>
+              <Td>{ruta.nombrePais}</Td>
               <Td>
                 <Button colorScheme="red" onClick={() => handleDelete(ruta.id)} mr={2}>Eliminar</Button>
                 <IconButton icon={<EditIcon />} onClick={() => handleEdit(ruta)} />
@@ -172,10 +167,10 @@ const PageFormRuta = () => {
                 onChange={handleInputChange}
               />
             </FormControl>
-            <FormControl mb={3} isInvalid={errors.rutaId} isRequired>
+            <FormControl mb={3} isInvalid={errors.paisId} isRequired>
               <FormLabel>Pais</FormLabel>
               <PaisSelector onPaisChange={handlePaisChange} />
-              {errors.rutaId && <FormErrorMessage>{errors.rutaId}</FormErrorMessage>}
+              {errors.paisId && <FormErrorMessage>{errors.paisId}</FormErrorMessage>}
             </FormControl>
           </ModalBody>
           <ModalFooter>
