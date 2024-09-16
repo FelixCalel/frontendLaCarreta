@@ -1,5 +1,5 @@
 import { Box } from "@chakra-ui/react";
-import DetallePedidoForm from "./DetallePedidoForm";
+import DetallePedidoForm from "./pageFormPedidos";
 
 export const PageDetallePedido = () => {
   return (

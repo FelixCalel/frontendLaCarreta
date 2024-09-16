@@ -9,7 +9,7 @@ import {
   AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
 
-import { tablaProductos } from "../../../store/Productos/thunks";
+import { tablaProductos } from "../../../store/Pedidos/pedidoSlice";
 
 const ProductoSelector = ({ onSelect }) => {
   const dispatch = useDispatch();

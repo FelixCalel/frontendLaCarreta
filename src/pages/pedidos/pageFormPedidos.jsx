@@ -11,9 +11,9 @@ import {
   ModalBody,
   ModalCloseButton,
 } from "@chakra-ui/react";
-import ProductoSelector from "./ProductoSelector";
-import CantidadInput from "./CantidadInput";
-import PrecioInput from "./PrecioInput";
+import ProductoSelector from "./componentes/productoSelector";
+import CantidadInput from "./componentes/cantidadInput";
+import PrecioInput from "./componentes/precioInput";
 
 const DetallePedidoForm = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();

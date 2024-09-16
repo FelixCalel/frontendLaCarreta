@@ -1,24 +1,44 @@
-import { useState, useEffect } from 'react';
-import { Box, Flex, IconButton, Text, VStack, Tooltip, useBreakpointValue } from '@chakra-ui/react';
-import { Link, useLocation } from 'react-router-dom'; // Importamos useLocation
-import { HamburgerIcon } from '@chakra-ui/icons';
-import { AiFillDashboard } from 'react-icons/ai';
-import { FaGlobe, FaBuilding } from 'react-icons/fa';
-import { MdLocationCity } from 'react-icons/md';
-import PropTypes from 'prop-types';
-import { FaStore } from 'react-icons/fa';
-import { MdDirections } from 'react-icons/md';
+import { useState, useEffect } from "react";
+import {
+  Box,
+  Flex,
+  IconButton,
+  Text,
+  VStack,
+  Tooltip,
+  useBreakpointValue,
+} from "@chakra-ui/react";
+import { Link, useLocation } from "react-router-dom"; // Importamos useLocation
+import { HamburgerIcon } from "@chakra-ui/icons";
+// import { AiFillDashboard } from "react-icons/ai";
+import { FaShoppingCart } from 'react-icons/fa'; 
+import { FaGlobe, FaBuilding } from "react-icons/fa";
+import { MdLocationCity } from "react-icons/md";
+import PropTypes from "prop-types";
+import { FaStore } from "react-icons/fa";
+import { MdDirections } from "react-icons/md";
 
 // Componente MenuItem para cada ítem del menú
 const MenuItem = ({ icon, label, to, isExpanded, isActive }) => {
   const menuItemContent = (
-    <Flex align="center" p="2" justifyContent={isExpanded ? 'flex-start' : 'center'}>
-      <Link to={to} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-        <Box 
-          bg={isActive ? 'green.500' : 'transparent'} // Marca como activo
-          color={isActive ? 'white' : 'inherit'}
-          _hover={{ bg: 'green.500', color: 'white' }} 
-          p={isExpanded ? "2" : "4"} 
+    <Flex
+      align="center"
+      p="2"
+      justifyContent={isExpanded ? "flex-start" : "center"}
+    >
+      <Link
+        to={to}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          textDecoration: "none",
+        }}
+      >
+        <Box
+          bg={isActive ? "green.500" : "transparent"} // Marca como activo
+          color={isActive ? "white" : "inherit"}
+          _hover={{ bg: "green.500", color: "white" }}
+          p={isExpanded ? "2" : "4"}
           borderRadius="md"
           display="flex"
           alignItems="center"
@@ -30,7 +50,9 @@ const MenuItem = ({ icon, label, to, isExpanded, isActive }) => {
     </Flex>
   );
 
-  return isExpanded ? menuItemContent : (
+  return isExpanded ? (
+    menuItemContent
+  ) : (
     <Tooltip label={label} placement="right" hasArrow>
       {menuItemContent}
     </Tooltip>
@@ -47,7 +69,7 @@ MenuItem.propTypes = {
 
 const MenuPrincipalD = () => {
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const [isExpanded, setIsExpanded] = useState(false); 
+  const [isExpanded, setIsExpanded] = useState(false);
   const location = useLocation(); // Obtener la ruta actual
 
   useEffect(() => {
@@ -57,7 +79,11 @@ const MenuPrincipalD = () => {
   }, [isMobile]);
 
   return (
-    <Box w={isExpanded ? "200px" : "60px"} bg="gray.200" transition="width 0.5s">
+    <Box
+      w={isExpanded ? "200px" : "60px"}
+      bg="gray.200"
+      transition="width 0.5s"
+    >
       <Flex align="center" justifyContent="center" h="50px" bg="gray.200">
         <IconButton
           icon={<HamburgerIcon />}
@@ -67,47 +93,54 @@ const MenuPrincipalD = () => {
         />
       </Flex>
       <VStack align="stretch" pl={isExpanded ? 2 : 0}>
-        <MenuItem 
+        {/* <MenuItem 
           icon={<AiFillDashboard style={{ fontSize: '20px' }} />} 
           label="Dashboard" 
           to="/admin/" 
           isExpanded={isExpanded}
           isActive={location.pathname === '/admin/'} // Comprobación de la ruta actual
-        /> 
-        <MenuItem 
-          icon={<MdDirections style={{ fontSize: '20px' }} />} 
-          label="Rutas" 
-          to="/ruta/listar" 
+        />  */}
+        <MenuItem
+          icon={<FaShoppingCart style={{ fontSize: "20px" }} />}
+          label="Pedido"
+          to="/pedido/listar"
           isExpanded={isExpanded}
-          isActive={location.pathname === '/ruta/listar'} // Comprobación de la ruta actual
+          isActive={location.pathname === "/pedido/listar"} // Comprobación de la ruta actual
         />
-        <MenuItem 
-          icon={<MdLocationCity style={{ fontSize: '20px' }} />} 
-          label="Departamento" 
-          to="/ciudad/listar" 
+        <MenuItem
+          icon={<MdDirections style={{ fontSize: "20px" }} />}
+          label="Rutas"
+          to="/ruta/listar"
           isExpanded={isExpanded}
-          isActive={location.pathname === '/ciudad/listar'} // Comprobación de la ruta actual
+          isActive={location.pathname === "/ruta/listar"} // Comprobación de la ruta actual
         />
-        <MenuItem 
-          icon={<FaStore style={{ fontSize: '20px' }} />} 
-          label="Sucursal" 
-          to="/tienda/listar" 
+        <MenuItem
+          icon={<MdLocationCity style={{ fontSize: "20px" }} />}
+          label="Departamento"
+          to="/ciudad/listar"
           isExpanded={isExpanded}
-          isActive={location.pathname === '/tienda/listar'} // Comprobación de la ruta actual
+          isActive={location.pathname === "/ciudad/listar"} // Comprobación de la ruta actual
         />
-        <MenuItem 
-          icon={<FaBuilding style={{ fontSize: '20px' }} />} 
-          label="Empresas" 
-          to="/empresa/listar" 
+        <MenuItem
+          icon={<FaStore style={{ fontSize: "20px" }} />}
+          label="Sucursal"
+          to="/tienda/listar"
           isExpanded={isExpanded}
-          isActive={location.pathname === '/empresa/listar'} // Comprobación de la ruta actual
+          isActive={location.pathname === "/tienda/listar"} // Comprobación de la ruta actual
         />
-        <MenuItem 
-          icon={<FaGlobe style={{ fontSize: '20px' }} />} 
-          label="País" 
-          to="/pais/listar" 
+        <MenuItem
+          icon={<FaBuilding style={{ fontSize: "20px" }} />}
+          label="Empresas"
+          to="/empresa/listar"
           isExpanded={isExpanded}
-          isActive={location.pathname === '/pais/listar'} // Comprobación de la ruta actual
+          isActive={location.pathname === "/empresa/listar"} // Comprobación de la ruta actual
+        />
+        <MenuItem
+          icon={<FaGlobe style={{ fontSize: "20px" }} />}
+          label="País"
+          to="/pais/listar"
+          isExpanded={isExpanded}
+          isActive={location.pathname === "/pais/listar"} // Comprobación de la ruta actual
         />
       </VStack>
     </Box>

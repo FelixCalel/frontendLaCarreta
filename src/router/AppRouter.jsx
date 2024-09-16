@@ -15,6 +15,7 @@ import { PaginaCiudad } from "./CiudaRouter";
 import { PaginaTienda } from "./TiendaRouter";
 import  { PaginaRuta } from "./RutaRouter";
 import HomePage from "../pages/auth/HomePage"; 
+import { PaginaPedido } from "./PedidosRouter";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -61,6 +62,7 @@ export const AppRouter = () => {
 
       {/* Rutas de Pais */}
       <Route path="/pais/*" element={<PaginaPais />} />
+      <Route path="/formulario/*" element={< PaginaPedido />} />
       <Route path="/empresa/*" element={<PaginaEmpresa />} />
       <Route path="/ciudad/*" element={<PaginaCiudad />} />
       <Route path="/tienda/*" element={<PaginaTienda />} />
