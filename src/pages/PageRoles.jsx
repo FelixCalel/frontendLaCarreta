@@ -10,7 +10,7 @@ export const PageRoles = () => {
       <Icon as={InfoOutlineIcon} color="brand.500" mr={2} />
       <Text fontSize="md">
         Se presentan los diferentes roles que se pueden asignar a los
-        usuarios de proveedores por empresas al solicitar un trámite de pago.
+        usuarios de lacarreta por empresas al solicitar un trámite de pago.
         En la opción de ver permisos, los usuarios pueden agregar o quitar
         permisos según lo necesiten.
       </Text>

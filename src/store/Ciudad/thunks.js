@@ -1,13 +1,14 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 export const tablaCiudad = createAsyncThunk(
   'ciudades/fetchCiudades',
   async () => {
-    const response = await axios.get('http://localhost:3000/ciudad/todos');
+    const response = await axios.get(`${BASE_URL}/ciudad/todos`);
     const data = response.data;
-   // console.log(data);
-    data.sort((a, b) => a.id - b.id); // Ordena los datos por id
+    data.sort((a, b) => a.id - b.id);
     return data;
   }
 );
@@ -15,7 +16,7 @@ export const tablaCiudad = createAsyncThunk(
 export const addNewCiudad = createAsyncThunk(
   'ciudades/addNewCiudad',
   async (newCiudad) => {
-    const response = await axios.post('http://localhost:3000/ciudad/create', newCiudad);
+    const response = await axios.post(`${BASE_URL}/ciudad/create`, newCiudad);
     return response.data;
   }
 );
@@ -23,7 +24,7 @@ export const addNewCiudad = createAsyncThunk(
 export const deleteCiudad = createAsyncThunk(
   'ciudades/deleteCiudad',
   async (id) => {
-    await axios.delete(`http://localhost:3000/ciudad/eliminar/${id}`);
+    await axios.delete(`${BASE_URL}/ciudad/eliminar/${id}`);
     return id;
   }
 );
@@ -31,7 +32,7 @@ export const deleteCiudad = createAsyncThunk(
 export const updateCiudad = createAsyncThunk(
   'ciudades/updateCiudad',
   async (ciudad) => {
-    const response = await axios.put(`http://localhost:3000/ciudad/actualizar/${ciudad.id}`, ciudad);
+    const response = await axios.put(`${BASE_URL}/ciudad/actualizar/${ciudad.id}`, ciudad);
     return response.data;
   }
 );
@@ -39,7 +40,7 @@ export const updateCiudad = createAsyncThunk(
 export const toggleCiudadStatus = createAsyncThunk(
   'ciudades/toggleCiudadStatus',
   async ({ id, estaActivo }) => {
-    const response = await axios.patch(`http://localhost:3000/ciudad/actualizar-estado/${id}`, { estaActivo });
+    const response = await axios.patch(`${BASE_URL}/ciudad/actualizar-estado/${id}`, { estaActivo });
     return response.data;
   }
 );
@@ -47,7 +48,7 @@ export const toggleCiudadStatus = createAsyncThunk(
 export const tablaPais = createAsyncThunk(
   'paises/fetchPaises',
   async () => {
-    const response = await axios.get('http://localhost:3000/pais/todos');
+    const response = await axios.get(`${BASE_URL}/pais/todos`);
     const data = response.data;
     data.sort((a, b) => a.id - b.id);
     return data;

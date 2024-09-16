@@ -9,7 +9,6 @@ import { useEffect } from "react";
 import { logout, login, obtenerDatosLogeado } from "../store/auth";
 import { isAuthenticated } from "../providers/endpoints";
 import { Dashboard } from "../pages";
-// import { ProveedoresPageRouter } from "./ProveedoresPageRouter";
 import { PaginaPais } from "./PaisRoute";
 import { PaginaEmpresa } from "./EmpresaRoute";
 import { PaginaCiudad } from "./CiudaRouter";
@@ -58,9 +57,6 @@ export const AppRouter = () => {
           </PrivateRoute>
         }
       />
-
-      {/* Rutas de Proveedores
-      <Route path="/proveedores/*" element={<ProveedoresPageRouter />} /> */}
 
 
       {/* Rutas de Pais */}

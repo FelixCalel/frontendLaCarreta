@@ -1,11 +1,13 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 // Fetch all Tiendas
 export const tablaTienda = createAsyncThunk(
   'tiendas/fetchTiendas',
   async () => {
-    const response = await axios.get('http://localhost:3000/tienda/todos');
+    const response = await axios.get(`${BASE_URL}/tienda/todos`);
     const data = response.data;
     data.sort((a, b) => a.id - b.id);
     return data;
@@ -22,8 +24,8 @@ export const addNewTienda = createAsyncThunk(
 
     console.log('Hola', newTienda);
     try {
-      const response = await axios.post('http://localhost:3000/tienda/create', newTienda);
-      console.log('Hola 2',newTienda);
+      const response = await axios.post(`${BASE_URL}/tienda/create`, newTienda);
+      console.log('Hola 2', newTienda);
       return response.data;
     } catch (error) {
       return (error.response.data || 'Error al crear la tienda');
@@ -31,12 +33,11 @@ export const addNewTienda = createAsyncThunk(
   }
 );
 
-
 // Delete Tienda
 export const deleteTienda = createAsyncThunk(
   'tiendas/deleteTienda',
   async (id) => {
-    await axios.delete(`http://localhost:3000/tienda/eliminar/${id}`);
+    await axios.delete(`${BASE_URL}/tienda/eliminar/${id}`);
     return id;
   }
 );
@@ -45,7 +46,7 @@ export const deleteTienda = createAsyncThunk(
 export const updateTienda = createAsyncThunk(
   'tiendas/updateTienda',
   async (tienda) => {
-    const response = await axios.put(`http://localhost:3000/tienda/actualizar/${tienda.id}`, tienda);
+    const response = await axios.put(`${BASE_URL}/tienda/actualizar/${tienda.id}`, tienda);
     return response.data;
   }
 );
@@ -54,20 +55,7 @@ export const updateTienda = createAsyncThunk(
 export const toggleTiendaStatus = createAsyncThunk(
   'tiendas/toggleTiendaStatus',
   async ({ id, estaActivo }) => {
-    const response = await axios.patch(`http://localhost:3000/tienda/actualizar-estado/${id}`, { estaActivo });
+    const response = await axios.patch(`${BASE_URL}/tienda/actualizar-estado/${id}`, { estaActivo });
     return response.data;
   }
 );
-
-// Fetch all Ciudades
-// export const tablaCiudad = createAsyncThunk(
-//   'ciudades/fetchCiudades',
-//   async () => {
-//     const response = await axios.get('http://localhost:3000/ciudad/todos');
-//     const data = response.data;
-//     data.sort((a, b) => a.id - b.id); // Ordena los datos por id
-//     return data;
-//   }
-// );
-
-

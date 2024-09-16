@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Flex, Heading, HStack, Link, Image } from '@chakra-ui/react';
 
 const Header = () => {
@@ -9,10 +8,10 @@ const Header = () => {
           <Image 
             src="../../images/POPOYAN BLANCO.png"
             alt="Logo Popoyán" 
-            boxSize="80px"  // Ajusta el tamaño de la imagen
-            width={200}  // Ajusta el ancho de la imagen
+            boxSize="80px" 
+            width={200}  
           />
-          <Heading size="lg" color="white" ml={9}>  {/* Ajusta el tamaño del texto */}
+          <Heading size="lg" color="white" ml={9}>  
              Modulo Proveedores - Solicitud
           </Heading>
         </Flex>

@@ -25,7 +25,7 @@ export const ConfirmacionRegistro = () => {
       textAlign="center"
     >
       <Text fontSize="xl" mb={4}>
-        Te has registrado con el correo {} correctamente en el sistema de portal de proveedores Agropecuaria Popoyan. Revisa tu bandeja de entrada del correo que registraste para darte de alta en el sistema.
+        Te has registrado con el correo {} correctamente en el sistema de portal de La Carreta Agropecuaria Popoyan. Revisa tu bandeja de entrada del correo que registraste para darte de alta en el sistema.
       </Text>
       <Link as={RouterLink} to="/auth/login">
         <Button colorScheme="blue">Regresar al Login</Button>
