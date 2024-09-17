@@ -14,6 +14,7 @@ import {
 import ProductoSelector from "./componentes/productoSelector";
 import CantidadInput from "./componentes/cantidadInput";
 import PrecioInput from "./componentes/precioInput";
+import DeuSelector from "./componentes/DeuSelector";
 
 const DetallePedidoForm = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -38,6 +39,14 @@ const DetallePedidoForm = () => {
       ...prev,
       productoId,
     }));
+  };
+
+  const handleDeudorSelect = (deudorId) => {
+    setDetallePedido((prev) => ({
+      ...prev,
+      deudorId,
+    }));
+
   };
 
   const validateFields = () => {
@@ -72,6 +81,7 @@ const DetallePedidoForm = () => {
           <ModalHeader>Agregar Detalle del Pedido</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
+          <DeuSelector onSelect={handleDeudorSelect} />
             <ProductoSelector onSelect={handleProductoSelect} />
             <CantidadInput
               value={detallePedido.cantidad}

@@ -8,7 +8,7 @@ export const PaginaPedido = () => {
     <Routes>
       <Route path="/*" element={<RootLayout />}>
         <Route index element={<Dashboard />} />
-        <Route path="pedidos" element={<PageDetallePedido />} /> 
+        <Route path="listar" element={<PageDetallePedido />} /> 
         {/* Más rutas anidadas si es necesario */}
       </Route>
     </Routes>

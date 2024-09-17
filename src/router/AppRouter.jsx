@@ -62,7 +62,8 @@ export const AppRouter = () => {
 
       {/* Rutas de Pais */}
       <Route path="/pais/*" element={<PaginaPais />} />
-      <Route path="/formulario/*" element={< PaginaPedido />} />
+      <Route path="/pedido/*" element={< PaginaPedido />} />
+      <Route path="/empresa/*" element={<PaginaEmpresa />} />
       <Route path="/empresa/*" element={<PaginaEmpresa />} />
       <Route path="/ciudad/*" element={<PaginaCiudad />} />
       <Route path="/tienda/*" element={<PaginaTienda />} />

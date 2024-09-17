@@ -47,7 +47,7 @@ const DeuSelector = ({ onSelect }) => {
 
 // Validación de PropTypes
 DeuSelector.propTypes = {
-  onSelect: PropTypes.func.isRequired, // Aseguramos que onSelect sea una función y es obligatorio
+  onSelect: PropTypes.func.isRequired, 
 };
 
 export default DeuSelector;
