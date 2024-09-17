@@ -52,15 +52,14 @@ const tiendaSlice = createSlice({
         if (index !== -1) {
           state.data[index].estaActivo = action.payload.estaActivo;
         }
-        state.data.sort((a, b) => a.id - b.id); // Ordena después de actualizar el estado
+        state.data.sort((a, b) => a.id - b.id);
       });
   }
 });
 
-// Selector para obtener tiendas ordenadas por ID
 export const selectOrderedTiendas = createSelector(
-  (state) => state.tiendas.data,  // Obtenemos el estado `data` de las tiendas
-  (data) => data.slice().sort((a, b) => a.id - b.id)  // Retornamos los datos ordenados
+  (state) => state.tiendas.data, 
+  (data) => data.slice().sort((a, b) => a.id - b.id)  
 );
 
 export default tiendaSlice.reducer;

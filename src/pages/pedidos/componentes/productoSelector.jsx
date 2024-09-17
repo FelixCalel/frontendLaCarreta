@@ -9,38 +9,40 @@ import {
   AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
 
-import { tablaProductos } from "../../../store/Pedidos/pedidoSlice";
+import { tablaItems } from "../../../store/items/thunks";  // Importa el thunk correcto
 
 const ProductoSelector = ({ onSelect }) => {
   const dispatch = useDispatch();
-  const productos = useSelector((state) => state.productos);
+  
+  // Accedemos al estado `items` en lugar de `productos`
+  const items = useSelector((state) => state.items.items);  // Cambiamos de `productos` a `items`
 
   useEffect(() => {
-    dispatch(tablaProductos());
+    dispatch(tablaItems());  // Despachamos el thunk para obtener los items
   }, [dispatch]);
 
-  const handleSelectProducto = (producto) => {
-    onSelect(producto.id);
+  const handleSelectItem = (item) => {
+    onSelect(item.id);  // Cambiamos de `producto` a `item`
   };
 
   return (
     <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
       <AutoComplete openOnFocus>
-        <AutoCompleteInput variant="outline" placeholder="Seleccione un producto" />
+        <AutoCompleteInput variant="outline" placeholder="Seleccione un item" />  {/* Cambiamos el texto */}
         <AutoCompleteList>
-          {productos.map((prod) => (
+          {items.map((item) => (  // Iteramos sobre `items` en lugar de `productos`
             <AutoCompleteItem
-              key={`option-${prod.id}`}
-              value={prod.nombre}
+              key={`option-${item.id}`}
+              value={item.nombre}  // Cambiamos de `prod` a `item`
               textTransform="capitalize"
-              onClick={() => handleSelectProducto(prod)}
+              onClick={() => handleSelectItem(item)}  // Cambiamos de `prod` a `item`
             >
-              {prod.nombre}
+              {item.nombre}  {/* Cambiamos de `prod` a `item` */}
             </AutoCompleteItem>
           ))}
         </AutoCompleteList>
       </AutoComplete>
-      <FormHelperText mt="2">Seleccione el producto para el pedido</FormHelperText>
+      <FormHelperText mt="2">Seleccione el item para el pedido</FormHelperText>  {/* Cambiamos el texto */}
     </Flex>
   );
 };

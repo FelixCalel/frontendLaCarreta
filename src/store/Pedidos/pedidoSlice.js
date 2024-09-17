@@ -1,6 +1,5 @@
 import { createSlice, createSelector } from '@reduxjs/toolkit';
 import {
-  tablaPedido,
   addNewPedido,
   deletePedido,
   updatePedido,
@@ -17,17 +16,6 @@ const pedidoSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(tablaPedido.pending, (state) => {
-        state.status = 'loading';
-      })
-      .addCase(tablaPedido.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.data = action.payload.sort((a, b) => a.id - b.id); // Ordena al actualizar
-      })
-      .addCase(tablaPedido.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.error.message;
-      })
       .addCase(addNewPedido.fulfilled, (state, action) => {
         state.data.push(action.payload);
         state.data.sort((a, b) => a.id - b.id); // Ordena después de agregar

@@ -5,9 +5,9 @@ import { tablaDeudores } from './thunks';
 const deudoresSlice = createSlice({
   name: 'deudores',
   initialState: {
-    deudores: [],  // Lista de deudores
-    status: 'idle',  // Estado de la solicitud
-    error: null,  // Errores en la solicitud
+    deudores: [], 
+    status: 'idle',
+    error: null, 
   },
   reducers: {},
   extraReducers: (builder) => {

@@ -9,6 +9,9 @@ import ciudadReducer from './Ciudad/ciudadSlice'
 import tiendaReducer from './Tienda/tiendaSlice'
 import rutaReducer from './Ruta/rutaSlice'
 import deusReducer from './Deus/deuSlice'
+import pedidosReducer from './Pedidos/pedidoSlice'
+import detalleOrdenReducer from './Pedidos/DetallePedidos/detalleOrdenSlice'
+import itemReducer from './items/itemSlice'
 
 export const store = configureStore({
   reducer: {
@@ -20,5 +23,8 @@ export const store = configureStore({
     tiendas: tiendaReducer,  
     rutas: rutaReducer,
     deudores: deusReducer,
+    pedidos: pedidosReducer,
+    detalleOrden: detalleOrdenReducer,
+    items: itemReducer,
   },
 })
