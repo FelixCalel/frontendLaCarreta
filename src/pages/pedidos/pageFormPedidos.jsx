@@ -15,6 +15,8 @@ import ProductoSelector from "./componentes/productoSelector";
 import CantidadInput from "./componentes/cantidadInput";
 import PrecioInput from "./componentes/precioInput";
 import DeuSelector from "./componentes/DeuSelector";
+import CiudadSelector from "./componentes/CiudadSelector";
+import TiendaSelector from "./componentes/tiendaSelector";
 
 const DetallePedidoForm = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -41,19 +43,37 @@ const DetallePedidoForm = () => {
     }));
   };
 
+  const handleCiudadChange = (e) => {
+    const { value } = e.target;
+    setDetallePedido((prev) => ({
+      ...prev,
+      ciudadId: value,
+    }));
+  };
+
   const handleDeudorSelect = (deudorId) => {
     setDetallePedido((prev) => ({
       ...prev,
       deudorId,
     }));
+  };
 
+  const handleTiendaChange = (e) => {
+    const { value } = e.target;
+    setDetallePedido((prev) => ({
+      ...prev,
+      tiendaId: value,
+    }));
   };
 
   const validateFields = () => {
     let formErrors = {};
-    if (!detallePedido.productoId) formErrors.productoId = "El producto es obligatorio";
-    if (detallePedido.cantidad <= 0) formErrors.cantidad = "La cantidad debe ser mayor a 0";
-    if (detallePedido.precio <= 0) formErrors.precio = "El precio debe ser mayor a 0";
+    if (!detallePedido.productoId)
+      formErrors.productoId = "El producto es obligatorio";
+    if (detallePedido.cantidad <= 0)
+      formErrors.cantidad = "La cantidad debe ser mayor a 0";
+    if (detallePedido.precio <= 0)
+      formErrors.precio = "El precio debe ser mayor a 0";
     return formErrors;
   };
 
@@ -81,7 +101,15 @@ const DetallePedidoForm = () => {
           <ModalHeader>Agregar Detalle del Pedido</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-          <DeuSelector onSelect={handleDeudorSelect} />
+            <CiudadSelector
+              value={detallePedido.ciudadId}
+              onChange={handleCiudadChange}
+            />
+            <DeuSelector onSelect={handleDeudorSelect} />
+            <TiendaSelector
+              value={detallePedido.tiendaId}
+              onChange={handleTiendaChange}
+            />
             <ProductoSelector onSelect={handleProductoSelect} />
             <CantidadInput
               value={detallePedido.cantidad}

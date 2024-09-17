@@ -36,7 +36,7 @@ import {
 } from "../../store/Tienda/thunks";
 import CiudadSelector from "./componentes/CiudadSelector";
 import RutaSelector from "./componentes/RutaSelector";
-// Componente DeuSelector actualizado
+
 import DeuSelector from "./componentes/DeuSelector";
 
 const PageFormTienda = () => {
@@ -45,8 +45,6 @@ const PageFormTienda = () => {
     data,
     status,
     error,
-    // ciudades,
-    // rutas,
     ciudadesStatus,
     rutasStatus,
     deudoresStatus,
@@ -190,18 +188,6 @@ const PageFormTienda = () => {
       </Box>
     );
   }
-
-  // const ciudadMap = ciudades.reduce((acc, ciudad) => {
-  //   console.log(acc);
-  //   console.log(ciudad);
-  //   acc[ciudad.id] = ciudad.id;
-  //   return acc;
-  // }, {});
-
-  // const rutaMap = rutas.reduce((acc, ruta) => {
-  //   acc[ruta.id] = ruta.id;
-  //   return acc;
-  // }, {});
 
   return (
     <Box padding="20px" overflowX="auto">
