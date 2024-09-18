@@ -230,7 +230,7 @@ const DetallePedidoForm = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{isPedidoFinalizado ? "Agregar Productos" : "Agregar Detalle del Pedido"}</ModalHeader>
+          <ModalHeader>{isPedidoFinalizado ? "Agregar Productos" : "Agregar Pedido"}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {!isPedidoFinalizado && (
