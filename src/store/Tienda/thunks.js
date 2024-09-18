@@ -7,12 +7,23 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 export const tablaTienda = createAsyncThunk(
   'tiendas/fetchTiendas',
   async () => {
-    const response = await axios.get(`${BASE_URL}/tienda/todos`);
-    const data = response.data;
-    data.sort((a, b) => a.id - b.id);
-    return data;
+    try {
+      const response = await axios.get(`${BASE_URL}/tienda/todos`);
+      const data = response.data;
+      
+      data.sort((a, b) => a.id - b.id);
+
+      // Log para ver los datos después de ordenar
+      console.log('Datos después de ordenar:', data);
+
+      return data;
+    } catch (error) {
+      console.error('Error al obtener tiendas:', error);
+      throw error; // Propaga el error para que sea capturado en la acción
+    }
   }
 );
+
 
 // Add new Tienda
 export const addNewTienda = createAsyncThunk(

@@ -1,5 +1,11 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
   Box,
   Button,
   useDisclosure,
@@ -10,12 +16,6 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Collapse,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,25 +25,31 @@ import PrecioInput from "./componentes/precioInput";
 import DeuSelector from "./componentes/DeuSelector";
 import CiudadSelector from "./componentes/CiudadSelector";
 import TiendaSelector from "./componentes/tiendaSelector";
-import { addNewDetalleOrden, tablaDetalleOrden } from "../../store/Pedidos/DetallePedidos/thunks";
-import { addNewPedido, tablaPedidos} from "../../store/Pedidos/thunks"
+import {
+  addNewDetalleOrden,
+  tablaDetalleOrden,
+} from "../../store/Pedidos/DetallePedidos/thunks";
+import { addNewPedido, tablaPedidos } from "../../store/Pedidos/thunks";
+
 const DetallePedidoForm = () => {
   const dispatch = useDispatch();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  
-  // Obtenemos pedidos y detalleOrden desde Redux
-  const pedidos = useSelector((state) => state.pedidos.data); 
+
+  // Obtener pedidos y detalleOrden desde Redux
+  const pedidos = useSelector((state) => state.pedidos.data); // Cambié "data" a "pedidos" para mayor claridad
   const detalleOrden = useSelector((state) => state.detalleOrden.data);
 
-  const [detallePedido, setDetallePedido] = useState({
+  // Estado para manejar la creación de pedidos y productos
+  const [currentPedido, setCurrentPedido] = useState({
     ciudadId: "",
     deudorId: "",
     tiendaId: "",
-    productos: [], 
+    usuarioId: "",
+    estadoId: 0,
   });
 
   const [isPedidoFinalizado, setIsPedidoFinalizado] = useState(false);
-  const [isDetailsOpen, setIsDetailsOpen] = useState({}); 
+  const [isDetailsOpen, setIsDetailsOpen] = useState({});
   const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
 
   const [producto, setProducto] = useState({
@@ -53,28 +59,28 @@ const DetallePedidoForm = () => {
   });
 
   useEffect(() => {
-    dispatch(tablaPedidos()); 
-    dispatch(tablaDetalleOrden()); 
+    dispatch(tablaPedidos()); // Cargar los pedidos al iniciar
+    dispatch(tablaDetalleOrden()); // Cargar los detalles de los pedidos
   }, [dispatch]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProducto((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: parseFloat(value),
     }));
   };
 
   const handleCiudadChange = (e) => {
     const { value } = e.target;
-    setDetallePedido((prev) => ({
+    setCurrentPedido((prev) => ({
       ...prev,
       ciudadId: value,
     }));
   };
 
   const handleDeudorSelect = (deudorId) => {
-    setDetallePedido((prev) => ({
+    setCurrentPedido((prev) => ({
       ...prev,
       deudorId,
     }));
@@ -82,7 +88,7 @@ const DetallePedidoForm = () => {
 
   const handleTiendaChange = (e) => {
     const { value } = e.target;
-    setDetallePedido((prev) => ({
+    setCurrentPedido((prev) => ({
       ...prev,
       tiendaId: value,
     }));
@@ -97,13 +103,20 @@ const DetallePedidoForm = () => {
 
   const validateFields = () => {
     let formErrors = {};
-    if (!detallePedido.ciudadId && !isPedidoFinalizado) formErrors.ciudadId = "La ciudad es obligatoria";
-    if (!detallePedido.deudorId && !isPedidoFinalizado) formErrors.deudorId = "El deudor es obligatorio";
-    if (!detallePedido.tiendaId && !isPedidoFinalizado) formErrors.tiendaId = "La tienda es obligatoria";
-    if (!producto.productoId) formErrors.productoId = "El producto es obligatorio";
-    if (producto.cantidad <= 0) formErrors.cantidad = "La cantidad debe ser mayor a 0";
-    if (producto.precio <= 0) formErrors.precio = "El precio debe ser mayor a 0";
-    return formErrors;
+    if (!currentPedido.ciudadId && !isPedidoFinalizado)
+      formErrors.ciudadId = "La ciudad es obligatoria";
+    if (!currentPedido.deudorId && !isPedidoFinalizado)
+      formErrors.deudorId = "El deudor es obligatorio";
+    if (!currentPedido.tiendaId && !isPedidoFinalizado)
+      formErrors.tiendaId = "La tienda es obligatoria";
+    if (!producto.productoId)
+      formErrors.productoId = "El producto es obligatorio";
+    if (producto.cantidad <= 0)
+      formErrors.cantidad = "La cantidad debe ser mayor a 0";
+    if (producto.precio <= 0)
+      formErrors.precio = "El precio debe ser mayor a 0";
+
+    return formErrors; // Retornar el objeto, aunque esté vacío
   };
 
   const handleSubmit = async () => {
@@ -114,30 +127,33 @@ const DetallePedidoForm = () => {
     }
 
     if (!isPedidoFinalizado) {
-      // Crear el pedido maestro (Ciudad, Deudor, Tienda)
+      // Crear un nuevo pedido
       const newPedido = {
-        ciudadId: detallePedido.ciudadId,
-        deudorId: detallePedido.deudorId,
-        tiendaId: detallePedido.tiendaId,
+        ciudadId: currentPedido.ciudadId,
+        deudorId: currentPedido.deudorId,
+        tiendaId: currentPedido.tiendaId,
+        estadoId: 1, // Estado inicial predeterminado
       };
 
-      // Despachamos el thunk para guardar el pedido en la base de datos
-      const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
-      
-      // Guardar el ID del pedido creado en la base de datos
-      setPedidoIdGuardado(pedidoGuardado.id);
+      try {
+        const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
+        setPedidoIdGuardado(pedidoGuardado.id);
+        setIsPedidoFinalizado(true);
 
-      setIsPedidoFinalizado(true); // Cambiamos el estado para agregar solo productos a partir de ahora
+        // Volver a cargar la tabla de pedidos
+        dispatch(tablaPedidos());
 
-      // Limpiamos el producto
-      setProducto({
-        productoId: "",
-        cantidad: 0,
-        precio: 0,
-      });
-
+        // Resetear el estado del producto
+        setProducto({
+          productoId: "",
+          cantidad: 0,
+          precio: 0,
+        });
+      } catch (error) {
+        console.error("Error al guardar el pedido:", error);
+      }
     } else {
-      // Agregar productos al pedido existente
+      // Guardar el detalle del pedido
       const newDetalleOrden = {
         pedidoId: pedidoIdGuardado,
         productoId: producto.productoId,
@@ -145,15 +161,13 @@ const DetallePedidoForm = () => {
         precio: producto.precio,
       };
 
-      // Despachamos el thunk para guardar el detalle del pedido en la base de datos
-      await dispatch(addNewDetalleOrden(newDetalleOrden));
+      try {
+        await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
+        console.log("Detalle del pedido guardado");
+      } catch (error) {
+        console.error("Error al guardar el detalle del pedido:", error);
+      }
     }
-
-    setProducto({
-      productoId: "",
-      cantidad: 0,
-      precio: 0,
-    });
 
     onClose();
   };
@@ -166,10 +180,12 @@ const DetallePedidoForm = () => {
   };
 
   const calcularTotal = (productos) => {
-    return productos.reduce((total, prod) => total + prod.precio * prod.cantidad, 0);
+    return productos.reduce(
+      (total, prod) => total + prod.precio * prod.cantidad,
+      0
+    );
   };
 
-  // Filtrar los detalles de un pedido específico
   const obtenerDetallesPedido = (pedidoId) => {
     return detalleOrden.filter((detalle) => detalle.pedidoId === pedidoId);
   };
@@ -177,13 +193,19 @@ const DetallePedidoForm = () => {
   return (
     <Box>
       <Button onClick={onOpen} colorScheme="blue">
-        {isPedidoFinalizado ? "Agregar Productos" : "Crear Detalle de Pedido"}
+        {isPedidoFinalizado ? "Agregar Productos" : "Crear Pedido"}
       </Button>
 
+      {/* Tabla para mostrar los pedidos */}
       <Table mt={4}>
         <Thead>
           <Tr>
             <Th>ID</Th>
+            <Th>Ciudad</Th>
+            <Th>Deudor</Th>
+            <Th>Tienda</Th>
+            <Th>Usuario</Th>
+            <Th>Estado</Th>
             <Th>Acciones</Th>
           </Tr>
         </Thead>
@@ -191,15 +213,20 @@ const DetallePedidoForm = () => {
           {pedidos.map((pedido) => (
             <Tr key={pedido.id}>
               <Td>{pedido.id}</Td>
+              <Td>{pedido.nombreCiudad || "N/A"}</Td>
+              <Td>{pedido.nombreDeu || "N/A"}</Td>
+              <Td>{pedido.nombreTienda || "N/A"}</Td>
+              <Td>{pedido.usuarioId || "Sin usuario"}</Td>
+              <Td>{pedido.estadoId || "Desconocido"}</Td>
               <Td>
                 <Button size="sm" onClick={() => handleToggleDetails(pedido.id)}>
-                  {isDetailsOpen[pedido.id] ? "Ocultar Detalles" : "Ver Detalles"}
+                  {isDetailsOpen[pedido.id] ? "▲" : "▼"}
                 </Button>
                 <Collapse in={isDetailsOpen[pedido.id]}>
                   <Table mt={2} size="sm">
                     <Thead>
                       <Tr>
-                        <Th>Item</Th>
+                        <Th>Producto</Th>
                         <Th>Cantidad</Th>
                         <Th>Precio</Th>
                       </Tr>
@@ -207,7 +234,7 @@ const DetallePedidoForm = () => {
                     <Tbody>
                       {obtenerDetallesPedido(pedido.id).map((prod, index) => (
                         <Tr key={index}>
-                          <Td>{prod.productoId}</Td>
+                          <Td>{prod.producto?.nombre || prod.productoId}</Td>
                           <Td>{prod.cantidad}</Td>
                           <Td>{prod.precio}</Td>
                         </Tr>
@@ -227,29 +254,38 @@ const DetallePedidoForm = () => {
         </Tbody>
       </Table>
 
+      {/* Modal para agregar o editar pedidos */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{isPedidoFinalizado ? "Agregar Productos" : "Agregar Pedido"}</ModalHeader>
+          <ModalHeader>
+            {isPedidoFinalizado ? "Agregar Productos" : "Agregar Pedido"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {!isPedidoFinalizado && (
               <>
-                <CiudadSelector value={detallePedido.ciudadId} onChange={handleCiudadChange} />
+                <CiudadSelector
+                  value={currentPedido.ciudadId}
+                  onChange={handleCiudadChange}
+                />
                 <DeuSelector onSelect={handleDeudorSelect} />
-                <TiendaSelector value={detallePedido.tiendaId} onChange={handleTiendaChange} />
+                <TiendaSelector
+                  value={currentPedido.tiendaId}
+                  onChange={handleTiendaChange}
+                />
               </>
             )}
             <ProductoSelector onSelect={handleProductoSelect} />
             <CantidadInput
-              value={producto.cantidad}
+              pedidoId={pedidoIdGuardado || 0}
+              productoId={producto.productoId || 0}
+              value={Number(producto.cantidad) || 0}
               onChange={handleInputChange}
-              error={null}
             />
             <PrecioInput
-              value={producto.precio}
+              value={Number(producto.precio) || 0}
               onChange={handleInputChange}
-              error={null}
             />
           </ModalBody>
           <ModalFooter>

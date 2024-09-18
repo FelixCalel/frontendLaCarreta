@@ -7,12 +7,29 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 export const tablaDetalleOrden = createAsyncThunk(
   'detalleOrden/fetchDetalleOrden',
   async () => {
-    const response = await axios.get(`${BASE_URL}/detalle/pedido/todos`);
-    const data = response.data;
-    data.sort((a, b) => a.id - b.id);
-    return data;
+    try {
+      // Hacer la petición a la API
+      const response = await axios.get(`${BASE_URL}/detalle/pedido/todos`);
+
+      // Extraer los datos del response
+      const data = response.data;
+
+      // Ordenar los datos
+      data.sort((a, b) => a.id - b.id);
+
+      // Log para ver los datos después de ordenarlos
+      console.log("Datos después de ordenar:", data);
+
+      // Retornar los datos para que se manejen en el reducer
+      return data;
+    } catch (error) {
+      // Capturar y mostrar cualquier error que ocurra en la petición
+      console.error("Error al obtener el detalle de la orden:", error);
+      throw error; // Propagar el error para que pueda ser manejado en el estado de Redux
+    }
   }
 );
+
 
 // Add new DetalleOrden
 export const addNewDetalleOrden = createAsyncThunk(
