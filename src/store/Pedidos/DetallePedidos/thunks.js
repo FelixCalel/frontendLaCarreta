@@ -7,7 +7,7 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 export const tablaDetalleOrden = createAsyncThunk(
   'detalleOrden/fetchDetalleOrden',
   async () => {
-    const response = await axios.get(`${BASE_URL}/detalleOrden/todos`);
+    const response = await axios.get(`${BASE_URL}/detalle/pedido/todos`);
     const data = response.data;
     data.sort((a, b) => a.id - b.id);
     return data;
@@ -18,7 +18,7 @@ export const tablaDetalleOrden = createAsyncThunk(
 export const addNewDetalleOrden = createAsyncThunk(
   'detalleOrden/addNewDetalleOrden',
   async (newDetalleOrden) => {
-    const response = await axios.post(`${BASE_URL}/detalleOrden/create`, newDetalleOrden);
+    const response = await axios.post(`${BASE_URL}/detalle/pedido/create`, newDetalleOrden);
     console.log("Detalle Orden Creado: ", newDetalleOrden);
     return response.data;
   }
@@ -28,7 +28,7 @@ export const addNewDetalleOrden = createAsyncThunk(
 export const deleteDetalleOrden = createAsyncThunk(
   'detalleOrden/deleteDetalleOrden',
   async (id) => {
-    await axios.delete(`${BASE_URL}/detalleOrden/eliminar/${id}`);
+    await axios.delete(`${BASE_URL}/detalle/pedido/eliminar/${id}`);
     return id;
   }
 );
@@ -37,7 +37,7 @@ export const deleteDetalleOrden = createAsyncThunk(
 export const updateDetalleOrden = createAsyncThunk(
   'detalleOrden/updateDetalleOrden',
   async (detalleOrden) => {
-    const response = await axios.put(`${BASE_URL}/detalleOrden/actualizar/${detalleOrden.id}`, detalleOrden);
+    const response = await axios.put(`${BASE_URL}/detalle/pedido/actualizar/${detalleOrden.id}`, detalleOrden);
     return response.data;
   }
 );
@@ -46,7 +46,7 @@ export const updateDetalleOrden = createAsyncThunk(
 export const toggleDetalleOrdenStatus = createAsyncThunk(
   'detalleOrden/toggleDetalleOrdenStatus',
   async ({ id, estaActivo }) => {
-    const response = await axios.patch(`${BASE_URL}/detalleOrden/actualizar-estado/${id}`, { estaActivo });
+    const response = await axios.patch(`${BASE_URL}/pedido/actualizar-estado/${id}`, { estaActivo });
     return response.data;
   }
 );
