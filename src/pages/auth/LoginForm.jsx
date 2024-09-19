@@ -1,5 +1,5 @@
-import { useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
+import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
 import {
   Alert,
   AlertIcon,
@@ -15,70 +15,83 @@ import {
   Link,
   Stack,
   useColorModeValue,
-} from '@chakra-ui/react';
-import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+} from "@chakra-ui/react";
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export const LoginForm = () => {
-  const actualUsuario = useSelector(usuario => usuario.auth);
+  const actualUsuario = useSelector((usuario) => usuario.auth);
   const navigate = useNavigate();
 
-  const [correo, setEmail] = useState('');
-  const [contrasena, setPassword] = useState('');
+  const [correo, setEmail] = useState("");
+  const [contrasena, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (actualUsuario === 'authenticated') {
+    if (actualUsuario === "authenticated") {
       return navigate("/auth/home", { replace: true });
     }
   }, [actualUsuario, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
       console.log("Enviando solicitud al backend...");
-      const response = await axios.post('http://localhost:3000/usuarios/login', {
-        correo,
-        contrasena,
-      });
-  
+      const response = await axios.post(
+        "http://localhost:3000/usuarios/login",
+        {
+          correo,
+          contrasena,
+        }
+      );
+
       console.log("Respuesta recibida del backend:", response);
-  
-      // Cambia la forma en que accedes al token
-      if (response.data && response.data.usuario && response.data.usuario.token) {
+
+      // Asegúrate de que la respuesta contenga el token y los datos del usuario
+      if (
+        response.data &&
+        response.data.usuario &&
+        response.data.usuario.token
+      ) {
         console.log("Login exitoso, redireccionando a /auth/home...");
-        
-        // Guarda el token en el almacenamiento local
-        localStorage.setItem('token', response.data.usuario.token);
-        
-        // Redirecciona al home o a la ruta deseada
+
+        const { token } = response.data.usuario;
+        const nombre = response.data.usuario.usuario.nombre; // Accede correctamente al nombre
+
+        // Guarda el token y el nombre en el localStorage
+        localStorage.setItem("token", token);
+        localStorage.setItem("nombreUsuario", nombre); // Guarda el nombre del usuario
+
+        // Redirige al home o a la ruta deseada
         navigate("/auth/home", { replace: true });
       } else {
         console.log("Credenciales incorrectas.");
-        setError('Credenciales incorrectas');
+        setError("Credenciales incorrectas");
       }
     } catch (err) {
       console.error("Error en la solicitud de login:", err);
-  
+
       if (err.response && err.response.data && err.response.data.error) {
         const backendMessage = err.response.data.error;
-        if (backendMessage.includes('Por favor verifica tu correo electrónico')) {
-          setError('Por favor verifica tu correo electrónico antes de iniciar sesión.');
-        } else if (backendMessage.includes('Este usuario no existe')) {
-          setError('Este usuario no existe. Por favor, crea una cuenta.');
+        if (
+          backendMessage.includes("Por favor verifica tu correo electrónico")
+        ) {
+          setError(
+            "Por favor verifica tu correo electrónico antes de iniciar sesión."
+          );
+        } else if (backendMessage.includes("Este usuario no existe")) {
+          setError("Este usuario no existe. Por favor, crea una cuenta.");
         } else {
-          setError('Error al iniciar sesión. Por favor, intenta de nuevo.');
+          setError("Error al iniciar sesión. Por favor, intenta de nuevo.");
         }
       } else {
-        setError('Error al iniciar sesión. Por favor, intenta de nuevo.');
+        setError("Error al iniciar sesión. Por favor, intenta de nuevo.");
       }
     }
   };
-  
-  
 
   return (
     <Flex
@@ -94,10 +107,19 @@ export const LoginForm = () => {
         maxWidth="500px"
         borderRadius="lg"
         boxShadow="lg"
-        backgroundColor={useColorModeValue('whiteAlpha.800', 'gray.700')}
+        backgroundColor={useColorModeValue("whiteAlpha.800", "gray.700")}
       >
         <Box lineHeight={1} pb={6} textAlign={"center"}>
-          <Heading as='section' pb={5} textAlign={"center"} size="lg" mb="0.2" lineHeight="tight">Iniciar sesión</Heading>
+          <Heading
+            as="section"
+            pb={5}
+            textAlign={"center"}
+            size="lg"
+            mb="0.2"
+            lineHeight="tight"
+          >
+            Iniciar sesión
+          </Heading>
         </Box>
         <form onSubmit={handleSubmit}>
           <Stack spacing={4}>
@@ -115,7 +137,7 @@ export const LoginForm = () => {
               <FormLabel>Contraseña</FormLabel>
               <InputGroup>
                 <Input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="Ingresa tu contraseña"
                   required
                   onChange={(e) => setPassword(e.target.value)}
@@ -141,21 +163,23 @@ export const LoginForm = () => {
               </Alert>
             )}
             <Stack spacing={6}>
-              <Button
-                type="submit"
-                colorScheme="green"
-              >
+              <Button type="submit" colorScheme="green">
                 Iniciar sesión
               </Button>
               <Button
                 variant="outline"
                 colorScheme="green"
-                onClick={() => navigate('/auth/registro')}
+                onClick={() => navigate("/auth/registro")}
               >
                 Registro
               </Button>
             </Stack>
-            <Link color="teal.500" href="#" onClick={() => navigate('/auth/recuperar_clave')} textAlign={"center"}>
+            <Link
+              color="teal.500"
+              href="#"
+              onClick={() => navigate("/auth/recuperar_clave")}
+              textAlign={"center"}
+            >
               Se me olvidó la contraseña
             </Link>
           </Stack>

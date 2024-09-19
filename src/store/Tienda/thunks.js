@@ -13,9 +13,6 @@ export const tablaTienda = createAsyncThunk(
       
       data.sort((a, b) => a.id - b.id);
 
-      // Log para ver los datos después de ordenar
-      console.log('Datos después de ordenar:', data);
-
       return data;
     } catch (error) {
       console.error('Error al obtener tiendas:', error);
