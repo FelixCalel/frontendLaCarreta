@@ -2,7 +2,7 @@
 import React from 'react'
 import { Route } from 'react-router-dom'
 import  LoginForm  from '../LoginForm'
-import  RegisterForm  from '../RegisterForm'
+import  RegisterForm  from '../Registro/RegisterForm'
 import  RecuperarClave  from '../RecuperarClave'
 import ActivarUsuarioDep from '../ActivarUsuarioDep'
 

@@ -1,6 +1,6 @@
 import axios from "axios";
-import { useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
+import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -17,46 +17,47 @@ import {
   InputGroup,
   InputRightElement,
   Divider,
-} from '@chakra-ui/react';
-import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
-import { useNavigate } from 'react-router-dom';
-
+} from "@chakra-ui/react";
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import { useNavigate } from "react-router-dom";
+import PaisSelector from "./component/paisSelector";
 export const RegisterForm = () => {
   const navigate = useNavigate();
-  const actualUsuario = useSelector(state => state.auth);
-  
+  const actualUsuario = useSelector((state) => state.auth);
+
   const [formData, setFormData] = useState({
-    nombre: '',
-    apellido: '',
-    correo: '',
-    telefono: '',
-    contrasena: '',
-    confirmacionContrasena: '',
+    nombre: "",
+    apellido: "",
+    correo: "",
+    telefono: "",
+    contrasena: "",
+    confirmacionContrasena: "",
     estadoActivo: true,
-    correoValidado: false
+    correoValidado: false,
+    paisId: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const toast = useToast();
 
   useEffect(() => {
-    if (actualUsuario === 'authenticated') {
+    if (actualUsuario === "authenticated") {
       return navigate("/admin/dashboard", { replace: true });
     }
   }, [actualUsuario, navigate]);
 
   useEffect(() => {
     if (formData.contrasena === formData.confirmacionContrasena) {
-      setError(''); // Limpia el error si las contraseñas coinciden
+      setError(""); // Limpia el error si las contraseñas coinciden
     }
   }, [formData.contrasena, formData.confirmacionContrasena]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -73,13 +74,16 @@ export const RegisterForm = () => {
       if (response.ok) {
         toast({
           title: "Usuario creado.",
-          description: "Usuario creado correctamente. Por favor, verifica tu correo electrónico.",
+          description:
+            "Usuario creado correctamente. Por favor, verifica tu correo electrónico.",
           status: "success",
           duration: 5000,
           isClosable: true,
           position: "top",
         });
-        setMessage("Usuario creado correctamente. Por favor, verifica tu correo electrónico.");
+        setMessage(
+          "Usuario creado correctamente. Por favor, verifica tu correo electrónico."
+        );
       } else {
         setError(response.errorMessage);
       }
@@ -98,12 +102,12 @@ export const RegisterForm = () => {
     >
       <Box
         p={8}
-        width={{ base: 'full', md: '450px' }}
+        width={{ base: "full", md: "450px" }}
         borderRadius="lg"
         boxShadow="lg"
         bg="white"
       >
-        <Heading as='h2' size="lg" textAlign="center" mb={6} color="green.800">
+        <Heading as="h2" size="lg" textAlign="center" mb={6} color="green.800">
           Registro para Usuarios
         </Heading>
         <form onSubmit={handleSubmit}>
@@ -136,6 +140,19 @@ export const RegisterForm = () => {
             </FormControl>
 
             <Divider my={4} borderColor="gray.300" />
+
+            <FormControl id="pais" isRequired>
+              <FormLabel>País</FormLabel>
+              <PaisSelector
+                value={formData.paisId}
+                onPaisChange={(paisId) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    paisId: parseInt(paisId, 10), // Convierte paisId a número entero
+                  }))
+                }
+              />
+            </FormControl>
 
             <FormControl id="correo" isRequired>
               <FormLabel>Correo Electrónico</FormLabel>
@@ -263,19 +280,34 @@ async function registerUser(data) {
     telefono: parseInt(data.telefono, 10),
     contrasena: data.contrasena,
     estadoActivo: data.estadoActivo,
-    correoValidado: data.correoValidado
+    correoValidado: data.correoValidado,
+    paisId: data.paisId,
   };
 
+  // Log para ver qué datos están siendo enviados al backend
+  console.log("Datos que se envían al backend:", userData);
+
   try {
-    const response = await axios.post('http://localhost:3000/usuarios/registro', userData);
+    const response = await axios.post(
+      "http://localhost:3000/usuarios/registro",
+      userData
+    );
+
+    // Log para ver la respuesta del backend
+    console.log("Respuesta del backend:", response.data);
+
     return {
       ok: true,
-      usuario: response.data.usuario
+      usuario: response.data.usuario,
     };
   } catch (error) {
+    // Log del error para ver más detalles si algo falla
+    console.error("Error en el registro:", error.response?.data);
+
     return {
       ok: false,
-      errorMessage: error.response?.data?.error || "Error al registrar el usuario"
+      errorMessage:
+        error.response?.data?.error || "Error al registrar el usuario",
     };
   }
 }

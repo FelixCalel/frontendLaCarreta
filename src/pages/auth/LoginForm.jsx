@@ -37,19 +37,24 @@ export const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+  
     try {
       console.log("Enviando solicitud al backend...");
       const response = await axios.post('http://localhost:3000/usuarios/login', {
         correo,
         contrasena,
       });
-
+  
       console.log("Respuesta recibida del backend:", response);
-
-      if (response.data && response.data.token) {
+  
+      // Cambia la forma en que accedes al token
+      if (response.data && response.data.usuario && response.data.usuario.token) {
         console.log("Login exitoso, redireccionando a /auth/home...");
-        localStorage.setItem('token', response.data.token);
+        
+        // Guarda el token en el almacenamiento local
+        localStorage.setItem('token', response.data.usuario.token);
+        
+        // Redirecciona al home o a la ruta deseada
         navigate("/auth/home", { replace: true });
       } else {
         console.log("Credenciales incorrectas.");
@@ -57,7 +62,7 @@ export const LoginForm = () => {
       }
     } catch (err) {
       console.error("Error en la solicitud de login:", err);
-
+  
       if (err.response && err.response.data && err.response.data.error) {
         const backendMessage = err.response.data.error;
         if (backendMessage.includes('Por favor verifica tu correo electrónico')) {
@@ -72,6 +77,8 @@ export const LoginForm = () => {
       }
     }
   };
+  
+  
 
   return (
     <Flex

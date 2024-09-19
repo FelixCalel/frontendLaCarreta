@@ -1,5 +1,5 @@
 export * from './LoginForm'
 export * from './RecuperarClave'
-export * from './RegisterForm'
+export * from './Registro/RegisterForm'
 export * from './ConfirmacionRegistro'
 export * from './ActivarUsuarioDep'
