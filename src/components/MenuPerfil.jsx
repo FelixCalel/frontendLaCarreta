@@ -9,9 +9,11 @@ export const MenuPerfil = () => {
   const dispatch = useDispatch();
 
   const onLogout = () => {
-    // Limpiar la autenticación del usuario en localStorage
-    localStorage.setItem('isAuthenticated', 'false');
-    localStorage.setItem('userData', '');
+    // Limpiar el localStorage
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('token');
+    localStorage.removeItem('nombreUsuario');
 
     // Despachar la acción logout
     dispatch(logout());
@@ -20,7 +22,7 @@ export const MenuPerfil = () => {
     navigate('/auth/login', {
       replace: true // Remplaza la ruta actual en el historial de navegación
     });
-  }
+  };
 
   return (
     <Box>
@@ -84,13 +86,14 @@ export const MenuPerfil = () => {
               >
                 Permisos
               </MenuItem>
+              {/* Botón para salir */}
               <MenuItem 
                 _hover={{ bg: 'green.500', color: 'white', borderRadius: 'md' }}
                 _focus={{ bg: 'green.500', color: 'white', borderRadius: 'md' }}
                 p={2}
-                onClick={onLogout}
+                onClick={onLogout} // Evento de salir
               >
-                Logout
+                Salir {/* Cambiado a "Salir" */}
               </MenuItem>
             </MenuList>
           </Menu>
@@ -98,4 +101,4 @@ export const MenuPerfil = () => {
       </Flex>
     </Box>
   );
-}
+};

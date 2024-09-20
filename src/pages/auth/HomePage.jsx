@@ -13,23 +13,26 @@ const HomePage = () => {
       setNombreUsuario(nombre);
     }
   }, []);
-  
 
   return (
     <Flex height="100vh" direction="column">
-      <NavBar />.
-      <Flex flex="1" direction="row">
+      {/* NavBar */}
+      <NavBar />
+      
+      {/* Main content */}
+      <Flex flex="1" direction="row" minHeight="100vh">
+        {/* Sidebar */}
         <MenuPrincipalD />
-        <Box flex="1" p={4}>
-          {/* Bienvenida personalizada */}
-          <Heading as="h1" size="xl" mb={4}>
+        
+        {/* Main section */}
+        <Box flex="1" p={8} m={0} bg="white">
+          <Heading as="h1" size="xl" mb={4} textAlign="left">
             Bienvenido {nombreUsuario}
           </Heading>
           <Text fontSize="lg" color="gray.600" mb={6}>
-            ¡Nos alegra tenerte de vuelta! Aquí podrás acceder a los disntitos servicios.
+            ¡Nos alegra tenerte de vuelta! Aquí podrás acceder a los distintos servicios.
           </Text>
 
-          {/* Información adicional o acciones */}
           <Stack direction={'row'} mt={6} spacing={3}>
             <Button colorScheme="green" onClick={() => alert('Ir a tu perfil')}>
               Ir a mi perfil
