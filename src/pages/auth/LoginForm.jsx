@@ -1,4 +1,4 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -19,10 +19,12 @@ import {
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { login as loginAuth } from "../../store/auth/authSlice"; // Importa la acción login desde tu slice de Redux
 
 export const LoginForm = () => {
   const actualUsuario = useSelector((usuario) => usuario.auth);
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // Añadimos el dispatch para enviar las acciones a Redux
 
   const [correo, setEmail] = useState("");
   const [contrasena, setPassword] = useState("");
@@ -64,6 +66,9 @@ export const LoginForm = () => {
         // Guarda el token y el nombre en el localStorage
         localStorage.setItem("token", token);
         localStorage.setItem("nombreUsuario", nombre); // Guarda el nombre del usuario
+
+        // Actualiza el estado global de autenticación en Redux
+        dispatch(loginAuth({ token, nombre })); // Enviamos la acción a Redux con los datos del usuario
 
         // Redirige al home o a la ruta deseada
         navigate("/auth/home", { replace: true });

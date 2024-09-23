@@ -36,31 +36,31 @@ const DetallePedidoForm = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Obtener pedidos y detalleOrden desde Redux
-  const pedidos = useSelector((state) => state.pedidos.data); // Cambié "data" a "pedidos" para mayor claridad
-  const detalleOrden = useSelector((state) => state.detalleOrden.data);
+  const pedidos = useSelector((state) => state.pedidos.pedidos); // Pedidos
+  const detalleOrden = useSelector((state) => state.detalleOrden.detalleOrden); // Detalles de pedidos
 
   // Estado para manejar la creación de pedidos y productos
   const [currentPedido, setCurrentPedido] = useState({
-    ciudadId: "",
-    deudorId: "",
-    tiendaId: "",
-    usuarioId: "",
-    estadoId: 0,
+    ciudadId: 0,
+    deudorId: 0,
+    tiendaId: 0,
+    usuarioId: 0,
+    estadoId: 1, // Estado inicial predeterminado
   });
 
   const [isPedidoFinalizado, setIsPedidoFinalizado] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState({});
   const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
-
   const [producto, setProducto] = useState({
     productoId: "",
     cantidad: 0,
     precio: 0,
   });
 
+  // Cargar pedidos y detalles al iniciar
   useEffect(() => {
-    dispatch(tablaPedidos()); // Cargar los pedidos al iniciar
-    dispatch(tablaDetalleOrden()); // Cargar los detalles de los pedidos
+    dispatch(tablaPedidos());
+    dispatch(tablaDetalleOrden());
   }, [dispatch]);
 
   const handleInputChange = (e) => {
@@ -116,7 +116,7 @@ const DetallePedidoForm = () => {
     if (producto.precio <= 0)
       formErrors.precio = "El precio debe ser mayor a 0";
 
-    return formErrors; // Retornar el objeto, aunque esté vacío
+    return formErrors;
   };
 
   const handleSubmit = async () => {
@@ -210,47 +210,54 @@ const DetallePedidoForm = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {pedidos.map((pedido) => (
-            <Tr key={pedido.id}>
-              <Td>{pedido.id}</Td>
-              <Td>{pedido.nombreCiudad || "N/A"}</Td>
-              <Td>{pedido.nombreDeu || "N/A"}</Td>
-              <Td>{pedido.nombreTienda || "N/A"}</Td>
-              <Td>{pedido.usuarioId || "Sin usuario"}</Td>
-              <Td>{pedido.estadoId || "Desconocido"}</Td>
-              <Td>
-                <Button size="sm" onClick={() => handleToggleDetails(pedido.id)}>
-                  {isDetailsOpen[pedido.id] ? "▲" : "▼"}
-                </Button>
-                <Collapse in={isDetailsOpen[pedido.id]}>
-                  <Table mt={2} size="sm">
-                    <Thead>
-                      <Tr>
-                        <Th>Producto</Th>
-                        <Th>Cantidad</Th>
-                        <Th>Precio</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {obtenerDetallesPedido(pedido.id).map((prod, index) => (
-                        <Tr key={index}>
-                          <Td>{prod.producto?.nombre || prod.productoId}</Td>
-                          <Td>{prod.cantidad}</Td>
-                          <Td>{prod.precio}</Td>
+          {pedidos &&
+            Array.isArray(pedidos) &&
+            pedidos.map((pedido) => (
+              <Tr key={pedido.id}>
+                <Td>{pedido.id}</Td>
+                <Td>{pedido.nombreCiudad || "N/A"}</Td>
+                <Td>{pedido.nombreDeu || "N/A"}</Td>
+                <Td>{pedido.nombreTienda || "N/A"}</Td>
+                <Td>{pedido.usuarioId || "Sin usuario"}</Td>
+                <Td>{pedido.estadoId || "Desconocido"}</Td>
+                <Td>
+                  <Button
+                    size="sm"
+                    onClick={() => handleToggleDetails(pedido.id)}
+                  >
+                    {isDetailsOpen[pedido.id] ? "▲" : "▼"}
+                  </Button>
+                  <Collapse in={isDetailsOpen[pedido.id]}>
+                    <Table mt={2} size="sm">
+                      <Thead>
+                        <Tr>
+                          <Th>Producto</Th>
+                          <Th>Cantidad</Th>
+                          <Th>Precio</Th>
                         </Tr>
-                      ))}
-                      <Tr>
-                        <Td colSpan={2} align="right">
-                          <strong>Total:</strong>
-                        </Td>
-                        <Td>{calcularTotal(obtenerDetallesPedido(pedido.id))}</Td>
-                      </Tr>
-                    </Tbody>
-                  </Table>
-                </Collapse>
-              </Td>
-            </Tr>
-          ))}
+                      </Thead>
+                      <Tbody>
+                        {obtenerDetallesPedido(pedido.id).map((prod, index) => (
+                          <Tr key={index}>
+                            <Td>{prod.producto?.nombre || prod.productoId}</Td>
+                            <Td>{prod.cantidad}</Td>
+                            <Td>{prod.precio}</Td>
+                          </Tr>
+                        ))}
+                        <Tr>
+                          <Td colSpan={2} align="right">
+                            <strong>Total:</strong>
+                          </Td>
+                          <Td>
+                            {calcularTotal(obtenerDetallesPedido(pedido.id))}
+                          </Td>
+                        </Tr>
+                      </Tbody>
+                    </Table>
+                  </Collapse>
+                </Td>
+              </Tr>
+            ))}
         </Tbody>
       </Table>
 
