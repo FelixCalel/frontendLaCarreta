@@ -17,14 +17,15 @@ import {
   InputGroup,
   InputRightElement,
   Divider,
+  Text,
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import PaisSelector from "./component/paisSelector";
+
 export const RegisterForm = () => {
   const navigate = useNavigate();
   const actualUsuario = useSelector((state) => state.auth);
-
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
@@ -36,7 +37,6 @@ export const RegisterForm = () => {
     correoValidado: false,
     paisId: "",
   });
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
@@ -97,21 +97,29 @@ export const RegisterForm = () => {
       minHeight="100vh"
       align="center"
       justify="center"
-      bg="gray.100"
+      bg="gray.50"
       padding="20px"
     >
       <Box
         p={8}
         width={{ base: "full", md: "450px" }}
         borderRadius="lg"
-        boxShadow="lg"
+        boxShadow="2xl"
         bg="white"
+        border="1px solid"
+        borderColor="green.200"
       >
-        <Heading as="h2" size="lg" textAlign="center" mb={6} color="green.800">
-          Registro para Usuarios
-        </Heading>
+        <VStack spacing={6}>
+          <Heading as="h2" size="lg" textAlign="center" color="green.600">
+            Crea tu Cuenta
+          </Heading>
+          <Text fontSize="sm" color="gray.500">
+            Completa el siguiente formulario para registrarte
+          </Text>
+        </VStack>
+
         <form onSubmit={handleSubmit}>
-          <VStack spacing={4}>
+          <VStack spacing={4} mt={6}>
             <FormControl id="nombre" isRequired>
               <FormLabel>Nombre</FormLabel>
               <Input
@@ -125,6 +133,7 @@ export const RegisterForm = () => {
                 size="lg"
               />
             </FormControl>
+
             <FormControl id="apellido" isRequired>
               <FormLabel>Apellido</FormLabel>
               <Input
@@ -139,8 +148,6 @@ export const RegisterForm = () => {
               />
             </FormControl>
 
-            <Divider my={4} borderColor="gray.300" />
-
             <FormControl id="pais" isRequired>
               <FormLabel>País</FormLabel>
               <PaisSelector
@@ -148,7 +155,7 @@ export const RegisterForm = () => {
                 onPaisChange={(paisId) =>
                   setFormData((prev) => ({
                     ...prev,
-                    paisId: parseInt(paisId, 10), // Convierte paisId a número entero
+                    paisId: parseInt(paisId, 10),
                   }))
                 }
               />
@@ -167,11 +174,12 @@ export const RegisterForm = () => {
                 size="lg"
               />
             </FormControl>
+
             <FormControl id="telefono" isRequired>
               <FormLabel>Teléfono</FormLabel>
               <Input
                 name="telefono"
-                type="text"
+                type="tel"
                 placeholder="Ingresa tu teléfono"
                 value={formData.telefono}
                 onChange={handleChange}
@@ -200,17 +208,17 @@ export const RegisterForm = () => {
                   <Button
                     h="1.75rem"
                     size="sm"
-                    onMouseDown={() => setShowPassword(true)}
-                    onMouseUp={() => setShowPassword(false)}
-                    onMouseLeave={() => setShowPassword(false)}
+                    onClick={() => setShowPassword(!showPassword)}
+                    variant="ghost"
                   >
                     {showPassword ? <ViewOffIcon /> : <ViewIcon />}
                   </Button>
                 </InputRightElement>
               </InputGroup>
             </FormControl>
+
             <FormControl id="confirmacionContrasena" isRequired>
-              <FormLabel>Confirmación de Contraseña</FormLabel>
+              <FormLabel>Confirmar Contraseña</FormLabel>
               <InputGroup>
                 <Input
                   name="confirmacionContrasena"
@@ -226,9 +234,10 @@ export const RegisterForm = () => {
                   <Button
                     h="1.75rem"
                     size="sm"
-                    onMouseDown={() => setShowConfirmPassword(true)}
-                    onMouseUp={() => setShowConfirmPassword(false)}
-                    onMouseLeave={() => setShowConfirmPassword(false)}
+                    onClick={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
+                    variant="ghost"
                   >
                     {showConfirmPassword ? <ViewOffIcon /> : <ViewIcon />}
                   </Button>
@@ -236,31 +245,37 @@ export const RegisterForm = () => {
               </InputGroup>
             </FormControl>
           </VStack>
+
           {error && (
-            <Box width="full" mt={4}>
-              <Alert status="error" variant="left-accent" borderRadius="md">
-                <AlertIcon />
-                {error}
-              </Alert>
-            </Box>
+            <Alert status="error" variant="left-accent" borderRadius="md" mt={4}>
+              <AlertIcon />
+              {error}
+            </Alert>
           )}
+
           {message && (
-            <Box width="full" mt={4}>
-              <Alert status="success" variant="left-accent" borderRadius="md">
-                <AlertIcon />
-                {message}
-              </Alert>
-            </Box>
+            <Alert
+              status="success"
+              variant="left-accent"
+              borderRadius="md"
+              mt={4}
+            >
+              <AlertIcon />
+              {message}
+            </Alert>
           )}
+
           <Button
             type="submit"
             colorScheme="green"
             size="lg"
             mt={6}
             width="full"
+            borderRadius="md"
           >
             Registrar
           </Button>
+
           <Flex justifyContent="center" mt={5}>
             <Link as="a" href="/auth/login" color="green.600">
               Volver al inicio de sesión
@@ -284,26 +299,16 @@ async function registerUser(data) {
     paisId: data.paisId,
   };
 
-  // Log para ver qué datos están siendo enviados al backend
-  console.log("Datos que se envían al backend:", userData);
-
   try {
     const response = await axios.post(
       "http://localhost:3000/usuarios/registro",
       userData
     );
-
-    // Log para ver la respuesta del backend
-    console.log("Respuesta del backend:", response.data);
-
     return {
       ok: true,
       usuario: response.data.usuario,
     };
   } catch (error) {
-    // Log del error para ver más detalles si algo falla
-    console.error("Error en el registro:", error.response?.data);
-
     return {
       ok: false,
       errorMessage:
