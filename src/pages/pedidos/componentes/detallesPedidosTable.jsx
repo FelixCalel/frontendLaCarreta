@@ -107,7 +107,7 @@ const ProductosTable = ({ pedidoId }) => {
                 onClick={handleAddProducto}
                 size="sm"
                 isDisabled={
-                  !newProducto.productoId ||
+                  !newProducto.nombreProducto ||
                   newProducto.cantidad <= 0 ||
                   newProducto.precio <= 0
                 }

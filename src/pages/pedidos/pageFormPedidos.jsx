@@ -17,15 +17,13 @@ import {
   ModalBody,
   ModalCloseButton,
   Collapse,
+  Heading,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import ProductoSelector from "./componentes/productoSelector";
-import CantidadInput from "./componentes/cantidadInput";
-import PrecioInput from "./componentes/precioInput";
 import DeuSelector from "./componentes/DeuSelector";
 import CiudadSelector from "./componentes/CiudadSelector";
 import TiendaSelector from "./componentes/tiendaSelector";
-import ProductosTable from "./componentes/detallesPedidosTable"
+import ProductosTable from "./componentes/detallesPedidosTable";
 import {
   addNewDetalleOrden,
   tablaDetalleOrden,
@@ -37,9 +35,10 @@ const DetallePedidoForm = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Obtener pedidos y detalleOrden desde Redux
-  const pedidos = useSelector((state) => state.pedidos.pedidos); // Pedidos
+  const pedidos = useSelector((state) => state.pedidos.data); // Asegúrate de acceder a state.pedidos.data
   const detalleOrden = useSelector((state) => state.detalleOrden.detalleOrden); // Detalles de pedidos
   console.log("Pedidos desde Redux antes de renderizar:", pedidos);
+
   // Estado para manejar la creación de pedidos y productos
   const [currentPedido, setCurrentPedido] = useState({
     ciudadId: 0,
@@ -68,15 +67,6 @@ const DetallePedidoForm = () => {
     });
   }, [dispatch]);
 
-  // Manejo del cambio de producto
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setProducto((prev) => ({
-      ...prev,
-      [name]: parseFloat(value),
-    }));
-  };
-
   // Manejo del cambio de ciudad
   const handleCiudadChange = (e) => {
     const { value } = e.target;
@@ -102,14 +92,6 @@ const DetallePedidoForm = () => {
     }));
   };
 
-  // Manejo del cambio de producto
-  const handleProductoSelect = (productoId) => {
-    setProducto((prev) => ({
-      ...prev,
-      productoId,
-    }));
-  };
-
   // Validar los campos del formulario
   const validateFields = () => {
     let formErrors = {};
@@ -119,12 +101,6 @@ const DetallePedidoForm = () => {
       formErrors.deudorId = "El deudor es obligatorio";
     if (!currentPedido.tiendaId && !isPedidoFinalizado)
       formErrors.tiendaId = "La tienda es obligatoria";
-    if (!producto.productoId)
-      formErrors.productoId = "El producto es obligatorio";
-    if (producto.cantidad <= 0)
-      formErrors.cantidad = "La cantidad debe ser mayor a 0";
-    if (producto.precio <= 0)
-      formErrors.precio = "El precio debe ser mayor a 0";
 
     return formErrors;
   };
@@ -153,34 +129,8 @@ const DetallePedidoForm = () => {
 
         // Volver a cargar la tabla de pedidos
         dispatch(tablaPedidos());
-
-        // Resetear el estado del producto
-        setProducto({
-          productoId: "",
-          cantidad: 0,
-          precio: 0,
-        });
       } catch (error) {
         console.error("Error al guardar el pedido:", error);
-      }
-    } else {
-      // Guardar el detalle del pedido
-      if (producto.productoId && producto.cantidad > 0 && producto.precio > 0) {
-        const newDetalleOrden = {
-          pedidoId: pedidoIdGuardado,
-          productoId: producto.productoId,
-          cantidad: producto.cantidad,
-          precio: producto.precio,
-        };
-
-        try {
-          await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
-          console.log("Detalle del pedido guardado");
-        } catch (error) {
-          console.error("Error al guardar el detalle del pedido:", error);
-        }
-      } else {
-        console.error("El detalle del pedido no es válido.");
       }
     }
 
@@ -203,6 +153,10 @@ const DetallePedidoForm = () => {
   };
 
   const obtenerDetallesPedido = (pedidoId) => {
+    // Asegurarnos de que detalleOrden sea un array
+    if (!Array.isArray(detalleOrden)) {
+      return [];
+    }
     return detalleOrden.filter((detalle) => detalle.pedidoId === pedidoId);
   };
 
@@ -221,58 +175,38 @@ const DetallePedidoForm = () => {
             <Th>Deudor</Th>
             <Th>Tienda</Th>
             <Th>Usuario</Th>
-            <Th>Estado</Th>
             <Th>Acciones</Th>
           </Tr>
         </Thead>
         <Tbody>
           {pedidos && pedidos.length > 0 ? (
-            pedidos.map((pedido) => (
-              <Tr key={pedido.id}>
-                <Td>{pedido.id}</Td>
-                <Td>{pedido.nombreCiudad || "N/A"}</Td>
-                <Td>{pedido.nombreDeu || "N/A"}</Td>
-                <Td>{pedido.nombreTienda || "N/A"}</Td>
-                <Td>{pedido.usuarioId || "Sin usuario"}</Td>
-                <Td>{pedido.estadoId || "Desconocido"}</Td>
-                <Td>
-                  <Button
-                    size="sm"
-                    onClick={() => handleToggleDetails(pedido.id)}
-                  >
-                    {isDetailsOpen[pedido.id] ? "▲" : "▼"}
-                  </Button>
-                  <Collapse in={isDetailsOpen[pedido.id]}>
-                    <Table mt={2} size="sm">
-                      <Thead>
-                        <Tr>
-                          <Th>Producto</Th>
-                          <Th>Cantidad</Th>
-                          <Th>Precio</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {obtenerDetallesPedido(pedido.id).map((prod, index) => (
-                          <Tr key={index}>
-                            <Td>{prod.producto?.nombre || prod.productoId}</Td>
-                            <Td>{prod.cantidad}</Td>
-                            <Td>{prod.precio}</Td>
-                          </Tr>
-                        ))}
-                        <Tr>
-                          <Td colSpan={2} align="right">
-                            <strong>Total:</strong>
-                          </Td>
-                          <Td>
-                            {calcularTotal(obtenerDetallesPedido(pedido.id))}
-                          </Td>
-                        </Tr>
-                      </Tbody>
-                    </Table>
-                  </Collapse>
-                </Td>
-              </Tr>
-            ))
+            pedidos.map((pedido) => {
+              console.log("detallepedidos:", pedido); // Aquí es donde agregas el console.log para verificar la estructura de cada pedido
+
+              return (
+                <Tr key={pedido.id}>
+                  <Td>{pedido.id}</Td>
+                  {/* Usamos el operador ?. para manejar casos donde ciudad, deudor, etc. sean undefined */}
+                  <Td>{pedido.nombreCiudad || "N/A"}</Td>
+                  <Td>{pedido.nombreDeu || "N/A"}</Td>
+                  <Td>{pedido.nombreTienda || "N/A"}</Td>
+                  <Td>{pedido.estadoId || "Desconocido"}</Td>
+                  <Td>
+                    <Button
+                      size="sm"
+                      onClick={() => handleToggleDetails(pedido.id)}
+                    >
+                      <Box mt={6}>
+                          
+                        <detallesPedidosTable />{" "}
+                        {/* Usando el nuevo componente de Contactos */}
+                      </Box>
+                      {isDetailsOpen[pedido.id] ? "▲" : "▼"}
+                    </Button>
+                  </Td>
+                </Tr>
+              );
+            })
           ) : (
             <Tr>
               <Td colSpan="7" align="center">
@@ -282,7 +216,6 @@ const DetallePedidoForm = () => {
           )}
         </Tbody>
       </Table>
-
       {/* Modal para agregar o editar pedidos */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
@@ -308,18 +241,6 @@ const DetallePedidoForm = () => {
             {isPedidoFinalizado && (
               <ProductosTable pedidoId={pedidoIdGuardado} />
             )}
-            <ProductoSelector onSelect={handleProductoSelect} />
-
-            <CantidadInput
-              pedidoId={pedidoIdGuardado || 0}
-              productoId={producto.productoId || 0}
-              value={Number(producto.cantidad) || 0}
-              onChange={handleInputChange}
-            />
-            <PrecioInput
-              value={Number(producto.precio) || 0}
-              onChange={handleInputChange}
-            />
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
