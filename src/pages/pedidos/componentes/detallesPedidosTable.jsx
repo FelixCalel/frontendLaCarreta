@@ -68,7 +68,7 @@ const ProductosTable = ({ pedidoId }) => {
         <Tbody>
           {productos.map((producto, index) => (
             <Tr key={index}>
-              <Td>{producto.productoId}</Td>
+              <Td>{producto.nombreProducto}</Td>
               <Td>{producto.cantidad}</Td>
               <Td>{producto.precio}</Td>
               <Td>
@@ -106,20 +106,13 @@ const ProductosTable = ({ pedidoId }) => {
                 colorScheme="green"
                 onClick={handleAddProducto}
                 size="sm"
-                isDisabled={
-                  !newProducto.nombreProducto ||
-                  newProducto.cantidad <= 0 ||
-                  newProducto.precio <= 0
-                }
               />
             </Td>
           </Tr>
         </Tbody>
       </Table>
 
-      <Button mt={4} colorScheme="blue" onClick={handleSaveDetalleOrden}>
-        Guardar Productos
-      </Button>
+    
     </>
   );
 };

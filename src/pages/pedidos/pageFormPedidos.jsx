@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import React from "react";
 import {
   Table,
   Thead,
@@ -17,7 +18,6 @@ import {
   ModalBody,
   ModalCloseButton,
   Collapse,
-  Heading,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import DeuSelector from "./componentes/DeuSelector";
@@ -25,7 +25,6 @@ import CiudadSelector from "./componentes/CiudadSelector";
 import TiendaSelector from "./componentes/tiendaSelector";
 import ProductosTable from "./componentes/detallesPedidosTable";
 import {
-  addNewDetalleOrden,
   tablaDetalleOrden,
 } from "../../store/Pedidos/DetallePedidos/thunks";
 import { addNewPedido, tablaPedidos } from "../../store/Pedidos/thunks";
@@ -37,7 +36,6 @@ const DetallePedidoForm = () => {
   // Obtener pedidos y detalleOrden desde Redux
   const pedidos = useSelector((state) => state.pedidos.data); // Asegúrate de acceder a state.pedidos.data
   const detalleOrden = useSelector((state) => state.detalleOrden.detalleOrden); // Detalles de pedidos
-  console.log("Pedidos desde Redux antes de renderizar:", pedidos);
 
   // Estado para manejar la creación de pedidos y productos
   const [currentPedido, setCurrentPedido] = useState({
@@ -51,11 +49,6 @@ const DetallePedidoForm = () => {
   const [isPedidoFinalizado, setIsPedidoFinalizado] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState({});
   const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
-  const [producto, setProducto] = useState({
-    productoId: "",
-    cantidad: 0,
-    precio: 0,
-  });
 
   // Cargar pedidos y detalles al iniciar
   useEffect(() => {
@@ -165,7 +158,6 @@ const DetallePedidoForm = () => {
       <Button onClick={onOpen} colorScheme="blue">
         {isPedidoFinalizado ? "Agregar Productos" : "Crear Pedido"}
       </Button>
-
       {/* Tabla para mostrar los pedidos */}
       <Table mt={4}>
         <Thead>
@@ -174,42 +166,42 @@ const DetallePedidoForm = () => {
             <Th>Ciudad</Th>
             <Th>Deudor</Th>
             <Th>Tienda</Th>
-            <Th>Usuario</Th>
-            <Th>Acciones</Th>
+            <Th>Estado</Th>
+            <Th>Detalles</Th>
           </Tr>
         </Thead>
         <Tbody>
           {pedidos && pedidos.length > 0 ? (
-            pedidos.map((pedido) => {
-              console.log("detallepedidos:", pedido); // Aquí es donde agregas el console.log para verificar la estructura de cada pedido
-
-              return (
-                <Tr key={pedido.id}>
+            pedidos.map((pedido) => (
+              <React.Fragment key={pedido.id}>
+                <Tr>
                   <Td>{pedido.id}</Td>
-                  {/* Usamos el operador ?. para manejar casos donde ciudad, deudor, etc. sean undefined */}
                   <Td>{pedido.nombreCiudad || "N/A"}</Td>
                   <Td>{pedido.nombreDeu || "N/A"}</Td>
                   <Td>{pedido.nombreTienda || "N/A"}</Td>
-                  <Td>{pedido.estadoId || "Desconocido"}</Td>
+                  <Td>{pedido.estadoId || "N/A"}</Td>
                   <Td>
                     <Button
                       size="sm"
                       onClick={() => handleToggleDetails(pedido.id)}
                     >
-                      <Box mt={6}>
-                          
-                        <detallesPedidosTable />{" "}
-                        {/* Usando el nuevo componente de Contactos */}
-                      </Box>
                       {isDetailsOpen[pedido.id] ? "▲" : "▼"}
                     </Button>
                   </Td>
                 </Tr>
-              );
-            })
+                {/* Aquí se desplegará ProductosTable para cada pedido */}
+                <Tr>
+                  <Td colSpan={6}>
+                    <Collapse in={isDetailsOpen[pedido.id]}>
+                      <ProductosTable pedidoId={pedido.id} />
+                    </Collapse>
+                  </Td>
+                </Tr>
+              </React.Fragment>
+            ))
           ) : (
             <Tr>
-              <Td colSpan="7" align="center">
+              <Td colSpan="6" align="center">
                 No hay pedidos disponibles
               </Td>
             </Tr>

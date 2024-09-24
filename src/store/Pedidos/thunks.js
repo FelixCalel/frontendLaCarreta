@@ -8,35 +8,17 @@ export const tablaPedidos = createAsyncThunk(
   'pedidos/fetchPedidos',
   async () => {
     try {
-      // Realizar la petición a la API del backend
       const response = await axios.get(`${BASE_URL}/form/pedidos/todos`);
-      
-      // Depuración: Verifica la respuesta cruda
-      console.log("Datos de respuesta cruda:", response);
-      
-      // Extraer los datos de la respuesta
       const data = response.data;
-      
-      // Depuración: Verifica los datos extraídos
-      console.log("Datos extraídos de la respuesta:", data);
-      
-      // Ordenar los datos por 'id' (opcional)
-      data.sort((a, b) => a.id - b.id);
-      
-      // Depuración: Verifica los datos ordenados
-      console.log("Datos ordenados:", data);
-      
+      data.sort((a, b) => a.id - b.id); 
       return data;
     } catch (error) {
       // Registrar el error para entender qué salió mal
       console.error("Error al obtener pedidos:", error.response ? error.response.data : error.message);
-      
-      // Relanzar el error para que el código que llama (Thunk de Redux) lo maneje
       throw error;
     }
   }
 );
-
 
 
 // Add new Pedido
@@ -53,7 +35,7 @@ export const addNewPedido = createAsyncThunk(
 export const deletePedido = createAsyncThunk(
   'pedidos/deletePedido',
   async (id) => {
-    await axios.delete(`${BASE_URL}/form/pedido/eliminar/${id}`);
+    await axios.delete(`${BASE_URL}/form/pedidos/eliminar/${id}`);
     return id;
   }
 );
