@@ -41,12 +41,6 @@ const PageFormPais = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentPais, setCurrentPais] = useState({ id: "", nombre: "" });
 
-  // Hooks para los colores de Chakra UI, asegurarse de que se llaman al principio
-  const bgHoverColor = useColorModeValue("green.50", "green.900");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const textColor = useColorModeValue("gray.700", "white");
-  const textMutedColor = useColorModeValue("gray.600", "gray.400");
-
   useEffect(() => {
     if (status === "idle") {
       dispatch(tablaPais());
@@ -101,6 +95,12 @@ const PageFormPais = () => {
     }
   };
 
+  const bgHoverColor = useColorModeValue("green.50", "green.900");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardShadow = useColorModeValue("md", "dark-lg");
+  const hoverShadow = useColorModeValue("lg", "2xl");
+  
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   if (status === "loading") {
@@ -122,7 +122,7 @@ const PageFormPais = () => {
   }
 
   return (
-    <Box padding="0px" marginTop="-25px">
+    <Box padding="0px" marginTop="-25">
       <Flex justify="space-between" mb="20px" alignItems="center">
         <Text fontSize="2xl" fontWeight="bold" color="green.600">
           Gestión de Países
@@ -143,52 +143,40 @@ const PageFormPais = () => {
       <Grid
         templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
         gap={6}
-        border="1px solid"
-        borderColor={borderColor}
-        rounded="lg"
-        padding={4}
       >
         {data.map((pais) => (
           <GridItem
             key={pais.id}
-            p={4}
-            rounded="md"
-            boxShadow="sm"
-            border="1px solid"
-            borderColor={borderColor}
-            _hover={{ backgroundColor: bgHoverColor }}
-            transition="background-color 0.2s ease"
+            p={6}
+            bg={cardBg}
+            boxShadow={cardShadow}
+            rounded="xl"
+            _hover={{ backgroundColor: bgHoverColor, boxShadow: hoverShadow, transform: "translateY(-5px)" }}
+            transition="all 0.3s ease-in-out"
           >
             <Flex direction="column" gap={3}>
-              <Text fontWeight="bold" color={textColor}>
-                ID: {pais.id}
-              </Text>
-              <Text color={textColor}>Nombre: {pais.nombre}</Text>
-              <Text fontSize="sm" color={textMutedColor}>
-                Creado: {formatDate(pais.creadoEl)}
-              </Text>
-              <Text fontSize="sm" color={textMutedColor}>
-                Actualizado: {formatDate(pais.actualizadoEl)}
-              </Text>
+              <Text fontWeight="bold" fontSize="lg">{pais.nombre}</Text>
+              <Text fontSize="sm" color="gray.500">Creado: {formatDate(pais.creadoEl)}</Text>
+              <Text fontSize="sm" color="gray.500">Actualizado: {formatDate(pais.actualizadoEl)}</Text>
               <Flex justify="space-between" alignItems="center" mt={3}>
                 <Switch
                   isChecked={pais.estaActivo}
                   onChange={() => handleToggleStatus(pais.id, !pais.estaActivo)}
                   colorScheme="teal"
                 />
-                <Flex>
+                <Flex gap={2}>
                   <Button
                     colorScheme="red"
-                    size={isMobile ? "sm" : "md"}
+                    size="sm"
                     onClick={() => handleDelete(pais.id)}
-                    mr={2}
                   >
                     Eliminar
                   </Button>
                   <IconButton
                     icon={<EditIcon />}
-                    size={isMobile ? "sm" : "md"}
+                    size="sm"
                     onClick={() => handleEdit(pais)}
+                    colorScheme="teal"
                   />
                 </Flex>
               </Flex>

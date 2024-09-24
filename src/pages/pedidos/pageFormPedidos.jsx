@@ -35,7 +35,6 @@ const DetallePedidoForm = () => {
 
   // Obtener pedidos y detalleOrden desde Redux
   const pedidos = useSelector((state) => state.pedidos.data); // Asegúrate de acceder a state.pedidos.data
-  const detalleOrden = useSelector((state) => state.detalleOrden.detalleOrden); // Detalles de pedidos
 
   // Estado para manejar la creación de pedidos y productos
   const [currentPedido, setCurrentPedido] = useState({
@@ -105,7 +104,9 @@ const DetallePedidoForm = () => {
       console.log(formErrors);
       return;
     }
-
+  
+    const usuarioId = localStorage.getItem("usuarioId"); // Obtiene el usuarioId desde el localStorage
+  
     if (!isPedidoFinalizado) {
       // Crear un nuevo pedido
       const newPedido = {
@@ -113,22 +114,24 @@ const DetallePedidoForm = () => {
         deudorId: currentPedido.deudorId,
         tiendaId: currentPedido.tiendaId,
         estadoId: 1, // Estado inicial predeterminado
+        usuarioId: parseInt(usuarioId), // Vincular el pedido al usuario actual
       };
-
+  
       try {
         const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
         setPedidoIdGuardado(pedidoGuardado.id);
         setIsPedidoFinalizado(true);
-
+  
         // Volver a cargar la tabla de pedidos
         dispatch(tablaPedidos());
       } catch (error) {
         console.error("Error al guardar el pedido:", error);
       }
     }
-
+  
     onClose();
   };
+  
 
   // Manejo del colapso de detalles del pedido
   const handleToggleDetails = (pedidoId) => {
@@ -138,21 +141,9 @@ const DetallePedidoForm = () => {
     }));
   };
 
-  const calcularTotal = (productos) => {
-    return productos.reduce(
-      (total, prod) => total + prod.precio * prod.cantidad,
-      0
-    );
-  };
 
-  const obtenerDetallesPedido = (pedidoId) => {
-    // Asegurarnos de que detalleOrden sea un array
-    if (!Array.isArray(detalleOrden)) {
-      return [];
-    }
-    return detalleOrden.filter((detalle) => detalle.pedidoId === pedidoId);
-  };
-
+  const usuarioId = localStorage.getItem("usuarioId");
+  const pedidosUsuario = pedidos.filter(pedido => pedido.usuarioId === parseInt(usuarioId));
   return (
     <Box>
       <Button onClick={onOpen} colorScheme="blue">
@@ -171,8 +162,8 @@ const DetallePedidoForm = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {pedidos && pedidos.length > 0 ? (
-            pedidos.map((pedido) => (
+          {pedidosUsuario && pedidosUsuario.length > 0 ? (
+            pedidosUsuario.map((pedido) => (
               <React.Fragment key={pedido.id}>
                 <Tr>
                   <Td>{pedido.id}</Td>

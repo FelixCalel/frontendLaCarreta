@@ -56,11 +56,13 @@ export const LoginForm = () => {
         const { token } = response.data.usuario;
         const nombre = response.data.usuario.usuario.nombre;
         const correoUsuario = response.data.usuario.usuario.correo; // Asegúrate de tener el correo aquí
+        const usuarioId = response.data.usuario.usuario.id;
   
         // Guardar en localStorage
         localStorage.setItem("token", token);
         localStorage.setItem("nombreUsuario", nombre);
         localStorage.setItem("correoUsuario", correoUsuario); // Guarda el correo
+        localStorage.setItem("usuarioId", usuarioId);
   
         // Actualizar el estado global (si estás usando Redux)
         dispatch(loginAuth({ token, nombre, correo: correoUsuario }));
