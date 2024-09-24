@@ -5,18 +5,20 @@ import { tablaTienda } from "../../../store/Tienda/thunks";
 
 const TiendaSelector = ({ value, onChange }) => {
   const dispatch = useDispatch();
-  const tiendas = useSelector((state) => state.tiendas.data); 
+  const tiendas = useSelector((state) => state.tiendas.data);
 
   useEffect(() => {
     dispatch(tablaTienda());
   }, [dispatch]);
 
-  return (
-    <select value={value} onChange={onChange}>
-      {/* Opción por defecto */}
-      <option value="">Seleccionar tienda</option>
+  const handleSelectChange = (e) => {
+    const selectedValue = e.target.value ? parseInt(e.target.value, 10) : ""; // Convertir a número solo si existe un valor
+    onChange(selectedValue);
+  };
 
-      {/* Mapear las tiendas disponibles */}
+  return (
+    <select value={value || ""} onChange={handleSelectChange}>
+      <option value="">Seleccionar tienda</option>
       {tiendas.map((tienda) => (
         <option key={tienda.id} value={tienda.id}>
           {tienda.nombre}
@@ -26,10 +28,9 @@ const TiendaSelector = ({ value, onChange }) => {
   );
 };
 
-
 TiendaSelector.propTypes = {
-  value: PropTypes.string.isRequired,  
-  onChange: PropTypes.func.isRequired, 
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // Aceptar string o número
+  onChange: PropTypes.func.isRequired,
 };
 
 export default TiendaSelector;

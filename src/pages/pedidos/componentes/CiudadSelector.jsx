@@ -8,7 +8,7 @@ const CiudadSelector = ({ value, onChange }) => {
   const ciudades = useSelector((state) => state.ciudades.data);
 
   useEffect(() => {
-    dispatch(tablaCiudad()); 
+    dispatch(tablaCiudad());
   }, [dispatch]);
 
   return (
@@ -25,7 +25,7 @@ const CiudadSelector = ({ value, onChange }) => {
 };
 
 CiudadSelector.propTypes = {
-  value: PropTypes.string.isRequired,  
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
   onChange: PropTypes.func.isRequired,
 };
 

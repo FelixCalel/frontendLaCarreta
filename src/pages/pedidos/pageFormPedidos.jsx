@@ -25,6 +25,7 @@ import PrecioInput from "./componentes/precioInput";
 import DeuSelector from "./componentes/DeuSelector";
 import CiudadSelector from "./componentes/CiudadSelector";
 import TiendaSelector from "./componentes/tiendaSelector";
+import ProductosTable from "./componentes/detallesPedidosTable"
 import {
   addNewDetalleOrden,
   tablaDetalleOrden,
@@ -38,7 +39,7 @@ const DetallePedidoForm = () => {
   // Obtener pedidos y detalleOrden desde Redux
   const pedidos = useSelector((state) => state.pedidos.pedidos); // Pedidos
   const detalleOrden = useSelector((state) => state.detalleOrden.detalleOrden); // Detalles de pedidos
-
+  console.log("Pedidos desde Redux antes de renderizar:", pedidos);
   // Estado para manejar la creación de pedidos y productos
   const [currentPedido, setCurrentPedido] = useState({
     ciudadId: 0,
@@ -59,10 +60,15 @@ const DetallePedidoForm = () => {
 
   // Cargar pedidos y detalles al iniciar
   useEffect(() => {
-    dispatch(tablaPedidos());
-    dispatch(tablaDetalleOrden());
+    dispatch(tablaPedidos()).then((response) => {
+      console.log("Pedidos cargados en Redux:", response.payload); // Verifica que el payload contiene los datos esperados
+    });
+    dispatch(tablaDetalleOrden()).then((response) => {
+      console.log("Detalle de orden cargado en Redux:", response.payload);
+    });
   }, [dispatch]);
 
+  // Manejo del cambio de producto
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProducto((prev) => ({
@@ -71,14 +77,16 @@ const DetallePedidoForm = () => {
     }));
   };
 
+  // Manejo del cambio de ciudad
   const handleCiudadChange = (e) => {
     const { value } = e.target;
     setCurrentPedido((prev) => ({
       ...prev,
-      ciudadId: value,
+      ciudadId: parseInt(value, 10), // Convertir a número
     }));
   };
 
+  // Manejo del cambio de deudor
   const handleDeudorSelect = (deudorId) => {
     setCurrentPedido((prev) => ({
       ...prev,
@@ -86,14 +94,15 @@ const DetallePedidoForm = () => {
     }));
   };
 
-  const handleTiendaChange = (e) => {
-    const { value } = e.target;
+  // Manejo del cambio de tienda
+  const handleTiendaChange = (value) => {
     setCurrentPedido((prev) => ({
       ...prev,
       tiendaId: value,
     }));
   };
 
+  // Manejo del cambio de producto
   const handleProductoSelect = (productoId) => {
     setProducto((prev) => ({
       ...prev,
@@ -101,6 +110,7 @@ const DetallePedidoForm = () => {
     }));
   };
 
+  // Validar los campos del formulario
   const validateFields = () => {
     let formErrors = {};
     if (!currentPedido.ciudadId && !isPedidoFinalizado)
@@ -119,6 +129,7 @@ const DetallePedidoForm = () => {
     return formErrors;
   };
 
+  // Manejo del envío del formulario
   const handleSubmit = async () => {
     const formErrors = validateFields();
     if (Object.keys(formErrors).length > 0) {
@@ -154,24 +165,29 @@ const DetallePedidoForm = () => {
       }
     } else {
       // Guardar el detalle del pedido
-      const newDetalleOrden = {
-        pedidoId: pedidoIdGuardado,
-        productoId: producto.productoId,
-        cantidad: producto.cantidad,
-        precio: producto.precio,
-      };
+      if (producto.productoId && producto.cantidad > 0 && producto.precio > 0) {
+        const newDetalleOrden = {
+          pedidoId: pedidoIdGuardado,
+          productoId: producto.productoId,
+          cantidad: producto.cantidad,
+          precio: producto.precio,
+        };
 
-      try {
-        await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
-        console.log("Detalle del pedido guardado");
-      } catch (error) {
-        console.error("Error al guardar el detalle del pedido:", error);
+        try {
+          await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
+          console.log("Detalle del pedido guardado");
+        } catch (error) {
+          console.error("Error al guardar el detalle del pedido:", error);
+        }
+      } else {
+        console.error("El detalle del pedido no es válido.");
       }
     }
 
     onClose();
   };
 
+  // Manejo del colapso de detalles del pedido
   const handleToggleDetails = (pedidoId) => {
     setIsDetailsOpen((prev) => ({
       ...prev,
@@ -210,8 +226,7 @@ const DetallePedidoForm = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {pedidos &&
-            Array.isArray(pedidos) &&
+          {pedidos && pedidos.length > 0 ? (
             pedidos.map((pedido) => (
               <Tr key={pedido.id}>
                 <Td>{pedido.id}</Td>
@@ -257,7 +272,14 @@ const DetallePedidoForm = () => {
                   </Collapse>
                 </Td>
               </Tr>
-            ))}
+            ))
+          ) : (
+            <Tr>
+              <Td colSpan="7" align="center">
+                No hay pedidos disponibles
+              </Td>
+            </Tr>
+          )}
         </Tbody>
       </Table>
 
@@ -283,7 +305,11 @@ const DetallePedidoForm = () => {
                 />
               </>
             )}
+            {isPedidoFinalizado && (
+              <ProductosTable pedidoId={pedidoIdGuardado} />
+            )}
             <ProductoSelector onSelect={handleProductoSelect} />
+
             <CantidadInput
               pedidoId={pedidoIdGuardado || 0}
               productoId={producto.productoId || 0}

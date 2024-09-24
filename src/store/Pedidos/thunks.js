@@ -8,16 +8,35 @@ export const tablaPedidos = createAsyncThunk(
   'pedidos/fetchPedidos',
   async () => {
     try {
+      // Realizar la petición a la API del backend
       const response = await axios.get(`${BASE_URL}/form/pedidos/todos`);
+      
+      // Depuración: Verifica la respuesta cruda
+      console.log("Datos de respuesta cruda:", response);
+      
+      // Extraer los datos de la respuesta
       const data = response.data;
+      
+      // Depuración: Verifica los datos extraídos
+      console.log("Datos extraídos de la respuesta:", data);
+      
+      // Ordenar los datos por 'id' (opcional)
       data.sort((a, b) => a.id - b.id);
+      
+      // Depuración: Verifica los datos ordenados
+      console.log("Datos ordenados:", data);
+      
       return data;
     } catch (error) {
-      console.error("Error al obtener pedidos:", error);
-      throw error; // Propagar el error para manejarlo en el estado de Redux
+      // Registrar el error para entender qué salió mal
+      console.error("Error al obtener pedidos:", error.response ? error.response.data : error.message);
+      
+      // Relanzar el error para que el código que llama (Thunk de Redux) lo maneje
+      throw error;
     }
   }
 );
+
 
 
 // Add new Pedido

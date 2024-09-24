@@ -31,6 +31,7 @@ const RutaSelector = ({ selectedRoutes, setSelectedRoutes, usuarioId }) => {
   };
 
   const asignarRuta = async (usuarioId, rutaId) => {
+    
     try {
       await axios.post(`http://localhost:3000/usuarios/${usuarioId}/asignar-ruta`, {
         rutaId: [rutaId], // Asigna solo esta ruta
