@@ -18,26 +18,24 @@ import {
   ModalBody,
   ModalCloseButton,
   Collapse,
-  Flex
+  Flex,
+  IconButton
 } from "@chakra-ui/react";
+import { DeleteIcon } from "@chakra-ui/icons"; // Para el icono de eliminar
 import { useDispatch, useSelector } from "react-redux";
 import DeuSelector from "./componentes/DeuSelector";
 import CiudadSelector from "./componentes/CiudadSelector";
 import TiendaSelector from "./componentes/tiendaSelector";
 import ProductosTable from "./componentes/detallesPedidosTable";
-import {
-  tablaDetalleOrden,
-} from "../../store/Pedidos/DetallePedidos/thunks";
-import { addNewPedido, tablaPedidos } from "../../store/Pedidos/thunks";
-import { addNewDetalleOrden } from '../../store/Pedidos/DetallePedidos/thunks';
-
+import { addNewPedido, tablaPedidos, deletePedido } from "../../store/Pedidos/thunks";
+import { addNewDetalleOrden, deleteDetalleOrden } from '../../store/Pedidos/DetallePedidos/thunks';
 
 const DetallePedidoForm = () => {
   const dispatch = useDispatch();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Obtener pedidos y detalleOrden desde Redux
-  const pedidos = useSelector((state) => state.pedidos.data); // Asegúrate de acceder a state.pedidos.data
+  const pedidos = useSelector((state) => state.pedidos.data); 
 
   // Estado para manejar la creación de pedidos y productos
   const [currentPedido, setCurrentPedido] = useState({
@@ -55,9 +53,9 @@ const DetallePedidoForm = () => {
   // Cargar pedidos y detalles al iniciar
   useEffect(() => {
     dispatch(tablaPedidos()).then((response) => {
-      console.log("Pedidos cargados en Redux:", response.payload); // Verifica que el payload contiene los datos esperados
+      console.log("Pedidos cargados en Redux:", response.payload);
     });
-    dispatch(tablaDetalleOrden()).then((response) => {
+    dispatch(deletePedido()).then((response) => {
       console.log("Detalle de orden cargado en Redux:", response.payload);
     });
   }, [dispatch]);
@@ -67,7 +65,7 @@ const DetallePedidoForm = () => {
     const { value } = e.target;
     setCurrentPedido((prev) => ({
       ...prev,
-      ciudadId: parseInt(value, 10), // Convertir a número
+      ciudadId: parseInt(value, 10),
     }));
   };
 
@@ -108,16 +106,15 @@ const DetallePedidoForm = () => {
       return;
     }
 
-    const usuarioId = localStorage.getItem("usuarioId"); // Obtiene el usuarioId desde el localStorage
+    const usuarioId = localStorage.getItem("usuarioId");
 
     if (!isPedidoFinalizado) {
-      // Crear un nuevo pedido
       const newPedido = {
         ciudadId: currentPedido.ciudadId,
         deudorId: currentPedido.deudorId,
         tiendaId: currentPedido.tiendaId,
-        estadoId: 1, // Estado inicial predeterminado
-        usuarioId: parseInt(usuarioId), // Vincular el pedido al usuario actual
+        estadoId: 1,
+        usuarioId: parseInt(usuarioId),
       };
 
       try {
@@ -125,7 +122,6 @@ const DetallePedidoForm = () => {
         setPedidoIdGuardado(pedidoGuardado.id);
         setIsPedidoFinalizado(true);
 
-        // Volver a cargar la tabla de pedidos
         dispatch(tablaPedidos());
       } catch (error) {
         console.error("Error al guardar el pedido:", error);
@@ -135,23 +131,20 @@ const DetallePedidoForm = () => {
     onClose();
   };
 
-  // Guardar los detalles del pedido seleccionados en la base de datos
+  // Guardar los detalles del pedido seleccionados
   const handleRealizarPedido = async () => {
-    const productos = useSelector((state) => state.detalleOrden.productosSeleccionados); // Obtener productos seleccionados
+    const productos = useSelector((state) => state.detalleOrden.productosSeleccionados);
 
     try {
       const detallePedidoData = productos.map((producto) => ({
-        pedidoId: pedidoIdGuardado,  // Asignar el pedidoId
-        productoId: producto.productoId,     // Producto ID
-        cantidad: producto.cantidad, // Cantidad seleccionada
-        precio: producto.precio      // Precio del producto
+        pedidoId: pedidoIdGuardado,
+        productoId: producto.productoId,
+        cantidad: producto.cantidad,
+        precio: producto.precio,
       }));
 
-      // Realizar el guardado de todos los detalles del pedido
       await Promise.all(
-        detallePedidoData.map(detalle =>
-          dispatch(addNewDetalleOrden(detalle))
-        )
+        detallePedidoData.map(detalle => dispatch(addNewDetalleOrden(detalle)))
       );
       console.log("Detalle del pedido guardado exitosamente.");
     } catch (error) {
@@ -167,6 +160,17 @@ const DetallePedidoForm = () => {
     }));
   };
 
+  // Manejo de la eliminación de pedido
+  const handleDeletePedido = async (pedidoId) => {
+    try {
+      await dispatch(deleteDetalleOrden(pedidoId)).unwrap();
+      console.log("Pedido eliminado correctamente");
+      dispatch(tablaPedidos()); // Recargar la tabla de pedidos
+    } catch (error) {
+      console.error("Error al eliminar el pedido:", error);
+    }
+  };
+
   const usuarioId = localStorage.getItem("usuarioId");
   const pedidosUsuario = pedidos.filter(pedido => pedido.usuarioId === parseInt(usuarioId));
 
@@ -175,7 +179,6 @@ const DetallePedidoForm = () => {
       <Button onClick={onOpen} colorScheme="blue">
         {isPedidoFinalizado ? "Agregar Productos" : "Crear Pedido"}
       </Button>
-      {/* Tabla para mostrar los pedidos */}
       <Table mt={4}>
         <Thead>
           <Tr>
@@ -185,6 +188,7 @@ const DetallePedidoForm = () => {
             <Th>Tienda</Th>
             <Th>Estado</Th>
             <Th>Detalles</Th>
+            <Th>Acciones</Th> {/* Agregar columna para el botón de eliminar */}
           </Tr>
         </Thead>
         <Tbody>
@@ -205,10 +209,18 @@ const DetallePedidoForm = () => {
                       {isDetailsOpen[pedido.id] ? "▲" : "▼"}
                     </Button>
                   </Td>
+                  {/* Botón de eliminar pedido */}
+                  <Td>
+                    <IconButton
+                      icon={<DeleteIcon />}
+                      colorScheme="red"
+                      onClick={() => handleDeletePedido(pedido.id)}  // Eliminar pedido
+                      size="sm"
+                    />
+                  </Td>
                 </Tr>
-                {/* Aquí se desplegará ProductosTable para cada pedido */}
                 <Tr>
-                  <Td colSpan={6}>
+                  <Td colSpan={7}>
                     <Collapse in={isDetailsOpen[pedido.id]}>
                       <ProductosTable pedidoId={pedido.id} />
                     </Collapse>
@@ -218,7 +230,7 @@ const DetallePedidoForm = () => {
             ))
           ) : (
             <Tr>
-              <Td colSpan="6" align="center">
+              <Td colSpan="7" align="center">
                 No hay pedidos disponibles
               </Td>
             </Tr>
@@ -226,7 +238,6 @@ const DetallePedidoForm = () => {
         </Tbody>
       </Table>
 
-      {/* Botón de Realizar Pedido */}
       {isPedidoFinalizado && (
         <Flex justify="flex-end" mt={4}>
           <Button colorScheme="green" onClick={handleRealizarPedido}>
@@ -235,7 +246,6 @@ const DetallePedidoForm = () => {
         </Flex>
       )}
 
-      {/* Modal para agregar o editar pedidos */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -257,9 +267,7 @@ const DetallePedidoForm = () => {
                 />
               </>
             )}
-            {isPedidoFinalizado && (
-              <ProductosTable pedidoId={pedidoIdGuardado} />
-            )}
+            {isPedidoFinalizado && <ProductosTable pedidoId={pedidoIdGuardado} />}
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
