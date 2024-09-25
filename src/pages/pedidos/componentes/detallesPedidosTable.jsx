@@ -1,56 +1,117 @@
-import { useState } from "react";
-import { Table, Thead, Tbody, Tr, Th, Td, IconButton, Button } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import {
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  IconButton,
+  Button,
+} from "@chakra-ui/react";
 import { DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { useDispatch } from "react-redux";
 import ProductoSelector from "./productoSelector";
 import CantidadInput from "./cantidadInput";
 import PrecioInput from "./precioInput";
-import { addNewDetalleOrden } from "../../../store/Pedidos/DetallePedidos/thunks";
-import PropTypes from 'prop-types';  // <-- Importing PropTypes
+import {
+  addNewDetalleOrden,
+  getDetalleOrdenByPedidoId,
+  deleteDetalleOrden,
+} from "../../../store/Pedidos/DetallePedidos/thunks";
+import PropTypes from "prop-types";
 
 const ProductosTable = ({ pedidoId }) => {
   const dispatch = useDispatch();
-  
+
+  // Estado para manejar productos
   const [productos, setProductos] = useState([]);
   const [newProducto, setNewProducto] = useState({
     productoId: "",
+    nombreProducto: "",
     cantidad: 0,
     precio: 0,
   });
 
-  const handleProductoChange = (field, value) => {
+  // Cargar productos del pedido al montar el componente
+  useEffect(() => {
+    const cargarDetalles = async () => {
+      try {
+        const detalles = await dispatch(
+          getDetalleOrdenByPedidoId(pedidoId)
+        ).unwrap();
+        setProductos(detalles); // Actualizamos el estado con los productos del pedido seleccionado
+      } catch (error) {
+        console.error("Error al cargar los detalles del pedido:", error);
+      }
+    };
+    cargarDetalles();
+  }, [dispatch, pedidoId]);
+
+  // Manejar cambios en los campos del producto
+  const handleProductoChange = (productoId, nombreProducto) => {
     setNewProducto((prev) => ({
       ...prev,
-      [field]: value,
+      productoId,
+      nombreProducto,
     }));
   };
 
-  const handleAddProducto = () => {
-    if (newProducto.productoId && newProducto.cantidad > 0 && newProducto.precio > 0) {
-      setProductos((prevProductos) => [...prevProductos, newProducto]);
-      setNewProducto({ productoId: "", cantidad: 0, precio: 0 });
-    }
-  };
-
-  const handleRemoveProducto = (index) => {
-    setProductos((prevProductos) => prevProductos.filter((_, i) => i !== index));
-  };
-
-  const handleSaveDetalleOrden = async () => {
-    for (const producto of productos) {
-      const newDetalleOrden = {
-        pedidoId,
-        productoId: producto.productoId,
-        cantidad: producto.cantidad,
-        precio: producto.precio,
-      };
-
+  // Añadir nuevo producto a la lista y base de datos
+  const handleAddProducto = async () => {
+    if (
+      
+      newProducto.productoId &&
+      newProducto.cantidad > 0 &&
+      newProducto.precio > 0
+    ) 
+    
+    window.location.reload();
+    {
       try {
-        await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
-        console.log("Detalle de producto guardado:", newDetalleOrden);
+        const newDetalleOrden = {
+          pedidoId,
+          productoId: newProducto.productoId,
+          cantidad: newProducto.cantidad,
+          precio: newProducto.precio,
+        };
+
+        // Guardar el producto en la base de datos
+        const savedDetalle = await dispatch(
+          addNewDetalleOrden(newDetalleOrden)
+        ).unwrap();
+
+        // Obtener el nombre del producto y actualizar el estado local
+        const updatedProducto = {
+          ...newProducto,
+          id: savedDetalle.id,
+        };
+
+        setProductos((prevProductos) => [...prevProductos, updatedProducto]);
+        setNewProducto({
+          productoId: "",
+          nombreProducto: "",
+          cantidad: 0,
+          precio: 0,
+        });
       } catch (error) {
         console.error("Error al guardar el detalle del pedido:", error);
       }
+    }
+  };
+
+  // Eliminar producto del estado y de la base de datos
+  const handleRemoveProducto = async (productoId, index) => {
+    try {
+      // Eliminar el producto de la base de datos
+      await dispatch(deleteDetalleOrden(productoId)).unwrap();
+
+      // Actualizar el estado local para reflejar la eliminación
+      setProductos((prevProductos) =>
+        prevProductos.filter((_, i) => i !== index)
+      );
+    } catch (error) {
+      console.error("Error al eliminar el detalle del pedido:", error);
     }
   };
 
@@ -67,7 +128,7 @@ const ProductosTable = ({ pedidoId }) => {
         </Thead>
         <Tbody>
           {productos.map((producto, index) => (
-            <Tr key={index}>
+            <Tr key={producto.id || index}>
               <Td>{producto.nombreProducto}</Td>
               <Td>{producto.cantidad}</Td>
               <Td>{producto.precio}</Td>
@@ -75,7 +136,7 @@ const ProductosTable = ({ pedidoId }) => {
                 <IconButton
                   icon={<DeleteIcon />}
                   colorScheme="red"
-                  onClick={() => handleRemoveProducto(index)}
+                  onClick={() => handleRemoveProducto(producto.id, index)} // Pasamos el id del producto
                   size="sm"
                 />
               </Td>
@@ -84,35 +145,48 @@ const ProductosTable = ({ pedidoId }) => {
           <Tr>
             <Td>
               <ProductoSelector
-                onSelect={(productoId) => handleProductoChange("productoId", productoId)}
+                onSelect={(productoId, nombreProducto) =>
+                  handleProductoChange(productoId, nombreProducto)
+                }
                 value={newProducto.productoId}
               />
             </Td>
             <Td>
               <CantidadInput
                 value={Number(newProducto.cantidad) || 0}
-                onChange={(e) => handleProductoChange("cantidad", parseFloat(e.target.value))}
+                onChange={(e) =>
+                  setNewProducto({
+                    ...newProducto,
+                    cantidad: parseFloat(e.target.value),
+                  })
+                }
               />
             </Td>
             <Td>
               <PrecioInput
                 value={Number(newProducto.precio) || 0}
-                onChange={(e) => handleProductoChange("precio", parseFloat(e.target.value))}
+                onChange={(e) =>
+                  setNewProducto({
+                    ...newProducto,
+                    precio: parseFloat(e.target.value),
+                  })
+                }
               />
             </Td>
             <Td>
               <IconButton
                 icon={<AddIcon />}
                 colorScheme="green"
-                onClick={handleAddProducto}
+                onClick={handleAddProducto} // Acción para guardar en la DB
                 size="sm"
               />
             </Td>
           </Tr>
         </Tbody>
       </Table>
-
-    
+      <Button colorScheme="blue" mt={4}>
+        Guardar Productos
+      </Button>
     </>
   );
 };

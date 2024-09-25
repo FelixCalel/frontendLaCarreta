@@ -1,5 +1,36 @@
 import { useEffect, useState } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text, Button, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Input, FormControl, FormLabel, FormErrorMessage, Switch, Select, IconButton } from '@chakra-ui/react';
+import {
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Box,
+  Spinner,
+  Text,
+  Button,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Input,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
+  Switch,
+  Select,
+  IconButton,
+  SimpleGrid,
+  VStack,
+  useBreakpointValue,
+  Flex,
+  Badge
+} from '@chakra-ui/react';
 import { EditIcon } from '@chakra-ui/icons';
 import { format } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,6 +43,7 @@ const PageFormEmpresa = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentEmpresa, setCurrentEmpresa] = useState({ id: '', nombre: '', alias: '', estaActivo: true, baseDatos: '', ipBaseDatos: '', paisId: '' });
   const [errors, setErrors] = useState({});
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
   useEffect(() => {
     if (status === 'idle') {
@@ -26,7 +58,7 @@ const PageFormEmpresa = () => {
     const { name, value, type, checked } = e.target;
     const newValue = type === 'checkbox' ? checked : (name === 'paisId' ? parseInt(value, 10) : value);
     setCurrentEmpresa({ ...currentEmpresa, [name]: newValue });
-    setErrors({ ...errors, [name]: '' }); // Limpiar el error al cambiar el valor
+    setErrors({ ...errors, [name]: '' });
   };
 
   const validateFields = () => {
@@ -108,47 +140,87 @@ const PageFormEmpresa = () => {
   }, {});
 
   return (
-    <Box padding="20px" overflowX="auto">
-      <Button colorScheme="green" onClick={() => { setIsEditMode(false); setCurrentEmpresa({ nombre: '', alias: '', estaActivo: true, baseDatos: '', ipBaseDatos: '', paisId: '' }); onOpen(); }} mb="20px">Agregar Empresa</Button>
-      <Table variant="striped" colorScheme="teal" size="sm">
-        <Thead>
-          <Tr>
-            <Th>ID</Th>
-            <Th>NOMBRE</Th>
-            <Th>ALIAS</Th>
-            <Th>Fecha de Creación</Th>
-            <Th>Fecha de Actualización</Th>
-            <Th>Estado</Th>
-            <Th>Base de datos</Th>
-            <Th>IP SAP</Th>
-            <Th>País</Th>
-            <Th>Acciones</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {data.map((empresa) => (
-            <Tr key={empresa.id}>
-              <Td>{empresa.id}</Td>
-              <Td>{empresa.nombre}</Td>
-              <Td>{empresa.alias}</Td>
-              <Td>{formatDate(empresa.creadoEl)}</Td>
-              <Td>{formatDate(empresa.actualizadoEl)}</Td>
-              <Td>
-                <Switch name="estaActivo" isChecked={empresa.estaActivo} onChange={() => handleToggleStatus(empresa.id, !empresa.estaActivo)} />
-              </Td>
-              <Td>{empresa.baseDatos}</Td>
-              <Td>{empresa.ipBaseDatos}</Td>
-              <Td>{paisMap[empresa.paisId] || 'Sin país'}</Td>
-              <Td>
-                <Button colorScheme="red" onClick={() => handleDelete(empresa.id)} mr={2}>Eliminar</Button>
-                <IconButton icon={<EditIcon />} onClick={() => handleEdit(empresa)} />
-              </Td>
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
+    <Box padding="0px" marginTop="-25" marginLeft="-20px" marginRight="-5">
 
-      <Modal isOpen={isOpen} onClose={onClose}>
+
+      <Button colorScheme="green" onClick={() => { setIsEditMode(false); setCurrentEmpresa({ nombre: '', alias: '', estaActivo: true, baseDatos: '', ipBaseDatos: '', paisId: '' }); onOpen(); }} mb="20px">
+        Agregar Empresa
+      </Button>
+      
+      {/* Mostrar tabla solo en pantallas grandes */}
+      {!isMobile && (
+        <Box overflowX="auto">
+          <Table variant="striped" colorScheme="teal" size="sm">
+            <Thead>
+              <Tr>
+                <Th>ID</Th>
+                <Th>NOMBRE</Th>
+                <Th>ALIAS</Th>
+                <Th>Fecha de Creación</Th>
+                <Th>Fecha de Actualización</Th>
+                <Th>Estado</Th>
+                <Th>Base de datos</Th>
+                <Th>IP SAP</Th>
+                <Th>País</Th>
+                <Th>Acciones</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {data.map((empresa) => (
+                <Tr key={empresa.id}>
+                  <Td>{empresa.id}</Td>
+                  <Td>{empresa.nombre}</Td>
+                  <Td>{empresa.alias}</Td>
+                  <Td>{formatDate(empresa.creadoEl)}</Td>
+                  <Td>{formatDate(empresa.actualizadoEl)}</Td>
+                  <Td>
+                    <Switch name="estaActivo" isChecked={empresa.estaActivo} onChange={() => handleToggleStatus(empresa.id, !empresa.estaActivo)} />
+                  </Td>
+                  <Td>{empresa.baseDatos}</Td>
+                  <Td>{empresa.ipBaseDatos}</Td>
+                  <Td>{paisMap[empresa.paisId] || 'Sin país'}</Td>
+                  <Td>
+                    <Button colorScheme="red" size="sm" onClick={() => handleDelete(empresa.id)} mr={2}>
+                      Eliminar
+                    </Button>
+                    <IconButton icon={<EditIcon />} size="sm" onClick={() => handleEdit(empresa)} />
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
+      )}
+
+      {/* Mostrar tarjetas en dispositivos móviles */}
+      {isMobile && (
+        <SimpleGrid columns={1} spacing={4}>
+          {data.map((empresa) => (
+            <Box key={empresa.id} p={4} borderWidth="1px" borderRadius="lg" boxShadow="md" bg="white">
+              <VStack align="start" spacing={3}>
+                <Flex justifyContent="space-between" width="100%">
+                  <Text fontWeight="bold">{empresa.nombre}</Text>
+                  <Badge colorScheme={empresa.estaActivo ? "green" : "red"}>
+                    {empresa.estaActivo ? "Activo" : "Inactivo"}
+                  </Badge>
+                </Flex>
+                <Text><strong>Alias:</strong> {empresa.alias}</Text>
+                <Text><strong>Fecha de Creación:</strong> {formatDate(empresa.creadoEl)}</Text>
+                <Text><strong>Fecha de Actualización:</strong> {formatDate(empresa.actualizadoEl)}</Text>
+                <Text><strong>Base de Datos:</strong> {empresa.baseDatos}</Text>
+                <Text><strong>IP SAP:</strong> {empresa.ipBaseDatos}</Text>
+                <Text><strong>País:</strong> {paisMap[empresa.paisId] || 'Sin país'}</Text>
+                <Flex justifyContent="space-between" width="100%">
+                  <Button size="sm" colorScheme="red" onClick={() => handleDelete(empresa.id)}>Eliminar</Button>
+                  <IconButton size="sm" icon={<EditIcon />} onClick={() => handleEdit(empresa)} />
+                </Flex>
+              </VStack>
+            </Box>
+          ))}
+        </SimpleGrid>
+      )}
+
+      <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? "full" : "md"}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>{isEditMode ? 'Actualizar Empresa' : 'Agregar Nueva Empresa'}</ModalHeader>
@@ -216,7 +288,7 @@ const PageFormEmpresa = () => {
             </FormControl>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
+            <Button colorScheme="green" mr={3} onClick={handleSubmit}>
               {isEditMode ? 'Actualizar' : 'Guardar'}
             </Button>
             <Button variant="ghost" onClick={onClose}>Cancelar</Button>

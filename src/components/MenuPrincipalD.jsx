@@ -18,7 +18,7 @@ import PropTypes from "prop-types";
 // Componente MenuItem rediseñado con animación
 const MenuItem = ({ icon, label, to, isExpanded, isActive }) => {
   const activeBg = useColorModeValue("green.500", "green.300");
-  const hoverBg = useColorModeValue("green.100", "green.700");
+  const hoverBg = useColorModeValue("green.500", "green.500");
 
   const menuItemContent = (
     <Flex

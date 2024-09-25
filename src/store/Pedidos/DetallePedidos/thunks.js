@@ -84,3 +84,45 @@ export const toggleDetalleOrdenStatus = createAsyncThunk(
     return response.data;
   }
 );
+
+export const getDetalleOrdenByPedidoId = createAsyncThunk(
+  'detalleOrden/fetchByPedidoId',
+  async (pedidoId) => {
+    try {
+      // Hacer la petición a la API con el pedidoId
+      console.log(`Iniciando la petición a la API para el pedidoId: ${pedidoId}`);
+      const response = await axios.get(`${BASE_URL}/detalle/pedido/listar/${pedidoId}`);
+
+      // Verificar si la respuesta es exitosa
+      if (response.status === 200) {
+        console.log("Respuesta recibida:", response.data);
+      } else {
+        console.warn("Respuesta no fue exitosa. Código de estado:", response.status);
+      }
+
+      const data = response.data;
+
+      // Verificar la estructura de los datos antes de ordenar
+      console.log("Datos recibidos sin ordenar:", data);
+
+      // Ordenar los datos si es necesario
+      data.sort((a, b) => a.id - b.id);
+      console.log("Datos ordenados:", data);
+
+      return data;  // Retornar los datos obtenidos para ser usados en el estado de Redux
+    } catch (error) {
+      console.error("Error al obtener el detalle de la orden por pedidoId:", error);
+
+      // Manejo de error específico
+      if (error.response) {
+        console.error("Error en la respuesta de la API:", error.response.data);
+      } else if (error.request) {
+        console.error("No se recibió respuesta de la API:", error.request);
+      } else {
+        console.error("Error al configurar la petición:", error.message);
+      }
+
+      throw error; // Propagar el error para que pueda ser manejado en el estado de Redux
+    }
+  }
+);

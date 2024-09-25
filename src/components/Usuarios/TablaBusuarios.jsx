@@ -154,7 +154,6 @@ export const TablaBusuarios = () => {
               <Th color="green.700">Nombre</Th>
               <Th color="green.700">Correo</Th>
               <Th color="green.700">Teléfono</Th>
-              <Th color="green.700">Estado</Th>
               <Th color="green.700">Acciones</Th>
             </Tr>
           </Thead>
@@ -170,17 +169,16 @@ export const TablaBusuarios = () => {
                   </Td>
                   <Td>{usuario.correo}</Td>
                   <Td>{usuario.telefono}</Td>
-                  <Td>
-                    <Stack align="center" direction="row">
-                      <Switch
+                  
+                    {/* <Stack align="center" direction="row"> */}
+                      {/* <Switch
                         size="sm"
                         isChecked={usuario.estaActivo === true}
                         colorScheme="green"
                         onChange={() => handleDesactivar(usuario.id)}
                       />
-                      <Text>{usuario.estaActivo ? "Activo" : "Inactivo"}</Text>
-                    </Stack>
-                  </Td>
+                      <Text>{usuario.estaActivo ? "Activo" : "Inactivo"}</Text> */}
+                    {/* </Stack> */}
                   <Td>
                     <Stack align="center" direction="row">
                       <Button
@@ -199,12 +197,6 @@ export const TablaBusuarios = () => {
                       >
                         Asignar Rutas
                       </Button>
-                      <IconButton
-                        icon={<AiOutlineUserDelete />}
-                        aria-label="Eliminar usuario"
-                        colorScheme="red"
-                        size="sm"
-                      />
                     </Stack>
                   </Td>
                 </Tr>

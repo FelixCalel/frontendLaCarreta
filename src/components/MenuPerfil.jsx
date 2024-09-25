@@ -11,7 +11,14 @@ import {
   useColorModeValue,
   Divider,
 } from "@chakra-ui/react";
-import { FaUser, FaBuilding, FaUsers, FaKey, FaShieldAlt, FaSignOutAlt } from "react-icons/fa"; // Iconos adicionales
+import {
+  FaUser,
+  FaBuilding,
+  FaUsers,
+  FaKey,
+  FaShieldAlt,
+  FaSignOutAlt,
+} from "react-icons/fa"; // Iconos adicionales
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "../store/auth";
@@ -62,8 +69,8 @@ export const MenuPerfil = () => {
             aria-label="Perfil"
             icon={<FaUser />}
             variant="ghost"
-            _hover={{ bg: useColorModeValue("gray.200", "gray.700") }}
-            _active={{ bg: useColorModeValue("gray.300", "gray.600") }}
+            _hover={{ bg: useColorModeValue("green.100", "gray.700") }}
+            _active={{ bg: useColorModeValue("green.200", "gray.600") }}
             size="lg"
             color={useColorModeValue("gray.600", "white")}
           />
@@ -96,8 +103,8 @@ export const MenuPerfil = () => {
               as={Link}
               to="/admin/perfil"
               icon={<FaUser />}
-              _hover={{ bg: "teal.500", color: "white" }}
-              _focus={{ bg: "teal.500", color: "white" }}
+              _hover={{ bg: "green.500", color: "white" }}
+              _focus={{ bg: "green.500", color: "white" }}
               py={2}
             >
               Perfil
@@ -107,8 +114,8 @@ export const MenuPerfil = () => {
               as={Link}
               to="/admin/empresas"
               icon={<FaBuilding />}
-              _hover={{ bg: "teal.500", color: "white" }}
-              _focus={{ bg: "teal.500", color: "white" }}
+              _hover={{ bg: "green.500", color: "white" }}
+              _focus={{ bg: "green.500", color: "white" }}
               py={2}
             >
               Empresas
@@ -118,8 +125,8 @@ export const MenuPerfil = () => {
               as={Link}
               to="/admin/usuarios"
               icon={<FaUsers />}
-              _hover={{ bg: "teal.500", color: "white" }}
-              _focus={{ bg: "teal.500", color: "white" }}
+              _hover={{ bg: "green.500", color: "white" }}
+              _focus={{ bg: "green.500", color: "white" }}
               py={2}
             >
               Usuarios
@@ -129,8 +136,8 @@ export const MenuPerfil = () => {
               as={Link}
               to="/admin/roles"
               icon={<FaKey />}
-              _hover={{ bg: "teal.500", color: "white" }}
-              _focus={{ bg: "teal.500", color: "white" }}
+              _hover={{ bg: "green.500", color: "white" }}
+              _focus={{ bg: "green.500", color: "white" }}
               py={2}
             >
               Roles
@@ -140,8 +147,8 @@ export const MenuPerfil = () => {
               as={Link}
               to="/admin/permisos"
               icon={<FaShieldAlt />}
-              _hover={{ bg: "teal.500", color: "white" }}
-              _focus={{ bg: "teal.500", color: "white" }}
+              _hover={{ bg: "green.500", color: "white" }}
+              _focus={{ bg: "green.500", color: "white" }}
               py={2}
             >
               Permisos
