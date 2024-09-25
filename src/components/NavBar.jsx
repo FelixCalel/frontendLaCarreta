@@ -1,5 +1,5 @@
 import { Box, Flex, IconButton, Image, Spacer, HStack, Tooltip } from "@chakra-ui/react";
-import { BellIcon, SearchIcon } from "@chakra-ui/icons"; // Iconos predeterminados de Chakra UI
+import { FiBell, FiSearch } from "react-icons/fi"; // Iconos modernos usando react-icons
 import { MenuPerfil } from "./MenuPerfil";
 import SearchBar from "./Dashboard/SearchBar";
 import { Link } from "react-router-dom";
@@ -8,15 +8,16 @@ export default function NavBar() {
   return (
     <Flex
       as="nav"
-      p={{ base: "4px 8px", md: "8px 16px" }} // Ajusta el padding para pantallas pequeñas y grandes
+      p={{ base: "4px 8px", md: "8px 16px" }} // Mantén el padding adaptable
       alignItems="center"
       borderBottom="1px solid"
-      borderColor="gray.200" // Añade color al borde inferior
-      bg="white" // Fondo blanco para contraste
-      position="sticky" // Posición fija cuando se hace scroll
+      borderColor="gray.100" // Un color más claro para el borde inferior
+      bg="white" // Fondo blanco para mantener el contraste
+      position="sticky"
       top="0"
       zIndex="1000" // Asegura que esté por encima de otros elementos
       width="100%"
+      boxShadow="sm" // Sombra suave para dar un toque minimalista
     >
       <Box display="flex" alignItems="center">
         {/* Logo envuelto en un Link que redirige a /auth/home */}
@@ -25,7 +26,7 @@ export default function NavBar() {
             src="/images/logo.png" // Reemplaza con la ruta correcta de tu logo
             alt="La Carreta"
             objectFit="contain"
-            width={{ base: "50px", md: "70px", lg: "90px" }} // Tamaño adaptable al dispositivo
+            width={{ base: "40px", md: "60px", lg: "80px" }} // Tamaño adaptable al dispositivo
             cursor="pointer" // Muestra un cursor de pointer
           />
         </Link>
@@ -40,7 +41,8 @@ export default function NavBar() {
               <IconButton
                 variant="ghost"
                 aria-label="Buscar"
-                icon={<SearchIcon />}
+                icon={<FiSearch />} // Cambiado a un icono más moderno
+                size="lg"
               />
             </Tooltip>
           </Link>
@@ -59,8 +61,9 @@ export default function NavBar() {
           <Tooltip label="Notificaciones" aria-label="Notificaciones Tooltip">
             <IconButton
               variant="ghost"
-              fontSize={{ base: "18px", md: "22px" }} // Ajuste del tamaño del icono según el dispositivo
-              icon={<BellIcon />}
+              fontSize={{ base: "20px", md: "24px" }} // Ajuste del tamaño del icono según el dispositivo
+              icon={<FiBell />} // Cambiado a un icono de campana más moderno
+              size="lg"
             />
           </Tooltip>
         </Link>

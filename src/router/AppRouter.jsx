@@ -8,7 +8,6 @@ import CheckingAuth from "../ui/components/CheckingAuth";
 import { useEffect } from "react";
 import { logout, login, obtenerDatosLogeado } from "../store/auth";
 import { isAuthenticated } from "../providers/endpoints";
-import { Dashboard } from "../pages";
 import { PaginaPais } from "./PaisRoute";
 import { PaginaEmpresa } from "./EmpresaRoute";
 import { PaginaCiudad } from "./CiudaRouter";
@@ -16,6 +15,7 @@ import { PaginaTienda } from "./TiendaRouter";
 import  { PaginaRuta } from "./RutaRouter";
 import HomePage from "../pages/auth/HomePage"; 
 import { PaginaPedido } from "./PedidosRouter";
+import { LoginForm } from "../pages/auth";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -72,7 +72,7 @@ export const AppRouter = () => {
       {/* <Route path="/login/*" element={<PaginaPais />} /> */}
 
       {/* Ruta predeterminada */}
-      <Route path="*" element={<Dashboard />} />
+      <Route path="*" element={<LoginForm />} />
     </Routes>
   );
 };

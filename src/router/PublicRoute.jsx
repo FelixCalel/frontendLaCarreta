@@ -11,7 +11,7 @@ const actualUsuario = useSelector( state => state.auth)
 return  ( actualUsuario.status === 'registered')
   ? <Navigate to="/auth/confirmacion_registro" replace />
   : ( actualUsuario.status === 'authenticated')
-  ? <Navigate to="/admin/dashboard" replace />
+  ? <Navigate to="/auth/home" replace />
   : children  
 
 
