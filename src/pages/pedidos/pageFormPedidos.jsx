@@ -21,7 +21,7 @@ import {
   Flex,
   IconButton
 } from "@chakra-ui/react";
-import { DeleteIcon } from "@chakra-ui/icons"; // Para el icono de eliminar
+import { DeleteIcon } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import DeuSelector from "./componentes/DeuSelector";
 import CiudadSelector from "./componentes/CiudadSelector";

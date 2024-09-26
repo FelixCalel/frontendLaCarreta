@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import ProductoSelector from "./productoSelector";
 import CantidadInput from "./cantidadInput";
 import PrecioInput from "./precioInput";
-import { addNewDetalleOrden, tablaDetalleOrden, deleteDetalleOrden } from "../../../store/Pedidos/DetallePedidos/thunks";
+import { addNewDetalleOrden, getDetalleOrdenByPedidoId, deleteDetalleOrden } from "../../../store/Pedidos/DetallePedidos/thunks";
 import PropTypes from "prop-types";
 
 const ProductosTable = ({ pedidoId }) => {
@@ -20,12 +20,12 @@ const ProductosTable = ({ pedidoId }) => {
     precio: 0,
   });
 
-  // Cargar productos del pedido al montar el componente
+  // Cargar productos del pedido específico al montar el componente
   useEffect(() => {
     const cargarDetalles = async () => {
       try {
-        const detalles = await dispatch(tablaDetalleOrden(pedidoId)).unwrap();
-        setProductos(detalles); // Actualizamos el estado con los productos del pedido seleccionado
+        const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+        setProductos(detalles); // Actualizamos el estado con los productos del pedido específico
       } catch (error) {
         console.error("Error al cargar los detalles del pedido:", error);
       }
