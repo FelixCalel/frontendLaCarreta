@@ -21,6 +21,8 @@ import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { login as loginAuth } from "../../store/auth/authSlice";
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 
 export const LoginForm = () => {
   const actualUsuario = useSelector((usuario) => usuario.auth);
@@ -42,7 +44,7 @@ export const LoginForm = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:3000/usuarios/login",
+        `${BASE_URL}/usuarios/login`,
         {
           correo,
           contrasena,

@@ -10,7 +10,6 @@ import {
   Button,
   useToast,
   Stack,
-  Switch,
   Text,
   Box,
   Flex,
@@ -26,9 +25,10 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { FiUserPlus, FiSearch } from "react-icons/fi";
-import { AiOutlineUserDelete } from "react-icons/ai";
 import axios from "axios";
 import RutaSelector from "./RutaSelector"; // Componente para selección de rutas
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 
 export const TablaBusuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -43,7 +43,7 @@ export const TablaBusuarios = () => {
     const fetchUsuarios = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/usuarios/todos"
+          `${BASE_URL}/usuarios/todos`
         );
         setUsuarios(response.data.usuarios);
       } catch (error) {
@@ -59,7 +59,7 @@ export const TablaBusuarios = () => {
 
     const fetchRutas = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/ruta/todos");
+        const response = await axios.get(`${BASE_URL}/ruta/todos`);
         setRutas(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error("Error al obtener rutas:", error);
@@ -98,7 +98,7 @@ export const TablaBusuarios = () => {
       }
 
       await axios.post(
-        `http://localhost:3000/usuarios/${usuarioId}/asignar-ruta`,
+        `${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`,
         {
           rutaId: selectedRoutes,
         }

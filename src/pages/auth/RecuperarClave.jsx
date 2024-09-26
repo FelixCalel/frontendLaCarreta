@@ -13,6 +13,8 @@ import {
   Text,
 } from '@chakra-ui/react';
 import axios from 'axios';
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 
 export const RecuperarClave = () => {
   const [email, setEmail] = useState('');
@@ -41,7 +43,7 @@ export const RecuperarClave = () => {
     
     // Aquí manejarías el envío del correo electrónico para la recuperación de la contraseña
     try {
-      const response = await axios.post('http://localhost:3000/usuarios/recuperar_clave_email', {
+      const response = await axios.post(`${BASE_URL}/usuarios/recuperar_clave_email`, {
         correo_electronico,
       });
       console.log(response)

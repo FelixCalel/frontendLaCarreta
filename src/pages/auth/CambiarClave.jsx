@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Box, Heading, FormControl, FormLabel, Input, Button, Text, useToast, Icon } from '@chakra-ui/react';
 import axios from 'axios';
-import { MdError, MdCheckCircle, MdWarning } from 'react-icons/md';
-import { Navigate, redirect, useNavigate, useParams } from 'react-router-dom';
+import { MdError, MdWarning } from 'react-icons/md';
+import { useNavigate, useParams } from 'react-router-dom';
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 
 
 
@@ -36,7 +38,7 @@ const handleSubmit = async (e) => {
           }
   
         // Realizar la solicitud HTTP para enviar la nueva contraseña
-        const response = await axios.post('http://localhost:3000/usuarios/recuperar-clave', {
+        const response = await axios.post(`${BASE_URL}/usuarios/recuperar-clave`, {
           
           correo_electronico: correo_electronico,
           token: token,

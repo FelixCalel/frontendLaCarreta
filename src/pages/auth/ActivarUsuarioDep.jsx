@@ -13,6 +13,8 @@ import {
   Text,
 } from '@chakra-ui/react';
 import axios from 'axios';
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 
 export const ActivarUsuarioDep = () => {
   const url = window.location.href;
@@ -84,7 +86,7 @@ export const ActivarUsuarioDep = () => {
     
     // Aquí se activa el usuario actualizando la contraseña solicitada
     try {
-      const response = await axios.post('http://localhost:3000/usuarios/activarUsuarioHijo', {
+      const response = await axios.post(`${BASE_URL}/usuarios/activarUsuarioHijo`, {
         nombres, apellidos,correo_electronico,nuevaClave,telefono,celular
       });
       console.log(response.status)

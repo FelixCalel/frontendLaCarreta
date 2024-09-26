@@ -5,6 +5,7 @@ import { tablaRuta } from "../../store/Ruta/thunks";
 import { Checkbox, Stack, Text } from "@chakra-ui/react";
 import axios from "axios";
 
+const BASE_URL = import.meta.env.VITE_API_URL; // Agregar esta línea
 
 const RutaSelector = ({ selectedRoutes, setSelectedRoutes, usuarioId }) => {
   const dispatch = useDispatch();
@@ -31,9 +32,8 @@ const RutaSelector = ({ selectedRoutes, setSelectedRoutes, usuarioId }) => {
   };
 
   const asignarRuta = async (usuarioId, rutaId) => {
-    
     try {
-      await axios.post(`http://localhost:3000/usuarios/${usuarioId}/asignar-ruta`, {
+      await axios.post(`${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`, {
         rutaId: [rutaId], // Asigna solo esta ruta
       });
     } catch (error) {
@@ -43,7 +43,7 @@ const RutaSelector = ({ selectedRoutes, setSelectedRoutes, usuarioId }) => {
 
   const desasignarRuta = async (usuarioId, rutaId) => {
     try {
-      await axios.post(`http://localhost:3000/usuarios/${usuarioId}/desasignar-ruta`, {
+      await axios.post(`${BASE_URL}/usuarios/${usuarioId}/desasignar-ruta`, {
         rutaId: [rutaId], // Desasigna solo esta ruta
       });
     } catch (error) {
