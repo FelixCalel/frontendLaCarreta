@@ -163,7 +163,7 @@ const DetallePedidoForm = () => {
   // Manejo de la eliminación de pedido
   const handleDeletePedido = async (pedidoId) => {
     try {
-      await dispatch(deleteDetalleOrden(pedidoId)).unwrap();
+      await dispatch(deletePedido(pedidoId)).unwrap();
       console.log("Pedido eliminado correctamente");
       dispatch(tablaPedidos()); // Recargar la tabla de pedidos
     } catch (error) {
