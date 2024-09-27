@@ -19,7 +19,7 @@ import {
   ModalCloseButton,
   Collapse,
   Flex,
-  IconButton
+  IconButton,
 } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,15 +27,22 @@ import DeuSelector from "./componentes/DeuSelector";
 import CiudadSelector from "./componentes/CiudadSelector";
 import TiendaSelector from "./componentes/tiendaSelector";
 import ProductosTable from "./componentes/detallesPedidosTable";
-import { addNewPedido, tablaPedidos, deletePedido } from "../../store/Pedidos/thunks";
-import { addNewDetalleOrden, deleteDetalleOrden } from '../../store/Pedidos/DetallePedidos/thunks';
+import {
+  addNewPedido,
+  tablaPedidos,
+  deletePedido,
+} from "../../store/Pedidos/thunks";
+import {
+  addNewDetalleOrden,
+  deleteDetalleOrden,
+} from "../../store/Pedidos/DetallePedidos/thunks";
 
 const DetallePedidoForm = () => {
   const dispatch = useDispatch();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Obtener pedidos y detalleOrden desde Redux
-  const pedidos = useSelector((state) => state.pedidos.data); 
+  const pedidos = useSelector((state) => state.pedidos.data);
 
   // Estado para manejar la creación de pedidos y productos
   const [currentPedido, setCurrentPedido] = useState({
@@ -133,7 +140,9 @@ const DetallePedidoForm = () => {
 
   // Guardar los detalles del pedido seleccionados
   const handleRealizarPedido = async () => {
-    const productos = useSelector((state) => state.detalleOrden.productosSeleccionados);
+    const productos = useSelector(
+      (state) => state.detalleOrden.productosSeleccionados
+    );
 
     try {
       const detallePedidoData = productos.map((producto) => ({
@@ -144,7 +153,9 @@ const DetallePedidoForm = () => {
       }));
 
       await Promise.all(
-        detallePedidoData.map(detalle => dispatch(addNewDetalleOrden(detalle)))
+        detallePedidoData.map((detalle) =>
+          dispatch(addNewDetalleOrden(detalle))
+        )
       );
       console.log("Detalle del pedido guardado exitosamente.");
     } catch (error) {
@@ -172,7 +183,9 @@ const DetallePedidoForm = () => {
   };
 
   const usuarioId = localStorage.getItem("usuarioId");
-  const pedidosUsuario = pedidos.filter(pedido => pedido.usuarioId === parseInt(usuarioId));
+  const pedidosUsuario = pedidos.filter(
+    (pedido) => pedido.usuarioId === parseInt(usuarioId)
+  );
 
   return (
     <Box>
@@ -214,7 +227,7 @@ const DetallePedidoForm = () => {
                     <IconButton
                       icon={<DeleteIcon />}
                       colorScheme="red"
-                      onClick={() => handleDeletePedido(pedido.id)}  // Eliminar pedido
+                      onClick={() => handleDeletePedido(pedido.id)} // Eliminar pedido
                       size="sm"
                     />
                   </Td>
@@ -260,14 +273,22 @@ const DetallePedidoForm = () => {
                   value={currentPedido.ciudadId}
                   onChange={handleCiudadChange}
                 />
-                <DeuSelector onSelect={handleDeudorSelect} />
+
                 <TiendaSelector
+                  ciudadId={currentPedido.ciudadId}
                   value={currentPedido.tiendaId}
-                  onChange={handleTiendaChange}
+                  onChange={handleTiendaChange} // Maneja el cambio de tienda
+                />
+
+                <DeuSelector
+                  tiendaId={currentPedido.tiendaId} // Pasa el tiendaId seleccionado para mostrar el deudor asociado
+                  onSelect={handleDeudorSelect} // Maneja el cambio de deudor
                 />
               </>
             )}
-            {isPedidoFinalizado && <ProductosTable pedidoId={pedidoIdGuardado} />}
+            {isPedidoFinalizado && (
+              <ProductosTable pedidoId={pedidoIdGuardado} />
+            )}
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleSubmit}>

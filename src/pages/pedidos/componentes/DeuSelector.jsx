@@ -1,37 +1,50 @@
 import { useEffect, useState } from "react";
-import PropTypes from "prop-types"; // Importar PropTypes para la validación de props
+import PropTypes from "prop-types";
 import { Flex, FormControl, FormHelperText } from "@chakra-ui/react";
-import { useSelector, useDispatch } from "react-redux";
 import {
   AutoComplete,
   AutoCompleteInput,
   AutoCompleteItem,
   AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
-import { tablaDeudores } from "../../../store/Deus/thunks"; // Importa el thunk correcto para obtener los deudores
+import { useSelector } from "react-redux";
 
-const DeuSelector = ({ onSelect }) => {
-  const dispatch = useDispatch();
-  const deus = useSelector((state) => state.deudores.deudores); // Accedemos a los deudores del estado
+const DeuSelector = ({ tiendaId, onSelect }) => {
   const [inputValue, setInputValue] = useState(""); // Estado para controlar el valor del input
+  const [filteredDeudor, setFilteredDeudor] = useState(null); // Estado para el deudor filtrado por tienda
+
+  // Obtener todas las tiendas del estado de Redux
+  const tiendas = useSelector((state) => state.tiendas?.data || []); // Si tiendas es undefined, lo reemplazamos con un array vacío
 
   useEffect(() => {
-    dispatch(tablaDeudores()); // Despachamos la acción para obtener los deudores
-  }, [dispatch]);
+    if (tiendaId && tiendas.length > 0) {
+      // Encuentra la tienda seleccionada
+      const tiendaSeleccionada = tiendas.find((tienda) => tienda.id === tiendaId);
 
-  const handleSelectDeudor = (deudor) => {
-    setInputValue(`${deudor.correlativo} - ${deudor.nombre}`); // Actualizamos el input con el nombre del deudor seleccionado
-    onSelect(deudor.id); // Pasamos el id del deudor seleccionado al componente padre
-  };
+      // Si la tienda tiene un deudor asociado (deudorId) y nombreDeu
+      if (tiendaSeleccionada && tiendaSeleccionada.deudorId && tiendaSeleccionada.nombreDeu) {
+        setFilteredDeudor({
+          id: tiendaSeleccionada.deudorId,
+          nombre: tiendaSeleccionada.nombreDeu,
+        });
+        setInputValue(tiendaSeleccionada.nombreDeu); // Mostrar el nombre del deudor en el input
+        onSelect(tiendaSeleccionada.deudorId); // Pasar el deudorId al componente padre
+      } else {
+        setFilteredDeudor(null); // No hay deudor para esta tienda
+        setInputValue(""); // Limpiar el input si no hay deudor
+        onSelect(null); // Resetear la selección en el componente padre
+      }
+    } else {
+      setFilteredDeudor(null); // Si no hay tienda seleccionada, limpiar el deudor filtrado
+    }
+  }, [tiendaId, tiendas, onSelect]);
 
-  // Función para manejar cambios en el input manualmente
   const handleInputChange = (e) => {
     setInputValue(e.target.value); // Actualizamos el valor del input cuando el usuario escribe
   };
 
-  // Función para limpiar el input cuando el usuario borra manualmente
   const handleClearInput = () => {
-    setInputValue(""); // Limpia el valor del input
+    setInputValue(""); // Limpiar el valor del input
     onSelect(null); // Resetea la selección en el componente padre
   };
 
@@ -42,26 +55,25 @@ const DeuSelector = ({ onSelect }) => {
           <AutoCompleteInput
             variant="outline"
             placeholder="Seleccione un deudor"
-            value={inputValue} // Controlamos el valor del input
-            onChange={handleInputChange} // Manejamos cambios en el input
+            value={inputValue}
+            onChange={handleInputChange}
             onBlur={() => {
               if (!inputValue) handleClearInput(); // Limpiamos el input si está vacío cuando se sale del campo
             }}
           />
           <AutoCompleteList>
-            {deus.map((deu) => (
+            {filteredDeudor && (
               <AutoCompleteItem
-                key={`option-${deu.id}`}
-                value={`${deu.correlativo} - ${deu.nombre}`}
+                key={`option-${filteredDeudor.id}`}
+                value={filteredDeudor.nombre}
                 textTransform="capitalize"
-                onClick={() => handleSelectDeudor(deu)} // Selecciona el deudor
               >
-                {`${deu.correlativo} - ${deu.nombre}`}
+                {filteredDeudor.nombre}
               </AutoCompleteItem>
-            ))}
+            )}
           </AutoCompleteList>
         </AutoComplete>
-        <FormHelperText mt="2">Seleccione el deudor para el pedido</FormHelperText>
+        <FormHelperText mt="2">El deudor está relacionado con la tienda seleccionada</FormHelperText>
       </FormControl>
     </Flex>
   );
@@ -69,7 +81,8 @@ const DeuSelector = ({ onSelect }) => {
 
 // Validación de PropTypes
 DeuSelector.propTypes = {
-  onSelect: PropTypes.func.isRequired, 
+  tiendaId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  onSelect: PropTypes.func.isRequired, // Función para manejar la selección del deudor
 };
 
 export default DeuSelector;
