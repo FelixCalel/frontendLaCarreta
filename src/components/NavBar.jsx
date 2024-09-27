@@ -23,7 +23,7 @@ export default function NavBar() {
         {/* Logo envuelto en un Link que redirige a /auth/home */}
         <Link to="/auth/home">
           <Image
-            src="/images/logo.png" // Reemplaza con la ruta correcta de tu logo
+            src="/images/LogoLaCarreta.png" // Reemplaza con la ruta correcta de tu logo
             alt="La Carreta"
             objectFit="contain"
             width={{ base: "40px", md: "60px", lg: "80px" }} // Tamaño adaptable al dispositivo

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import React from "react";
 import {
   Table,
@@ -20,6 +20,12 @@ import {
   Collapse,
   Flex,
   IconButton,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
 } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -31,15 +37,22 @@ import {
   addNewPedido,
   tablaPedidos,
   deletePedido,
+  updatePedido, // Agregamos esto para actualizar el estado del pedido
 } from "../../store/Pedidos/thunks";
 import {
   addNewDetalleOrden,
-  deleteDetalleOrden,
 } from "../../store/Pedidos/DetallePedidos/thunks";
 
 const DetallePedidoForm = () => {
   const dispatch = useDispatch();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isDialogOpen,
+    onOpen: onDialogOpen,
+    onClose: onDialogClose,
+  } = useDisclosure();
+
+  const cancelRef = useRef();
 
   // Obtener pedidos y detalleOrden desde Redux
   const pedidos = useSelector((state) => state.pedidos.data);
@@ -59,12 +72,7 @@ const DetallePedidoForm = () => {
 
   // Cargar pedidos y detalles al iniciar
   useEffect(() => {
-    dispatch(tablaPedidos()).then((response) => {
-      console.log("Pedidos cargados en Redux:", response.payload);
-    });
-    dispatch(deletePedido()).then((response) => {
-      console.log("Detalle de orden cargado en Redux:", response.payload);
-    });
+    dispatch(tablaPedidos());
   }, [dispatch]);
 
   // Manejo del cambio de ciudad
@@ -157,7 +165,17 @@ const DetallePedidoForm = () => {
           dispatch(addNewDetalleOrden(detalle))
         )
       );
-      console.log("Detalle del pedido guardado exitosamente.");
+
+      // Después de agregar los detalles, cambiamos el estado del pedido a 2 (completado)
+      await dispatch(updatePedido({ id: pedidoIdGuardado, estadoId: 2 }));
+
+      // Cerrar el diálogo de confirmación
+      onDialogClose();
+
+      // Recargar pedidos
+      dispatch(tablaPedidos());
+
+      console.log("Pedido finalizado exitosamente.");
     } catch (error) {
       console.error("Error al guardar el detalle del pedido:", error);
     }
@@ -180,6 +198,11 @@ const DetallePedidoForm = () => {
     } catch (error) {
       console.error("Error al eliminar el pedido:", error);
     }
+  };
+
+  // Mostrar diálogo de confirmación antes de finalizar el pedido
+  const handleConfirmarPedido = () => {
+    onDialogOpen();
   };
 
   const usuarioId = localStorage.getItem("usuarioId");
@@ -253,12 +276,11 @@ const DetallePedidoForm = () => {
 
       {isPedidoFinalizado && (
         <Flex justify="flex-end" mt={4}>
-          <Button colorScheme="green" onClick={handleRealizarPedido}>
+          <Button colorScheme="green" onClick={handleConfirmarPedido}>
             Realizar Pedido
           </Button>
         </Flex>
       )}
-
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -273,13 +295,11 @@ const DetallePedidoForm = () => {
                   value={currentPedido.ciudadId}
                   onChange={handleCiudadChange}
                 />
-
                 <TiendaSelector
                   ciudadId={currentPedido.ciudadId}
                   value={currentPedido.tiendaId}
                   onChange={handleTiendaChange} // Maneja el cambio de tienda
                 />
-
                 <DeuSelector
                   tiendaId={currentPedido.tiendaId} // Pasa el tiendaId seleccionado para mostrar el deudor asociado
                   onSelect={handleDeudorSelect} // Maneja el cambio de deudor
@@ -300,6 +320,31 @@ const DetallePedidoForm = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+      {/* Alert Dialog de confirmación para realizar el pedido */}
+      <AlertDialog
+        isOpen={isDialogOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onDialogClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Confirmar Pedido
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              ¿Estás seguro de que quieres realizar este pedido?
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onDialogClose}>
+                No
+              </Button>
+              <Button colorScheme="green" onClick={handleRealizarPedido} ml={3}>
+                Sí
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   );
 };
