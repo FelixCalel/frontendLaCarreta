@@ -18,7 +18,6 @@ import {
   ModalBody,
   ModalCloseButton,
   Collapse,
-  Flex,
   IconButton,
   AlertDialog,
   AlertDialogBody,
@@ -37,10 +36,8 @@ import {
   addNewPedido,
   tablaPedidos,
   deletePedido,
-  updatePedido, // Agregamos esto para actualizar el estado del pedido
   togglePedidoStatus,
 } from "../../store/Pedidos/thunks";
-import { addNewDetalleOrden } from "../../store/Pedidos/DetallePedidos/thunks";
 
 const DetallePedidoForm = () => {
   const dispatch = useDispatch();
@@ -50,69 +47,54 @@ const DetallePedidoForm = () => {
     onOpen: onDialogOpen,
     onClose: onDialogClose,
   } = useDisclosure();
-
   const cancelRef = useRef();
 
-  // Obtener pedidos y detalleOrden desde Redux
+  // Obtener pedidos desde Redux
   const pedidos = useSelector((state) => state.pedidos.data);
+  const usuarioId = localStorage.getItem("usuarioId");
 
-  // Estado para manejar la creación de pedidos y productos
+  // Estado del pedido actual
   const [currentPedido, setCurrentPedido] = useState({
     ciudadId: 0,
     deudorId: 0,
     tiendaId: 0,
-    usuarioId: 0,
+    usuarioId: parseInt(usuarioId),
     estadoId: 1, // Estado inicial predeterminado
   });
 
   const [isPedidoFinalizado, setIsPedidoFinalizado] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState({});
   const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
+  const [selectedPedidoId, setSelectedPedidoId] = useState(null);
 
-  // Cargar pedidos y detalles al iniciar
+  // Cargar los pedidos al iniciar
   useEffect(() => {
     dispatch(tablaPedidos());
   }, [dispatch]);
 
-  // Manejo del cambio de ciudad
+  // Cambios en los selectores
   const handleCiudadChange = (e) => {
-    const { value } = e.target;
-    setCurrentPedido((prev) => ({
-      ...prev,
-      ciudadId: parseInt(value, 10),
-    }));
+    setCurrentPedido((prev) => ({ ...prev, ciudadId: parseInt(e.target.value) }));
   };
 
-  // Manejo del cambio de deudor
   const handleDeudorSelect = (deudorId) => {
-    setCurrentPedido((prev) => ({
-      ...prev,
-      deudorId,
-    }));
+    setCurrentPedido((prev) => ({ ...prev, deudorId }));
   };
 
-  // Manejo del cambio de tienda
   const handleTiendaChange = (value) => {
-    setCurrentPedido((prev) => ({
-      ...prev,
-      tiendaId: value,
-    }));
+    setCurrentPedido((prev) => ({ ...prev, tiendaId: value }));
   };
 
-  // Validar los campos del formulario
+  // Validar campos del formulario
   const validateFields = () => {
     let formErrors = {};
-    if (!currentPedido.ciudadId && !isPedidoFinalizado)
-      formErrors.ciudadId = "La ciudad es obligatoria";
-    if (!currentPedido.deudorId && !isPedidoFinalizado)
-      formErrors.deudorId = "El deudor es obligatorio";
-    if (!currentPedido.tiendaId && !isPedidoFinalizado)
-      formErrors.tiendaId = "La tienda es obligatoria";
-
+    if (!currentPedido.ciudadId && !isPedidoFinalizado) formErrors.ciudadId = "La ciudad es obligatoria";
+    if (!currentPedido.deudorId && !isPedidoFinalizado) formErrors.deudorId = "El deudor es obligatorio";
+    if (!currentPedido.tiendaId && !isPedidoFinalizado) formErrors.tiendaId = "La tienda es obligatoria";
     return formErrors;
   };
 
-  // Manejo del envío del formulario
+  // Guardar pedido nuevo
   const handleSubmit = async () => {
     const formErrors = validateFields();
     if (Object.keys(formErrors).length > 0) {
@@ -120,82 +102,55 @@ const DetallePedidoForm = () => {
       return;
     }
 
-    const usuarioId = localStorage.getItem("usuarioId");
-
     if (!isPedidoFinalizado) {
-      const newPedido = {
-        ciudadId: currentPedido.ciudadId,
-        deudorId: currentPedido.deudorId,
-        tiendaId: currentPedido.tiendaId,
-        estadoId: 1,
-        usuarioId: parseInt(usuarioId),
-      };
-
+      const newPedido = { ...currentPedido };
       try {
         const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
         setPedidoIdGuardado(pedidoGuardado.id);
         setIsPedidoFinalizado(true);
-
         dispatch(tablaPedidos());
       } catch (error) {
         console.error("Error al guardar el pedido:", error);
       }
     }
-
     onClose();
   };
 
-  // Guardar los detalles del pedido seleccionados
-  const handleRealizarPedido = async (pedidoId) => {
+  // Confirmar la acción de realizar el pedido
+  const handleRealizarPedido = async () => {
     try {
-      // Cambiar el estado del pedido a 2 (Pedido realizado)
-      const pedidoActualizado = await dispatch(
-        togglePedidoStatus({ id: pedidoId, estadoId: 2 }) // Enviar estadoId: 2
-      ).unwrap();
-
-      // Verifica si el pedido fue actualizado correctamente
-      console.log("Pedido actualizado a estado 2:", pedidoActualizado);
-
-      // Cerrar el diálogo de confirmación
-      onDialogClose();
-
-      // Recargar los pedidos
+      await dispatch(togglePedidoStatus({ id: selectedPedidoId, estadoId: 2 })).unwrap();
       dispatch(tablaPedidos());
-
-      console.log("Pedido finalizado exitosamente.");
+      onDialogClose();
+      console.log("Pedido actualizado a estado 2");
     } catch (error) {
       console.error("Error al actualizar el estado del pedido:", error);
     }
   };
 
-  // Manejo del colapso de detalles del pedido
-  const handleToggleDetails = (pedidoId) => {
-    setIsDetailsOpen((prev) => ({
-      ...prev,
-      [pedidoId]: !prev[pedidoId],
-    }));
+  // Mostrar alerta de confirmación para realizar el pedido
+  const showRealizarPedidoConfirmation = (pedidoId) => {
+    setSelectedPedidoId(pedidoId);
+    onDialogOpen();
   };
 
-  // Manejo de la eliminación de pedido
+  // Manejo del colapso de detalles
+  const handleToggleDetails = (pedidoId) => {
+    setIsDetailsOpen((prev) => ({ ...prev, [pedidoId]: !prev[pedidoId] }));
+  };
+
+  // Manejo de la eliminación del pedido
   const handleDeletePedido = async (pedidoId) => {
     try {
       await dispatch(deletePedido(pedidoId)).unwrap();
-      console.log("Pedido eliminado correctamente");
-      dispatch(tablaPedidos()); // Recargar la tabla de pedidos
+      dispatch(tablaPedidos());
     } catch (error) {
       console.error("Error al eliminar el pedido:", error);
     }
   };
 
-  // Mostrar diálogo de confirmación antes de finalizar el pedido
-  const handleConfirmarPedido = () => {
-    onDialogOpen();
-  };
-
-  const usuarioId = localStorage.getItem("usuarioId");
-  const pedidosUsuario = pedidos
-    .filter((pedido) => pedido.usuarioId === parseInt(usuarioId))
-    .filter((pedido) => pedido.estadoId !== 2);
+  // Filtrar los pedidos del usuario
+  const pedidosUsuario = pedidos.filter((pedido) => pedido.usuarioId === parseInt(usuarioId)).filter((pedido) => pedido.estadoId !== 2);
 
   return (
     <Box>
@@ -211,11 +166,11 @@ const DetallePedidoForm = () => {
             <Th>Tienda</Th>
             <Th>Estado</Th>
             <Th>Detalles</Th>
-            <Th>Acciones</Th> {/* Agregar columna para el botón de eliminar */}
+            <Th>Acciones</Th>
           </Tr>
         </Thead>
         <Tbody>
-          {pedidosUsuario && pedidosUsuario.length > 0 ? (
+          {pedidosUsuario.length > 0 ? (
             pedidosUsuario.map((pedido) => (
               <React.Fragment key={pedido.id}>
                 <Tr>
@@ -225,29 +180,15 @@ const DetallePedidoForm = () => {
                   <Td>{pedido.nombreTienda || "N/A"}</Td>
                   <Td>{pedido.estadoId || "N/A"}</Td>
                   <Td>
-                    <Button
-                      size="sm"
-                      onClick={() => handleToggleDetails(pedido.id)}
-                    >
+                    <Button size="sm" onClick={() => handleToggleDetails(pedido.id)}>
                       {isDetailsOpen[pedido.id] ? "▲" : "▼"}
                     </Button>
                   </Td>
                   <Td>
-                    <IconButton
-                      icon={<DeleteIcon />}
-                      colorScheme="red"
-                      onClick={() => handleDeletePedido(pedido.id)}
-                      size="sm"
-                    />
+                    <IconButton icon={<DeleteIcon />} colorScheme="red" onClick={() => handleDeletePedido(pedido.id)} size="sm" />
                   </Td>
-                  {/* Nuevo botón "Realizar Pedido" */}
                   <Td>
-                    <Button
-                      size="sm"
-                      colorScheme="green"
-                      onClick={() => handleRealizarPedido(pedido.id)} // Llamamos a handleRealizarPedido
-                      isDisabled={pedido.estadoId === 2} // Deshabilitar si ya está en estado 2
-                    >
+                    <Button size="sm" colorScheme="green" onClick={() => showRealizarPedidoConfirmation(pedido.id)} isDisabled={pedido.estadoId === 2}>
                       Realizar Pedido
                     </Button>
                   </Td>
@@ -271,41 +212,20 @@ const DetallePedidoForm = () => {
         </Tbody>
       </Table>
 
-      {isPedidoFinalizado && (
-        <Flex justify="flex-end" mt={4}>
-          <Button colorScheme="green" onClick={handleConfirmarPedido}>
-            Realizar Pedido
-          </Button>
-        </Flex>
-      )}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
-            {isPedidoFinalizado ? "Agregar Productos" : "Agregar Pedido"}
-          </ModalHeader>
+          <ModalHeader>{isPedidoFinalizado ? "Agregar Productos" : "Agregar Pedido"}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {!isPedidoFinalizado && (
               <>
-                <CiudadSelector
-                  value={currentPedido.ciudadId}
-                  onChange={handleCiudadChange}
-                />
-                <TiendaSelector
-                  ciudadId={currentPedido.ciudadId}
-                  value={currentPedido.tiendaId}
-                  onChange={handleTiendaChange} // Maneja el cambio de tienda
-                />
-                <DeuSelector
-                  tiendaId={currentPedido.tiendaId} // Pasa el tiendaId seleccionado para mostrar el deudor asociado
-                  onSelect={handleDeudorSelect} // Maneja el cambio de deudor
-                />
+                <CiudadSelector value={currentPedido.ciudadId} onChange={handleCiudadChange} />
+                <TiendaSelector ciudadId={currentPedido.ciudadId} value={currentPedido.tiendaId} onChange={handleTiendaChange} />
+                <DeuSelector tiendaId={currentPedido.tiendaId} onSelect={handleDeudorSelect} />
               </>
             )}
-            {isPedidoFinalizado && (
-              <ProductosTable pedidoId={pedidoIdGuardado} />
-            )}
+            {isPedidoFinalizado && <ProductosTable pedidoId={pedidoIdGuardado} />}
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
@@ -317,20 +237,15 @@ const DetallePedidoForm = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      {/* Alert Dialog de confirmación para realizar el pedido */}
-      <AlertDialog
-        isOpen={isDialogOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onDialogClose}
-      >
+
+      {/* Alerta de confirmación para realizar el pedido */}
+      <AlertDialog isOpen={isDialogOpen} leastDestructiveRef={cancelRef} onClose={onDialogClose}>
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
               Confirmar Pedido
             </AlertDialogHeader>
-            <AlertDialogBody>
-              ¿Estás seguro de que quieres realizar este pedido?
-            </AlertDialogBody>
+            <AlertDialogBody>¿Estás seguro de que quieres realizar este pedido?</AlertDialogBody>
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={onDialogClose}>
                 No

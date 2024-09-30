@@ -1,10 +1,18 @@
-import { Box, Flex, IconButton, Image, Spacer, HStack, Tooltip } from "@chakra-ui/react";
-import { FiBell, FiSearch } from "react-icons/fi"; // Iconos modernos usando react-icons
+import { Box, Flex, IconButton, Image, Spacer, HStack, Tooltip, Badge } from "@chakra-ui/react";
+import { FiSearch } from "react-icons/fi";
+import { FiBell } from "react-icons/fi"; // Iconos modernos usando react-icons
 import { MenuPerfil } from "./MenuPerfil";
 import SearchBar from "./Dashboard/SearchBar";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux"; // Para acceder a los pedidos desde Redux
 
 export default function NavBar() {
+  // Obtener la Lista de pedidos desde Redux
+  const pedidos = useSelector((state) => state.pedidos.data);
+
+  // Filtrar los pedidos con estadoId 2 (pedidos nuevos)
+  const pedidosNuevos = pedidos.filter((pedido) => pedido.estadoId === 2);
+
   return (
     <Flex
       as="nav"
@@ -59,12 +67,28 @@ export default function NavBar() {
       <HStack spacing={{ base: "10px", md: "20px" }} pr={{ base: "5px", md: "10px" }}>
         <Link to="/notificaciones">
           <Tooltip label="Notificaciones" aria-label="Notificaciones Tooltip">
-            <IconButton
-              variant="ghost"
-              fontSize={{ base: "20px", md: "24px" }} // Ajuste del tamaño del icono según el dispositivo
-              icon={<FiBell />} // Cambiado a un icono de campana más moderno
-              size="lg"
-            />
+            <Box position="relative">
+              <IconButton
+                variant="ghost"
+                fontSize={{ base: "20px", md: "24px" }} // Ajuste del tamaño del icono según el dispositivo
+                icon={<FiBell />} // Cambiado a un icono de campana más moderno
+                size="lg"
+              />
+              {/* Si hay pedidos nuevos, mostramos el número */}
+              {pedidosNuevos.length > 0 && (
+                <Badge
+                  colorScheme="red"
+                  borderRadius="full"
+                  position="absolute"
+                  top="-1px"
+                  right="-1px"
+                  fontSize="xs" // Tamaño de fuente pequeño para que sea discreto
+                  p="4px" // Padding pequeño para que el badge no sea muy grande
+                >
+                  {pedidosNuevos.length}
+                </Badge>
+              )}
+            </Box>
           </Tooltip>
         </Link>
 
