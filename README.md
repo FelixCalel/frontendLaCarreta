@@ -54,20 +54,5 @@ npm run build: Compila la aplicación para producción.
 npm run preview: Sirve una versión de producción de la aplicación localmente.
 npm run lint: Ejecuta ESLint para encontrar errores en el código.
 
-Estructura del Proyecto
-El proyecto sigue una estructura estándar de Vite y React:
-
-la-carreta/
-├── public/              # Archivos públicos
-├── src/
-│   ├── components/      # Componentes reutilizables
-│   ├── pages/           # Páginas o vistas
-│   ├── redux/           # Lógica de Redux
-│   └── App.jsx          # Punto de entrada de la aplicación
-├── .env.template        # Plantilla de variables de entorno
-├── package.json         # Dependencias y scripts del proyecto
-├── vite.config.js       # Configuración de Vite
-└── README.md            # Este archivo
-
 Las contribuciones son bienvenidas. Abre un issue o realiza un pull request si tienes alguna mejora o funcionalidad que agregar.
 
