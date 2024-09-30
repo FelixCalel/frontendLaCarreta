@@ -151,7 +151,7 @@ const DetallePedidoForm = () => {
     const productos = useSelector(
       (state) => state.detalleOrden.productosSeleccionados
     );
-
+  
     try {
       const detallePedidoData = productos.map((producto) => ({
         pedidoId: pedidoIdGuardado,
@@ -159,27 +159,33 @@ const DetallePedidoForm = () => {
         cantidad: producto.cantidad,
         precio: producto.precio,
       }));
-
+  
       await Promise.all(
         detallePedidoData.map((detalle) =>
           dispatch(addNewDetalleOrden(detalle))
         )
       );
-
-      // Después de agregar los detalles, cambiamos el estado del pedido a 2 (completado)
-      await dispatch(updatePedido({ id: pedidoIdGuardado, estadoId: 2 }));
-
+  
+      // Aquí actualizamos el estado del pedido a "completado" (estadoId: 2)
+      const pedidoActualizado = await dispatch(
+        updatePedido({ id: pedidoIdGuardado, estadoId: 2 })
+      ).unwrap();
+  
+      // Verifica si el pedido fue actualizado correctamente
+      console.log("Pedido actualizado: ", pedidoActualizado);
+  
       // Cerrar el diálogo de confirmación
       onDialogClose();
-
-      // Recargar pedidos
+  
+      // Recargar los pedidos
       dispatch(tablaPedidos());
-
+  
       console.log("Pedido finalizado exitosamente.");
     } catch (error) {
       console.error("Error al guardar el detalle del pedido:", error);
     }
   };
+  
 
   // Manejo del colapso de detalles del pedido
   const handleToggleDetails = (pedidoId) => {
