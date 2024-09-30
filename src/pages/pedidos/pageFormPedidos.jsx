@@ -38,10 +38,9 @@ import {
   tablaPedidos,
   deletePedido,
   updatePedido, // Agregamos esto para actualizar el estado del pedido
+  togglePedidoStatus,
 } from "../../store/Pedidos/thunks";
-import {
-  addNewDetalleOrden,
-} from "../../store/Pedidos/DetallePedidos/thunks";
+import { addNewDetalleOrden } from "../../store/Pedidos/DetallePedidos/thunks";
 
 const DetallePedidoForm = () => {
   const dispatch = useDispatch();
@@ -147,45 +146,27 @@ const DetallePedidoForm = () => {
   };
 
   // Guardar los detalles del pedido seleccionados
-  const handleRealizarPedido = async () => {
-    const productos = useSelector(
-      (state) => state.detalleOrden.productosSeleccionados
-    );
-  
+  const handleRealizarPedido = async (pedidoId) => {
     try {
-      const detallePedidoData = productos.map((producto) => ({
-        pedidoId: pedidoIdGuardado,
-        productoId: producto.productoId,
-        cantidad: producto.cantidad,
-        precio: producto.precio,
-      }));
-  
-      await Promise.all(
-        detallePedidoData.map((detalle) =>
-          dispatch(addNewDetalleOrden(detalle))
-        )
-      );
-  
-      // Aquí actualizamos el estado del pedido a "completado" (estadoId: 2)
+      // Cambiar el estado del pedido a 2 (Pedido realizado)
       const pedidoActualizado = await dispatch(
-        updatePedido({ id: pedidoIdGuardado, estadoId: 2 })
+        togglePedidoStatus({ id: pedidoId, estadoId: 2 }) // Enviar estadoId: 2
       ).unwrap();
-  
+
       // Verifica si el pedido fue actualizado correctamente
-      console.log("Pedido actualizado: ", pedidoActualizado);
-  
+      console.log("Pedido actualizado a estado 2:", pedidoActualizado);
+
       // Cerrar el diálogo de confirmación
       onDialogClose();
-  
+
       // Recargar los pedidos
       dispatch(tablaPedidos());
-  
+
       console.log("Pedido finalizado exitosamente.");
     } catch (error) {
-      console.error("Error al guardar el detalle del pedido:", error);
+      console.error("Error al actualizar el estado del pedido:", error);
     }
   };
-  
 
   // Manejo del colapso de detalles del pedido
   const handleToggleDetails = (pedidoId) => {
@@ -212,9 +193,9 @@ const DetallePedidoForm = () => {
   };
 
   const usuarioId = localStorage.getItem("usuarioId");
-  const pedidosUsuario = pedidos.filter(
-    (pedido) => pedido.usuarioId === parseInt(usuarioId)
-  );
+  const pedidosUsuario = pedidos
+    .filter((pedido) => pedido.usuarioId === parseInt(usuarioId))
+    .filter((pedido) => pedido.estadoId !== 2);
 
   return (
     <Box>
@@ -251,18 +232,28 @@ const DetallePedidoForm = () => {
                       {isDetailsOpen[pedido.id] ? "▲" : "▼"}
                     </Button>
                   </Td>
-                  {/* Botón de eliminar pedido */}
                   <Td>
                     <IconButton
                       icon={<DeleteIcon />}
                       colorScheme="red"
-                      onClick={() => handleDeletePedido(pedido.id)} // Eliminar pedido
+                      onClick={() => handleDeletePedido(pedido.id)}
                       size="sm"
                     />
                   </Td>
+                  {/* Nuevo botón "Realizar Pedido" */}
+                  <Td>
+                    <Button
+                      size="sm"
+                      colorScheme="green"
+                      onClick={() => handleRealizarPedido(pedido.id)} // Llamamos a handleRealizarPedido
+                      isDisabled={pedido.estadoId === 2} // Deshabilitar si ya está en estado 2
+                    >
+                      Realizar Pedido
+                    </Button>
+                  </Td>
                 </Tr>
                 <Tr>
-                  <Td colSpan={7}>
+                  <Td colSpan={8}>
                     <Collapse in={isDetailsOpen[pedido.id]}>
                       <ProductosTable pedidoId={pedido.id} />
                     </Collapse>
@@ -272,7 +263,7 @@ const DetallePedidoForm = () => {
             ))
           ) : (
             <Tr>
-              <Td colSpan="7" align="center">
+              <Td colSpan="8" align="center">
                 No hay pedidos disponibles
               </Td>
             </Tr>

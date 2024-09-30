@@ -52,8 +52,8 @@ export const updatePedido = createAsyncThunk(
 // Toggle Pedido Status
 export const togglePedidoStatus = createAsyncThunk(
   'pedidos/togglePedidoStatus',
-  async ({ id, estaActivo }) => {
-    const response = await axios.patch(`${BASE_URL}/form/pedido/actualizar-estado/${id}`, { estaActivo });
+  async ({ id, estadoId }) => {
+    const response = await axios.patch(`${BASE_URL}/form/pedidos/actualizar-estado/${id}`, { estadoId });
     return response.data;
   }
 );
