@@ -1,89 +1,165 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
+import PropTypes from "prop-types";
 import {
   Box,
   Flex,
   IconButton,
   Text,
   VStack,
-  Tooltip,
   Collapse,
-  useBreakpointValue,
   useColorModeValue,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
-import { HamburgerIcon } from "@chakra-ui/icons";
-import {
-  FaShoppingCart,
-  FaGlobe,
-  FaBuilding,
-  FaStore,
-} from "react-icons/fa";
+import { ChevronDownIcon, ChevronUpIcon } from "@chakra-ui/icons";
+import { FaShoppingCart, FaHistory, FaInbox, FaGlobe, FaBuilding, FaStore } from "react-icons/fa";
 import { MdLocationCity, MdDirections } from "react-icons/md";
-import PropTypes from "prop-types";
+import { AiOutlineMenu } from "react-icons/ai";
 
-const MenuItem = ({ icon, label, to, isExpanded, isActive, onClick }) => {
+// Componente MenuItem con validación de PropTypes
+const MenuItem = ({ icon, label, to, isExpanded, isActive }) => {
   const activeBg = useColorModeValue("green.500", "green.300");
   const hoverBg = useColorModeValue("green.500", "green.500");
 
   return (
-    <Tooltip label={isExpanded ? "" : label} placement="right" hasArrow>
-      <Box
-        as={Link}
+    <Flex
+      align="center"
+      p="2"
+      justifyContent={isExpanded ? "flex-start" : "center"}
+      bg={isActive ? activeBg : "transparent"}
+      color={isActive ? "white" : "inherit"}
+      _hover={{ bg: hoverBg, color: "white", transform: "scale(1.05)" }}
+      borderRadius="md"
+      transition="all 0.3s ease"
+      width="100%"
+    >
+      <Link
         to={to}
-        onClick={onClick} // Para manejar clicks personalizados
-        display="flex"
-        alignItems="center"
-        p="2"
-        justifyContent={isExpanded ? "flex-start" : "center"}
-        bg={isActive ? activeBg : "transparent"}
-        color={isActive ? "white" : "inherit"}
-        _hover={{ bg: hoverBg, color: "white", transform: "scale(1.05)" }}
-        borderRadius="md"
-        transition="all 0.3s ease"
-        cursor="pointer" // Cambia a pointer para toda el área clicable
+        style={{
+          display: "flex",
+          alignItems: "center",
+          textDecoration: "none",
+          width: "100%",
+        }}
       >
         {icon}
         {isExpanded && <Text ml="2" fontWeight="medium">{label}</Text>}
-      </Box>
-    </Tooltip>
+      </Link>
+    </Flex>
   );
 };
 
 MenuItem.propTypes = {
   icon: PropTypes.node.isRequired,
   label: PropTypes.string.isRequired,
-  to: PropTypes.string,
+  to: PropTypes.string.isRequired,
   isExpanded: PropTypes.bool.isRequired,
   isActive: PropTypes.bool.isRequired,
-  onClick: PropTypes.func,
 };
 
-const MenuPrincipalD = () => {
-  const isMobile = useBreakpointValue({ base: true, md: false });
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [showPedidoSubMenu, setShowPedidoSubMenu] = useState(false); // Para mostrar el submenú
-  const location = useLocation();
+// Modificar esta parte del menú de "Pedidos"
+const PedidoMenuItem = ({ isExpanded, location, resetSubmenu }) => {
+  const [isPedidoOpen, setIsPedidoOpen] = useState(false);
 
-  useEffect(() => {
-    if (isMobile) {
-      setIsExpanded(false);
+  // Cerrar el submenú si el toggle del menú principal está cerrado
+  React.useEffect(() => {
+    if (!isExpanded) {
+      setIsPedidoOpen(false);
     }
-  }, [isMobile]);
+  }, [isExpanded]);
 
-  const togglePedidoSubMenu = () => {
-    setShowPedidoSubMenu(!showPedidoSubMenu); // Toggle para el submenú de pedidos
-  };
+  return (
+    <>
+      {/* "Pedido" redirige a /pedido/listar */}
+      <Flex
+        align="center"
+        p="2"
+        justifyContent={isExpanded ? "flex-start" : "center"}
+        bg={location.pathname.startsWith("/pedido") ? "green.500" : "transparent"}
+        color={location.pathname.startsWith("/pedido") ? "white" : "inherit"}
+        _hover={{ bg: "green.500", color: "white", cursor: "pointer" }}
+        borderRadius="md"
+        transition="all 0.3s ease"
+      >
+        <Box
+          display="flex"
+          alignItems="center"
+          flex={1}
+          onClick={() => (isExpanded ? setIsPedidoOpen(!isPedidoOpen) : null)}
+          style={{ cursor: "pointer" }} // Cambia a un puntero de clic
+        >
+          <Link
+            to="/pedido/listar"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              textDecoration: "none",
+              flex: 1,
+            }}
+          >
+            <FaShoppingCart size="24px" />
+            {isExpanded && <Text ml="2" fontWeight="medium">Pedido</Text>}
+          </Link>
+        </Box>
+        {/* Icono de desplegable para submenú */}
+        {isExpanded && (
+          <Box onClick={() => setIsPedidoOpen(!isPedidoOpen)}>
+            {isPedidoOpen ? (
+              <ChevronUpIcon fontSize="24px" />
+            ) : (
+              <ChevronDownIcon fontSize="24px" />
+            )}
+          </Box>
+        )}
+      </Flex>
+
+      {/* Submenú de Pedidos */}
+      <Collapse in={isPedidoOpen} animateOpacity>
+        <VStack align="stretch" pl={isExpanded ? 4 : 0} spacing={2}>
+          <MenuItem
+            icon={<FaInbox size="20px" />}
+            label="Pedidos Entrantes"
+            to="/pedido/entrantes"
+            isExpanded={isExpanded}
+            isActive={location.pathname === "/pedido/entrantes"}
+          />
+          <MenuItem
+            icon={<FaHistory size="20px" />}
+            label="Historial de Pedidos"
+            to="/pedido/historial"
+            isExpanded={isExpanded}
+            isActive={location.pathname === "/pedido/historial"}
+          />
+        </VStack>
+      </Collapse>
+    </>
+  );
+};
+
+PedidoMenuItem.propTypes = {
+  isExpanded: PropTypes.bool.isRequired,
+  location: PropTypes.object.isRequired,
+  resetSubmenu: PropTypes.func,
+};
+
+// Componente principal del menú
+const MenuPrincipalD = () => {
+  const location = useLocation();
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Tamaño del menú adaptable a pantallas pequeñas
+  const menuWidth = useBreakpointValue({ base: "60px", md: isExpanded ? "220px" : "60px" });
 
   return (
     <Box
-      w={isExpanded ? "220px" : "60px"}
+      w={menuWidth}
       bg="green.50"
       transition="width 0.3s ease"
       boxShadow="md"
       borderRadius="md"
       overflow="hidden"
     >
-      {/* Encabezado del menú */}
+      {/* Botón de menú hamburguesa */}
       <Flex
         align="center"
         justifyContent="center"
@@ -92,7 +168,7 @@ const MenuPrincipalD = () => {
         boxShadow="base"
       >
         <IconButton
-          icon={<HamburgerIcon />}
+          icon={<AiOutlineMenu />} // Icono de hamburguesa
           onClick={() => setIsExpanded(!isExpanded)}
           aria-label="Toggle Menu"
           size="lg"
@@ -105,37 +181,9 @@ const MenuPrincipalD = () => {
 
       {/* Contenido del menú */}
       <VStack align="stretch" spacing="4" pl={isExpanded ? 4 : 0} pt="6">
-        <Box>
-          <MenuItem
-            icon={<FaShoppingCart size="24px" />}
-            label="Pedidos"
-            to="#" // No redirige, solo muestra el submenú
-            isExpanded={isExpanded}
-            isActive={location.pathname.startsWith("/pedido")}
-            onClick={togglePedidoSubMenu} // Controla el submenú
-          />
-
-          {/* Submenú de pedidos */}
-          <Collapse in={showPedidoSubMenu} animateOpacity>
-            <VStack pl={isExpanded ? 4 : 0} spacing="2" align="stretch">
-              <MenuItem
-                icon={<FaShoppingCart size="18px" />}
-                label="Pedidos Entrantes"
-                to="/pedido/entrantes"
-                isExpanded={isExpanded}
-                isActive={location.pathname === "/pedido/entrantes"}
-              />
-              <MenuItem
-                icon={<FaShoppingCart size="18px" />}
-                label="Historial de Pedidos"
-                to="/pedido/historial"
-                isExpanded={isExpanded}
-                isActive={location.pathname === "/pedido/historial"}
-              />
-            </VStack>
-          </Collapse>
-        </Box>
-
+        {/* Menú de Pedidos con su propio submenú */}
+        <PedidoMenuItem isExpanded={isExpanded} location={location} />
+        {/* Otros ítems del menú */}
         <MenuItem
           icon={<MdDirections size="24px" />}
           label="Rutas"
@@ -174,6 +222,10 @@ const MenuPrincipalD = () => {
       </VStack>
     </Box>
   );
+};
+
+MenuPrincipalD.propTypes = {
+  location: PropTypes.object.isRequired,
 };
 
 export default MenuPrincipalD;
