@@ -150,7 +150,10 @@ const DetallePedidoForm = () => {
   };
 
   // Filtrar los pedidos del usuario
-  const pedidosUsuario = pedidos.filter((pedido) => pedido.usuarioId === parseInt(usuarioId)).filter((pedido) => pedido.estadoId !== 2);
+// Filtrar los pedidos del usuario que estén en estado 1
+const pedidosUsuario = pedidos
+  .filter((pedido) => pedido.usuarioId === parseInt(usuarioId))
+  .filter((pedido) => pedido.estadoId === 1); // Cambia el filtro para solo los que están en estado 1
 
   return (
     <Box>
