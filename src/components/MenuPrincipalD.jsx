@@ -1,27 +1,27 @@
-import React, { useState } from "react";
-import PropTypes from "prop-types";
+import { useState, useEffect } from "react";
 import {
   Box,
   Flex,
   IconButton,
   Text,
   VStack,
-  Collapse,
-  useColorModeValue,
+  Tooltip,
   useBreakpointValue,
+  useColorModeValue,
+  Collapse,
 } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronDownIcon, ChevronUpIcon } from "@chakra-ui/icons";
-import { FaShoppingCart, FaHistory, FaInbox, FaGlobe, FaBuilding, FaStore } from "react-icons/fa";
+import { HamburgerIcon, ChevronDownIcon, ChevronUpIcon } from "@chakra-ui/icons";
+import { FaShoppingCart, FaInbox, FaHistory, FaStore, FaBuilding, FaGlobe } from "react-icons/fa";
 import { MdLocationCity, MdDirections } from "react-icons/md";
-import { AiOutlineMenu } from "react-icons/ai";
+import PropTypes from "prop-types";
 
-// Componente MenuItem con validación de PropTypes
+// Componente MenuItem
 const MenuItem = ({ icon, label, to, isExpanded, isActive }) => {
   const activeBg = useColorModeValue("green.500", "green.300");
   const hoverBg = useColorModeValue("green.500", "green.500");
 
-  return (
+  const menuItemContent = (
     <Flex
       align="center"
       p="2"
@@ -31,21 +31,18 @@ const MenuItem = ({ icon, label, to, isExpanded, isActive }) => {
       _hover={{ bg: hoverBg, color: "white", transform: "scale(1.05)" }}
       borderRadius="md"
       transition="all 0.3s ease"
-      width="100%"
     >
-      <Link
-        to={to}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          textDecoration: "none",
-          width: "100%",
-        }}
-      >
+      <Link to={to} style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
         {icon}
         {isExpanded && <Text ml="2" fontWeight="medium">{label}</Text>}
       </Link>
     </Flex>
+  );
+
+  return isExpanded ? menuItemContent : (
+    <Tooltip label={label} placement="right" hasArrow>
+      {menuItemContent}
+    </Tooltip>
   );
 };
 
@@ -57,12 +54,12 @@ MenuItem.propTypes = {
   isActive: PropTypes.bool.isRequired,
 };
 
-// Modificar esta parte del menú de "Pedidos"
-const PedidoMenuItem = ({ isExpanded, location, resetSubmenu }) => {
+// Componente de "Pedidos" con submenú
+const PedidoMenuItem = ({ isExpanded, location }) => {
   const [isPedidoOpen, setIsPedidoOpen] = useState(false);
 
-  // Cerrar el submenú si el toggle del menú principal está cerrado
-  React.useEffect(() => {
+  // Cerrar submenú cuando se cierra el menú principal
+  useEffect(() => {
     if (!isExpanded) {
       setIsPedidoOpen(false);
     }
@@ -70,7 +67,6 @@ const PedidoMenuItem = ({ isExpanded, location, resetSubmenu }) => {
 
   return (
     <>
-      {/* "Pedido" redirige a /pedido/listar */}
       <Flex
         align="center"
         p="2"
@@ -81,47 +77,29 @@ const PedidoMenuItem = ({ isExpanded, location, resetSubmenu }) => {
         borderRadius="md"
         transition="all 0.3s ease"
       >
-        <Box
-          display="flex"
-          alignItems="center"
-          flex={1}
-          onClick={() => (isExpanded ? setIsPedidoOpen(!isPedidoOpen) : null)}
-          style={{ cursor: "pointer" }} // Cambia a un puntero de clic
-        >
-          <Link
-            to="/pedido/listar"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              textDecoration: "none",
-              flex: 1,
-            }}
-          >
+        <Box display="flex" alignItems="center" flex={1}>
+          <Link to="/pedido/listar" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
             <FaShoppingCart size="24px" />
             {isExpanded && <Text ml="2" fontWeight="medium">Pedido</Text>}
           </Link>
         </Box>
-        {/* Icono de desplegable para submenú */}
+        {/* Icono para abrir/cerrar submenú */}
         {isExpanded && (
           <Box onClick={() => setIsPedidoOpen(!isPedidoOpen)}>
-            {isPedidoOpen ? (
-              <ChevronUpIcon fontSize="24px" />
-            ) : (
-              <ChevronDownIcon fontSize="24px" />
-            )}
+            {isPedidoOpen ? <ChevronUpIcon fontSize="24px" /> : <ChevronDownIcon fontSize="24px" />}
           </Box>
         )}
       </Flex>
 
-      {/* Submenú de Pedidos */}
+      {/* Submenú */}
       <Collapse in={isPedidoOpen} animateOpacity>
-        <VStack align="stretch" pl={isExpanded ? 4 : 0} spacing={2}>
+        <VStack align="stretch" pl={isExpanded ? 1 : 0} spacing={2}>
           <MenuItem
             icon={<FaInbox size="20px" />}
             label="Pedidos Entrantes"
-            to="/pedido/entrantes"
+            to="/pedidos/entrantes"
             isExpanded={isExpanded}
-            isActive={location.pathname === "/pedido/entrantes"}
+            isActive={location.pathname === "/pedidos/entrantes"}
           />
           <MenuItem
             icon={<FaHistory size="20px" />}
@@ -139,36 +117,35 @@ const PedidoMenuItem = ({ isExpanded, location, resetSubmenu }) => {
 PedidoMenuItem.propTypes = {
   isExpanded: PropTypes.bool.isRequired,
   location: PropTypes.object.isRequired,
-  resetSubmenu: PropTypes.func,
 };
 
 // Componente principal del menú
 const MenuPrincipalD = () => {
   const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
-  // Tamaño del menú adaptable a pantallas pequeñas
-  const menuWidth = useBreakpointValue({ base: "60px", md: isExpanded ? "220px" : "60px" });
+  // Desactivar el menú en pantallas móviles
+  useEffect(() => {
+    if (isMobile) {
+      setIsExpanded(false);
+    }
+  }, [isMobile]);
 
   return (
     <Box
-      w={menuWidth}
+      w={isExpanded ? { base: "150px", md: "180px" } : "60px"}
       bg="green.50"
       transition="width 0.3s ease"
       boxShadow="md"
       borderRadius="md"
       overflow="hidden"
+      height="100vh"
     >
-      {/* Botón de menú hamburguesa */}
-      <Flex
-        align="center"
-        justifyContent="center"
-        h="60px"
-        bg="green.300"
-        boxShadow="base"
-      >
+      {/* Toggle Menu */}
+      <Flex align="center" justifyContent="center" h="60px" bg="green.300" boxShadow="base">
         <IconButton
-          icon={<AiOutlineMenu />} // Icono de hamburguesa
+          icon={<HamburgerIcon />}
           onClick={() => setIsExpanded(!isExpanded)}
           aria-label="Toggle Menu"
           size="lg"
@@ -180,8 +157,8 @@ const MenuPrincipalD = () => {
       </Flex>
 
       {/* Contenido del menú */}
-      <VStack align="stretch" spacing="4" pl={isExpanded ? 4 : 0} pt="6">
-        {/* Menú de Pedidos con su propio submenú */}
+      <VStack align="stretch" spacing="4" pl={isExpanded ? 1 : 0} pt="6">
+        {/* Menú de Pedidos con submenú */}
         <PedidoMenuItem isExpanded={isExpanded} location={location} />
         {/* Otros ítems del menú */}
         <MenuItem
@@ -225,7 +202,7 @@ const MenuPrincipalD = () => {
 };
 
 MenuPrincipalD.propTypes = {
-  location: PropTypes.object.isRequired,
+  location: PropTypes.object,
 };
 
 export default MenuPrincipalD;

@@ -16,6 +16,7 @@ import  { PaginaRuta } from "./RutaRouter";
 import HomePage from "../pages/auth/HomePage"; 
 import { PaginaPedido } from "./PedidosRouter";
 import { LoginForm } from "../pages/auth";
+import { PaginaPedidosEntrantes } from "./PedidosEntrantesRouter";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -68,6 +69,8 @@ export const AppRouter = () => {
       <Route path="/ciudad/*" element={<PaginaCiudad />} />
       <Route path="/tienda/*" element={<PaginaTienda />} />
       <Route path="/ruta/*" element={<PaginaRuta />} />
+      <Route path="/pedidos/*" element={<PaginaPedidosEntrantes />} />
+
 
       {/* <Route path="/login/*" element={<PaginaPais />} /> */}
 

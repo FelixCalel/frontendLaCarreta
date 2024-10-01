@@ -25,7 +25,7 @@ const HomePage = () => {
         <MenuPrincipalD />
         
         {/* Main section */}
-        <Box flex="1" p={8} m={0} bg="white">
+        <Box flex="1" p={4} m={0} bg="white">
           <Heading as="h1" size="xl" mb={4} textAlign="left">
             Bienvenido {nombreUsuario}
           </Heading>
@@ -33,13 +33,17 @@ const HomePage = () => {
             ¡Nos alegra tenerte de vuelta! Aquí podrás acceder a los distintos servicios.
           </Text>
 
-          <Stack direction={'row'} mt={6} spacing={3}>
-            <Button colorScheme="green" onClick={() => alert('Ir a tu perfil')}>
-              Ir a mi perfil
-            </Button>
-            <Button variant="outline" colorScheme="green" onClick={() => alert('Ver el catálogo')}>
-              Ver el catálogo
-            </Button>
+          <Stack direction={'column'} mt={6} spacing={3} align="flex-start">
+            <Box>
+              <Button size="sm" colorScheme="green" onClick={() => alert('Ir a tu perfil')}>
+                Ir a mi perfil
+              </Button>
+            </Box>
+            <Box>
+              <Button size="sm" variant="outline" colorScheme="green" onClick={() => alert('Ver el catálogo')}>
+                Ver el catálogo
+              </Button>
+            </Box>
           </Stack>
         </Box>
       </Flex>

@@ -32,6 +32,7 @@ export const fetchUsuarios = createAsyncThunk(
 export const usuariosSlice = createSlice({
   name: 'usuarios',
   initialState: {
+    data:[],
     items: [],
     status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null
@@ -60,4 +61,4 @@ export const usuariosSlice = createSlice({
 export const usuariosReducer = usuariosSlice.reducer;
 
 // Exporta las acciones generadas automáticamente por createSlice
-export const {  } = usuariosSlice.actions;
+export const { setUsuarios } = usuariosSlice.actions;
