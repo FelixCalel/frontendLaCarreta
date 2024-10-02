@@ -42,6 +42,7 @@ const ProductosTable = ({ pedidoId }) => {
     }));
   };
 
+
   // Añadir nuevo producto a la lista y base de datos
   const handleAddProducto = async () => {
     if (newProducto.productoId && newProducto.cantidad > 0 && newProducto.precio > 0) {
@@ -52,12 +53,14 @@ const ProductosTable = ({ pedidoId }) => {
           cantidad: newProducto.cantidad,
           precio: newProducto.precio,
         };
-
+  
         // Guardar el producto en la base de datos
         const savedDetalle = await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
-
+  
         // Actualizar el estado local con el nuevo producto
         setProductos((prevProductos) => [...prevProductos, { ...newProducto, id: savedDetalle.id }]);
+  
+        // Limpiar el campo de producto para el siguiente ingreso
         setNewProducto({ productoId: "", nombreProducto: "", cantidad: 0, precio: 0 });
       } catch (error) {
         console.error("Error al guardar el detalle del pedido:", error);

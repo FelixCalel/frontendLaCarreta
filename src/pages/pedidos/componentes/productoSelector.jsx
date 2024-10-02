@@ -25,7 +25,7 @@ const ProductoSelector = ({ onSelect }) => {
   // Función para manejar la selección de un producto
   const handleSelectItem = (item) => {
     setInputValue(item.nombre); // Actualizamos el valor del input con el nombre del producto seleccionado
-    onSelect(item.id); // Pasamos el ID del producto seleccionado al componente padre
+    onSelect(item.id, item.nombre); // Pasamos el ID y el nombre del producto seleccionado al componente padre
   };
 
   // Función para manejar los cambios en el input manualmente
@@ -36,7 +36,7 @@ const ProductoSelector = ({ onSelect }) => {
   // Función para limpiar el input cuando el usuario borra manualmente
   const handleClearInput = () => {
     setInputValue(""); // Limpia el valor del input
-    onSelect(null); // Resetea la selección en el componente padre
+    onSelect(null, ""); // Resetea la selección en el componente padre
   };
 
   return (
