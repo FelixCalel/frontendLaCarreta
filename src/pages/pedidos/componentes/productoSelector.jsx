@@ -11,7 +11,7 @@ import {
 
 import { tablaItems } from "../../../store/items/thunks"; // Importa el thunk correcto
 
-const ProductoSelector = ({ onSelect }) => {
+const ProductoSelector = ({ onSelect, reset }) => {
   const dispatch = useDispatch();
   const [inputValue, setInputValue] = useState(""); // Estado para controlar el valor del input
 
@@ -33,11 +33,12 @@ const ProductoSelector = ({ onSelect }) => {
     setInputValue(e.target.value); // Actualizamos el valor del input cuando el usuario escribe
   };
 
-  // Función para limpiar el input cuando el usuario borra manualmente
-  const handleClearInput = () => {
-    setInputValue(""); // Limpia el valor del input
-    onSelect(null, ""); // Resetea la selección en el componente padre
-  };
+  // Efecto para limpiar el campo de input cuando se agrega un producto
+  useEffect(() => {
+    if (reset) {
+      setInputValue(""); // Limpiar el campo de producto después de agregar
+    }
+  }, [reset]);
 
   return (
     <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
@@ -48,9 +49,6 @@ const ProductoSelector = ({ onSelect }) => {
             placeholder="Seleccione un item"
             value={inputValue} // Controlamos el valor del input
             onChange={handleInputChange} // Controlamos los cambios en el input
-            onBlur={() => {
-              if (!inputValue) handleClearInput(); // Limpiamos el input si está vacío cuando se sale del campo
-            }}
           />
           <AutoCompleteList>
             {items.map((item) => (
@@ -75,6 +73,7 @@ const ProductoSelector = ({ onSelect }) => {
 
 ProductoSelector.propTypes = {
   onSelect: PropTypes.func.isRequired,
+  reset: PropTypes.bool.isRequired, // Se agrega una prop para saber si reiniciar el campo
 };
 
 export default ProductoSelector;
