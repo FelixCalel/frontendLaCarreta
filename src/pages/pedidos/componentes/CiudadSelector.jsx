@@ -5,22 +5,16 @@ import { tablaCiudad } from "../../../store/Ciudad/thunks";
 
 const CiudadSelector = ({ value, onChange }) => {
   const dispatch = useDispatch();
-  const ciudades = useSelector((state) => state.ciudades.data);
-  
-  const paisId = localStorage.getItem("paisId"); // Obtener el paisId desde el localStorage
+  const ciudades = useSelector((state) => state.ciudades);
 
   useEffect(() => {
     dispatch(tablaCiudad());
   }, [dispatch]);
 
-  // Filtrar las ciudades basadas en el paisId del usuario
-  const ciudadesFiltradas = ciudades.filter(ciudad => ciudad.paisId === parseInt(paisId, 10));
-
   return (
     <select value={value} onChange={onChange}>
       <option value="">Seleccionar ciudad</option>
-
-      {ciudadesFiltradas.map((ciudad) => (
+      {ciudades.data.map((ciudad) => (
         <option key={ciudad.id} value={ciudad.id}>
           {ciudad.nombre}
         </option>
@@ -30,8 +24,8 @@ const CiudadSelector = ({ value, onChange }) => {
 };
 
 CiudadSelector.propTypes = {
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  onChange: PropTypes.func.isRequired,
+  value: PropTypes.string.isRequired,  // 'value' debe ser una string y es obligatorio
+  onChange: PropTypes.func.isRequired, // 'onChange' debe ser una función y es obligatorio
 };
 
 export default CiudadSelector;

@@ -107,19 +107,28 @@ const PageFormTienda = () => {
       setErrors(formErrors);
       return;
     }
-
+    
+    const tiendaData = {
+      ...currentTienda,
+      deudorCorrelativo: currentTienda.deudorCorrelativo,
+      nombreDeu: currentTienda.nombreDeu,
+    };
+    
     if (isEditMode) {
-      dispatch(updateTienda(currentTienda)).then(() => {
+      dispatch(updateTienda(tiendaData)).then(() => {
         onClose();
         dispatch(tablaTienda());
       });
     } else {
-      dispatch(addNewTienda(currentTienda)).then(() => {
+      dispatch(addNewTienda(tiendaData)).then(() => {
         onClose();
         dispatch(tablaTienda());
       });
     }
   };
+  
+  
+  
 
   const handleDelete = (id) => {
     dispatch(deleteTienda(id)).then(() => {
@@ -128,17 +137,28 @@ const PageFormTienda = () => {
   };
 
   const handleEdit = (tienda) => {
-    setCurrentTienda(tienda);
+    setCurrentTienda({
+      ...tienda,
+      deudorCorrelativo: tienda.deudorCorrelativo, // Cargar el correlativo correctamente al editar
+      nombreDeu: tienda.nombreDeu,  // Cargar el nombre también
+    });
     setIsEditMode(true);
     onOpen();
   };
+  
 
-  const handleDeudorSelect = (deudorId) => {
+  const handleDeudorSelect = (deudor) => {
     setCurrentTienda((prevState) => ({
       ...prevState,
-      deudorId, // Actualizar el ID del deudor seleccionado
+      deudorId: deudor.id, 
+      deudorCorrelativo: deudor.correlativo,  // Aquí se asegura de guardar el correlativo
+      nombreDeu: deudor.nombre, // Aquí el nombre
     }));
   };
+  
+  
+  
+  
 
   const formatDate = (dateString) => {
     try {
@@ -211,55 +231,49 @@ const PageFormTienda = () => {
         Agregar Tienda
       </Button>
       <Table variant="striped" colorScheme="teal" size="sm">
-        <Thead>
-          <Tr>
-            <Th>ID</Th>
-            <Th>NOMBRE</Th>
-            <Th>DESCUENTO</Th>
-            <Th>Fecha de Creación</Th>
-            <Th>Fecha de Actualización</Th>
-            <Th>Estado</Th>
-            <Th>Deudor</Th>
-            <Th>Ciudad</Th>
-            <Th>Ruta</Th>
-            <Th>Acciones</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {data.map((tienda) => (
-            <Tr key={tienda.id}>
-              <Td>{tienda.id}</Td>
-              <Td>{tienda.nombre}</Td>
-              <Td>{tienda.descuento}</Td>
-              <Td>{formatDate(tienda.creadoEl)}</Td>
-              <Td>{formatDate(tienda.actualizadoEl)}</Td>
-              <Td>
-                <Switch
-                  name="estaActivo"
-                  isChecked={Boolean(currentTienda.estaActivo)}
-                  onChange={(e) => handleInputChange(e)}
-                />
-              </Td>
-              <Td>{tienda.nombreDeu}</Td>
-              <Td>{tienda.nombreCiudad}</Td>
-              <Td>{tienda.nombreRuta}</Td>
-              <Td>
-                <Button
-                  colorScheme="red"
-                  onClick={() => handleDelete(tienda.id)}
-                  mr={2}
-                >
-                  Eliminar
-                </Button>
-                <IconButton
-                  icon={<EditIcon />}
-                  onClick={() => handleEdit(tienda)}
-                />
-              </Td>
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
+  <Thead>
+    <Tr>
+      <Th>ID</Th>
+      <Th>NOMBRE</Th>
+      <Th>DESCUENTO</Th>
+      <Th>Fecha de Creación</Th>
+      <Th>Fecha de Actualización</Th>
+      <Th>Estado</Th>
+      <Th>Deudor</Th>
+      <Th>Ciudad</Th>
+      <Th>Ruta</Th>
+      <Th>Acciones</Th>
+    </Tr>
+  </Thead>
+  <Tbody>
+    {data.map((tienda) => (
+      <Tr key={tienda.id}>
+        <Td>{tienda.id}</Td>
+        <Td>{tienda.nombre}</Td>
+        <Td>{tienda.descuento}</Td>
+        <Td>{formatDate(tienda.creadoEl)}</Td>
+        <Td>{formatDate(tienda.actualizadoEl)}</Td>
+        <Td>
+          <Switch
+            name="estaActivo"
+            isChecked={Boolean(tienda.estaActivo)}
+            onChange={(e) => handleInputChange(e)}
+          />
+        </Td>
+        <Td>{`${tienda.nombreCorrelativo || ''} - ${tienda.nombreDeu || ''}`}</Td>
+        <Td>{tienda.nombreCiudad}</Td>
+        <Td>{tienda.nombreRuta}</Td>
+        <Td>
+          <Button colorScheme="red" onClick={() => handleDelete(tienda.id)} mr={2}>
+            Eliminar
+          </Button>
+          <IconButton icon={<EditIcon />} onClick={() => handleEdit(tienda)} />
+        </Td>
+      </Tr>
+    ))}
+  </Tbody>
+</Table>
+
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />

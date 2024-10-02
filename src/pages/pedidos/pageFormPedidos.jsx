@@ -223,10 +223,10 @@ const pedidosUsuario = pedidos
           <ModalBody>
             {!isPedidoFinalizado && (
               <>
-                <CiudadSelector value={currentPedido.ciudadId} onChange={handleCiudadChange} />
-                <TiendaSelector ciudadId={currentPedido.ciudadId} value={currentPedido.tiendaId} onChange={handleTiendaChange} />
-                <DeuSelector tiendaId={currentPedido.tiendaId} onSelect={handleDeudorSelect} />
-              </>
+              <CiudadSelector value={currentPedido.ciudadId} onChange={handleCiudadChange} />
+              <DeuSelector ciudadId={currentPedido.ciudadId} onSelect={handleDeudorSelect} />
+              <TiendaSelector ciudadId={currentPedido.ciudadId} deudorId={currentPedido.deudorId} value={currentPedido.tiendaId} onChange={handleTiendaChange} />
+            </>
             )}
             {isPedidoFinalizado && <ProductosTable pedidoId={pedidoIdGuardado} />}
           </ModalBody>

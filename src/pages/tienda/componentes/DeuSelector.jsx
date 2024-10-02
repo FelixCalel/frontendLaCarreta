@@ -20,8 +20,12 @@ const DeuSelector = ({ onSelect }) => {
   }, [dispatch]);
 
   const handleSelectDeudor = (deudor) => {
-    onSelect(deudor.id); // Pasar el id del deudor seleccionado al componente padre
-  };
+    onSelect({
+      id: deudor.id,
+      correlativo: deudor.correlativo, // Pasar correlativo
+      nombre: deudor.nombre, // Pasar nombre
+    });
+  };  
 
   return (
     <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
