@@ -40,6 +40,11 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
     setInputValue(e.target.value);
   };
 
+  const handleSelectDeudor = (deu) => {
+    setInputValue(`${deu.correlativo} - ${deu.nombre}`); // Actualizar el valor del input con el deudor seleccionado
+    onSelect(deu.id); // Llamar a la función onSelect con el id del deudor seleccionado
+  };
+
   return (
     <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
       <FormControl>
@@ -62,7 +67,7 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
                   key={`deudor-${deu.id}`}
                   value={`${deu.correlativo} - ${deu.nombre}`}
                   textTransform="capitalize"
-                  onClick={() => onSelect(deu.id)}
+                  onClick={() => handleSelectDeudor(deu)}
                 >
                   {`${deu.correlativo} - ${deu.nombre}`}
                 </AutoCompleteItem>
