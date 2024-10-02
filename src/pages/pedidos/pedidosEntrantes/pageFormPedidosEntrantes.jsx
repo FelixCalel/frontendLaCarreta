@@ -103,8 +103,6 @@ const EntrantesPage = () => {
 
   return (
     <Box p={4}>
-      <h1>Pedidos Entrantes</h1>
-      
       {/* Botones para aprobar y cancelar pedidos */}
       <Box mb={4}>
         <Button colorScheme="green" mr={2} onClick={handleAprobarPedidos} isDisabled={selectedPedidos.length === 0}>
@@ -124,7 +122,7 @@ const EntrantesPage = () => {
             <Th>Tienda</Th>
             <Th>Deudor</Th>
             <Th>Fecha</Th>
-            <Th>Monto</Th>
+            {/* <Th>Monto</Th> */}
             <Th>Acciones</Th>
           </Tr>
         </Thead>
@@ -144,7 +142,7 @@ const EntrantesPage = () => {
                 <Td>{pedido.nombreDeu}</Td>
                 <Td>{pedido.fechaOrden}</Td>
                 {/* Mostrar el total del monto para cada pedido */}
-                <Td>{montos[pedido.id] ? montos[pedido.id].toFixed(2) : "Calculando..."}</Td>
+                {/* <Td>{montos[pedido.id] ? montos[pedido.id].toFixed(2) : "Calculando..."}</Td> */}
                 <Td>
                   <Button colorScheme="blue" size="sm" onClick={() => console.log(`Ver detalles de pedido ${pedido.id}`)}>
                     Ver Detalles
