@@ -62,15 +62,10 @@ export const TablaBusuarios = () => {
         const response = await axios.get(`${BASE_URL}/ruta/todos`);
         setRutas(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
-        console.error("Error al obtener rutas:", error);
-        toast({
-          title: "Error al obtener rutas",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        // Ya no se maneja el error
       }
     };
+    
 
     fetchUsuarios();
     fetchRutas();
@@ -96,20 +91,35 @@ export const TablaBusuarios = () => {
         });
         return;
       }
-
-      await axios.post(
-        `${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`,
-        {
-          rutaId: selectedRoutes,
-        }
+  
+      // Llamada al backend para asignar rutas
+      await axios.post(`${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`, {
+        rutaId: selectedRoutes,
+      });
+  
+      // Actualizar el estado local de los usuarios
+      setUsuarios((prevUsuarios) =>
+        prevUsuarios.map((usuario) =>
+          usuario.id === usuarioId
+            ? {
+                ...usuario,
+                rutas: selectedRoutes.map((rutaId) => ({
+                  id: rutaId,
+                  // Si tienes más información de la ruta, puedes agregarla aquí
+                })),
+              }
+            : usuario
+        )
       );
-
+  
       toast({
         title: "Rutas asignadas correctamente",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
+  
+      // Cerrar el modal
       onClose();
     } catch (error) {
       console.error("Error al asignar rutas:", error);
@@ -121,6 +131,7 @@ export const TablaBusuarios = () => {
       });
     }
   };
+  
 
   return (
     <>

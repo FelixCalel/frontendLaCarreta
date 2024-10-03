@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { Table, Thead, Tbody, Tr, Th, Td, Box, Button, Checkbox } from "@chakra-ui/react";
+import {
+  Table, Thead, Tbody, Tr, Th, Td, Box, Button, Checkbox, Spinner,
+  Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton
+} from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { tablaPedidos, togglePedidoStatus } from "../../../store/Pedidos/thunks"; 
-import { fetchUsuarios } from "../../../store/Usuarios/usuariosSlice"; // Asegúrate de que la ruta sea correcta
-import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks"; // Importa el thunk para obtener los detalles del pedido
+import { fetchUsuarios } from "../../../store/Usuarios/usuariosSlice"; 
+import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks"; 
 
 const EntrantesPage = () => {
   const dispatch = useDispatch();
@@ -14,12 +17,20 @@ const EntrantesPage = () => {
 
   // Estado para almacenar los montos totales por pedido
   const [montos, setMontos] = useState({});
-
-  // Filtrar solo los pedidos con estadoId 2
-  const pedidosEntrantes = pedidos.filter((pedido) => pedido.estadoId === 2);
+  
+  // Estado de carga para las operaciones de aprobar/cancelar
+  const [isLoading, setIsLoading] = useState(false);
 
   // Estado para gestionar las selecciones de pedidos
   const [selectedPedidos, setSelectedPedidos] = useState([]);
+
+  // Estado para almacenar detalles del pedido seleccionado
+  const [detallesPedido, setDetallesPedido] = useState([]);
+  const [selectedPedido, setSelectedPedido] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Filtrar solo los pedidos con estadoId 2
+  const pedidosEntrantes = pedidos.filter((pedido) => pedido.estadoId === 2);
 
   // Cargar los pedidos y usuarios al montar el componente
   useEffect(() => {
@@ -33,44 +44,31 @@ const EntrantesPage = () => {
       const montosTemp = {};
       for (const pedido of pedidosEntrantes) {
         try {
-          // Obtener los detalles del pedido
           const detalles = await dispatch(getDetalleOrdenByPedidoId(pedido.id)).unwrap();
-          
-          // Verificar que cada detalle tenga un precio y cantidad correctos
           const totalMonto = detalles.reduce((acc, detalle) => {
-            const precio = parseFloat(detalle.precio); // Convertir a número
-            const cantidad = parseFloat(detalle.cantidad); // Convertir a número
-            
-            if (isNaN(precio) || isNaN(cantidad)) {
-              console.error(`Precio o cantidad inválidos para el detalle del pedido ${detalle.id}`);
-              return acc; // Saltar este detalle si hay un valor inválido
+            const precio = parseFloat(detalle.precio); 
+            const cantidad = parseFloat(detalle.cantidad); 
+            if (!isNaN(precio) && !isNaN(cantidad)) {
+              return acc + (precio * cantidad); 
             }
-            
-            return acc + (precio * cantidad); // Multiplicar precio por cantidad y sumar al total
+            return acc;
           }, 0);
-  
-          montosTemp[pedido.id] = totalMonto; // Guardar el total para el pedido
+          montosTemp[pedido.id] = totalMonto; 
         } catch (error) {
           console.error(`Error al cargar detalles para pedido ${pedido.id}:`, error);
-          montosTemp[pedido.id] = 0; // Si hay error, asignar 0
+          montosTemp[pedido.id] = 0; 
         }
       }
-      setMontos(montosTemp); // Almacenar los montos totales
+      setMontos(montosTemp); 
     };
-  
     cargarMontos();
   }, [dispatch, pedidosEntrantes]);
-  
-  
-  
 
-  // Función para obtener el nombre del usuario basado en el usuarioId
   const getNombreUsuario = (usuarioId) => {
     const usuario = usuarios.find(user => user.id === usuarioId);
-    return usuario ? usuario.nombre : "N/A"; // Devuelve el nombre o "N/A" si no se encuentra
+    return usuario ? usuario.nombre : "N/A"; 
   };
 
-  // Manejar la selección de pedidos
   const handleSelectPedido = (pedidoId) => {
     if (selectedPedidos.includes(pedidoId)) {
       setSelectedPedidos(selectedPedidos.filter(id => id !== pedidoId));
@@ -79,37 +77,95 @@ const EntrantesPage = () => {
     }
   };
 
-  // Aprobar pedidos seleccionados: cambiar el estado a 3
-  const handleAprobarPedidos = () => {
-    selectedPedidos.forEach((pedidoId) => {
-      const pedido = pedidos.find(p => p.id === pedidoId);
-      if (pedido) {
-        dispatch(togglePedidoStatus({ ...pedido, estadoId: 3 })); // Cambiar el estado a 3 (aprobado)
-      }
-    });
-    setSelectedPedidos([]); // Limpiar selección
+  console.log('Selected Pedidos:', selectedPedidos);
+
+  
+
+  // Manejar la apertura del modal de detalles
+  const handleVerDetalles = async (pedidoId) => {
+    try {
+      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+      setDetallesPedido(detalles);
+      setSelectedPedido(pedidoId);
+      setIsModalOpen(true); // Abrir modal
+    } catch (error) {
+      console.error(`Error al obtener los detalles del pedido ${pedidoId}:`, error);
+    }
   };
 
-  // Cancelar pedidos seleccionados: cambiar el estado a 4 (cancelado)
-  const handleCancelarPedidos = () => {
-    selectedPedidos.forEach((pedidoId) => {
-      const pedido = pedidos.find(p => p.id === pedidoId);
-      if (pedido) {
-        dispatch(togglePedidoStatus({ ...pedido, estadoId: 4 })); // Cambiar el estado a 4 (cancelado)
-      }
-    });
-    setSelectedPedidos([]); // Limpiar selección
+  // Cerrar modal de detalles
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedPedido(null);
+    setDetallesPedido([]);
   };
+
+  // Optimistic Update: Refleja los cambios en la UI inmediatamente
+  const updatePedidosOptimistically = (newEstadoId) => {
+    const updatedPedidos = pedidos.map((pedido) => {
+      if (selectedPedidos.includes(pedido.id)) {
+        return { ...pedido, estadoId: newEstadoId };
+      }
+      return pedido;
+    });
+    return updatedPedidos;
+  };
+
+  // Aprobar pedidos seleccionados
+// Aprobar pedidos seleccionados
+const handleAprobarPedidos = async () => {
+    setIsLoading(true);
+  
+    try {
+      // Iterar sobre los pedidos seleccionados y aprobarlos
+      for (const pedidoId of selectedPedidos) {
+        await dispatch(togglePedidoStatus({ id: pedidoId, estadoId: 3 }));
+      }
+      setSelectedPedidos([]); // Limpia la selección después de aprobar
+    } catch (error) {
+      console.error("Error al aprobar pedidos:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  
+  // Cancelar pedidos seleccionados
+  const handleCancelarPedidos = async () => {
+    setIsLoading(true);
+  
+    try {
+      // Iterar sobre los pedidos seleccionados y cancelarlos
+      for (const pedidoId of selectedPedidos) {
+        await dispatch(togglePedidoStatus({ id: pedidoId, estadoId: 4 }));
+      }
+      setSelectedPedidos([]); // Limpia la selección después de cancelar
+    } catch (error) {
+      console.error("Error al cancelar pedidos:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  
 
   return (
     <Box p={4}>
-      {/* Botones para aprobar y cancelar pedidos */}
       <Box mb={4}>
-        <Button colorScheme="green" mr={2} onClick={handleAprobarPedidos} isDisabled={selectedPedidos.length === 0}>
-          Aprobar Pedidos
+        <Button 
+          colorScheme="green" 
+          mr={2} 
+          onClick={handleAprobarPedidos} 
+          isDisabled={selectedPedidos.length === 0 || isLoading}
+        >
+          {isLoading ? <Spinner size="sm" /> : 'Aprobar Pedidos'}
         </Button>
-        <Button colorScheme="red" onClick={handleCancelarPedidos} isDisabled={selectedPedidos.length === 0}>
-          Cancelar Pedidos
+        <Button 
+          colorScheme="red" 
+          onClick={handleCancelarPedidos} 
+          isDisabled={selectedPedidos.length === 0 || isLoading}
+        >
+          {isLoading ? <Spinner size="sm" /> : 'Cancelar Pedidos'}
         </Button>
       </Box>
 
@@ -122,7 +178,6 @@ const EntrantesPage = () => {
             <Th>Tienda</Th>
             <Th>Deudor</Th>
             <Th>Fecha</Th>
-            {/* <Th>Monto</Th> */}
             <Th>Acciones</Th>
           </Tr>
         </Thead>
@@ -137,14 +192,12 @@ const EntrantesPage = () => {
                   />
                 </Td>
                 <Td>{pedido.id}</Td>
-                <Td>{getNombreUsuario(pedido.usuarioId)}</Td>
+                <Td>{pedido.nombreUsuario}</Td>
                 <Td>{pedido.nombreTienda}</Td>
                 <Td>{pedido.nombreDeu}</Td>
                 <Td>{pedido.fechaOrden}</Td>
-                {/* Mostrar el total del monto para cada pedido */}
-                {/* <Td>{montos[pedido.id] ? montos[pedido.id].toFixed(2) : "Calculando..."}</Td> */}
                 <Td>
-                  <Button colorScheme="blue" size="sm" onClick={() => console.log(`Ver detalles de pedido ${pedido.id}`)}>
+                  <Button colorScheme="blue" size="sm" onClick={() => handleVerDetalles(pedido.id)}>
                     Ver Detalles
                   </Button>
                 </Td>
@@ -152,11 +205,49 @@ const EntrantesPage = () => {
             ))
           ) : (
             <Tr>
-              <Td colSpan={8} align="center">No hay pedidos en estado 2</Td>
+              <Td colSpan="8" align="center">No hay pedidos en estado 2</Td>
             </Tr>
           )}
         </Tbody>
       </Table>
+
+      {/* Modal de detalles del pedido */}
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Detalles del Pedido {selectedPedido}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {detallesPedido.length > 0 ? (
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Producto</Th>
+                    <Th>Cantidad</Th>
+                    <Th>Precio</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {detallesPedido.map((detalle) => (
+                    <Tr key={detalle.id}>
+                      <Td>{detalle.nombreProducto}</Td>
+                      <Td>{detalle.cantidad}</Td>
+                      <Td>{detalle.precio}</Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            ) : (
+              <Box>No hay detalles disponibles</Box>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={handleCloseModal}>
+              Cerrar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
