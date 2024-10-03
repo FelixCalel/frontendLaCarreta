@@ -76,9 +76,6 @@ const EntrantesPage = () => {
       setSelectedPedidos([...selectedPedidos, pedidoId]);
     }
   };
-
-  console.log('Selected Pedidos:', selectedPedidos);
-
   
 
   // Manejar la apertura del modal de detalles
