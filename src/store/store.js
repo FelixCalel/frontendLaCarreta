@@ -12,6 +12,9 @@ import deusReducer from './Deus/deuSlice'
 import pedidosReducer from './Pedidos/pedidoSlice'
 import detalleOrdenReducer from './Pedidos/DetallePedidos/detalleOrdenSlice'
 import itemReducer from './items/itemSlice'
+import roleReducer from './Roles/roleSlice'
+import permisoReducer from './Permisos/permisoSlice'
+import assignReducer from './RolPermisoUsuario/RolPermisoUsuarioSlice'
 
 export const store = configureStore({
   reducer: {
@@ -26,5 +29,8 @@ export const store = configureStore({
     pedidos: pedidosReducer,
     detalleOrden: detalleOrdenReducer,
     items: itemReducer,
+    roles: roleReducer,
+    permisos: permisoReducer,
+    assignments: assignReducer,
   },
 })

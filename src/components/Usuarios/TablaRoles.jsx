@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import {
   Table,
   Thead,
@@ -6,75 +6,68 @@ import {
   Tr,
   Th,
   Td,
-  Input,
   Button,
-  useToast,
   Stack,
-  Switch,
-  Text,
   Link,
+  Spinner,
+  Text
 } from '@chakra-ui/react';
-import rolesData from '../../assets/datos/roles.json';
-import { Label } from 'recharts';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchRoles } from '../../store/Roles/thunks'; // Importamos el thunk para roles
+import { Link as RouterLink } from 'react-router-dom';
 
-
-
-// const usuariosData = [
-//     { id: 1, nombre: 'Usuario 1', correo: 'usuario1@example.com', estado: 'activo' },
-//     { id: 2, nombre: 'Usuario 2', correo: 'usuario2@example.com', estado: 'activo' },
-//     // Agrega más datos de usuarios según sea necesario
-//   ];
 export const TablaRoles = () => {
-
-    const [searchTerm, setSearchTerm] = useState('');
-    const [roles, setRoles] = useState(rolesData);
-    const toast = useToast();
-
+  const dispatch = useDispatch();
   
-   
-  return (
+  // Obtener el estado de los roles desde Redux
+  const { data: roles, status } = useSelector((state) => state.roles);
 
-    
+  // Hacer la solicitud para obtener los roles al montar el componente
+  useEffect(() => {
+    if (status === 'idle') {
+      dispatch(fetchRoles());
+    }
+  }, [status, dispatch]);
+
+  // Mostrar un spinner mientras los datos están cargando
+  if (status === 'loading') {
+    return <Spinner />;
+  }
+
+  // Mostrar un mensaje si no se cargan los datos correctamente
+  if (status === 'failed') {
+    return <Text>Hubo un error cargando los roles.</Text>;
+  }
+
+  return (
     <>
-      {/* <Input
-        placeholder="Buscar usuario"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        mb={4}
-      /> */}
       <Table variant="simple" mt={10}>
         <Thead>
           <Tr>
             <Th>Nombre rol</Th>
             <Th>Descripción</Th>
-           
             <Th>Acciones</Th>
           </Tr>
         </Thead>
         <Tbody>
-          {roles
-            .filter((rol) =>
-              rol.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-            .map((rol) => (
-              <Tr key={rol.id}>
-                <Td>{rol.nombre}</Td>
-                <Td>{rol.descripcion}</Td>
-             
-                <Td>
-                 <Stack  align='center'  direction='row'>
-                 <Button size={'xs'} onClick={() => handleChangePassword(usuario.id)} colorScheme="blue">
+          {roles.map((rol) => (
+            <Tr key={rol.id}>
+              <Td>{rol.nombre}</Td>
+              <Td>{rol.descripcion}</Td>
+              <Td>
+                <Stack align="center" direction="row">
+                  <Button size="xs" colorScheme="blue">
                     Ver permisos
                   </Button>
-                  <Link ml={2} color="blue.500" href="/admin/permisos">Permisos</Link>
-                 </Stack>
-                  
-                </Td>
-              </Tr>
-            ))}
+                  <Link as={RouterLink} to="/admin/permisos" ml={2} color="blue.500">
+                    Permisos
+                  </Link>
+                </Stack>
+              </Td>
+            </Tr>
+          ))}
         </Tbody>
       </Table>
-    
     </>
-  )
-}
+  );
+};
