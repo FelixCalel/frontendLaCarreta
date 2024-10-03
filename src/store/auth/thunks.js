@@ -10,34 +10,36 @@ export const checkingAuthentication = () => {
         dispatch( checkingCredentials() ); 
     }
 }
-export const startSignIn = ({correo_electronico, password}) => {
-    return async( dispatch ) => {
-         dispatch(checkingCredentials());
-       
-       await singIn({correo_electronico, password}).then((result)=>{
-     
-       
-    
-        if (result.ok){ 
-            console.log(result);
-           return  dispatch(login(result));
-        }
-        else {
-            localStorage.setItem('isAuthenticated','false')
-            localStorage.setItem('userData','')
-          return  dispatch(logout(result))
-         }
-        
-       
-       }).catch((error)=>{
-        const err = error.response
-    
-        return  dispatch(logout(err));
-       });
-   
-     
-    }
-}
+export const startSignIn = ({ correo_electronico, password }) => {
+  return async (dispatch) => {
+    dispatch(checkingCredentials());
+
+    await singIn({ correo_electronico, password }).then((result) => {
+      if (result.ok) {
+        const userData = {
+          id: result.usuario.id,
+          displayName: result.usuario.nombres + " " + result.usuario.apellidos,
+          email: result.usuario.correo_electronico,
+          nombre_empresa: result.usuario.nombre_empresa,
+        };
+
+        // Guardamos los datos en localStorage
+        localStorage.setItem("userData", JSON.stringify(userData));
+        localStorage.setItem("token", result.token); // Guarda el token si es necesario
+
+        dispatch(login(userData));
+      } else {
+        localStorage.setItem("isAuthenticated", "false");
+        localStorage.setItem("userData", "");
+        dispatch(logout(result));
+      }
+    }).catch((error) => {
+      const err = error.response;
+      dispatch(logout(err));
+    });
+  };
+};
+
 export const startCreatingUser = (nombres, apellidos,empresa,nit,correo_electronico,password) => {
     return async( dispatch ) => {
         dispatch( checkingCredentials());
@@ -112,19 +114,27 @@ export const startCreatingUserChildren = (nombres, apellidos,empresa,nit,correo_
 
 
 
-export const obtenerDatosLogeado = ()=>{
- 
-       const data = JSON.parse(localStorage.getItem('userData'))
-       const payload = {
-        // id: data.id,
-        uid:data.id,
-        displayName: data.displayName,
-        email: data.email,
-        // nit: data.nit,
-        nombre_empresa:  data.nombre_empresa
-
-        }
-       
- return payload
-
-}
+export const obtenerDatosLogeado = () => {
+    const data = JSON.parse(localStorage.getItem('userData'));
+  
+    // Verificamos si los datos existen
+    if (!data) {
+      return null; // Retornamos null si no hay datos
+    }
+  
+    // Validamos que todos los datos esperados estén presentes
+    const payload = {
+      uid: data.id || null,
+      displayName: data.displayName || null,
+      email: data.email || null,
+      nombre_empresa: data.nombre_empresa || null
+    };
+  
+    // Aseguramos que uid y email existan, de lo contrario retornamos null
+    if (!payload.uid || !payload.email) {
+      return null;
+    }
+  
+    return payload;
+  };
+  

@@ -1,13 +1,21 @@
-// import { Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import PropTypes from "prop-types";  // Importamos PropTypes para la validación
 
-// export const ProtectedRoute = ({ children }) => {
-//   const isAuthenticated = localStorage.getItem('token'); // Verifica si el token está presente en el localStorage
+const ProtectedRoute = ({ children }) => {
+  const token = useSelector((state) => state.auth.token); // O donde guardes el token
 
-//   if (!isAuthenticated) {
-//     // Si el usuario no está autenticado, redirige al login
-//     return <Navigate to="/auth/login" replace />;
-//   }
+  if (!token) {
+    // Si no hay token, redirigir al login
+    return <Navigate to="/auth/login" replace />;
+  }
 
-//   // Si está autenticado, renderiza los componentes hijos (la página protegida)
-//   return children;
-// };
+  return children;
+};
+
+// Validamos que `children` sea un nodo de React
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
+export default ProtectedRoute;

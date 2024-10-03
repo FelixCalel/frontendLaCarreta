@@ -60,6 +60,11 @@ export const MenuPerfil = () => {
     });
   };
 
+  // Variables de estilo basadas en el tema
+  const bgColor = useColorModeValue("white", "gray.800");
+  const hoverBg = useColorModeValue("green.500", "white");
+  const focusBg = useColorModeValue("green.500", "white");
+
   return (
     <Box>
       <Flex h={16} alignItems={"center"} justifyContent={"flex-end"}>
@@ -75,7 +80,7 @@ export const MenuPerfil = () => {
             color={useColorModeValue("gray.600", "white")}
           />
           <MenuList
-            bg={useColorModeValue("white", "gray.800")}
+            bg={bgColor}
             borderRadius="md"
             boxShadow="xl"
             p={0}
@@ -103,8 +108,8 @@ export const MenuPerfil = () => {
               as={Link}
               to="/admin/perfil"
               icon={<FaUser />}
-              _hover={{ bg: "green.500", color: "white" }}
-              _focus={{ bg: "green.500", color: "white" }}
+              _hover={{ bg: hoverBg, color: "white" }}
+              _focus={{ bg: focusBg, color: "white" }}
               py={2}
             >
               Perfil
@@ -114,8 +119,8 @@ export const MenuPerfil = () => {
               as={Link}
               to="/admin/empresas"
               icon={<FaBuilding />}
-              _hover={{ bg: "green.500", color: "white" }}
-              _focus={{ bg: "green.500", color: "white" }}
+              _hover={{ bg: hoverBg, color: "white" }}
+              _focus={{ bg: focusBg, color: "white" }}
               py={2}
             >
               Empresas
@@ -125,8 +130,8 @@ export const MenuPerfil = () => {
               as={Link}
               to="/admin/usuarios"
               icon={<FaUsers />}
-              _hover={{ bg: "green.500", color: "white" }}
-              _focus={{ bg: "green.500", color: "white" }}
+              _hover={{ bg: hoverBg, color: "white" }}
+              _focus={{ bg: focusBg, color: "white" }}
               py={2}
             >
               Usuarios
@@ -136,8 +141,8 @@ export const MenuPerfil = () => {
               as={Link}
               to="/admin/roles"
               icon={<FaKey />}
-              _hover={{ bg: "green.500", color: "white" }}
-              _focus={{ bg: "green.500", color: "white" }}
+              _hover={{ bg: hoverBg, color: "white" }}
+              _focus={{ bg: focusBg, color: "white" }}
               py={2}
             >
               Roles
@@ -147,8 +152,8 @@ export const MenuPerfil = () => {
               as={Link}
               to="/admin/permisos"
               icon={<FaShieldAlt />}
-              _hover={{ bg: "green.500", color: "white" }}
-              _focus={{ bg: "green.500", color: "white" }}
+              _hover={{ bg: hoverBg, color: "white" }}
+              _focus={{ bg: focusBg, color: "white" }}
               py={2}
             >
               Permisos
