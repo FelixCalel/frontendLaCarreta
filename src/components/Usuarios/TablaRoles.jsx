@@ -20,7 +20,8 @@ export const TablaRoles = () => {
   const dispatch = useDispatch();
   
   // Obtener el estado de los roles desde Redux
-  const { data: roles, status } = useSelector((state) => state.roles);
+  const { data: roles = [], status } = useSelector((state) => state.roles);
+
 
   // Hacer la solicitud para obtener los roles al montar el componente
   useEffect(() => {
@@ -50,24 +51,27 @@ export const TablaRoles = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {roles.map((rol) => (
-            <Tr key={rol.id}>
-              <Td>{rol.nombre}</Td>
-              <Td>{rol.descripcion}</Td>
-              <Td>
-                <Stack align="center" direction="row">
-                  <Button size="xs" colorScheme="blue">
-                    Ver permisos
-                  </Button>
-                  <Link as={RouterLink} to="/admin/permisos" ml={2} color="blue.500">
-                    Permisos
-                  </Link>
-                </Stack>
-              </Td>
+          {Array.isArray(roles) && roles.length > 0 ? (
+            roles.map((rol) => (
+              <Tr key={rol.id}>
+                <Td>{rol.nombre}</Td>
+                <Td>{rol.descripcion}</Td>
+                <Td>
+                  <Stack align="center" direction="row">
+                    <Button size="xs" colorScheme="blue">Ver permisos</Button>
+                    <Link as={RouterLink} to="/admin/permisos" ml={2} color="blue.500">Permisos</Link>
+                  </Stack>
+                </Td>
+              </Tr>
+            ))
+          ) : (
+            <Tr>
+              <Td colSpan={3}>No hay roles disponibles</Td>
             </Tr>
-          ))}
+          )}
         </Tbody>
       </Table>
     </>
   );
+  
 };

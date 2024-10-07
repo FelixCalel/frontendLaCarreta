@@ -299,6 +299,7 @@ async function registerUser(data) {
     estadoActivo: data.estadoActivo,
     correoValidado: data.correoValidado,
     paisId: data.paisId,
+    roleId: 2,
   };
 
   try {

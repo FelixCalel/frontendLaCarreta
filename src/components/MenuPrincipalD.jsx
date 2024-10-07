@@ -78,7 +78,7 @@ const PedidoMenuItem = ({ isExpanded, location }) => {
         transition="all 0.3s ease"
       >
         <Box display="flex" alignItems="center" flex={1}>
-          <Link to="/pedido/listar" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+          <Link  style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
             <FaShoppingCart size="24px" />
             {isExpanded && <Text ml="2" fontWeight="medium">Pedido</Text>}
           </Link>
@@ -94,6 +94,13 @@ const PedidoMenuItem = ({ isExpanded, location }) => {
       {/* Submenú */}
       <Collapse in={isPedidoOpen} animateOpacity>
         <VStack align="stretch" pl={isExpanded ? 1 : 0} spacing={2}>
+        <MenuItem
+            icon={<FaInbox size="20px" />}
+            label="Crear Pedido"
+            to="/pedido/listar"
+            isExpanded={isExpanded}
+            isActive={location.pathname === "/pedido/listar"}
+          />
           <MenuItem
             icon={<FaInbox size="20px" />}
             label="Pedidos Entrantes"
