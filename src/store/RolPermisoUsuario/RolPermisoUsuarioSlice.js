@@ -1,26 +1,29 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { assignRoleToUser } from './thunks';
-
-const assignSlice = createSlice({
-  name: 'assignments',
+import { fetchModulos } from './thunks';
+ 
+const modulosSlice = createSlice({
+  name: 'modulos',
   initialState: {
-    status: 'idle',
+    modulos: [],
+    loading: false,
     error: null,
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(assignRoleToUser.pending, (state) => {
-        state.status = 'loading';
+      .addCase(fetchModulos.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
-      .addCase(assignRoleToUser.fulfilled, (state) => {
-        state.status = 'succeeded';
+      .addCase(fetchModulos.fulfilled, (state, action) => {
+        state.modulos = action.payload;
+        state.loading = false;
       })
-      .addCase(assignRoleToUser.rejected, (state, action) => {
-        state.status = 'failed';
+      .addCase(fetchModulos.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.error.message;
       });
-  }
+  },
 });
-
-export default assignSlice.reducer;
+ 
+export default modulosSlice.reducer;

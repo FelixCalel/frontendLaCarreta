@@ -11,10 +11,23 @@ import {
   Collapse,
 } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
-import { HamburgerIcon, ChevronDownIcon, ChevronUpIcon } from "@chakra-ui/icons";
-import { FaShoppingCart, FaInbox, FaHistory, FaStore, FaBuilding, FaGlobe } from "react-icons/fa";
+import {
+  HamburgerIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from "@chakra-ui/icons";
+import {
+  FaShoppingCart,
+  FaInbox,
+  FaHistory,
+  FaStore,
+  FaBuilding,
+  FaGlobe,
+} from "react-icons/fa";
 import { MdLocationCity, MdDirections } from "react-icons/md";
 import PropTypes from "prop-types";
+import { fetchModulos } from "../store/RolPermisoUsuario/thunks";
+import { useDispatch } from "react-redux";  // <-- Importar useDispatch y useSelector
 
 // Componente MenuItem
 const MenuItem = ({ icon, label, to, isExpanded, isActive }) => {
@@ -32,14 +45,27 @@ const MenuItem = ({ icon, label, to, isExpanded, isActive }) => {
       borderRadius="md"
       transition="all 0.3s ease"
     >
-      <Link to={to} style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+      <Link
+        to={to}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          textDecoration: "none",
+        }}
+      >
         {icon}
-        {isExpanded && <Text ml="2" fontWeight="medium">{label}</Text>}
+        {isExpanded && (
+          <Text ml="2" fontWeight="medium">
+            {label}
+          </Text>
+        )}
       </Link>
     </Flex>
   );
 
-  return isExpanded ? menuItemContent : (
+  return isExpanded ? (
+    menuItemContent
+  ) : (
     <Tooltip label={label} placement="right" hasArrow>
       {menuItemContent}
     </Tooltip>
@@ -57,6 +83,7 @@ MenuItem.propTypes = {
 // Componente de "Pedidos" con submenú
 const PedidoMenuItem = ({ isExpanded, location }) => {
   const [isPedidoOpen, setIsPedidoOpen] = useState(false);
+  const dispatch = useDispatch();  // <-- Definir dispatch
 
   // Cerrar submenú cuando se cierra el menú principal
   useEffect(() => {
@@ -65,28 +92,48 @@ const PedidoMenuItem = ({ isExpanded, location }) => {
     }
   }, [isExpanded]);
 
+  useEffect(() => {
+    dispatch(fetchModulos()); // Llamada a la API cuando el componente se monta
+  }, [dispatch]);
+
   return (
     <>
       <Flex
         align="center"
         p="2"
         justifyContent={isExpanded ? "flex-start" : "center"}
-        bg={location.pathname.startsWith("/pedido") ? "green.500" : "transparent"}
+        bg={
+          location.pathname.startsWith("/pedido") ? "green.500" : "transparent"
+        }
         color={location.pathname.startsWith("/pedido") ? "white" : "inherit"}
         _hover={{ bg: "green.500", color: "white", cursor: "pointer" }}
         borderRadius="md"
         transition="all 0.3s ease"
       >
         <Box display="flex" alignItems="center" flex={1}>
-          <Link  style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+          <Link
+            style={{
+              display: "flex",
+              alignItems: "center",
+              textDecoration: "none",
+            }}
+          >
             <FaShoppingCart size="24px" />
-            {isExpanded && <Text ml="2" fontWeight="medium">Pedido</Text>}
+            {isExpanded && (
+              <Text ml="2" fontWeight="medium">
+                Pedido
+              </Text>
+            )}
           </Link>
         </Box>
         {/* Icono para abrir/cerrar submenú */}
         {isExpanded && (
           <Box onClick={() => setIsPedidoOpen(!isPedidoOpen)}>
-            {isPedidoOpen ? <ChevronUpIcon fontSize="24px" /> : <ChevronDownIcon fontSize="24px" />}
+            {isPedidoOpen ? (
+              <ChevronUpIcon fontSize="24px" />
+            ) : (
+              <ChevronDownIcon fontSize="24px" />
+            )}
           </Box>
         )}
       </Flex>
@@ -94,7 +141,7 @@ const PedidoMenuItem = ({ isExpanded, location }) => {
       {/* Submenú */}
       <Collapse in={isPedidoOpen} animateOpacity>
         <VStack align="stretch" pl={isExpanded ? 1 : 0} spacing={2}>
-        <MenuItem
+          <MenuItem
             icon={<FaInbox size="20px" />}
             label="Crear Pedido"
             to="/pedido/listar"
@@ -150,7 +197,13 @@ const MenuPrincipalD = () => {
       height="100vh"
     >
       {/* Toggle Menu */}
-      <Flex align="center" justifyContent="center" h="60px" bg="green.300" boxShadow="base">
+      <Flex
+        align="center"
+        justifyContent="center"
+        h="60px"
+        bg="green.300"
+        boxShadow="base"
+      >
         <IconButton
           icon={<HamburgerIcon />}
           onClick={() => setIsExpanded(!isExpanded)}
