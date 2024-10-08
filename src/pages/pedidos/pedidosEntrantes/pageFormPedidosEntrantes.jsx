@@ -139,9 +139,9 @@ const EntrantesPage = () => {
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet(`Pedido_${pedido.id}`);
   
-      // Añadir encabezados
+      // Añadir encabezados con 'ID Pedido'
       worksheet.columns = [
-        { header: 'ID', key: 'id', width: 10 },
+        { header: 'ID Pedido', key: 'id', width: 15 },  // Aquí cambiamos a 'ID Pedido'
         { header: 'Deudor', key: 'deudor', width: 25 },
         { header: 'Item', key: 'item', width: 35 },
         { header: 'Cantidad', key: 'cantidad', width: 15 },
@@ -166,10 +166,10 @@ const EntrantesPage = () => {
         };
       });
   
-      // Añadir datos con estilo y bordes
+      // Añadir datos con estilo y bordes, concatenando 'P-' al ID del pedido
       detalles.forEach((detalle, index) => {
         const row = worksheet.addRow({
-          id: pedido.id,
+          id: `P-${pedido.id}`,  // Aquí concatenamos 'P-' al ID del pedido
           deudor: pedido.nombreDeu,
           item: detalle.nombreProducto,
           cantidad: detalle.cantidad,
@@ -212,6 +212,7 @@ const EntrantesPage = () => {
       console.error(`Error al exportar pedido ${pedido.id}:`, error);
     }
   };
+  
 
   return (
     <Box p={4}>
