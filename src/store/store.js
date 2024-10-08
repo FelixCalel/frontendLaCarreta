@@ -15,7 +15,7 @@ import itemReducer from './items/itemSlice'
 import roleReducer from './Roles/roleSlice'
 import permisoReducer from './Permisos/permisoSlice'
 import assignReducer from './RolPermisoUsuario/RolPermisoUsuarioSlice'
-import modulosSlice from './RolPermisoUsuario/RolPermisoUsuarioSlice'
+import modulosReducer from './RolPermisoUsuario/RolPermisoUsuarioSlice'
 
 export const store = configureStore({
   reducer: {
@@ -33,6 +33,6 @@ export const store = configureStore({
     roles: roleReducer,
     permisos: permisoReducer,
     assignments: assignReducer,
-    modulosSlice: modulosSlice,
+    modulos: modulosReducer,
   },
 })
