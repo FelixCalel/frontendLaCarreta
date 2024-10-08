@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { tablaPedidos, togglePedidoStatus } from "../../../store/Pedidos/thunks"; 
 import { fetchUsuarios } from "../../../store/Usuarios/usuariosSlice"; 
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks"; 
+import * as XLSX from 'xlsx'; // Importamos xlsx para exportar a Excel
 
 const EntrantesPage = () => {
   const dispatch = useDispatch();
@@ -77,7 +78,6 @@ const EntrantesPage = () => {
     }
   };
   
-
   // Manejar la apertura del modal de detalles
   const handleVerDetalles = async (pedidoId) => {
     try {
@@ -97,24 +97,11 @@ const EntrantesPage = () => {
     setDetallesPedido([]);
   };
 
-  // Optimistic Update: Refleja los cambios en la UI inmediatamente
-  const updatePedidosOptimistically = (newEstadoId) => {
-    const updatedPedidos = pedidos.map((pedido) => {
-      if (selectedPedidos.includes(pedido.id)) {
-        return { ...pedido, estadoId: newEstadoId };
-      }
-      return pedido;
-    });
-    return updatedPedidos;
-  };
-
   // Aprobar pedidos seleccionados
-// Aprobar pedidos seleccionados
-const handleAprobarPedidos = async () => {
+  const handleAprobarPedidos = async () => {
     setIsLoading(true);
   
     try {
-      // Iterar sobre los pedidos seleccionados y aprobarlos
       for (const pedidoId of selectedPedidos) {
         await dispatch(togglePedidoStatus({ id: pedidoId, estadoId: 3 }));
       }
@@ -126,13 +113,11 @@ const handleAprobarPedidos = async () => {
     }
   };
   
-  
   // Cancelar pedidos seleccionados
   const handleCancelarPedidos = async () => {
     setIsLoading(true);
   
     try {
-      // Iterar sobre los pedidos seleccionados y cancelarlos
       for (const pedidoId of selectedPedidos) {
         await dispatch(togglePedidoStatus({ id: pedidoId, estadoId: 4 }));
       }
@@ -143,8 +128,89 @@ const handleAprobarPedidos = async () => {
       setIsLoading(false);
     }
   };
-  
-  
+
+// Función para exportar a Excel con formato mejorado y estilizado
+const handleExportarExcel = async (pedido) => {
+  try {
+      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedido.id)).unwrap();
+      const data = detalles.map((detalle) => ({
+          ID: pedido.id,
+          Deudor: pedido.nombreDeu,
+          Item: detalle.nombreProducto,
+          Cantidad: detalle.cantidad,
+          Fecha: pedido.fechaOrden,
+      }));
+
+      // Crear la hoja de trabajo
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+
+      // Aplicar formato de tabla (colores y bordes)
+      const range = XLSX.utils.decode_range(worksheet['!ref']);
+
+      // Estilizar encabezados: Negrita, centrado, color de fondo
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+          const headerAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+          if (!worksheet[headerAddress]) continue;
+          worksheet[headerAddress].s = {
+              font: { bold: true, sz: 12 },
+              alignment: { horizontal: 'center', vertical: 'center' },
+              fill: { fgColor: { rgb: '4F81BD' } }, // Color de fondo azul
+              border: {
+                  top: { style: 'thin', color: { rgb: '000000' } },
+                  bottom: { style: 'thin', color: { rgb: '000000' } },
+                  left: { style: 'thin', color: { rgb: '000000' } },
+                  right: { style: 'thin', color: { rgb: '000000' } }
+              },
+              font: { color: { rgb: 'FFFFFF' } }, // Texto blanco
+          };
+      }
+
+      // Estilizar las filas de datos: Bordes y colores alternos para las filas
+      for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+              const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+              worksheet[cellAddress].s = {
+                  alignment: { horizontal: 'center', vertical: 'center' },
+                  border: {
+                      top: { style: 'thin', color: { rgb: '000000' } },
+                      bottom: { style: 'thin', color: { rgb: '000000' } },
+                      left: { style: 'thin', color: { rgb: '000000' } },
+                      right: { style: 'thin', color: { rgb: '000000' } }
+                  },
+                  fill: {
+                      fgColor: { rgb: R % 2 === 0 ? 'DDEBF7' : 'FFFFFF' } // Alternar colores de fondo
+                  }
+              };
+          }
+      }
+
+      // Configurar el ancho de las columnas para que se ajuste al contenido
+      worksheet['!cols'] = [
+          { wch: 10 }, // ID
+          { wch: 20 }, // Deudor
+          { wch: 30 }, // Item
+          { wch: 10 }, // Cantidad
+          { wch: 25 }  // Fecha
+      ];
+
+      // Definir la tabla en el rango de datos
+      const tableRange = XLSX.utils.encode_range(range);
+      worksheet['!autofilter'] = { ref: tableRange }; // Activar los filtros automáticos
+
+      // Agregar la hoja de trabajo al libro
+      XLSX.utils.book_append_sheet(workbook, worksheet, `Pedido_${pedido.id}`);
+
+      // Descargar el archivo Excel
+      XLSX.writeFile(workbook, `pedido_${pedido.id}.xlsx`);
+  } catch (error) {
+      console.error(`Error al exportar pedido ${pedido.id}:`, error);
+  }
+};
+
+
+
+
 
   return (
     <Box p={4}>
@@ -196,6 +262,9 @@ const handleAprobarPedidos = async () => {
                 <Td>
                   <Button colorScheme="blue" size="sm" onClick={() => handleVerDetalles(pedido.id)}>
                     Ver Detalles
+                  </Button>
+                  <Button colorScheme="teal" size="sm" ml={2} onClick={() => handleExportarExcel(pedido)}>
+                    Exportar a Excel
                   </Button>
                 </Td>
               </Tr>
