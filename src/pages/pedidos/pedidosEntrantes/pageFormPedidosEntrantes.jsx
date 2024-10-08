@@ -7,7 +7,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { tablaPedidos, togglePedidoStatus } from "../../../store/Pedidos/thunks"; 
 import { fetchUsuarios } from "../../../store/Usuarios/usuariosSlice"; 
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks"; 
-import * as XLSX from 'xlsx'; // Importamos xlsx para exportar a Excel
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';  // Necesitas instalar file-saver
+
 
 const EntrantesPage = () => {
   const dispatch = useDispatch();
@@ -129,88 +131,87 @@ const EntrantesPage = () => {
     }
   };
 
-// Función para exportar a Excel con formato mejorado y estilizado
-const handleExportarExcel = async (pedido) => {
-  try {
+  const handleExportarExcel = async (pedido) => {
+    try {
       const detalles = await dispatch(getDetalleOrdenByPedidoId(pedido.id)).unwrap();
-      const data = detalles.map((detalle) => ({
-          ID: pedido.id,
-          Deudor: pedido.nombreDeu,
-          Item: detalle.nombreProducto,
-          Cantidad: detalle.cantidad,
-          Fecha: pedido.fechaOrden,
-      }));
-
-      // Crear la hoja de trabajo
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-
-      // Aplicar formato de tabla (colores y bordes)
-      const range = XLSX.utils.decode_range(worksheet['!ref']);
-
-      // Estilizar encabezados: Negrita, centrado, color de fondo
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-          const headerAddress = XLSX.utils.encode_cell({ r: 0, c: C });
-          if (!worksheet[headerAddress]) continue;
-          worksheet[headerAddress].s = {
-              font: { bold: true, sz: 12 },
-              alignment: { horizontal: 'center', vertical: 'center' },
-              fill: { fgColor: { rgb: '4F81BD' } }, // Color de fondo azul
-              border: {
-                  top: { style: 'thin', color: { rgb: '000000' } },
-                  bottom: { style: 'thin', color: { rgb: '000000' } },
-                  left: { style: 'thin', color: { rgb: '000000' } },
-                  right: { style: 'thin', color: { rgb: '000000' } }
-              },
-              font: { color: { rgb: 'FFFFFF' } }, // Texto blanco
-          };
-      }
-
-      // Estilizar las filas de datos: Bordes y colores alternos para las filas
-      for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-          for (let C = range.s.c; C <= range.e.c; ++C) {
-              const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-              worksheet[cellAddress].s = {
-                  alignment: { horizontal: 'center', vertical: 'center' },
-                  border: {
-                      top: { style: 'thin', color: { rgb: '000000' } },
-                      bottom: { style: 'thin', color: { rgb: '000000' } },
-                      left: { style: 'thin', color: { rgb: '000000' } },
-                      right: { style: 'thin', color: { rgb: '000000' } }
-                  },
-                  fill: {
-                      fgColor: { rgb: R % 2 === 0 ? 'DDEBF7' : 'FFFFFF' } // Alternar colores de fondo
-                  }
-              };
-          }
-      }
-
-      // Configurar el ancho de las columnas para que se ajuste al contenido
-      worksheet['!cols'] = [
-          { wch: 10 }, // ID
-          { wch: 20 }, // Deudor
-          { wch: 30 }, // Item
-          { wch: 10 }, // Cantidad
-          { wch: 25 }  // Fecha
+  
+      // Crear un nuevo libro de Excel
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet(`Pedido_${pedido.id}`);
+  
+      // Añadir encabezados
+      worksheet.columns = [
+        { header: 'ID', key: 'id', width: 10 },
+        { header: 'Deudor', key: 'deudor', width: 25 },
+        { header: 'Item', key: 'item', width: 35 },
+        { header: 'Cantidad', key: 'cantidad', width: 15 },
+        { header: 'Fecha', key: 'fecha', width: 25 },
       ];
-
-      // Definir la tabla en el rango de datos
-      const tableRange = XLSX.utils.encode_range(range);
-      worksheet['!autofilter'] = { ref: tableRange }; // Activar los filtros automáticos
-
-      // Agregar la hoja de trabajo al libro
-      XLSX.utils.book_append_sheet(workbook, worksheet, `Pedido_${pedido.id}`);
-
+  
+      // Estilizar encabezados
+      const headerRow = worksheet.getRow(1);
+      headerRow.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } }; // Texto blanco
+      headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF4CAF50' },  // Fondo verde
+      };
+      headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+      headerRow.eachCell({ includeEmpty: false }, (cell) => {
+        cell.border = {
+          top: { style: 'thick', color: { argb: 'FF228B22' } },
+          left: { style: 'thick', color: { argb: 'FF228B22' } },
+          bottom: { style: 'thick', color: { argb: 'FF228B22' } },
+          right: { style: 'thick', color: { argb: 'FF228B22' } },
+        };
+      });
+  
+      // Añadir datos con estilo y bordes
+      detalles.forEach((detalle, index) => {
+        const row = worksheet.addRow({
+          id: pedido.id,
+          deudor: pedido.nombreDeu,
+          item: detalle.nombreProducto,
+          cantidad: detalle.cantidad,
+          fecha: pedido.fechaOrden,
+        });
+  
+        row.eachCell({ includeEmpty: false }, (cell) => {
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FF228B22' } },
+            left: { style: 'thin', color: { argb: 'FF228B22' } },
+            bottom: { style: 'thin', color: { argb: 'FF228B22' } },
+            right: { style: 'thin', color: { argb: 'FF228B22' } },
+          };
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        });
+  
+        // Aplicar colores alternos en las filas
+        if (index % 2 === 0) {
+          row.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE8F5E9' },  // Color verde claro
+          };
+        }
+      });
+  
+      // Limitar el rango de la tabla a las columnas con información
+      const totalRows = detalles.length + 1;  // +1 para incluir los encabezados
+      worksheet.autoFilter = {
+        from: 'A1',
+        to: `E${totalRows}`,  // Rango limitado de A a E con el número de filas con datos
+      };
+  
       // Descargar el archivo Excel
-      XLSX.writeFile(workbook, `pedido_${pedido.id}.xlsx`);
-  } catch (error) {
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      saveAs(blob, `pedido_${pedido.id}.xlsx`);
+  
+    } catch (error) {
       console.error(`Error al exportar pedido ${pedido.id}:`, error);
-  }
-};
-
-
-
-
+    }
+  };
 
   return (
     <Box p={4}>

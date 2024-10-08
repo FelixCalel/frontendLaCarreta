@@ -4,17 +4,18 @@ import { Link } from 'react-router-dom';
 import { HamburgerIcon, ChevronDownIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchModulos } from '../store/RolPermisoUsuario/thunks';  // Ajusta el path según corresponda
-import { AiFillDashboard, AiOutlineShoppingCart, AiOutlineFileText } from 'react-icons/ai';
-import { FaFileInvoice, FaCog, FaUsers } from 'react-icons/fa';
+import { FaHistory, FaInbox, FaBuilding, FaStore, FaGlobe } from 'react-icons/fa';
+import { MdLocationCity, MdDirections } from 'react-icons/md'
 
 // Mapa de iconos
 const iconMap = {
-  AiFillDashboard: AiFillDashboard,
-  AiOutlineShoppingCart: AiOutlineShoppingCart,
-  AiOutlineFileText: AiOutlineFileText,
-  FaFileInvoice: FaFileInvoice,
-  FaCog: FaCog,
-  FaUsers: FaUsers,
+  FaInbox: FaInbox,
+  FaHistory: FaHistory,
+  FaBuilding: FaBuilding,
+  FaStore: FaStore,
+  FaGlobe: FaGlobe,
+  MdLocationCity: MdLocationCity,
+  MdDirections: MdDirections
 };
 
 // Componente MenuItem
