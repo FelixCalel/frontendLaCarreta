@@ -25,6 +25,8 @@ import {
   FaStore,
   FaGlobe,
   FaClipboardList,
+  FaShoppingCart,
+  FaTools,
 } from "react-icons/fa";
 import { MdLocationCity, MdDirections } from "react-icons/md";
 
@@ -38,6 +40,8 @@ const iconMap = {
   MdLocationCity: MdLocationCity,
   MdDirections: MdDirections,
   FaClipboardList: FaClipboardList,
+  FaShoppingCart: FaShoppingCart,
+  FaTools: FaTools,
 };
 
 // Componente MenuItem
@@ -240,6 +244,8 @@ const MenuPrincipalD = () => {
         aria-label="Toggle Menu"
         isRound
         variant="ghost"
+        mb={4} // Aquí agregas un margen inferior (margin-bottom)
+        // También podrías usar 'p' o 'm' para ajustar el padding o margen general
       />
       <VStack align="stretch" spacing={1}>
         {modulosAgrupados.map((modulo) => (
