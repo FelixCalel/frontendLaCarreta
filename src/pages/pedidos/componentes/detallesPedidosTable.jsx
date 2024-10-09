@@ -161,7 +161,7 @@ const ProductosTable = ({ pedidoId }) => {
                     cantidad: parseFloat(e.target.value),
                   })
                 }
-                placeholder="0" // Placeholder para cantidad
+                placeholder="0" 
               />
             </Td>
             <Td>

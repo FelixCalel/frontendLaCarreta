@@ -14,18 +14,20 @@ const CiudadSelector = ({ value, onChange }) => {
   return (
     <select value={value} onChange={onChange}>
       <option value="">Seleccionar ciudad</option>
-      {ciudades.data.map((ciudad) => (
-        <option key={ciudad.id} value={ciudad.id}>
-          {ciudad.nombre}
-        </option>
-      ))}
+      {ciudades.data
+        .filter((ciudad) => ciudad.estaActivo)  // Usamos el campo estaActivo para filtrar
+        .map((ciudad) => (
+          <option key={ciudad.id} value={ciudad.id}>
+            {ciudad.nombre}
+          </option>
+        ))}
     </select>
   );
 };
 
 CiudadSelector.propTypes = {
-  value: PropTypes.string.isRequired,  // 'value' debe ser una string y es obligatorio
-  onChange: PropTypes.func.isRequired, // 'onChange' debe ser una función y es obligatorio
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
 };
 
 export default CiudadSelector;

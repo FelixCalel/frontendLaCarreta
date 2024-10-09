@@ -54,3 +54,17 @@ export const tablaPais = createAsyncThunk(
     return data;
   }
 );
+
+
+export const sincronizarClientes = createAsyncThunk(
+  'empresas/sincronizarClientes',
+  async ({ dbsap, ipsap, empresaId }) => {
+    const response = await axios.post(`${BASE_URL}/sap/deus/sincronizarClientes`, {
+      dbsap,
+      ipsap,
+      empresaId
+    });
+    return response.data;
+  }
+);
+

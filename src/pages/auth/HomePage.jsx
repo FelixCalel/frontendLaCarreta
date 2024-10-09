@@ -35,14 +35,14 @@ const HomePage = () => {
 
           <Stack direction={'column'} mt={6} spacing={3} align="flex-start">
             <Box>
-              <Button size="sm" colorScheme="green" onClick={() => alert('Ir a tu perfil')}>
+              {/* <Button size="sm" colorScheme="green" onClick={() => alert('Ir a tu perfil')}>
                 Ir a mi perfil
-              </Button>
+              </Button> */}
             </Box>
             <Box>
-              <Button size="sm" variant="outline" colorScheme="green" onClick={() => alert('Ver el catálogo')}>
+              {/* <Button size="sm" variant="outline" colorScheme="green" onClick={() => alert('Ver el catálogo')}>
                 Ver el catálogo
-              </Button>
+              </Button> */}
             </Box>
           </Stack>
         </Box>
