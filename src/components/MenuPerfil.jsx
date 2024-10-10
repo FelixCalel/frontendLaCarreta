@@ -104,7 +104,7 @@ export const MenuPerfil = () => {
             </Flex>
 
             {/* Opciones del menú */}
-            <MenuItem
+            {/* <MenuItem
               as={Link}
               to="/admin/perfil"
               icon={<FaUser />}
@@ -113,9 +113,9 @@ export const MenuPerfil = () => {
               py={2}
             >
               Perfil
-            </MenuItem>
+            </MenuItem> */}
 
-            <MenuItem
+            {/* <MenuItem
               as={Link}
               to="/admin/empresas"
               icon={<FaBuilding />}
@@ -124,7 +124,7 @@ export const MenuPerfil = () => {
               py={2}
             >
               Empresas
-            </MenuItem>
+            </MenuItem> */}
 
             <MenuItem
               as={Link}

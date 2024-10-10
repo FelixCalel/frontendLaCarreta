@@ -59,58 +59,52 @@ const ProductosTable = ({ pedidoId }) => {
   };
 
   // Añadir nuevo producto a la lista y base de datos
-  const handleAddProducto = async () => {
-    if (
-      newProducto.productoId &&
-      newProducto.cantidad > 0
-    ) {
-      try {
-        const newDetalleOrden = {
-          pedidoId,
-          productoId: newProducto.productoId,
-          cantidad: newProducto.cantidad,
-          precio: newProducto.precio, // Permitir precio cero
-        };
-
-        // Guardar el producto en la base de datos
-        const savedDetalle = await dispatch(
-          addNewDetalleOrden(newDetalleOrden)
-        ).unwrap();
-
-        // Actualizar el estado local con el nuevo producto
-        setProductos((prevProductos) => [
-          ...prevProductos,
-          { ...newProducto, id: savedDetalle.id },
-        ]);
-
-        // Limpiar los campos después de agregar el producto
-        setNewProducto({
-          productoId: "",
-          nombreProducto: "",
-          cantidad: 0,
-          precio: 0,
-        });
-        setResetFields(true); // Indicar que se deben resetear los campos
-      } catch (error) {
-        console.error("Error al guardar el detalle del pedido:", error);
-      }
-    }
-  };
-
-  // Eliminar producto del estado y de la base de datos
-  const handleRemoveProducto = async (productoId, index) => {
+// Añadir nuevo producto a la lista y base de datos
+const handleAddProducto = async () => {
+  if (newProducto.productoId && newProducto.cantidad > 0) {
     try {
-      // Eliminar el producto de la base de datos
-      await dispatch(deleteDetalleOrden(productoId)).unwrap();
+      const newDetalleOrden = {
+        pedidoId,
+        productoId: newProducto.productoId,
+        cantidad: newProducto.cantidad,
+        precio: newProducto.precio, // Permitir precio cero
+      };
 
-      // Actualizar el estado local para reflejar la eliminación
-      setProductos((prevProductos) =>
-        prevProductos.filter((_, i) => i !== index)
-      );
+      // Guardar el producto en la base de datos
+      await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
+
+      // Volver a cargar la lista de productos después de agregar
+      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+      setProductos(detalles);
+
+      // Limpiar los campos después de agregar el producto
+      setNewProducto({
+        productoId: "",
+        nombreProducto: "",
+        cantidad: 0,
+        precio: 0,
+      });
+      setResetFields(true); // Indicar que se deben resetear los campos
     } catch (error) {
-      console.error("Error al eliminar el detalle del pedido:", error);
+      console.error("Error al guardar el detalle del pedido:", error);
     }
-  };
+  }
+};
+
+// Eliminar producto del estado y de la base de datos
+const handleRemoveProducto = async (productoId, index) => {
+  try {
+    // Eliminar el producto de la base de datos
+    await dispatch(deleteDetalleOrden(productoId)).unwrap();
+
+    // Volver a cargar la lista de productos después de eliminar
+    const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+    setProductos(detalles);
+  } catch (error) {
+    console.error("Error al eliminar el detalle del pedido:", error);
+  }
+};
+
 
   // Calcular el total de los precios
   const totalPrecio = productos.reduce(
