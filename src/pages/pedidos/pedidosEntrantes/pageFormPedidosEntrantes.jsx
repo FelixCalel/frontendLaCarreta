@@ -1,38 +1,61 @@
 import { useEffect, useState } from "react";
 import {
-  Table, Thead, Tbody, Tr, Th, Td, Box, Button, Checkbox, Spinner,
-  Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Box,
+  Button,
+  Checkbox,
+  Spinner,
+  Text,
+  Heading,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useToast,
+  Tooltip,
+  IconButton,
+  Flex,
+  Center,
+  Badge,
+  Divider,
 } from "@chakra-ui/react";
+import { SiMicrosoftexcel } from "react-icons/si";
+import { DownloadIcon } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { tablaPedidos, togglePedidoStatus } from "../../../store/Pedidos/thunks"; 
-import { fetchUsuarios } from "../../../store/Usuarios/usuariosSlice"; 
-import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks"; 
-import ExcelJS from 'exceljs';
-import { saveAs } from 'file-saver';  // Necesitas instalar file-saver
-
+import {
+  tablaPedidos,
+  togglePedidoStatus,
+} from "../../../store/Pedidos/thunks";
+import { fetchUsuarios } from "../../../store/Usuarios/usuariosSlice";
+import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver"; // Necesitas instalar file-saver
 
 const EntrantesPage = () => {
   const dispatch = useDispatch();
+  const toast = useToast(); // Para notificaciones
 
   // Obtener pedidos y usuarios desde Redux
   const pedidos = useSelector((state) => state.pedidos.data);
-  const usuarios = useSelector((state) => state.usuarios.data); 
+  const usuarios = useSelector((state) => state.usuarios.data);
 
   // Estado para almacenar los montos totales por pedido
   const [montos, setMontos] = useState({});
-  
-  // Estado de carga para las operaciones de aprobar/cancelar
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Estado para gestionar las selecciones de pedidos
-  const [selectedPedidos, setSelectedPedidos] = useState([]);
-
-  // Estado para almacenar detalles del pedido seleccionado
-  const [detallesPedido, setDetallesPedido] = useState([]);
+  const [isLoading, setIsLoading] = useState(false); // Estado de carga para las operaciones de aprobar/cancelar
+  const [selectedPedidos, setSelectedPedidos] = useState([]); // Selección de pedidos
+  const [detallesPedido, setDetallesPedido] = useState([]); // Detalles del pedido seleccionado
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Filtrar solo los pedidos con estadoId 2
+  // Filtrar solo los pedidos con estadoId 2 (pedidos entrantes)
   const pedidosEntrantes = pedidos.filter((pedido) => pedido.estadoId === 2);
 
   // Cargar los pedidos y usuarios al montar el componente
@@ -47,48 +70,58 @@ const EntrantesPage = () => {
       const montosTemp = {};
       for (const pedido of pedidosEntrantes) {
         try {
-          const detalles = await dispatch(getDetalleOrdenByPedidoId(pedido.id)).unwrap();
+          const detalles = await dispatch(
+            getDetalleOrdenByPedidoId(pedido.id)
+          ).unwrap();
           const totalMonto = detalles.reduce((acc, detalle) => {
-            const precio = parseFloat(detalle.precio); 
-            const cantidad = parseFloat(detalle.cantidad); 
+            const precio = parseFloat(detalle.precio);
+            const cantidad = parseFloat(detalle.cantidad);
             if (!isNaN(precio) && !isNaN(cantidad)) {
-              return acc + (precio * cantidad); 
+              return acc + precio * cantidad;
             }
             return acc;
           }, 0);
-          montosTemp[pedido.id] = totalMonto; 
+          montosTemp[pedido.id] = totalMonto;
         } catch (error) {
-          console.error(`Error al cargar detalles para pedido ${pedido.id}:`, error);
-          montosTemp[pedido.id] = 0; 
+          console.error(
+            `Error al cargar detalles para pedido ${pedido.id}:`,
+            error
+          );
+          montosTemp[pedido.id] = 0;
         }
       }
-      setMontos(montosTemp); 
+      setMontos(montosTemp);
     };
     cargarMontos();
   }, [dispatch, pedidosEntrantes]);
 
   const getNombreUsuario = (usuarioId) => {
-    const usuario = usuarios.find(user => user.id === usuarioId);
-    return usuario ? usuario.nombre : "N/A"; 
+    const usuario = usuarios.find((user) => user.id === usuarioId);
+    return usuario ? usuario.nombre : "N/A";
   };
 
   const handleSelectPedido = (pedidoId) => {
     if (selectedPedidos.includes(pedidoId)) {
-      setSelectedPedidos(selectedPedidos.filter(id => id !== pedidoId));
+      setSelectedPedidos(selectedPedidos.filter((id) => id !== pedidoId));
     } else {
       setSelectedPedidos([...selectedPedidos, pedidoId]);
     }
   };
-  
+
   // Manejar la apertura del modal de detalles
   const handleVerDetalles = async (pedidoId) => {
     try {
-      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+      const detalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedidoId)
+      ).unwrap();
       setDetallesPedido(detalles);
       setSelectedPedido(pedidoId);
       setIsModalOpen(true); // Abrir modal
     } catch (error) {
-      console.error(`Error al obtener los detalles del pedido ${pedidoId}:`, error);
+      console.error(
+        `Error al obtener los detalles del pedido ${pedidoId}:`,
+        error
+      );
     }
   };
 
@@ -102,28 +135,40 @@ const EntrantesPage = () => {
   // Aprobar pedidos seleccionados
   const handleAprobarPedidos = async () => {
     setIsLoading(true);
-  
     try {
       for (const pedidoId of selectedPedidos) {
         await dispatch(togglePedidoStatus({ id: pedidoId, estadoId: 3 }));
       }
-      setSelectedPedidos([]); // Limpia la selección después de aprobar
+      setSelectedPedidos([]); // Limpiar selección después de aprobar
+      toast({
+        title: "Pedidos aprobados",
+        description: "Los pedidos seleccionados han sido aprobados.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
       console.error("Error al aprobar pedidos:", error);
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   // Cancelar pedidos seleccionados
   const handleCancelarPedidos = async () => {
     setIsLoading(true);
-  
     try {
       for (const pedidoId of selectedPedidos) {
         await dispatch(togglePedidoStatus({ id: pedidoId, estadoId: 4 }));
       }
-      setSelectedPedidos([]); // Limpia la selección después de cancelar
+      setSelectedPedidos([]); // Limpiar selección después de cancelar
+      toast({
+        title: "Pedidos cancelados",
+        description: "Los pedidos seleccionados han sido cancelados.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
       console.error("Error al cancelar pedidos:", error);
     } finally {
@@ -131,108 +176,106 @@ const EntrantesPage = () => {
     }
   };
 
+  // Exportar el pedido a Excel
   const handleExportarExcel = async (pedido) => {
     try {
-      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedido.id)).unwrap();
-  
-      // Crear un nuevo libro de Excel
+      const detalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedido.id)
+      ).unwrap();
+
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet(`Pedido_${pedido.id}`);
-  
-      // Añadir encabezados con 'ID Pedido'
+
       worksheet.columns = [
-        { header: 'ID Pedido', key: 'id', width: 15 },  // Aquí cambiamos a 'ID Pedido'
-        { header: 'Deudor', key: 'deudor', width: 25 },
-        { header: 'Item', key: 'item', width: 35 },
-        { header: 'Cantidad', key: 'cantidad', width: 15 },
-        { header: 'Fecha', key: 'fecha', width: 25 },
+        { header: "ID Pedido", key: "id", width: 15 },
+        { header: "Deudor", key: "deudor", width: 25 },
+        { header: "Item", key: "item", width: 35 },
+        { header: "Cantidad", key: "cantidad", width: 15 },
+        { header: "Fecha", key: "fecha", width: 25 },
       ];
-  
-      // Estilizar encabezados
+
       const headerRow = worksheet.getRow(1);
-      headerRow.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } }; // Texto blanco
+      headerRow.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
       headerRow.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FF4CAF50' },  // Fondo verde
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF4CAF50" },
       };
-      headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+      headerRow.alignment = { vertical: "middle", horizontal: "center" };
       headerRow.eachCell({ includeEmpty: false }, (cell) => {
         cell.border = {
-          top: { style: 'thick', color: { argb: 'FF228B22' } },
-          left: { style: 'thick', color: { argb: 'FF228B22' } },
-          bottom: { style: 'thick', color: { argb: 'FF228B22' } },
-          right: { style: 'thick', color: { argb: 'FF228B22' } },
+          top: { style: "thick", color: { argb: "FF228B22" } },
+          left: { style: "thick", color: { argb: "FF228B22" } },
+          bottom: { style: "thick", color: { argb: "FF228B22" } },
+          right: { style: "thick", color: { argb: "FF228B22" } },
         };
       });
-  
-      // Añadir datos con estilo y bordes, concatenando 'P-' al ID del pedido
+
       detalles.forEach((detalle, index) => {
         const row = worksheet.addRow({
-          id: `P-${pedido.id}`,  // Aquí concatenamos 'P-' al ID del pedido
+          id: `P-${pedido.id}`,
           deudor: pedido.nombreDeu,
           item: detalle.nombreProducto,
           cantidad: detalle.cantidad,
           fecha: pedido.fechaOrden,
         });
-  
+
         row.eachCell({ includeEmpty: false }, (cell) => {
           cell.border = {
-            top: { style: 'thin', color: { argb: 'FF228B22' } },
-            left: { style: 'thin', color: { argb: 'FF228B22' } },
-            bottom: { style: 'thin', color: { argb: 'FF228B22' } },
-            right: { style: 'thin', color: { argb: 'FF228B22' } },
+            top: { style: "thin", color: { argb: "FF228B22" } },
+            left: { style: "thin", color: { argb: "FF228B22" } },
+            bottom: { style: "thin", color: { argb: "FF228B22" } },
+            right: { style: "thin", color: { argb: "FF228B22" } },
           };
-          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          cell.alignment = { vertical: "middle", horizontal: "center" };
         });
-  
-        // Aplicar colores alternos en las filas
+
         if (index % 2 === 0) {
           row.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFE8F5E9' },  // Color verde claro
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFE8F5E9" },
           };
         }
       });
-  
-      // Limitar el rango de la tabla a las columnas con información
-      const totalRows = detalles.length + 1;  // +1 para incluir los encabezados
-      worksheet.autoFilter = {
-        from: 'A1',
-        to: `E${totalRows}`,  // Rango limitado de A a E con el número de filas con datos
-      };
-  
-      // Descargar el archivo Excel
+
+      const totalRows = detalles.length + 1;
+      worksheet.autoFilter = { from: "A1", to: `E${totalRows}` };
+
       const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
       saveAs(blob, `pedido_${pedido.id}.xlsx`);
-  
     } catch (error) {
       console.error(`Error al exportar pedido ${pedido.id}:`, error);
     }
   };
-  
 
   return (
-    <Box p={4}>
-      <Box mb={4}>
-        <Button 
-          colorScheme="green" 
-          mr={2} 
-          onClick={handleAprobarPedidos} 
-          isDisabled={selectedPedidos.length === 0 || isLoading}
-        >
-          {isLoading ? <Spinner size="sm" /> : 'Aprobar Pedidos'}
-        </Button>
-        <Button 
-          colorScheme="red" 
-          onClick={handleCancelarPedidos} 
-          isDisabled={selectedPedidos.length === 0 || isLoading}
-        >
-          {isLoading ? <Spinner size="sm" /> : 'Cancelar Pedidos'}
-        </Button>
-      </Box>
+    <Box p={6} boxShadow="xl" bg="white" rounded="lg">
+      <Flex justify="space-between" mb={6}>
+        <Heading as="h2" size="lg">
+          Listado de Pedidos Entrantes
+        </Heading>
+        <Flex>
+          <Button
+            colorScheme="green"
+            mr={4}
+            onClick={handleAprobarPedidos}
+            isDisabled={selectedPedidos.length === 0 || isLoading}
+          >
+            {isLoading ? <Spinner size="sm" /> : "Aprobar Pedidos"}
+          </Button>
+          <Button
+            colorScheme="red"
+            onClick={handleCancelarPedidos}
+            isDisabled={selectedPedidos.length === 0 || isLoading}
+          >
+            {isLoading ? <Spinner size="sm" /> : "Cancelar Pedidos"}
+          </Button>
+        </Flex>
+      </Flex>
 
       <Table variant="striped" colorScheme="gray">
         <Thead>
@@ -262,18 +305,32 @@ const EntrantesPage = () => {
                 <Td>{pedido.nombreDeu}</Td>
                 <Td>{pedido.fechaOrden}</Td>
                 <Td>
-                  <Button colorScheme="blue" size="sm" onClick={() => handleVerDetalles(pedido.id)}>
-                    Ver Detalles
-                  </Button>
-                  <Button colorScheme="teal" size="sm" ml={2} onClick={() => handleExportarExcel(pedido)}>
-                    Exportar a Excel
-                  </Button>
+                  <Tooltip label="Ver Detalles" hasArrow>
+                    <Button
+                      colorScheme="blue"
+                      size="sm"
+                      onClick={() => handleVerDetalles(pedido.id)}
+                    >
+                      Ver Detalles
+                    </Button>
+                  </Tooltip>
+                  <Tooltip label="Exportar a Excel" hasArrow>
+                    <IconButton
+                      ml={2}
+                      colorScheme="teal"
+                      size="sm"
+                      icon={<SiMicrosoftexcel />} // Usar el icono de Excel
+                      onClick={() => handleExportarExcel(pedido)}
+                    />
+                  </Tooltip>
                 </Td>
               </Tr>
             ))
           ) : (
             <Tr>
-              <Td colSpan="8" align="center">No hay pedidos en estado 2</Td>
+              <Td colSpan="8" align="center">
+                No hay pedidos en estado 2
+              </Td>
             </Tr>
           )}
         </Tbody>
