@@ -34,7 +34,7 @@ import {
 import { EditIcon } from '@chakra-ui/icons';
 import { format } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
-import { tablaEmpresa, addNewEmpresa, deleteEmpresa, updateEmpresa, toggleEmpresaStatus, tablaPais } from '../../store/Empresa/thunks';
+import { tablaEmpresa, addNewEmpresa, deleteEmpresa, updateEmpresa, toggleEmpresaStatus, tablaPais, sincronizarClientes } from '../../store/Empresa/thunks';
 
 const PageFormEmpresa = () => {
   const dispatch = useDispatch();
@@ -77,19 +77,41 @@ const PageFormEmpresa = () => {
       setErrors(formErrors);
       return;
     }
-
+  
     if (isEditMode) {
       dispatch(updateEmpresa(currentEmpresa)).then(() => {
         onClose();
         dispatch(tablaEmpresa());
       });
     } else {
-      dispatch(addNewEmpresa(currentEmpresa)).then(() => {
+      // Crear una nueva empresa y obtener su ID
+      dispatch(addNewEmpresa(currentEmpresa)).then((result) => {
+        const newEmpresaId = result.payload.id; // Obtenemos el ID de la nueva empresa
+  
+        // Si los campos de base de datos e IP están presentes, sincronizamos con SAP
+        if (currentEmpresa.baseDatos && currentEmpresa.ipBaseDatos) {
+          dispatch(sincronizarClientes({
+            dbsap: currentEmpresa.baseDatos,
+            ipsap: currentEmpresa.ipBaseDatos,
+            empresaId: newEmpresaId // Aquí usamos el ID generado
+          }))
+          .then((syncResult) => {
+            if (syncResult.error) {
+              console.error('Error en la sincronización:', syncResult.error);
+            } else {
+              console.log('Sincronización exitosa:', syncResult);
+            }
+          });
+        }
+  
         onClose();
-        dispatch(tablaEmpresa());
+        dispatch(tablaEmpresa()); // Actualizamos la tabla después de crear la empresa
       });
     }
   };
+  
+  
+  
 
   const handleDelete = (id) => {
     dispatch(deleteEmpresa(id)).then(() => {
