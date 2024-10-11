@@ -6,6 +6,7 @@ import { tablaCiudad } from "../../../store/Ciudad/thunks";
 const CiudadSelector = ({ value, onChange }) => {
   const dispatch = useDispatch();
   const ciudades = useSelector((state) => state.ciudades);
+  const paisIdUsuario = localStorage.getItem('paisId'); // Obtener el país del usuario desde localStorage
 
   useEffect(() => {
     dispatch(tablaCiudad());
@@ -15,7 +16,7 @@ const CiudadSelector = ({ value, onChange }) => {
     <select value={value} onChange={onChange}>
       <option value="">Seleccionar ciudad</option>
       {ciudades.data
-        .filter((ciudad) => ciudad.estaActivo)  // Usamos el campo estaActivo para filtrar
+        .filter((ciudad) => ciudad.estaActivo && ciudad.paisId === parseInt(paisIdUsuario, 10))  // Filtra ciudades activas y por país
         .map((ciudad) => (
           <option key={ciudad.id} value={ciudad.id}>
             {ciudad.nombre}
