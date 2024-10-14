@@ -9,15 +9,18 @@ import {
   AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
 
-import { tablaDeudores } from "../../../store/Deus/thunks";
+import { tablaDeudores } from "../../../store/Deus/thunks"; // Actualiza tu ruta según tu estructura
 
-const DeuSelector = ({ onSelect }) => {
+const DeuSelector = ({ ciudadId, onSelect }) => {
   const dispatch = useDispatch();
-  const deus = useSelector((state) => state.deudores);
+  const { deudores, status } = useSelector((state) => state.deudores);
 
   useEffect(() => {
-    dispatch(tablaDeudores());
-  }, [dispatch]);
+    // Si hay una ciudad seleccionada, obtener los deudores vinculados a esa ciudad
+    if (ciudadId) {
+      dispatch(tablaDeudores({ ciudadId })); // Filtra los deudores por ciudadId
+    }
+  }, [dispatch, ciudadId]);
 
   const handleSelectDeudor = (deudor) => {
     onSelect({
@@ -25,33 +28,48 @@ const DeuSelector = ({ onSelect }) => {
       correlativo: deudor.correlativo, // Pasar correlativo
       nombre: deudor.nombre, // Pasar nombre
     });
-  };  
+  };
 
   return (
     <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
       <AutoComplete openOnFocus>
         <AutoCompleteInput variant="outline" placeholder="Seleccione un deudor" />
         <AutoCompleteList>
-          {deus.deudores.map((deu) => (
+          {deudores.length > 0 ? (
+            deudores.map((deu) => (
+              <AutoCompleteItem
+                key={`option-${deu.id}`}
+                value={`${deu.correlativo} - ${deu.nombre}`}
+                textTransform="capitalize"
+                onClick={() => handleSelectDeudor(deu)}
+              >
+                {`${deu.correlativo} - ${deu.nombre}`}
+              </AutoCompleteItem>
+            ))
+          ) : (
             <AutoCompleteItem
-              key={`option-${deu.id}`}
-              value={`${deu.correlativo} - ${deu.nombre}`}
-              textTransform="capitalize"
-              onClick={() => handleSelectDeudor(deu)}
+              key="no-deudores"
+              value="No hay deudores disponibles"
+              isDisabled
             >
-              {`${deu.correlativo} - ${deu.nombre}`}
+              No hay deudores disponibles
             </AutoCompleteItem>
-          ))}
+          )}
         </AutoCompleteList>
       </AutoComplete>
-      <FormHelperText mt="2">Seleccione el deudor para esta tienda</FormHelperText>
+      <FormHelperText mt="2">
+        {deudores.length > 0
+          ? "Seleccione el deudor para esta tienda"
+          : "No hay deudores vinculados a esta ciudad"}
+      </FormHelperText>
     </Flex>
   );
 };
 
 // Validación de PropTypes
 DeuSelector.propTypes = {
-  onSelect: PropTypes.func.isRequired, 
+  ciudadId: PropTypes.string.isRequired,  // Verifica que el ID de la ciudad es requerido
+  onSelect: PropTypes.func.isRequired,  // La función onSelect es requerida
 };
 
 export default DeuSelector;

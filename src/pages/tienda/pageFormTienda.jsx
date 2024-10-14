@@ -71,13 +71,12 @@ const PageFormTienda = () => {
   const handleInputChange = (e) => {
     const { name, type, checked, value } = e.target;
     const newValue = type === "checkbox" ? checked : value;
-  
+
     setCurrentTienda((prevState) => ({
       ...prevState,
       [name]: newValue,
     }));
   };
-  
 
   const validateFields = () => {
     let formErrors = {};
@@ -324,7 +323,7 @@ const PageFormTienda = () => {
             <FormControl mb={3} isInvalid={errors.deudorId} isRequired>
               <FormLabel>Deudor</FormLabel>
               <DeuSelector
-                value={currentTienda.deudorId}
+                ciudadId={currentTienda.ciudadId} // Asegúrate de pasar el ID de la ciudad seleccionada
                 onSelect={handleDeudorSelect} // Maneja la selección del deudor
               />
               {errors.deudorId && (
