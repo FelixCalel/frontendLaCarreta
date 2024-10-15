@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Routes, Route } from "react-router-dom";
 import { PortalRouter } from "./PortalRouter";
-import { PrivateRoute } from "./PrivateRoute"; // Asegúrate de importar el PrivateRoute
+import { PrivateRoute } from "./PrivateRoute";
 import { PublicRoute } from "./PublicRoute";
 import { PortalPagePublic } from "./PortalPagePublic";
 import CheckingAuth from "../ui/components/CheckingAuth";

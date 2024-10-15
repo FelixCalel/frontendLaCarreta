@@ -176,30 +176,35 @@ const EntrantesPage = () => {
     }
   };
 
-  // Exportar el pedido a Excel
   const handleExportarExcel = async (pedido) => {
     try {
-      const detalles = await dispatch(
-        getDetalleOrdenByPedidoId(pedido.id)
-      ).unwrap();
-
+      // Obtener los detalles del pedido
+      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedido.id)).unwrap();
+      
+      if (!detalles || detalles.length === 0) {
+        console.error("No hay detalles disponibles para el pedido:", pedido.id);
+        return;
+      }
+  
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet(`Pedido_${pedido.id}`);
-
+  
+      // Definir columnas de la tabla
       worksheet.columns = [
         { header: "ID Pedido", key: "id", width: 15 },
-        { header: "Deudor", key: "deudor", width: 25 },
-        { header: "Item", key: "item", width: 35 },
+        { header: "Deudor", key: "deudor", width: 30 },
+        { header: "Item", key: "item", width: 40 },
         { header: "Cantidad", key: "cantidad", width: 15 },
         { header: "Fecha", key: "fecha", width: 25 },
       ];
-
+  
+      // Estilo de los encabezados
       const headerRow = worksheet.getRow(1);
       headerRow.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
       headerRow.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FF4CAF50" },
+        fgColor: { argb: "FF4CAF50" },  // Color de fondo verde
       };
       headerRow.alignment = { vertical: "middle", horizontal: "center" };
       headerRow.eachCell({ includeEmpty: false }, (cell) => {
@@ -210,16 +215,18 @@ const EntrantesPage = () => {
           right: { style: "thick", color: { argb: "FF228B22" } },
         };
       });
-
+  
+      // Añadir los detalles del pedido como filas
       detalles.forEach((detalle, index) => {
         const row = worksheet.addRow({
           id: `P-${pedido.id}`,
-          deudor: pedido.nombreDeu,
+          deudor: `${pedido.nombreCorrelativo || ""} - ${pedido.nombreDeu || "N/A"}`, // Correlativo y deudor concatenado
           item: detalle.nombreProducto,
           cantidad: detalle.cantidad,
           fecha: pedido.fechaOrden,
         });
-
+  
+        // Estilo de las filas
         row.eachCell({ includeEmpty: false }, (cell) => {
           cell.border = {
             top: { style: "thin", color: { argb: "FF228B22" } },
@@ -229,28 +236,43 @@ const EntrantesPage = () => {
           };
           cell.alignment = { vertical: "middle", horizontal: "center" };
         });
-
+  
+        // Zebra striping
         if (index % 2 === 0) {
           row.fill = {
             type: "pattern",
             pattern: "solid",
-            fgColor: { argb: "FFE8F5E9" },
+            fgColor: { argb: "FFE8F5E9" },  // Color de fondo para filas pares
           };
         }
       });
-
-      const totalRows = detalles.length + 1;
-      worksheet.autoFilter = { from: "A1", to: `E${totalRows}` };
-
+  
+      // Comprobar si hay datos para exportar
+      if (worksheet.rowCount <= 1) {
+        console.error("No se añadieron filas al Excel");
+        return;
+      }
+  
+      // Aplicar autofiltro
+      worksheet.autoFilter = { from: "A1", to: `E${detalles.length + 1}` };
+  
+      // Congelar encabezados
+      worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+  
+      // Escribir y guardar el archivo
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       saveAs(blob, `pedido_${pedido.id}.xlsx`);
+  
     } catch (error) {
       console.error(`Error al exportar pedido ${pedido.id}:`, error);
     }
   };
+  
+  
+  
 
   return (
     <Box p={6} boxShadow="xl" bg="white" rounded="lg">
@@ -302,7 +324,9 @@ const EntrantesPage = () => {
                 <Td>{pedido.id}</Td>
                 <Td>{pedido.nombreUsuario}</Td>
                 <Td>{pedido.nombreTienda}</Td>
-                <Td>{pedido.nombreDeu}</Td>
+                <Td>{`${pedido.nombreCorrelativo || ""} - ${
+                  pedido.nombreDeu || "N/A"
+                }`}</Td>
                 <Td>{pedido.fechaOrden}</Td>
                 <Td>
                   <Tooltip label="Ver Detalles" hasArrow>

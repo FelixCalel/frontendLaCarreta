@@ -13,7 +13,7 @@ import { tablaDeudores } from "../../../store/Deus/thunks"; // Actualiza tu ruta
 
 const DeuSelector = ({ ciudadId, onSelect }) => {
   const dispatch = useDispatch();
-  const { deudores, status } = useSelector((state) => state.deudores);
+  const { deudores } = useSelector((state) => state.deudores);
 
   useEffect(() => {
     // Si hay una ciudad seleccionada, obtener los deudores vinculados a esa ciudad
