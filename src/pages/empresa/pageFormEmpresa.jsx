@@ -99,7 +99,6 @@ const PageFormEmpresa = () => {
     } else {
       try {
         const result = await dispatch(addNewEmpresa(currentEmpresa));
-
         const newEmpresaId = result.payload?.id;
 
         if (newEmpresaId) {
@@ -118,11 +117,7 @@ const PageFormEmpresa = () => {
 
   const handleSync = async (empresaId, baseDatos, ipBaseDatos) => {
     try {
-      setSyncDisabled(prevState => ({ ...prevState, [empresaId]: true }));
-
-      setTimeout(() => {
-        setSyncDisabled(prevState => ({ ...prevState, [empresaId]: false }));
-      }, 15000);
+      setSyncDisabled(prevState => ({ ...prevState, [empresaId]: true })); // Deshabilitar el botón de sincronización actual
 
       const syncResult = await dispatch(sincronizarClientes({
         dbsap: baseDatos,
@@ -136,7 +131,7 @@ const PageFormEmpresa = () => {
           title: 'Error en la sincronización.',
           description: 'No se pudo completar la sincronización.',
           status: 'error',
-          duration: 5000,
+          duration: 2500,
           isClosable: true,
         });
       } else {
@@ -144,7 +139,7 @@ const PageFormEmpresa = () => {
           title: 'Sincronización completada.',
           description: 'La sincronización se completó correctamente.',
           status: 'success',
-          duration: 5000,
+          duration: 2500,
           isClosable: true,
         });
       }
@@ -153,9 +148,11 @@ const PageFormEmpresa = () => {
         title: 'Error en la sincronización.',
         description: 'No se pudo completar la sincronización.',
         status: 'error',
-        duration: 5000,
+        duration: 2500,
         isClosable: true,
       });
+    } finally {
+      setSyncDisabled(prevState => ({ ...prevState, [empresaId]: false })); // Habilitar el botón después de que se complete la acción
     }
   };
 
@@ -166,7 +163,7 @@ const PageFormEmpresa = () => {
         title: 'Empresa eliminada.',
         description: 'La empresa ha sido eliminada correctamente.',
         status: 'info',
-        duration: 5000,
+        duration: 2500,
         isClosable: true,
       });
     });
@@ -179,7 +176,7 @@ const PageFormEmpresa = () => {
         title: 'Estado actualizado.',
         description: 'El estado de la empresa ha sido actualizado.',
         status: 'success',
-        duration: 5000,
+        duration: 2500,
         isClosable: true,
       });
     });
@@ -292,7 +289,7 @@ const PageFormEmpresa = () => {
                     variant="outline"
                     colorScheme={syncDisabled[empresa.id] ? 'gray' : 'blue'}
                     isDisabled={syncDisabled[empresa.id]}
-                    isLoading={syncDisabled[empresa.id]}
+                    isLoading={syncDisabled[empresa.id]} 
                   />
                 </Tooltip>
               </Stack>
