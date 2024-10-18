@@ -16,19 +16,37 @@ import { PaginaRuta } from "./RutaRouter";
 import { PaginaPedido } from "./PedidosRouter";
 import { LoginForm } from "../pages/auth";
 import { PaginaPedidosEntrantes } from "./PedidosEntrantesRouter";
-import { validarUsuario } from "../store/RolPermisoUsuario/thunks";
+import { validarUsuario } from "../store/RolPermisoUsuario/thunks"; // Thunk para validar permisos
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
   const status = useSelector((state) => state.auth.status);
-  const [accesoPermitido, setAccesoPermitido] = useState(false); 
+  const [accesosPermitidos, setAccesosPermitidos] = useState({}); // Guardar los accesos permitidos por ruta
+  const usuarioId = localStorage.getItem("usuarioId");
+
+  // Mapeo de rutas con sus respectivos rutaId
+  const rutasConRutaId = [
+    { path: "/pais/*", rutaId: 1, component: PaginaPais },
+    { path: "/ciudad/*", rutaId: 2, component: PaginaCiudad },
+    { path: "/ruta/*", rutaId: 3, component: PaginaRuta },
+    { path: "/tienda/*", rutaId: 4, component: PaginaTienda },
+    { path: "/empresa/*", rutaId: 5, component: PaginaEmpresa },
+    { path: "/pedido/*", rutaId: 6, component: PaginaPedido },
+    { path: "/pedidos/*", rutaId: 7, component: PaginaPedidosEntrantes }
+  ];
 
   useEffect(() => {
     const datosUsuario = obtenerDatosLogeado();
-    const usuarioId = localStorage.getItem("usuarioId");
+
     if (usuarioId) {
-      dispatch(validarUsuario({ usuarioId, rutaId: 1 })).then((result) => {
-        setAccesoPermitido(result.payload); 
+      // Validar el acceso para cada ruta según su rutaId
+      rutasConRutaId.forEach(({ rutaId, path }) => {
+        dispatch(validarUsuario({ usuarioId, rutaId })).then((result) => {
+          setAccesosPermitidos((prev) => ({
+            ...prev,
+            [path]: result.payload, // Guardamos el acceso permitido para cada ruta
+          }));
+        });
       });
     }
 
@@ -37,7 +55,7 @@ export const AppRouter = () => {
     } else {
       dispatch(logout()); // Si no hay datos o son inválidos, cerramos sesión
     }
-  }, [dispatch]);
+  }, [dispatch, usuarioId]);
 
   if (status === "checking") {
     return <CheckingAuth />;
@@ -65,29 +83,15 @@ export const AppRouter = () => {
         }
       />
 
-      {/* Rutas Privadas */}
-      <Route
-        path="/admin/*"
-        element={
-          <PrivateRoute>
-            <PortalRouter />
-          </PrivateRoute>
-        }
-      />
-
-      {/* Otras rutas protegidas */}
-      {accesoPermitido ? (
-        <Route path="/pais/*" element={<PrivateRoute><PaginaPais /></PrivateRoute>} />
-      ) : (
-        console.log("No puedes acceder a esta ruta")
-      )}
-
-      <Route path="/pedido/*" element={<PrivateRoute><PaginaPedido /></PrivateRoute>} />
-      <Route path="/empresa/*" element={<PrivateRoute><PaginaEmpresa /></PrivateRoute>} />
-      <Route path="/ciudad/*" element={<PrivateRoute><PaginaCiudad /></PrivateRoute>} />
-      <Route path="/tienda/*" element={<PrivateRoute><PaginaTienda /></PrivateRoute>} />
-      <Route path="/ruta/*" element={<PrivateRoute><PaginaRuta /></PrivateRoute>} />
-      <Route path="/pedidos/*" element={<PrivateRoute><PaginaPedidosEntrantes /></PrivateRoute>} />
+      {/* Rutas Privadas Protegidas */}
+      {/* Iteramos sobre las rutas y verificamos si tienen acceso */}
+      {rutasConRutaId.map(({ path, component: Component }) => (
+        accesosPermitidos[path] ? (
+          <Route key={path} path={path} element={<PrivateRoute><Component /></PrivateRoute>} />
+        ) : (
+          console.log(`No puedes acceder a la ruta ${path}`)
+        )
+      ))}
 
       {/* Ruta predeterminada */}
       <Route path="*" element={<HomePage />} />
