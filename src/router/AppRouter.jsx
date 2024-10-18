@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Routes, Route } from "react-router-dom";
 import { PortalRouter } from "./PortalRouter";
@@ -16,13 +16,22 @@ import { PaginaRuta } from "./RutaRouter";
 import { PaginaPedido } from "./PedidosRouter";
 import { LoginForm } from "../pages/auth";
 import { PaginaPedidosEntrantes } from "./PedidosEntrantesRouter";
+import { validarUsuario } from "../store/RolPermisoUsuario/thunks";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
   const status = useSelector((state) => state.auth.status);
+  const [accesoPermitido, setAccesoPermitido] = useState(false); 
 
   useEffect(() => {
     const datosUsuario = obtenerDatosLogeado();
+    const usuarioId = localStorage.getItem("usuarioId");
+    if (usuarioId) {
+      dispatch(validarUsuario({ usuarioId, rutaId: 1 })).then((result) => {
+        setAccesoPermitido(result.payload); 
+      });
+    }
+
     if (datosUsuario) {
       dispatch(login(datosUsuario)); // Autenticamos si los datos son válidos
     } else {
@@ -67,7 +76,12 @@ export const AppRouter = () => {
       />
 
       {/* Otras rutas protegidas */}
-      <Route path="/pais/*" element={<PrivateRoute><PaginaPais /></PrivateRoute>} />
+      {accesoPermitido ? (
+        <Route path="/pais/*" element={<PrivateRoute><PaginaPais /></PrivateRoute>} />
+      ) : (
+        console.log("No puedes acceder a esta ruta")
+      )}
+
       <Route path="/pedido/*" element={<PrivateRoute><PaginaPedido /></PrivateRoute>} />
       <Route path="/empresa/*" element={<PrivateRoute><PaginaEmpresa /></PrivateRoute>} />
       <Route path="/ciudad/*" element={<PrivateRoute><PaginaCiudad /></PrivateRoute>} />
@@ -76,7 +90,7 @@ export const AppRouter = () => {
       <Route path="/pedidos/*" element={<PrivateRoute><PaginaPedidosEntrantes /></PrivateRoute>} />
 
       {/* Ruta predeterminada */}
-      <Route path="*" element={<LoginForm />} />
+      <Route path="*" element={<HomePage />} />
     </Routes>
   );
 };
