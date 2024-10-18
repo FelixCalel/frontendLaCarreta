@@ -1,24 +1,21 @@
-import { useEffect } from "react";
+// CiudadSelector.jsx
 import PropTypes from "prop-types";
 import { useSelector, useDispatch } from "react-redux";
+import { useEffect } from "react";
 import { tablaCiudad } from "../../../store/Ciudad/thunks";
 
-const CiudadSelector = ({ value, onChange }) => {
+const CiudadSelector = ({ paisId, value, onChange }) => {
   const dispatch = useDispatch();
-  const ciudades = useSelector((state) => state.ciudades);
+  const ciudades = useSelector((state) => state.ciudades.data);
 
   useEffect(() => {
-    dispatch(tablaCiudad());
-  }, [dispatch]);
+    dispatch(tablaCiudad(paisId)); // Filtra las ciudades por país
+  }, [dispatch, paisId]);
 
   return (
-    
     <select value={value} onChange={onChange}>
-      {/* Opción por defecto */}
       <option value="">Seleccionar ciudad</option>
-
-      {/* Mapear las ciudades disponibles */}
-      {ciudades.data.map((ciudad) => (
+      {ciudades.map((ciudad) => (
         <option key={ciudad.id} value={ciudad.id}>
           {ciudad.nombre}
         </option>
@@ -27,10 +24,10 @@ const CiudadSelector = ({ value, onChange }) => {
   );
 };
 
-// Añade la validación de props
 CiudadSelector.propTypes = {
-  value: PropTypes.string.isRequired,  // 'value' debe ser una string y es obligatorio
-  onChange: PropTypes.func.isRequired, // 'onChange' debe ser una función y es obligatorio
+  paisId: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
 };
 
 export default CiudadSelector;

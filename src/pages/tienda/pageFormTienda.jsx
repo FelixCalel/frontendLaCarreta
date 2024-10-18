@@ -36,13 +36,11 @@ import {
 } from "../../store/Tienda/thunks";
 import CiudadSelector from "./componentes/CiudadSelector";
 import RutaSelector from "./componentes/RutaSelector";
-
 import DeuSelector from "./componentes/DeuSelector";
 
 const PageFormTienda = () => {
   const dispatch = useDispatch();
-  const { data, status, error, ciudadesStatus, rutasStatus, deudoresStatus } =
-    useSelector((state) => state.tiendas);
+  const { data, status, error, ciudades } = useSelector((state) => state.tiendas);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentTienda, setCurrentTienda] = useState({
@@ -53,20 +51,15 @@ const PageFormTienda = () => {
     deudorId: "",
     ciudadId: "",
     rutaId: "",
-    usuarioCreadoPorId: "",
   });
   const [errors, setErrors] = useState({});
-  const [, setSelectedDeu] = useState(currentTienda.deudorId);
+  const [selectedPaisId, setSelectedPaisId] = useState("");
 
   useEffect(() => {
     if (status === "idle") {
       dispatch(tablaTienda());
     }
   }, [dispatch, status]);
-
-  useEffect(() => {
-    setSelectedDeu(currentTienda.deudorId);
-  }, [currentTienda.deudorId]);
 
   const handleInputChange = (e) => {
     const { name, type, checked, value } = e.target;
@@ -81,16 +74,11 @@ const PageFormTienda = () => {
   const validateFields = () => {
     let formErrors = {};
     if (!currentTienda.nombre) formErrors.nombre = "El nombre es obligatorio";
-    if (
-      currentTienda.descuento !== undefined &&
-      isNaN(currentTienda.descuento)
-    ) {
+    if (isNaN(currentTienda.descuento)) {
       formErrors.descuento = "El descuento debe ser un número";
     }
-    if (!currentTienda.deudorId)
-      formErrors.deudorId = "El deudor es obligatorio";
-    if (!currentTienda.ciudadId)
-      formErrors.ciudadId = "La ciudad es obligatoria";
+    if (!currentTienda.deudorId) formErrors.deudorId = "El deudor es obligatorio";
+    if (!currentTienda.ciudadId) formErrors.ciudadId = "La ciudad es obligatoria";
     if (!currentTienda.rutaId) formErrors.rutaId = "La ruta es obligatoria";
     return formErrors;
   };
@@ -104,8 +92,6 @@ const PageFormTienda = () => {
 
     const tiendaData = {
       ...currentTienda,
-      deudorCorrelativo: currentTienda.deudorCorrelativo,
-      nombreDeu: currentTienda.nombreDeu,
     };
 
     if (isEditMode) {
@@ -128,69 +114,36 @@ const PageFormTienda = () => {
   };
 
   const handleEdit = (tienda) => {
-    setCurrentTienda({
-      ...tienda,
-      deudorCorrelativo: tienda.deudorCorrelativo, // Cargar el correlativo correctamente al editar
-      nombreDeu: tienda.nombreDeu, // Cargar el nombre también
-    });
+    setCurrentTienda(tienda);
     setIsEditMode(true);
     onOpen();
+  };
+
+  const formatDate = (dateString) => {
+    return dateString ? format(new Date(dateString), "dd-MM-yyyy HH:mm:ss") : "Fecha inválida";
   };
 
   const handleDeudorSelect = (deudor) => {
     setCurrentTienda((prevState) => ({
       ...prevState,
       deudorId: deudor.id,
-      deudorCorrelativo: deudor.correlativo, // Aquí se asegura de guardar el correlativo
-      nombreDeu: deudor.nombre, // Aquí el nombre
+      deudorCorrelativo: deudor.correlativo,
+      nombreDeu: deudor.nombre,
     }));
   };
 
-  const formatDate = (dateString) => {
-    try {
-      return dateString
-        ? format(new Date(dateString), "dd-MM-yyyy HH:mm:ss")
-        : "Fecha inválida";
-    } catch (error) {
-      console.error("Fecha inválida:", dateString);
-      return "Fecha inválida";
-    }
-  };
-
-  if (
-    status === "loading" ||
-    ciudadesStatus === "loading" ||
-    rutasStatus === "loading" ||
-    deudoresStatus === "loading"
-  ) {
+  if (status === "loading") {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
         <Spinner size="xl" />
       </Box>
     );
   }
 
-  if (
-    status === "failed" ||
-    ciudadesStatus === "failed" ||
-    rutasStatus === "failed" ||
-    deudoresStatus === "failed"
-  ) {
+  if (status === "failed") {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
-        <Text fontSize="2xl" color="red.500">
-          Error al cargar los datos: {error}
-        </Text>
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Text fontSize="2xl" color="red.500">Error al cargar los datos: {error}</Text>
       </Box>
     );
   }
@@ -205,10 +158,9 @@ const PageFormTienda = () => {
             nombre: "",
             descuento: 0,
             estaActivo: true,
-            deudorId: null,
-            ciudadId: null,
-            rutaId: null,
-            usuarioCreadoPorId: null,
+            deudorId: "",
+            ciudadId: "",
+            rutaId: "",
           });
           onOpen();
         }}
@@ -246,9 +198,7 @@ const PageFormTienda = () => {
                   onChange={(e) => handleInputChange(e)}
                 />
               </Td>
-              <Td>{`${tienda.nombreCorrelativo || ""} - ${
-                tienda.nombreDeu || ""
-              }`}</Td>
+              <Td>{tienda.nombreDeu}</Td>
               <Td>{tienda.nombreCiudad}</Td>
               <Td>{tienda.nombreRuta}</Td>
               <Td>
@@ -272,9 +222,7 @@ const PageFormTienda = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
-            {isEditMode ? "Actualizar Tienda" : "Agregar Nueva Tienda"}
-          </ModalHeader>
+          <ModalHeader>{isEditMode ? "Actualizar Tienda" : "Agregar Nueva Tienda"}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl mb={3} isInvalid={errors.nombre} isRequired>
@@ -284,9 +232,7 @@ const PageFormTienda = () => {
                 value={currentTienda.nombre}
                 onChange={handleInputChange}
               />
-              {errors.nombre && (
-                <FormErrorMessage>{errors.nombre}</FormErrorMessage>
-              )}
+              {errors.nombre && <FormErrorMessage>{errors.nombre}</FormErrorMessage>}
             </FormControl>
 
             <FormControl mb={3} isInvalid={errors.descuento} isRequired>
@@ -297,16 +243,14 @@ const PageFormTienda = () => {
                 value={currentTienda.descuento}
                 onChange={handleInputChange}
               />
-              {errors.descuento && (
-                <FormErrorMessage>{errors.descuento}</FormErrorMessage>
-              )}
+              {errors.descuento && <FormErrorMessage>{errors.descuento}</FormErrorMessage>}
             </FormControl>
 
             <FormControl display="flex" alignItems="center" mb={3}>
               <FormLabel mb="0">Activo</FormLabel>
               <Switch
                 name="estaActivo"
-                isChecked={currentTienda.estaActivo} // Ahora es un booleano
+                isChecked={currentTienda.estaActivo}
                 onChange={(e) =>
                   handleInputChange({
                     target: {
@@ -319,32 +263,28 @@ const PageFormTienda = () => {
               />
             </FormControl>
 
-            {/* Campo de Deudor */}
-            <FormControl mb={3} isInvalid={errors.deudorId} isRequired>
-              <FormLabel>Deudor</FormLabel>
-              <DeuSelector
-                ciudadId={currentTienda.ciudadId} // Asegúrate de pasar el ID de la ciudad seleccionada
-                onSelect={handleDeudorSelect} // Maneja la selección del deudor
-              />
-              {errors.deudorId && (
-                <FormErrorMessage>{errors.deudorId}</FormErrorMessage>
-              )}
-            </FormControl>
-
             <FormControl mb={3} isInvalid={errors.ciudadId} isRequired>
               <FormLabel>Ciudad</FormLabel>
               <CiudadSelector
+                paisId={selectedPaisId}
                 value={currentTienda.ciudadId}
-                onChange={(e) =>
+                onChange={(e) => {
                   setCurrentTienda((prev) => ({
                     ...prev,
-                    ciudadId: e.target.value, // Actualizar el ID de la ciudad seleccionada
-                  }))
-                }
+                    ciudadId: e.target.value,
+                  }));
+                }}
               />
-              {errors.ciudadId && (
-                <FormErrorMessage>{errors.ciudadId}</FormErrorMessage>
-              )}
+              {errors.ciudadId && <FormErrorMessage>{errors.ciudadId}</FormErrorMessage>}
+            </FormControl>
+
+            <FormControl mb={3} isInvalid={errors.deudorId} isRequired>
+              <FormLabel>Deudor</FormLabel>
+              <DeuSelector
+                empresaId={currentTienda.empresaId}
+                onSelect={handleDeudorSelect}
+              />
+              {errors.deudorId && <FormErrorMessage>{errors.deudorId}</FormErrorMessage>}
             </FormControl>
 
             <FormControl mb={3} isInvalid={errors.rutaId} isRequired>
@@ -354,13 +294,11 @@ const PageFormTienda = () => {
                 onChange={(e) =>
                   setCurrentTienda((prev) => ({
                     ...prev,
-                    rutaId: e.target.value, // Actualizar el ID de la ruta seleccionada
+                    rutaId: e.target.value,
                   }))
                 }
               />
-              {errors.rutaId && (
-                <FormErrorMessage>{errors.rutaId}</FormErrorMessage>
-              )}
+              {errors.rutaId && <FormErrorMessage>{errors.rutaId}</FormErrorMessage>}
             </FormControl>
           </ModalBody>
           <ModalFooter>
