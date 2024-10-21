@@ -35,10 +35,11 @@ export const LoginForm = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (actualUsuario === "authenticated") {
-      return navigate("/auth/home", { replace: true });
+    if (actualUsuario?.status === "authenticated") {
+      navigate("/auth/home", { replace: true });
     }
   }, [actualUsuario, navigate]);
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();

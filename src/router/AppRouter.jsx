@@ -82,8 +82,7 @@ export const AppRouter = () => {
           </PrivateRoute>
         }
       />
-
-      {/* Rutas Privadas Protegidas */}
+    
       {/* Iteramos sobre las rutas y verificamos si tienen acceso */}
       {rutasConRutaId.map(({ path, component: Component }) => (
         accesosPermitidos[path] ? (
