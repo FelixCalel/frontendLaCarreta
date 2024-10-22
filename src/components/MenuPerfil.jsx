@@ -81,8 +81,33 @@ export const MenuPerfil = () => {
             </Flex>
 
             {/* Mostrar las opciones solo si el `roleId` es 1 */}
+
+            { <MenuItem
+              as={Link}
+              to="/admin/perfil"
+              icon={<FaUser />}
+              _hover={{ bg: hoverBg, color: "white" }}
+              _focus={{ bg: focusBg, color: "white" }}
+              py={2}
+            >
+              Perfil
+            </MenuItem> }
             {roleId === "1" && (
               <>
+            {/* Opciones del menú */}
+
+
+            {/* { <MenuItem
+              as={Link}
+              to="/admin/empresas"
+              icon={<FaBuilding />}
+              _hover={{ bg: hoverBg, color: "white" }}
+              _focus={{ bg: focusBg, color: "white" }}
+              py={2}
+            >
+              Empresas
+            </MenuItem> } */}
+
                 <MenuItem as={Link} to="/admin/usuarios" icon={<FaUsers />} _hover={{ bg: hoverBg, color: "white" }}>
                   Usuarios
                 </MenuItem>

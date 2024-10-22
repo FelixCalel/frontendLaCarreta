@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
 import {
   Flex,
   Input,
@@ -10,20 +12,49 @@ import {
   Box,
   IconButton,
   useColorModeValue,
+  Spinner,
 } from "@chakra-ui/react";
-import { useState } from "react";
 import { FaCamera } from "react-icons/fa";
 
 export const Perfil = () => {
-  const [userData, setUserData] = useState({
-    firstName: "",
-    lastName: "",
-    phoneNumber: "",
-    mobileNumber: "",
-    dpi: "",
-    password: "",
-    avatar: "",
-  });
+  const [userData, setUserData] = useState(null); // Estado para almacenar los datos del usuario
+  const [isLoading, setIsLoading] = useState(true); // Estado para manejar la carga
+  const [error, setError] = useState(null); // Estado para manejar errores
+  const usuarioId = localStorage.getItem("usuarioId"); // Obtener el ID del usuario desde localStorage
+
+  useEffect(() => {
+    // Función para obtener los usuarios desde la API
+    const obtenerUsuarios = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/usuarios/todos"); // Petición a la API
+        const usuarios = response.data.usuarios;
+
+        // Filtrar el usuario que está logueado
+        const usuarioLogueado = usuarios.find(
+          (usuario) => usuario.id === parseInt(usuarioId)
+        );
+
+        if (usuarioLogueado) {
+          setUserData({
+            firstName: usuarioLogueado.nombre,
+            lastName: usuarioLogueado.apellido,
+            phoneNumber: usuarioLogueado.telefono,
+            email: usuarioLogueado.correo,
+            avatar: "", // Puedes agregar un campo para el avatar si lo tienes disponible
+          });
+        } else {
+          setError("Usuario no encontrado");
+        }
+      } catch (err) {
+        setError("Error al obtener la información del usuario");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Ejecutar la función al montar el componente
+    obtenerUsuarios();
+  }, [usuarioId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,9 +79,25 @@ export const Perfil = () => {
   };
 
   const handleSubmit = () => {
-    // Aquí puedes enviar los datos del usuario al servidor
+    // Aquí puedes enviar los datos actualizados del usuario al servidor
     console.log(userData);
   };
+
+  if (isLoading) {
+    return (
+      <Flex align="center" justify="center" minHeight="100vh">
+        <Spinner size="xl" />
+      </Flex>
+    );
+  }
+
+  if (error) {
+    return (
+      <Flex align="center" justify="center" minHeight="100vh">
+        <Box>{error}</Box>
+      </Flex>
+    );
+  }
 
   return (
     <Flex
@@ -78,9 +125,9 @@ export const Perfil = () => {
             <FormControl id="firstName" isRequired>
               <FormLabel>Nombres</FormLabel>
               <Input
-                placeholder="Juan"
+                placeholder="Nombres"
                 name="firstName"
-                value={userData.firstName}
+                value={userData?.firstName || ""}
                 onChange={handleChange}
               />
             </FormControl>
@@ -88,9 +135,9 @@ export const Perfil = () => {
             <FormControl id="lastName" isRequired>
               <FormLabel>Apellidos</FormLabel>
               <Input
-                placeholder="Pérez"
+                placeholder="Apellidos"
                 name="lastName"
-                value={userData.lastName}
+                value={userData?.lastName || ""}
                 onChange={handleChange}
               />
             </FormControl>
@@ -98,41 +145,20 @@ export const Perfil = () => {
             <FormControl id="phoneNumber">
               <FormLabel>Teléfono</FormLabel>
               <Input
-                placeholder="2222-3333"
+                placeholder="Teléfono"
                 name="phoneNumber"
-                value={userData.phoneNumber}
+                value={userData?.phoneNumber || ""}
                 onChange={handleChange}
               />
             </FormControl>
 
-            <FormControl id="mobileNumber">
-              <FormLabel>Celular</FormLabel>
+            <FormControl id="email">
+              <FormLabel>Correo Electrónico</FormLabel>
               <Input
-                placeholder="5555-6666"
-                name="mobileNumber"
-                value={userData.mobileNumber}
-                onChange={handleChange}
-              />
-            </FormControl>
-
-            <FormControl id="dpi">
-              <FormLabel>DPI</FormLabel>
-              <Input
-                placeholder="1234567890101"
-                name="dpi"
-                value={userData.dpi}
-                onChange={handleChange}
-              />
-            </FormControl>
-
-            <FormControl id="password">
-              <FormLabel>Contraseña</FormLabel>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                name="password"
-                value={userData.password}
-                onChange={handleChange}
+                placeholder="Correo Electrónico"
+                name="email"
+                value={userData?.email || ""}
+                isReadOnly
               />
             </FormControl>
           </Stack>
@@ -148,8 +174,8 @@ export const Perfil = () => {
             <Box position="relative">
               <Avatar
                 size="2xl"
-                name={`${userData.firstName} ${userData.lastName}`}
-                src={userData.avatar}
+                name={`${userData?.firstName} ${userData?.lastName}`}
+                src={userData?.avatar}
                 mb={4}
               />
               <IconButton
@@ -176,7 +202,7 @@ export const Perfil = () => {
               size="lg"
               onClick={handleSubmit}
             >
-              Guardar
+              Guardar Cambios
             </Button>
           </Stack>
         </Flex>

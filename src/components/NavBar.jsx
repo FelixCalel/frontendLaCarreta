@@ -10,7 +10,7 @@ import {
   Collapse,
   Text,
   Divider,
-  useOutsideClick, // Importar el hook useOutsideClick
+  useOutsideClick,
 } from "@chakra-ui/react";
 import { FiSearch, FiBell } from "react-icons/fi";
 import { MenuPerfil } from "./MenuPerfil";
@@ -18,14 +18,14 @@ import SearchBar from "./Dashboard/SearchBar";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useDisclosure } from "@chakra-ui/react";
-import { useEffect, useRef } from "react"; // Importa useRef para manejar la referencia del contenedor
+import { useEffect, useRef } from "react";
 import { tablaPedidos } from "../store/Pedidos/thunks";
 
 export default function NavBar() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const roleId = localStorage.getItem("roleId");
 
+  const roleId = localStorage.getItem("roleId");
   console.log("Role ID from localStorage:", roleId); // Verificar si está correctamente guardado en localStorage
 
   // Obtener la Lista de pedidos desde Redux
@@ -41,6 +41,13 @@ export default function NavBar() {
   const countAprobados = pedidos.filter((pedido) => pedido.estadoId === 3).length;
   const countEnProceso = pedidos.filter((pedido) => pedido.estadoId === 1).length;
   const countCancelados = pedidos.filter((pedido) => pedido.estadoId === 4).length;
+
+  // Notificaciones personalizadas para el rol 2
+  const notificacionesRol2 = [
+    { id: 1, mensaje: "Tienes 3 nuevas tareas asignadas." },
+    { id: 2, mensaje: "Revisa los informes de la semana." },
+    { id: 3, mensaje: "Nueva solicitud de reunión pendiente." },
+  ];
 
   // Manejo del colapso del cuadro de notificaciones
   const { isOpen, onToggle, onClose } = useDisclosure();
@@ -149,6 +156,20 @@ export default function NavBar() {
                 {pedidosNuevos.length}
               </Badge>
             )}
+            {/* Mostrar el Badge para el rol 2 si hay notificaciones personalizadas */}
+            {roleId === "2" && notificacionesRol2.length > 0 && (
+              <Badge
+                colorScheme="blue"
+                borderRadius="full"
+                position="absolute"
+                top="-1px"
+                right="-1px"
+                fontSize="xs"
+                p="4px"
+              >
+                {notificacionesRol2.length}
+              </Badge>
+            )}
           </Box>
         </Tooltip>
 
@@ -174,10 +195,9 @@ export default function NavBar() {
           border="1px solid #E2E8F0"
           transition="all 0.3s ease"
         >
-          {/* Aquí validamos si el usuario tiene roleId === 3 */}
+          {/* Notificaciones personalizadas para el rol 3 */}
           {roleId === "3" ? (
             <>
-              {/* Contenido visible solo para el rol 3 */}
               <Box onClick={handleNotificationClick} _hover={{ bg: "gray.50" }}>
                 {pedidosNuevos.length > 0 ? (
                   <Text
@@ -205,18 +225,32 @@ export default function NavBar() {
                 </Text>
                 <Box mt={2}>
                   <Text fontSize="sm" color="green.600">
-                    Aprobados: {countAprobados}{" "}
-                    {/* Mostrar cantidad de pedidos aprobados */}
+                    Aprobados: {countAprobados}
                   </Text>
                   <Text fontSize="sm" color="yellow.600">
-                    En Proceso: {countEnProceso}{" "}
-                    {/* Mostrar cantidad de pedidos en proceso */}
+                    En Proceso: {countEnProceso}
                   </Text>
                   <Text fontSize="sm" color="red.600">
-                    Cancelados: {countCancelados}{" "}
-                    {/* Mostrar cantidad de pedidos cancelados */}
+                    Cancelados: {countCancelados}
                   </Text>
                 </Box>
+              </Box>
+            </>
+          ) : roleId === "2" ? (
+            <>
+              {/* Contenido visible solo para el rol 2 */}
+              <Box>
+                <Text fontWeight="medium" textAlign="center" color="gray.700" fontSize="sm">
+                EJEMPLO  
+                  Notificaciones para el Rol 2:
+                </Text>
+                {notificacionesRol2.map((notificacion) => (
+                  <Box key={notificacion.id} mt={2} _hover={{ bg: "gray.50" }}>
+                    <Text fontSize="sm" color="gray.600">
+                      {notificacion.mensaje}
+                    </Text>
+                  </Box>
+                ))}
               </Box>
             </>
           ) : (

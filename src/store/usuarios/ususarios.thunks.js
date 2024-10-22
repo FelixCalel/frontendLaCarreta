@@ -1,22 +1,22 @@
-import { listUsuarios } from "../../providers/endpoints"
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
 
+// const BASE_URL = import.meta.env.VITE_API_URL;
 
+// // Thunk para obtener los datos del usuario logueado
+// export const obtenerUsuarioActual = createAsyncThunk(
+//   'usuarios/obtenerUsuarioActual',
+//   async (usuarioId) => {
+//     const response = await axios.get(`${BASE_URL}/usuarios/todos`);
+//     const data = response.data.usuarios;
 
-
-// export const fetchUsuarios = createAsyncThunk(
-//   'usuarios/fetchUsuarios',
-//   async ({ id }, { rejectWithValue }) => {
-//     try {
-//       const resultado = await listUsuarios({ id });
-//       console.log(resultado);
-//       if (!resultado.ok) {
-//         throw new Error('Error al obtener los usuarios -->');
-//       }
-//       const usuarios = await resultado;
-//       return usuarios;
-//     } catch (error) {
-//       return rejectWithValue(error.message);
+//     // Filtrar solo el usuario con el id del logueado
+//     const usuarioActual = data.find((usuario) => usuario.id === parseInt(usuarioId));
+    
+//     if (!usuarioActual) {
+//       throw new Error("Usuario no encontrado");
 //     }
+
+//     return usuarioActual;
 //   }
 // );

@@ -32,49 +32,50 @@ export const AppRouter = () => {
     { path: "/tienda/*", rutaId: 4, component: PaginaTienda },
     { path: "/empresa/*", rutaId: 5, component: PaginaEmpresa },
     { path: "/pedido/*", rutaId: 6, component: PaginaPedido },
-    { path: "/pedidos/*", rutaId: 7, component: PaginaPedidosEntrantes }
+    { path: "/pedidos/*", rutaId: 7, component: PaginaPedidosEntrantes },
   ];
 
   // Cargar roleId cuando el componente se monta o cuando localStorage cambia
-useEffect(() => {
+  useEffect(() => {
     const storedRoleId = localStorage.getItem("roleId");
     setRoleId(storedRoleId); // Esto asegura que el roleId esté disponible antes de verificar rutas
     console.log("Role ID obtenido desde localStorage:", storedRoleId);
-}, []);
+  }, []);
 
-// Realiza las verificaciones solo cuando el roleId esté disponible
-useEffect(() => {
-  // Obtén el roleId del estado global (si usas Redux) o el estado del componente
-  if (roleId && usuarioId) {
-    rutasConRutaId.forEach(({ rutaId, path }) => {
-      dispatch(validarUsuario({ usuarioId, rutaId })).then((result) => {
-        setAccesosPermitidos((prev) => ({
-          ...prev,
-          [path]: result.payload,
-        }));
+  // Realiza las verificaciones solo cuando el roleId esté disponible
+  useEffect(() => {
+    // Verifica las rutas según el roleId y usuarioId
+    if (roleId && usuarioId) {
+      rutasConRutaId.forEach(({ rutaId, path }) => {
+        dispatch(validarUsuario({ usuarioId, rutaId })).then((result) => {
+          setAccesosPermitidos((prev) => ({
+            ...prev,
+            [path]: result.payload,
+          }));
+        });
       });
-    });
-  }
-}, [dispatch, usuarioId, roleId]);
+    }
+  }, [dispatch, usuarioId, roleId]);
 
-
+  // Definir roles que pueden acceder a las rutas de administración
+  const rolesPermitidosAdmin = ["1", "2", "3", "4"]; // Por ejemplo, rol 1 es admin, rol 2 es otro tipo de admin
 
   return (
     <Routes>
       {/* Rutas Públicas */}
       <Route path="/auth/*" element={<PublicRoute><PortalPagePublic /></PublicRoute>} />
-      
+
       {/* Protege la ruta de home con PrivateRoute */}
       <Route path="/auth/home" element={<PrivateRoute><HomePage /></PrivateRoute>} />
 
-      {/* Protege las rutas de administración (solo accesibles para admin con roleId === 1) */}
-      {roleId === "1" ? (
+      {/* Protege las rutas de administración */}
+      {rolesPermitidosAdmin.includes(roleId) ? (
         <Route path="/admin/*" element={<PrivateRoute><PortalRouter /></PrivateRoute>} />
       ) : (
-        <Route path="*" element={<Navigate to="/auth/home" />} /> // Redirige a home si no es admin
+        <Route path="*" element={<Navigate to="/auth/home" />} /> // Redirige a home si no es admin ni rol permitido
       )}
 
-      {/* Verificación de permisos para cada ruta */}
+      {/* Verificación de permisos para cada ruta según rol y acceso permitido */}
       {rutasConRutaId.map(({ path, component: Component }) =>
         accesosPermitidos[path] ? (
           <Route key={path} path={path} element={<PrivateRoute><Component /></PrivateRoute>} />
