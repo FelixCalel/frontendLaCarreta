@@ -1,4 +1,16 @@
-import { Box, Flex, IconButton, Image, Spacer, HStack, Tooltip, Badge, Collapse, Text, Divider } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  IconButton,
+  Image,
+  Spacer,
+  HStack,
+  Tooltip,
+  Badge,
+  Collapse,
+  Text,
+  Divider,
+} from "@chakra-ui/react";
 import { FiSearch, FiBell } from "react-icons/fi";
 import { MenuPerfil } from "./MenuPerfil";
 import SearchBar from "./Dashboard/SearchBar";
@@ -12,9 +24,16 @@ export default function NavBar() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const roleId = localStorage.getItem("roleId");
+console.log("Role ID from localStorage:", roleId); // Verificar si está correctamente guardado en localStorage
+
+
   // Obtener la Lista de pedidos desde Redux
   const pedidos = useSelector((state) => state.pedidos.data || []); // Asegúrate de que pedidos sea un array
+  // const roleId = useSelector((state) => state.auth.roleId); // Asumiendo que el roleId está en auth dentro de Redux
+  console.log("Role ID:", roleId); // Verificar que el roleId es el correcto
 
+  
   // Cargar los pedidos desde la base de datos cuando se monta el componente
   useEffect(() => {
     dispatch(tablaPedidos()); // Asegúrate de que los datos estén actualizados
@@ -22,10 +41,15 @@ export default function NavBar() {
 
   // Filtrar y contar los pedidos por estadoId
   const pedidosNuevos = pedidos.filter((pedido) => pedido.estadoId === 2); // Pedidos pendientes
-const countAprobados = pedidos.filter(pedido => pedido.estadoId === 3).length;
-const countEnProceso = pedidos.filter(pedido => pedido.estadoId === 1).length;
-const countCancelados = pedidos.filter((pedido) => pedido.estadoId === 4).length;
-
+  const countAprobados = pedidos.filter(
+    (pedido) => pedido.estadoId === 3
+  ).length;
+  const countEnProceso = pedidos.filter(
+    (pedido) => pedido.estadoId === 1
+  ).length;
+  const countCancelados = pedidos.filter(
+    (pedido) => pedido.estadoId === 4
+  ).length;
 
   // Manejo del colapso del cuadro de notificaciones
   const { isOpen, onToggle } = useDisclosure();
@@ -63,7 +87,12 @@ const countCancelados = pedidos.filter((pedido) => pedido.estadoId === 4).length
       </Box>
 
       {/* Barra de búsqueda centrada */}
-      <Box flex={1} mx={{ base: "5px", md: "10px" }} display="flex" justifyContent="center">
+      <Box
+        flex={1}
+        mx={{ base: "5px", md: "10px" }}
+        display="flex"
+        justifyContent="center"
+      >
         <Box display={{ base: "block", md: "none" }}>
           <Link to="/buscar">
             <Tooltip label="Buscar" aria-label="Buscar Tooltip">
@@ -84,37 +113,41 @@ const countCancelados = pedidos.filter((pedido) => pedido.estadoId === 4).length
       <Spacer />
 
       {/* Iconos del lado derecho */}
-      <HStack spacing={{ base: "10px", md: "20px" }} pr={{ base: "5px", md: "10px" }}>
+      <HStack
+        spacing={{ base: "10px", md: "20px" }}
+        pr={{ base: "5px", md: "10px" }}
+      >
         {/* Icono de notificaciones */}
         <Tooltip label="Notificaciones" aria-label="Notificaciones Tooltip">
-          <Box position="relative" onClick={onToggle}>
-            <IconButton
-              variant="ghost"
-              fontSize={{ base: "20px", md: "24px" }}
-              icon={<FiBell />}
-              size="lg"
-              _hover={{
-                color: "blue.600",
-                transform: "scale(1.05)",
-              }}
-              transition="all 0.2s ease-in-out"
-            />
-            {/* Si hay pedidos nuevos, mostramos el número */}
-            {pedidosNuevos.length > 0 && (
-              <Badge
-                colorScheme="red"
-                borderRadius="full"
-                position="absolute"
-                top="-1px"
-                right="-1px"
-                fontSize="xs"
-                p="4px"
-              >
-                {pedidosNuevos.length}
-              </Badge>
-            )}
-          </Box>
-        </Tooltip>
+  <Box position="relative" onClick={onToggle}>
+    <IconButton
+      variant="ghost"
+      fontSize={{ base: "20px", md: "24px" }}
+      icon={<FiBell />}
+      size="lg"
+      _hover={{
+        color: "blue.600",
+        transform: "scale(1.05)",
+      }}
+      transition="all 0.2s ease-in-out"
+    />
+    {/* Mostrar el Badge solo si el roleId es "3" */}
+    {roleId === "3" && pedidosNuevos.length > 0 && (
+      <Badge
+        colorScheme="red"
+        borderRadius="full"
+        position="absolute"
+        top="-1px"
+        right="-1px"
+        fontSize="xs"
+        p="4px"
+      >
+        {pedidosNuevos.length}
+      </Badge>
+    )}
+  </Box>
+</Tooltip>
+
 
         {/* Menú de perfil */}
         <MenuPerfil />
@@ -137,38 +170,56 @@ const countCancelados = pedidos.filter((pedido) => pedido.estadoId === 4).length
           border="1px solid #E2E8F0"
           transition="all 0.3s ease"
         >
-          {/* Sección de notificaciones de pedidos pendientes */}
-          <Box onClick={handleNotificationClick} _hover={{ bg: "gray.50" }}>
-            {pedidosNuevos.length > 0 ? (
-              <Text fontWeight="medium" textAlign="center" color="gray.700" fontSize="sm">
-                Tienes <strong>{pedidosNuevos.length}</strong> solicitudes de pedidos pendientes.
-              </Text>
-            ) : (
-              <Text fontSize="sm" color="gray.500" textAlign="center">
-                No hay nuevas solicitudes de pedidos.
-              </Text>
-            )}
-          </Box>
+          {/* Aquí validamos si el usuario tiene roleId === 2 */}
+          {roleId === "3" ? ( // Si el roleId es 2 como cadena
+            <>
+              {/* Contenido visible solo para el rol 2 */}
+              <Box onClick={handleNotificationClick} _hover={{ bg: "gray.50" }}>
+                {pedidosNuevos.length > 0 ? (
+                  <Text
+                    fontWeight="medium"
+                    textAlign="center"
+                    color="gray.700"
+                    fontSize="sm"
+                  >
+                    Tienes <strong>{pedidosNuevos.length}</strong> solicitudes
+                    de pedidos pendientes.
+                  </Text>
+                ) : (
+                  <Text fontSize="sm" color="gray.500" textAlign="center">
+                    No hay nuevas solicitudes de pedidos.
+                  </Text>
+                )}
+              </Box>
 
-          <Divider my={3} />
+              <Divider my={3} />
 
-          {/* Sección de estados de los pedidos */}
-          <Box>
-            <Text fontSize="md" color="gray.700" fontWeight="bold">
-              Estado de tus pedidos:
+              {/* Sección de estados de los pedidos */}
+              <Box>
+                <Text fontSize="md" color="gray.700" fontWeight="bold">
+                  Estado de tus pedidos:
+                </Text>
+                <Box mt={2}>
+                  <Text fontSize="sm" color="green.600">
+                    Aprobados: {countAprobados}{" "}
+                    {/* Mostrar cantidad de pedidos aprobados */}
+                  </Text>
+                  <Text fontSize="sm" color="yellow.600">
+                    En Proceso: {countEnProceso}{" "}
+                    {/* Mostrar cantidad de pedidos en proceso */}
+                  </Text>
+                  <Text fontSize="sm" color="red.600">
+                    Cancelados: {countCancelados}{" "}
+                    {/* Mostrar cantidad de pedidos cancelados */}
+                  </Text>
+                </Box>
+              </Box>
+            </>
+          ) : (
+            <Text textAlign="center" fontSize="sm" color="gray.500">
+              No tienes notificaciones pendientes.
             </Text>
-            <Box mt={2}>
-              <Text fontSize="sm" color="green.600">
-                Aprobados: {countAprobados} {/* Mostrar cantidad de pedidos aprobados */}
-              </Text>
-              <Text fontSize="sm" color="yellow.600">
-                En Proceso: {countEnProceso} {/* Mostrar cantidad de pedidos en proceso */}
-              </Text>
-              <Text fontSize="sm" color="red.600">
-                Cancelados: {countCancelados} {/* Mostrar cantidad de pedidos cancelados */}
-              </Text>
-            </Box>
-          </Box>
+          )}
         </Box>
       </Collapse>
     </Flex>

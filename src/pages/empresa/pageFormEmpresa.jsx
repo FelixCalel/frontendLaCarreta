@@ -90,23 +90,28 @@ const PageFormEmpresa = () => {
       setErrors(formErrors);
       return;
     }
-
+  
     if (isEditMode) {
+      // Si estamos en modo de edición, actualizamos la empresa
       dispatch(updateEmpresa(currentEmpresa)).then(() => {
         onClose();
         dispatch(tablaEmpresa());
       });
     } else {
       try {
+        // Creamos la nueva empresa
         const result = await dispatch(addNewEmpresa(currentEmpresa));
-        const newEmpresaId = result.payload?.id;
-
+        
+        const newEmpresaId = result.payload?.id; // Aquí estamos obteniendo el ID de la nueva empresa desde el payload
+        
         if (newEmpresaId) {
+          // Ejecutamos la sincronización automáticamente después de crear la empresa
           await handleSync(newEmpresaId, currentEmpresa.baseDatos, currentEmpresa.ipBaseDatos);
         } else {
           console.error("Error: No se pudo obtener el ID de la empresa creada.");
         }
-
+  
+        // Cerramos el modal y actualizamos la tabla de empresas
         onClose();
         dispatch(tablaEmpresa());
       } catch (error) {
@@ -114,17 +119,18 @@ const PageFormEmpresa = () => {
       }
     }
   };
+  
 
   const handleSync = async (empresaId, baseDatos, ipBaseDatos) => {
     try {
       setSyncDisabled(prevState => ({ ...prevState, [empresaId]: true })); // Deshabilitar el botón de sincronización actual
-
+  
       const syncResult = await dispatch(sincronizarClientes({
         dbsap: baseDatos,
         ipsap: ipBaseDatos,
         empresaId: empresaId
       }));
-
+  
       if (syncResult.error) {
         console.error('Error en la sincronización:', syncResult.error);
         toast({
@@ -155,6 +161,7 @@ const PageFormEmpresa = () => {
       setSyncDisabled(prevState => ({ ...prevState, [empresaId]: false })); // Habilitar el botón después de que se complete la acción
     }
   };
+  
 
   const handleDelete = (id) => {
     dispatch(deleteEmpresa(id)).then(() => {
