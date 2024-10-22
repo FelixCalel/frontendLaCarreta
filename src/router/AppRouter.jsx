@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Routes, Route, Navigate } from "react-router-dom"; // Agregamos Navigate para redirecciones
+import { Routes, Route, Navigate } from "react-router-dom";
 import { PortalRouter } from "./PortalRouter";
 import { PrivateRoute } from "./PrivateRoute";
 import { PublicRoute } from "./PublicRoute";
@@ -14,16 +14,15 @@ import { PaginaCiudad } from "./CiudaRouter";
 import { PaginaTienda } from "./TiendaRouter";
 import { PaginaRuta } from "./RutaRouter";
 import { PaginaPedido } from "./PedidosRouter";
-import { LoginForm } from "../pages/auth";
 import { PaginaPedidosEntrantes } from "./PedidosEntrantesRouter";
-import { validarUsuario } from "../store/RolPermisoUsuario/thunks"; // Thunk para validar permisos
+import { validarUsuario } from "../store/RolPermisoUsuario/thunks";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
   const status = useSelector((state) => state.auth.status);
   const [accesosPermitidos, setAccesosPermitidos] = useState({});
+  const [roleId, setRoleId] = useState(localStorage.getItem("roleId")); // Inicializa roleId directamente desde localStorage
   const usuarioId = localStorage.getItem("usuarioId");
-  const roleId = localStorage.getItem("roleId"); // Obtener el roleId del localStorage
 
   // Mapeo de rutas con sus respectivos rutaId
   const rutasConRutaId = [
@@ -36,30 +35,29 @@ export const AppRouter = () => {
     { path: "/pedidos/*", rutaId: 7, component: PaginaPedidosEntrantes }
   ];
 
-  useEffect(() => {
-    const datosUsuario = obtenerDatosLogeado();
+  // Cargar roleId cuando el componente se monta o cuando localStorage cambia
+useEffect(() => {
+    const storedRoleId = localStorage.getItem("roleId");
+    setRoleId(storedRoleId); // Esto asegura que el roleId esté disponible antes de verificar rutas
+    console.log("Role ID obtenido desde localStorage:", storedRoleId);
+}, []);
 
-    if (usuarioId) {
-      rutasConRutaId.forEach(({ rutaId, path }) => {
-        dispatch(validarUsuario({ usuarioId, rutaId })).then((result) => {
-          setAccesosPermitidos((prev) => ({
-            ...prev,
-            [path]: result.payload,
-          }));
-        });
+// Realiza las verificaciones solo cuando el roleId esté disponible
+useEffect(() => {
+  // Obtén el roleId del estado global (si usas Redux) o el estado del componente
+  if (roleId && usuarioId) {
+    rutasConRutaId.forEach(({ rutaId, path }) => {
+      dispatch(validarUsuario({ usuarioId, rutaId })).then((result) => {
+        setAccesosPermitidos((prev) => ({
+          ...prev,
+          [path]: result.payload,
+        }));
       });
-    }
-
-    if (datosUsuario) {
-      dispatch(login(datosUsuario)); // Autenticamos si los datos son válidos
-    } else {
-      dispatch(logout()); // Si no hay datos o son inválidos, cerramos sesión
-    }
-  }, [dispatch, usuarioId]);
-
-  if (status === "checking") {
-    return <CheckingAuth />;
+    });
   }
+}, [dispatch, usuarioId, roleId]);
+
+
 
   return (
     <Routes>

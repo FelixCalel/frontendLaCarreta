@@ -23,7 +23,6 @@ import axios from "axios";
 import { login as loginAuth } from "../../store/auth/authSlice";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-
 export const LoginForm = () => {
   const actualUsuario = useSelector((usuario) => usuario.auth);
   const navigate = useNavigate();
@@ -34,51 +33,43 @@ export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
+  // Redirigir solo cuando el usuario esté autenticado
   useEffect(() => {
     if (actualUsuario?.status === "authenticated") {
       navigate("/auth/home", { replace: true });
     }
   }, [actualUsuario, navigate]);
-  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `${BASE_URL}/usuarios/login`,
-        {
-          correo,
-          contrasena,
-        }
-      );
-      if (
-        response.data &&
-        response.data.usuario &&
-        response.data.usuario.token
-      ) {
+      const response = await axios.post(`${BASE_URL}/usuarios/login`, {
+        correo,
+        contrasena,
+      });
+      if (response.data && response.data.usuario && response.data.usuario.token) {
         const { token } = response.data.usuario;
         const nombre = response.data.usuario.usuario.nombre;
-        const correoUsuario = response.data.usuario.usuario.correo; // Asegúrate de tener el correo aquí
+        const correoUsuario = response.data.usuario.usuario.correo;
         const usuarioId = response.data.usuario.usuario.id;
         const paisId = response.data.usuario.usuario.paisId;
         const roleId = response.data.usuario.usuario.roleId;
   
-        // Depura para asegurarte de que el roleId está siendo recibido correctamente
-        console.log("roleId desde el backend:", roleId);
-  
         // Guardar en localStorage
         localStorage.setItem("token", token);
         localStorage.setItem("nombreUsuario", nombre);
-        localStorage.setItem("correoUsuario", correoUsuario); // Guarda el correo
+        localStorage.setItem("correoUsuario", correoUsuario);
         localStorage.setItem("usuarioId", usuarioId);
-        localStorage.setItem("roleId", roleId); // Aquí debería guardar correctamente el roleId
+        localStorage.setItem("roleId", roleId);
         localStorage.setItem("paisId", paisId);
   
         console.log("roleId guardado en localStorage:", localStorage.getItem("roleId"));
-
-        // Actualizar el estado global (si estás usando Redux)
+  
+        // Actualizar el estado global con Redux y luego el efecto se encargará de la redirección
         dispatch(loginAuth({ token, nombre, correo: correoUsuario, roleId }));
-        navigate("/auth/home", { replace: true });
+  
+        // // Recargar la página después de iniciar sesión
+        // window.location.reload(); 
       } else {
         setError("Credenciales incorrectas");
       }
@@ -98,9 +89,8 @@ export const LoginForm = () => {
       align="center"
       justify="center"
       bg={useColorModeValue("gray.100", "gray.900")}
-      position="relative" // Para que el fondo animado se posicione correctamente
+      position="relative"
     >
-      {/* Fondo con olas y plantas */}
       <Box
         position="absolute"
         top="0"
@@ -121,7 +111,6 @@ export const LoginForm = () => {
           animation="wave 10s infinite linear"
           transform="translate3d(0, 0, 0)"
         />
-        {/* Animación de las olas */}
         <Box
           position="absolute"
           bottom="0"
@@ -139,10 +128,9 @@ export const LoginForm = () => {
             },
           }}
         />
-        {/* Plantas o decoraciones estáticas o animadas */}
         <Box
           as="img"
-          src="/images/plant.png" // Aquí puedes agregar una imagen de una planta que subiste
+          src="/images/plant.png"
           position="absolute"
           bottom="20px"
           left="20px"
@@ -223,6 +211,7 @@ export const LoginForm = () => {
                 size="lg"
                 rounded="full"
                 _hover={{ bg: "teal.600" }}
+                
               >
                 Iniciar sesión
               </Button>
