@@ -10,6 +10,7 @@ import {
   Collapse,
   Text,
   Divider,
+  useOutsideClick, // Importar el hook useOutsideClick
 } from "@chakra-ui/react";
 import { FiSearch, FiBell } from "react-icons/fi";
 import { MenuPerfil } from "./MenuPerfil";
@@ -17,42 +18,45 @@ import SearchBar from "./Dashboard/SearchBar";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useDisclosure } from "@chakra-ui/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react"; // Importa useRef para manejar la referencia del contenedor
 import { tablaPedidos } from "../store/Pedidos/thunks";
 
 export default function NavBar() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const roleId = localStorage.getItem("roleId");
-console.log("Role ID from localStorage:", roleId); // Verificar si está correctamente guardado en localStorage
 
+  console.log("Role ID from localStorage:", roleId); // Verificar si está correctamente guardado en localStorage
 
   // Obtener la Lista de pedidos desde Redux
-  const pedidos = useSelector((state) => state.pedidos.data || []); // Asegúrate de que pedidos sea un array
-  // const roleId = useSelector((state) => state.auth.roleId); // Asumiendo que el roleId está en auth dentro de Redux
-  console.log("Role ID:", roleId); // Verificar que el roleId es el correcto
+  const pedidos = useSelector((state) => state.pedidos.data || []);
 
-  
   // Cargar los pedidos desde la base de datos cuando se monta el componente
   useEffect(() => {
-    dispatch(tablaPedidos()); // Asegúrate de que los datos estén actualizados
+    dispatch(tablaPedidos());
   }, [dispatch]);
 
   // Filtrar y contar los pedidos por estadoId
   const pedidosNuevos = pedidos.filter((pedido) => pedido.estadoId === 2); // Pedidos pendientes
-  const countAprobados = pedidos.filter(
-    (pedido) => pedido.estadoId === 3
-  ).length;
-  const countEnProceso = pedidos.filter(
-    (pedido) => pedido.estadoId === 1
-  ).length;
-  const countCancelados = pedidos.filter(
-    (pedido) => pedido.estadoId === 4
-  ).length;
+  const countAprobados = pedidos.filter((pedido) => pedido.estadoId === 3).length;
+  const countEnProceso = pedidos.filter((pedido) => pedido.estadoId === 1).length;
+  const countCancelados = pedidos.filter((pedido) => pedido.estadoId === 4).length;
 
   // Manejo del colapso del cuadro de notificaciones
-  const { isOpen, onToggle } = useDisclosure();
+  const { isOpen, onToggle, onClose } = useDisclosure();
+
+  // Crear una referencia para el contenedor del cuadro de notificaciones
+  const ref = useRef();
+
+  // Cerrar el desplegable si se hace clic afuera
+  useOutsideClick({
+    ref: ref, // Referencia del contenedor del cuadro de notificaciones
+    handler: () => {
+      if (isOpen) {
+        onClose(); // Cierra el desplegable si está abierto
+      }
+    },
+  });
 
   // Función para redirigir al hacer clic en la notificación
   const handleNotificationClick = () => {
@@ -119,35 +123,34 @@ console.log("Role ID from localStorage:", roleId); // Verificar si está correct
       >
         {/* Icono de notificaciones */}
         <Tooltip label="Notificaciones" aria-label="Notificaciones Tooltip">
-  <Box position="relative" onClick={onToggle}>
-    <IconButton
-      variant="ghost"
-      fontSize={{ base: "20px", md: "24px" }}
-      icon={<FiBell />}
-      size="lg"
-      _hover={{
-        color: "blue.600",
-        transform: "scale(1.05)",
-      }}
-      transition="all 0.2s ease-in-out"
-    />
-    {/* Mostrar el Badge solo si el roleId es "3" */}
-    {roleId === "3" && pedidosNuevos.length > 0 && (
-      <Badge
-        colorScheme="red"
-        borderRadius="full"
-        position="absolute"
-        top="-1px"
-        right="-1px"
-        fontSize="xs"
-        p="4px"
-      >
-        {pedidosNuevos.length}
-      </Badge>
-    )}
-  </Box>
-</Tooltip>
-
+          <Box position="relative" onClick={onToggle}>
+            <IconButton
+              variant="ghost"
+              fontSize={{ base: "20px", md: "24px" }}
+              icon={<FiBell />}
+              size="lg"
+              _hover={{
+                color: "blue.600",
+                transform: "scale(1.05)",
+              }}
+              transition="all 0.2s ease-in-out"
+            />
+            {/* Mostrar el Badge solo si el roleId es "3" */}
+            {roleId === "3" && pedidosNuevos.length > 0 && (
+              <Badge
+                colorScheme="red"
+                borderRadius="full"
+                position="absolute"
+                top="-1px"
+                right="-1px"
+                fontSize="xs"
+                p="4px"
+              >
+                {pedidosNuevos.length}
+              </Badge>
+            )}
+          </Box>
+        </Tooltip>
 
         {/* Menú de perfil */}
         <MenuPerfil />
@@ -156,6 +159,7 @@ console.log("Role ID from localStorage:", roleId); // Verificar si está correct
       {/* Cuadro flotante que muestra los pedidos nuevos */}
       <Collapse in={isOpen} animateOpacity>
         <Box
+          ref={ref} // Referencia al contenedor del cuadro de notificaciones
           pos="absolute"
           top="60px"
           right="20px"
@@ -170,10 +174,10 @@ console.log("Role ID from localStorage:", roleId); // Verificar si está correct
           border="1px solid #E2E8F0"
           transition="all 0.3s ease"
         >
-          {/* Aquí validamos si el usuario tiene roleId === 2 */}
-          {roleId === "3" ? ( // Si el roleId es 2 como cadena
+          {/* Aquí validamos si el usuario tiene roleId === 3 */}
+          {roleId === "3" ? (
             <>
-              {/* Contenido visible solo para el rol 2 */}
+              {/* Contenido visible solo para el rol 3 */}
               <Box onClick={handleNotificationClick} _hover={{ bg: "gray.50" }}>
                 {pedidosNuevos.length > 0 ? (
                   <Text
