@@ -61,16 +61,23 @@ export const LoginForm = () => {
         const correoUsuario = response.data.usuario.usuario.correo; // Asegúrate de tener el correo aquí
         const usuarioId = response.data.usuario.usuario.id;
         const paisId = response.data.usuario.usuario.paisId;
+        const roleId = response.data.usuario.usuario.roleId;
+  
+        // Depura para asegurarte de que el roleId está siendo recibido correctamente
+        console.log("roleId desde el backend:", roleId);
   
         // Guardar en localStorage
         localStorage.setItem("token", token);
         localStorage.setItem("nombreUsuario", nombre);
         localStorage.setItem("correoUsuario", correoUsuario); // Guarda el correo
         localStorage.setItem("usuarioId", usuarioId);
+        localStorage.setItem("roleId", roleId); // Aquí debería guardar correctamente el roleId
         localStorage.setItem("paisId", paisId);
   
+        console.log("roleId guardado en localStorage:", localStorage.getItem("roleId"));
+
         // Actualizar el estado global (si estás usando Redux)
-        dispatch(loginAuth({ token, nombre, correo: correoUsuario }));
+        dispatch(loginAuth({ token, nombre, correo: correoUsuario, roleId }));
         navigate("/auth/home", { replace: true });
       } else {
         setError("Credenciales incorrectas");

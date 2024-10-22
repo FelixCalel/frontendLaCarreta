@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom"; // Agregamos Navigate para redirecciones
 import { PortalRouter } from "./PortalRouter";
 import { PrivateRoute } from "./PrivateRoute";
 import { PublicRoute } from "./PublicRoute";
 import { PortalPagePublic } from "./PortalPagePublic";
 import CheckingAuth from "../ui/components/CheckingAuth";
 import { logout, login, obtenerDatosLogeado } from "../store/auth";
-import HomePage from "../pages/auth/HomePage"; 
+import HomePage from "../pages/auth/HomePage";
 import { PaginaPais } from "./PaisRoute";
 import { PaginaEmpresa } from "./EmpresaRoute";
 import { PaginaCiudad } from "./CiudaRouter";
@@ -21,8 +21,9 @@ import { validarUsuario } from "../store/RolPermisoUsuario/thunks"; // Thunk par
 export const AppRouter = () => {
   const dispatch = useDispatch();
   const status = useSelector((state) => state.auth.status);
-  const [accesosPermitidos, setAccesosPermitidos] = useState({}); // Guardar los accesos permitidos por ruta
+  const [accesosPermitidos, setAccesosPermitidos] = useState({});
   const usuarioId = localStorage.getItem("usuarioId");
+  const roleId = localStorage.getItem("roleId"); // Obtener el roleId del localStorage
 
   // Mapeo de rutas con sus respectivos rutaId
   const rutasConRutaId = [
@@ -39,12 +40,11 @@ export const AppRouter = () => {
     const datosUsuario = obtenerDatosLogeado();
 
     if (usuarioId) {
-      // Validar el acceso para cada ruta según su rutaId
       rutasConRutaId.forEach(({ rutaId, path }) => {
         dispatch(validarUsuario({ usuarioId, rutaId })).then((result) => {
           setAccesosPermitidos((prev) => ({
             ...prev,
-            [path]: result.payload, // Guardamos el acceso permitido para cada ruta
+            [path]: result.payload,
           }));
         });
       });
@@ -64,33 +64,26 @@ export const AppRouter = () => {
   return (
     <Routes>
       {/* Rutas Públicas */}
-      <Route
-        path="/auth/*"
-        element={
-          <PublicRoute>
-            <PortalPagePublic />
-          </PublicRoute>
-        }
-      />
+      <Route path="/auth/*" element={<PublicRoute><PortalPagePublic /></PublicRoute>} />
       
       {/* Protege la ruta de home con PrivateRoute */}
-      <Route
-        path="/auth/home"
-        element={
-          <PrivateRoute>
-            <HomePage />
-          </PrivateRoute>
-        }
-      />
-    
-      {/* Iteramos sobre las rutas y verificamos si tienen acceso */}
-      {rutasConRutaId.map(({ path, component: Component }) => (
+      <Route path="/auth/home" element={<PrivateRoute><HomePage /></PrivateRoute>} />
+
+      {/* Protege las rutas de administración (solo accesibles para admin con roleId === 1) */}
+      {roleId === "1" ? (
+        <Route path="/admin/*" element={<PrivateRoute><PortalRouter /></PrivateRoute>} />
+      ) : (
+        <Route path="*" element={<Navigate to="/auth/home" />} /> // Redirige a home si no es admin
+      )}
+
+      {/* Verificación de permisos para cada ruta */}
+      {rutasConRutaId.map(({ path, component: Component }) =>
         accesosPermitidos[path] ? (
           <Route key={path} path={path} element={<PrivateRoute><Component /></PrivateRoute>} />
         ) : (
           console.log(`No puedes acceder a la ruta ${path}`)
         )
-      ))}
+      )}
 
       {/* Ruta predeterminada */}
       <Route path="*" element={<HomePage />} />
