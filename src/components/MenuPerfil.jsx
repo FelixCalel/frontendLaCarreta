@@ -36,9 +36,9 @@ export const MenuPerfil = () => {
   useEffect(() => {
     const nombre = localStorage.getItem("nombreUsuario");
     const correo = localStorage.getItem("correoUsuario");
-    const roleId = localStorage.getItem("roleId"); // Obtener el roleId
+    // const roleId = localStorage.getItem("roleId"); // Obtener el roleId
     
-    console.log("Role ID obtenido del localStorage en MenuPerfil:", roleId); // Verificación de roleId
+    // console.log("Role ID obtenido del localStorage en MenuPerfil:", roleId); // Verificación de roleId
   
     if (nombre && correo) {
       setNombreUsuario(nombre);

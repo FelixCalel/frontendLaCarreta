@@ -26,7 +26,7 @@ export default function NavBar() {
   const dispatch = useDispatch();
 
   const roleId = localStorage.getItem("roleId");
-  console.log("Role ID from localStorage:", roleId); // Verificar si está correctamente guardado en localStorage
+  // console.log("Role ID from localStorage:", roleId); // Verificar si está correctamente guardado en localStorage
 
   // Obtener la Lista de pedidos desde Redux
   const pedidos = useSelector((state) => state.pedidos.data || []);

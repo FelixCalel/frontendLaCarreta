@@ -39,7 +39,7 @@ export const AppRouter = () => {
   useEffect(() => {
     const storedRoleId = localStorage.getItem("roleId");
     setRoleId(storedRoleId); // Esto asegura que el roleId esté disponible antes de verificar rutas
-    console.log("Role ID obtenido desde localStorage:", storedRoleId);
+    // console.log("Role ID obtenido desde localStorage:", storedRoleId);
   }, []);
 
   // Realiza las verificaciones solo cuando el roleId esté disponible
@@ -64,28 +64,29 @@ export const AppRouter = () => {
     <Routes>
       {/* Rutas Públicas */}
       <Route path="/auth/*" element={<PublicRoute><PortalPagePublic /></PublicRoute>} />
-
+  
       {/* Protege la ruta de home con PrivateRoute */}
       <Route path="/auth/home" element={<PrivateRoute><HomePage /></PrivateRoute>} />
-
+  
       {/* Protege las rutas de administración */}
       {rolesPermitidosAdmin.includes(roleId) ? (
         <Route path="/admin/*" element={<PrivateRoute><PortalRouter /></PrivateRoute>} />
       ) : (
         <Route path="*" element={<Navigate to="/auth/home" />} /> // Redirige a home si no es admin ni rol permitido
       )}
-
+  
       {/* Verificación de permisos para cada ruta según rol y acceso permitido */}
       {rutasConRutaId.map(({ path, component: Component }) =>
         accesosPermitidos[path] ? (
           <Route key={path} path={path} element={<PrivateRoute><Component /></PrivateRoute>} />
         ) : (
-          console.log(`No puedes acceder a la ruta ${path}`)
+          <Route key={path} path="*" element={<Navigate to="/auth/home" replace />} /> // Redirige si no tiene acceso
         )
       )}
-
+  
       {/* Ruta predeterminada */}
       <Route path="*" element={<HomePage />} />
     </Routes>
   );
+  
 };
