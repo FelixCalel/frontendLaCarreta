@@ -6,29 +6,27 @@ import {
   Tr,
   Th,
   Td,
-  Box,
-  Text,
+  Input,
   Button,
+  useToast,
+  Stack,
+  Text,
+  Box,
+  Flex,
+  Heading,
   useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
-  ModalBody,
   ModalCloseButton,
-  Input,
-  Stack,
-  CheckboxGroup,
-  Checkbox,
+  ModalBody,
+  ModalFooter,
   IconButton,
-  Badge,
-  useToast,
-  Flex,
-  Heading
-} from "@chakra-ui/react"; // Asegúrate de tener todas las importaciones necesarias
+} from "@chakra-ui/react";
 import { FiUserPlus, FiSearch } from "react-icons/fi";
 import axios from "axios";
+import RutaSelector from "./RutaSelector"; // Componente para selección de rutas
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -37,12 +35,11 @@ export const TablaBusuarios = () => {
   const [rutas, setRutas] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
-  const [filteredRutas, setFilteredRutas] = useState([]);
   const [selectedRoutes, setSelectedRoutes] = useState([]);
+  const [filteredRutas, setFilteredRutas] = useState([]); // Rutas filtradas
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
-  // Fetching usuarios and rutas
   useEffect(() => {
     const fetchUsuarios = async () => {
       try {
@@ -72,16 +69,13 @@ export const TablaBusuarios = () => {
     fetchRutas();
   }, [toast]);
 
-  // Filtrar rutas por país cuando se selecciona un usuario
-  const handleOpenAssignRutas = (usuario) => {
-    setSelectedUser(usuario.id);
-    setSelectedRoutes(usuario.rutas.map((ruta) => ruta.id));
-
-    // Filtrar las rutas que coincidan con el paisId del usuario
-    const rutasFiltradas = rutas.filter((ruta) => ruta.paisId === usuario.paisId);
-    setFilteredRutas(rutasFiltradas);
-
-    onOpen();
+  const handleDesactivar = (id) => {
+    toast({
+      title: "Usuario desactivado",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
   };
 
   const asignarRutas = async (usuarioId) => {
@@ -96,12 +90,10 @@ export const TablaBusuarios = () => {
         return;
       }
 
-      // Llamada al backend para asignar rutas
       await axios.post(`${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`, {
         rutaId: selectedRoutes,
       });
 
-      // Actualizar el estado local de los usuarios
       setUsuarios((prevUsuarios) =>
         prevUsuarios.map((usuario) =>
           usuario.id === usuarioId
@@ -134,13 +126,26 @@ export const TablaBusuarios = () => {
     }
   };
 
+  const handleOpenAssignRutas = (usuario) => {
+    setSelectedUser(usuario.id);
+    setSelectedRoutes(usuario.rutas.map((ruta) => ruta.id));
+
+    // Filtrar las rutas que coincidan con el paisId del usuario
+    const rutasFiltradas = rutas.filter(
+      (ruta) => ruta.paisId === usuario.paisId
+    );
+    setFilteredRutas(rutasFiltradas); // Guardamos las rutas filtradas
+
+    onOpen();
+  };
+
   return (
     <>
-      <Flex justify="space-between" align="center" mb={4} direction={{ base: "column", md: "row" }}>
-        <Heading size="lg" color="green.600" mb={{ base: 2, md: 0 }}>
+      <Flex justify="space-between" align="center" mb={4}>
+        <Heading size="lg" color="green.600">
           Lista de Usuarios
         </Heading>
-        <Flex width={{ base: "100%", md: "300px" }} justify="space-between">
+        <Flex maxWidth="300px">
           <Input
             placeholder="Buscar usuario"
             value={searchTerm}
@@ -149,26 +154,23 @@ export const TablaBusuarios = () => {
             bg="white"
             boxShadow="sm"
             _placeholder={{ color: "gray.400" }}
-            _focus={{ borderColor: "green.400" }}
           />
           <IconButton
             aria-label="Buscar"
             icon={<FiSearch />}
             ml={2}
             colorScheme="green"
-            onClick={() => console.log("Buscando...")}
           />
         </Flex>
       </Flex>
 
-      <Box borderRadius="md" boxShadow="lg" p={4} bg="white" overflowX="auto">
-        <Table variant="simple" colorScheme="green" size="sm">
+      <Box borderRadius="md" boxShadow="lg" p={4} bg="white">
+        <Table variant="simple">
           <Thead bg="green.100">
             <Tr>
               <Th color="green.700">Nombre</Th>
               <Th color="green.700">Correo</Th>
               <Th color="green.700">Teléfono</Th>
-              <Th color="green.700">Estado</Th>
               <Th color="green.700">Acciones</Th>
             </Tr>
           </Thead>
@@ -185,18 +187,10 @@ export const TablaBusuarios = () => {
                   <Td>{usuario.correo}</Td>
                   <Td>{usuario.telefono}</Td>
                   <Td>
-                    <Badge
-                      colorScheme={usuario.estaActivo ? "green" : "red"}
-                      variant="subtle"
-                    >
-                      {usuario.estaActivo ? "Activo" : "Inactivo"}
-                    </Badge>
-                  </Td>
-                  <Td>
                     <Stack align="center" direction="row">
                       <Button
                         size="sm"
-                        onClick={() => handleOpenAssignRutas(usuario)}
+                        onClick={() => handleOpenAssignRutas(usuario)} // Usar la función de apertura aquí
                         leftIcon={<FiUserPlus />}
                         colorScheme="green"
                         variant="solid"
@@ -213,35 +207,24 @@ export const TablaBusuarios = () => {
       </Box>
 
       {/* Modal para asignar rutas */}
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+      <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader color="green.600">Asignar Rutas</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Text mb={4}>Asignar rutas al usuario ID: {selectedUser}</Text>
-            <CheckboxGroup
-              value={selectedRoutes}
-              onChange={(value) => setSelectedRoutes(value)}
-            >
-              <Stack direction="column">
-                {filteredRutas.length > 0 ? (
-                  filteredRutas.map((ruta) => (
-                    <Checkbox key={ruta.id} value={ruta.id.toString()}>
-                      {ruta.nombre}
-                    </Checkbox>
-                  ))
-                ) : (
-                  <Text>No hay rutas disponibles para este país.</Text>
-                )}
-              </Stack>
-            </CheckboxGroup>
+            <RutaSelector
+              selectedRoutes={selectedRoutes}
+              setSelectedRoutes={setSelectedRoutes}
+              usuarioId={selectedUser}
+              filteredRutas={filteredRutas} // Pasa las rutas filtradas aquí
+            />
           </ModalBody>
           <ModalFooter>
             <Button
               colorScheme="green"
               onClick={() => asignarRutas(selectedUser)}
-              mr={3}
             >
               Asignar
             </Button>

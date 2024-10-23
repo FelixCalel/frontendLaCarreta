@@ -302,7 +302,7 @@ const EntrantesPage = () => {
       <Table variant="striped" colorScheme="gray">
         <Thead>
           <Tr>
-            <Th>Select</Th>
+            <Th>Selecionar</Th>
             <Th>ID</Th>
             <Th>Usuario</Th>
             <Th>Tienda</Th>

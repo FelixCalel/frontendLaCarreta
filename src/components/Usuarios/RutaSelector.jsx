@@ -1,22 +1,11 @@
 import { useEffect } from "react";
 import PropTypes from "prop-types"; // Importamos PropTypes para la validación de las props
-import { useSelector, useDispatch } from "react-redux";
-import { tablaRuta } from "../../store/Ruta/thunks";
 import { Checkbox, Stack, Text } from "@chakra-ui/react";
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_URL; // Agregar esta línea
 
-const RutaSelector = ({ selectedRoutes, setSelectedRoutes, usuarioId }) => {
-  const dispatch = useDispatch();
-
-  // Aseguramos que 'rutas' sea siempre un array vacío si no tiene datos
-  const rutas = useSelector((state) => state.rutas.data || []);
-
-  // Carga las rutas cuando el componente es montado
-  useEffect(() => {
-    dispatch(tablaRuta()); // Despachamos la acción para cargar las rutas
-  }, [dispatch]);
+const RutaSelector = ({ selectedRoutes, setSelectedRoutes, usuarioId, filteredRutas }) => {
 
   // Manejar la selección de rutas usando checkboxes
   const handleCheckboxChange = async (rutaId, isChecked) => {
@@ -53,8 +42,8 @@ const RutaSelector = ({ selectedRoutes, setSelectedRoutes, usuarioId }) => {
 
   return (
     <Stack spacing={2}>
-      {rutas.length > 0 ? (
-        rutas.map((ruta) => (
+      {filteredRutas.length > 0 ? (
+        filteredRutas.map((ruta) => (
           <Checkbox
             key={ruta.id}
             isChecked={selectedRoutes.includes(ruta.id)}
@@ -64,7 +53,7 @@ const RutaSelector = ({ selectedRoutes, setSelectedRoutes, usuarioId }) => {
           </Checkbox>
         ))
       ) : (
-        <Text>No hay rutas disponibles</Text>
+        <Text>No hay rutas disponibles para este país.</Text>
       )}
     </Stack>
   );
@@ -75,6 +64,7 @@ RutaSelector.propTypes = {
   selectedRoutes: PropTypes.array.isRequired,  // 'selectedRoutes' es un array de IDs de rutas seleccionadas
   setSelectedRoutes: PropTypes.func.isRequired, // 'setSelectedRoutes' es una función para actualizar las rutas seleccionadas
   usuarioId: PropTypes.number.isRequired,      // 'usuarioId' es el ID del usuario actual
+  filteredRutas: PropTypes.array.isRequired, // 'filteredRutas' es el array de rutas filtradas según el país
 };
 
 export default RutaSelector;
