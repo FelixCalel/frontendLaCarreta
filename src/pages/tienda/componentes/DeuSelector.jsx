@@ -1,41 +1,75 @@
-import PropTypes from "prop-types";
-import { useSelector, useDispatch } from "react-redux";
 import { useEffect } from "react";
-import { tablaDeudores } from "../../../store/Deus/thunks";
+import PropTypes from "prop-types"; // Importar PropTypes para la validación de props
+import { Flex, FormHelperText } from "@chakra-ui/react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  AutoComplete,
+  AutoCompleteInput,
+  AutoCompleteItem,
+  AutoCompleteList,
+} from "@choc-ui/chakra-autocomplete";
 
-const DeuSelector = ({ empresaId, onSelect }) => { // Cambia ciudadId por empresaId
+import { tablaDeudores } from "../../../store/Deus/thunks"; // Actualiza tu ruta según tu estructura
+
+const DeuSelector = ({ ciudadId, onSelect }) => {
   const dispatch = useDispatch();
   const { deudores } = useSelector((state) => state.deudores);
 
   useEffect(() => {
-    if (empresaId) {
-      dispatch(tablaDeudores({ empresaId })); // Filtra los deudores por empresaId
+    // Si hay una ciudad seleccionada, obtener los deudores vinculados a esa ciudad
+    if (ciudadId) {
+      dispatch(tablaDeudores({ ciudadId })); // Filtra los deudores por ciudadId
     }
-  }, [dispatch, empresaId]);
+  }, [dispatch, ciudadId]);
 
   const handleSelectDeudor = (deudor) => {
     onSelect({
       id: deudor.id,
-      correlativo: deudor.correlativo,
-      nombre: deudor.nombre,
+      correlativo: deudor.correlativo, // Pasar correlativo
+      nombre: deudor.nombre, // Pasar nombre
     });
   };
 
   return (
-    <select onChange={(e) => handleSelectDeudor(deudores.find(d => d.id === e.target.value))}>
-      <option value="">Seleccionar deudor</option>
-      {deudores.map((deu) => (
-        <option key={deu.id} value={deu.id}>
-          {`${deu.correlativo} - ${deu.nombre}`}
-        </option>
-      ))}
-    </select>
+    <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
+      <AutoComplete openOnFocus>
+        <AutoCompleteInput variant="outline" placeholder="Seleccione un deudor" />
+        <AutoCompleteList>
+          {deudores.length > 0 ? (
+            deudores.map((deu) => (
+              <AutoCompleteItem
+                key={`option-${deu.id}`}
+                value={`${deu.correlativo} - ${deu.nombre}`}
+                textTransform="capitalize"
+                onClick={() => handleSelectDeudor(deu)}
+              >
+                {`${deu.correlativo} - ${deu.nombre}`}
+              </AutoCompleteItem>
+            ))
+          ) : (
+            <AutoCompleteItem
+              key="no-deudores"
+              value="No hay deudores disponibles"
+              isDisabled
+            >
+              No hay deudores disponibles
+            </AutoCompleteItem>
+          )}
+        </AutoCompleteList>
+      </AutoComplete>
+      <FormHelperText mt="2">
+        {deudores.length > 0
+          ? "Seleccione el deudor para esta tienda"
+          : "No hay deudores vinculados a esta ciudad"}
+      </FormHelperText>
+    </Flex>
   );
 };
 
+// Validación de PropTypes
 DeuSelector.propTypes = {
-  empresaId: PropTypes.string.isRequired, // Cambia ciudadId a empresaId
-  onSelect: PropTypes.func.isRequired,
+  ciudadId: PropTypes.string.isRequired,  // Verifica que el ID de la ciudad es requerido
+  onSelect: PropTypes.func.isRequired,  // La función onSelect es requerida
 };
 
 export default DeuSelector;
