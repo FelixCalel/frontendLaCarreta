@@ -6,45 +6,47 @@ import {
   Tr,
   Th,
   Td,
-  Input,
-  Button,
-  useToast,
-  Stack,
-  Text,
   Box,
-  Flex,
-  Heading,
+  Text,
+  Button,
   useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalCloseButton,
-  ModalBody,
   ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Input,
+  Stack,
+  CheckboxGroup,
+  Checkbox,
   IconButton,
-} from "@chakra-ui/react";
+  Badge,
+  useToast,
+  Flex,
+  Heading
+} from "@chakra-ui/react"; // Asegúrate de tener todas las importaciones necesarias
 import { FiUserPlus, FiSearch } from "react-icons/fi";
 import axios from "axios";
-import RutaSelector from "./RutaSelector"; // Componente para selección de rutas
-const BASE_URL = import.meta.env.VITE_API_URL;
 
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const TablaBusuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
-  const [setRutas] = useState([]);
+  const [rutas, setRutas] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
+  const [filteredRutas, setFilteredRutas] = useState([]);
   const [selectedRoutes, setSelectedRoutes] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
+  // Fetching usuarios and rutas
   useEffect(() => {
     const fetchUsuarios = async () => {
       try {
-        const response = await axios.get(
-          `${BASE_URL}/usuarios/todos`
-        );
+        const response = await axios.get(`${BASE_URL}/usuarios/todos`);
         setUsuarios(response.data.usuarios);
       } catch (error) {
         console.error("Error al obtener los usuarios:", error);
@@ -62,22 +64,24 @@ export const TablaBusuarios = () => {
         const response = await axios.get(`${BASE_URL}/ruta/todos`);
         setRutas(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
-        // Ya no se maneja el error
+        console.error("Error al obtener las rutas:", error);
       }
     };
-    
 
     fetchUsuarios();
     fetchRutas();
-  }, []);
+  }, [toast]);
 
-  const handleDesactivar = (id) => {
-    toast({
-      title: "Usuario desactivado",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+  // Filtrar rutas por país cuando se selecciona un usuario
+  const handleOpenAssignRutas = (usuario) => {
+    setSelectedUser(usuario.id);
+    setSelectedRoutes(usuario.rutas.map((ruta) => ruta.id));
+
+    // Filtrar las rutas que coincidan con el paisId del usuario
+    const rutasFiltradas = rutas.filter((ruta) => ruta.paisId === usuario.paisId);
+    setFilteredRutas(rutasFiltradas);
+
+    onOpen();
   };
 
   const asignarRutas = async (usuarioId) => {
@@ -91,12 +95,12 @@ export const TablaBusuarios = () => {
         });
         return;
       }
-  
+
       // Llamada al backend para asignar rutas
       await axios.post(`${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`, {
         rutaId: selectedRoutes,
       });
-  
+
       // Actualizar el estado local de los usuarios
       setUsuarios((prevUsuarios) =>
         prevUsuarios.map((usuario) =>
@@ -105,21 +109,19 @@ export const TablaBusuarios = () => {
                 ...usuario,
                 rutas: selectedRoutes.map((rutaId) => ({
                   id: rutaId,
-                  // Si tienes más información de la ruta, puedes agregarla aquí
                 })),
               }
             : usuario
         )
       );
-  
+
       toast({
         title: "Rutas asignadas correctamente",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-  
-      // Cerrar el modal
+
       onClose();
     } catch (error) {
       console.error("Error al asignar rutas:", error);
@@ -131,15 +133,14 @@ export const TablaBusuarios = () => {
       });
     }
   };
-  
 
   return (
     <>
-      <Flex justify="space-between" align="center" mb={4}>
-        <Heading size="lg" color="green.600">
+      <Flex justify="space-between" align="center" mb={4} direction={{ base: "column", md: "row" }}>
+        <Heading size="lg" color="green.600" mb={{ base: 2, md: 0 }}>
           Lista de Usuarios
         </Heading>
-        <Flex maxWidth="300px">
+        <Flex width={{ base: "100%", md: "300px" }} justify="space-between">
           <Input
             placeholder="Buscar usuario"
             value={searchTerm}
@@ -148,23 +149,26 @@ export const TablaBusuarios = () => {
             bg="white"
             boxShadow="sm"
             _placeholder={{ color: "gray.400" }}
+            _focus={{ borderColor: "green.400" }}
           />
           <IconButton
             aria-label="Buscar"
             icon={<FiSearch />}
             ml={2}
             colorScheme="green"
+            onClick={() => console.log("Buscando...")}
           />
         </Flex>
       </Flex>
 
-      <Box borderRadius="md" boxShadow="lg" p={4} bg="white">
-        <Table variant="simple">
+      <Box borderRadius="md" boxShadow="lg" p={4} bg="white" overflowX="auto">
+        <Table variant="simple" colorScheme="green" size="sm">
           <Thead bg="green.100">
             <Tr>
               <Th color="green.700">Nombre</Th>
               <Th color="green.700">Correo</Th>
               <Th color="green.700">Teléfono</Th>
+              <Th color="green.700">Estado</Th>
               <Th color="green.700">Acciones</Th>
             </Tr>
           </Thead>
@@ -180,27 +184,19 @@ export const TablaBusuarios = () => {
                   </Td>
                   <Td>{usuario.correo}</Td>
                   <Td>{usuario.telefono}</Td>
-                  
-                    {/* <Stack align="center" direction="row"> */}
-                      {/* <Switch
-                        size="sm"
-                        isChecked={usuario.estaActivo === true}
-                        colorScheme="green"
-                        onChange={() => handleDesactivar(usuario.id)}
-                      />
-                      <Text>{usuario.estaActivo ? "Activo" : "Inactivo"}</Text> */}
-                    {/* </Stack> */}
+                  <Td>
+                    <Badge
+                      colorScheme={usuario.estaActivo ? "green" : "red"}
+                      variant="subtle"
+                    >
+                      {usuario.estaActivo ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </Td>
                   <Td>
                     <Stack align="center" direction="row">
                       <Button
                         size="sm"
-                        onClick={() => {
-                          setSelectedUser(usuario.id);
-                          setSelectedRoutes(
-                            usuario.rutas.map((ruta) => ruta.id)
-                          );
-                          onOpen();
-                        }}
+                        onClick={() => handleOpenAssignRutas(usuario)}
                         leftIcon={<FiUserPlus />}
                         colorScheme="green"
                         variant="solid"
@@ -217,21 +213,36 @@ export const TablaBusuarios = () => {
       </Box>
 
       {/* Modal para asignar rutas */}
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader color="green.600">Asignar Rutas</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Text mb={4}>Asignar rutas al usuario ID: {selectedUser}</Text>
-            <RutaSelector
-              selectedRoutes={selectedRoutes}
-              setSelectedRoutes={setSelectedRoutes}
-              usuarioId={selectedUser}
-            />
+            <CheckboxGroup
+              value={selectedRoutes}
+              onChange={(value) => setSelectedRoutes(value)}
+            >
+              <Stack direction="column">
+                {filteredRutas.length > 0 ? (
+                  filteredRutas.map((ruta) => (
+                    <Checkbox key={ruta.id} value={ruta.id.toString()}>
+                      {ruta.nombre}
+                    </Checkbox>
+                  ))
+                ) : (
+                  <Text>No hay rutas disponibles para este país.</Text>
+                )}
+              </Stack>
+            </CheckboxGroup>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="green" onClick={() => asignarRutas(selectedUser)}>
+            <Button
+              colorScheme="green"
+              onClick={() => asignarRutas(selectedUser)}
+              mr={3}
+            >
               Asignar
             </Button>
             <Button variant="ghost" onClick={onClose}>
