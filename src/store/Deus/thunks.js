@@ -7,17 +7,10 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 // Thunk para buscar deudores por nombre o correlativo
 export const tablaDeudores = createAsyncThunk(
   'deudores/tablaDeudores',
-  async ({ empresaId }) => { // Elimina paisId de aquí
-      const deudoresResponse = await axios.get(`${BASE_URL}/deus/todos`, {
-          params: { empresaId } // Enviar empresaId como parámetro para filtrar
-      });
-
-      // Filtrar deudores directamente por empresaId
-      const data = deudoresResponse.data.filter(deudor => {
-          return deudor.empresaId === empresaId; // Solo incluir deudores de la empresa seleccionada
-      });
-
-      data.sort((a, b) => a.id - b.id); // Ordena los datos por id
-      return data;
+  async () => {
+    const response = await axios.get(`${BASE_URL}/deus/todos`);
+    const data = response.data;
+    data.sort((a, b) => a.id - b.id); // Ordena los datos por id
+    return data;
   }
 );
