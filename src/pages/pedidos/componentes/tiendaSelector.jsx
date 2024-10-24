@@ -1,46 +1,62 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { useSelector, useDispatch } from "react-redux";
-import { tablaTienda } from "../../../store/Tienda/thunks";
+import axios from "axios";
 
-const TiendaSelector = ({ rutaId, paisId, value, onChange }) => {
-  const dispatch = useDispatch();
-  const tiendas = useSelector((state) => state.tiendas.data);
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+const TiendaSelector = ({ rutaIds, paisId, value, onChange, isRutaFilter }) => {
+  const [tiendas, setTiendas] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    dispatch(tablaTienda());
-  }, [dispatch]);
+    const fetchTiendas = async () => {
+      setLoading(true);
+      try {
+        let tiendasFiltradas = [];
+  
+        if (isRutaFilter && rutaIds.length > 0) {
+          // Filtrar por rutas
+          for (let rutaId of rutaIds) {
+            const response = await axios.get(`${BASE_URL}/tienda/by-ruta/${rutaId}`);
+            if (response && response.data) {
+              tiendasFiltradas = tiendasFiltradas.concat(response.data); // Añadir las tiendas a la lista
+            }
+          }
+        } else if (!isRutaFilter && paisId) {
+          console.log("Filtrando por paisId:", paisId); // Verificar valor de paisId
+          // Filtrar por país
+          const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
+          console.log("Respuesta de tiendas por país:", response.data); // Verificar respuesta de la API
+          if (response && response.data) {
+            tiendasFiltradas = response.data;
+          }
+        }
+  
+        setTiendas(tiendasFiltradas);
+      } catch (error) {
+        console.error("Error al obtener las tiendas:", error);
+        setTiendas([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchTiendas();
+  }, [rutaIds, paisId, isRutaFilter]);
+  
 
-  // Log para verificar qué tiendas se están obteniendo
-  useEffect(() => {
-    console.log("Tiendas obtenidas:", tiendas);
-  }, [tiendas]);
-
-  // Log para verificar rutaId y paisId
-  useEffect(() => {
-    console.log("Filtrando tiendas con rutaId:", rutaId, "y paisId:", paisId);
-  }, [rutaId, paisId]);
-
-  // Filtrar tiendas por ruta y país
-  const tiendasFiltradas = tiendas.filter(tienda => {
-    const matchesRuta = rutaId ? tienda.rutaId === rutaId : true; // Si rutaId es 0, incluye todas las tiendas
-    const matchesPais = tienda.paisId === paisId; // Filtra por país
-    return matchesRuta && matchesPais; // Retorna solo tiendas que coincidan
-  });
-
-  // Log para verificar las tiendas filtradas
-  useEffect(() => {
-    console.log("Tiendas filtradas:", tiendasFiltradas);
-  }, [tiendasFiltradas]);
+  if (loading) {
+    return <select disabled>Cargando tiendas...</select>;
+  }
 
   return (
     <select
-      value={value || ""}
+      value={value ? String(value) : ""}
       onChange={(e) => onChange(parseInt(e.target.value))}
     >
       <option value="">Seleccionar tienda</option>
-      {tiendasFiltradas.length > 0 ? (
-        tiendasFiltradas.map((tienda) => (
+      {tiendas.length > 0 ? (
+        tiendas.map((tienda) => (
           <option key={tienda.id} value={tienda.id}>
             {tienda.nombre}
           </option>
@@ -53,10 +69,11 @@ const TiendaSelector = ({ rutaId, paisId, value, onChange }) => {
 };
 
 TiendaSelector.propTypes = {
-  rutaId: PropTypes.number.isRequired, // Debe ser requerido para filtrar
-  paisId: PropTypes.number.isRequired, // Añadir paisId para filtrar por país
-  value: PropTypes.number,
+  rutaIds: PropTypes.arrayOf(PropTypes.number).isRequired, // Lista de rutas del usuario
+  paisId: PropTypes.number.isRequired, // Requerido para el filtro por país
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onChange: PropTypes.func.isRequired,
+  isRutaFilter: PropTypes.bool, // Indica si el selector debe filtrar por ruta o no
 };
 
 export default TiendaSelector;
