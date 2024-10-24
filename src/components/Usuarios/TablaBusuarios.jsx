@@ -26,7 +26,7 @@ import {
 } from "@chakra-ui/react";
 import { FiUserPlus, FiSearch } from "react-icons/fi";
 import axios from "axios";
-import RutaSelector from "./RutaSelector"; // Componente para selección de rutas
+import RutaSelector from "./RutaSelector";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -36,7 +36,7 @@ export const TablaBusuarios = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRoutes, setSelectedRoutes] = useState([]);
-  const [filteredRutas, setFilteredRutas] = useState([]); // Rutas filtradas
+  const [filteredRutas, setFilteredRutas] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
@@ -44,6 +44,7 @@ export const TablaBusuarios = () => {
     const fetchUsuarios = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/usuarios/todos`);
+        console.log("Usuarios obtenidos:", response.data.usuarios);
         setUsuarios(response.data.usuarios);
       } catch (error) {
         console.error("Error al obtener los usuarios:", error);
@@ -55,28 +56,41 @@ export const TablaBusuarios = () => {
         });
       }
     };
+  
+    fetchUsuarios();
+  }, [toast]);
+  
 
+  useEffect(() => {
     const fetchRutas = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/ruta/todos`);
-        setRutas(Array.isArray(response.data) ? response.data : []);
+        const response = await axios.get(`${BASE_URL}/tienda/todos`);
+        const tiendas = Array.isArray(response.data) ? response.data : [];
+        console.log("Tiendas obtenidas:", tiendas);
+    
+        // Extrae y filtra las rutas de las tiendas, asegurando que incluyes el paisId
+        const rutasExtraidas = tiendas.map((tienda) => ({
+          id: tienda.rutaId,
+          nombre: tienda.nombreRuta,
+          ciudadId: tienda.ciudadId,
+          paisId: tienda.paisId,  // Asegúrate de que este campo exista
+        }));
+        console.log("Rutas extraídas:", rutasExtraidas);
+    
+        const rutasUnicas = rutasExtraidas.filter(
+          (ruta, index, self) =>
+            index === self.findIndex((r) => r.id === ruta.id)
+        );
+    
+        setRutas(rutasUnicas); // Actualiza las rutas extraídas en el estado
       } catch (error) {
-        console.error("Error al obtener las rutas:", error);
+        console.error("Error al obtener las rutas vinculadas a tiendas:", error);
       }
     };
-
-    fetchUsuarios();
+    
+  
     fetchRutas();
   }, [toast]);
-
-  const handleDesactivar = (id) => {
-    toast({
-      title: "Usuario desactivado",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-  };
 
   const asignarRutas = async (usuarioId) => {
     try {
@@ -126,18 +140,63 @@ export const TablaBusuarios = () => {
     }
   };
 
-  const handleOpenAssignRutas = (usuario) => {
+  const fetchCiudadesYPaises = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/ciudad/todos`);
+      console.log("Respuesta de la API de ciudades:", response.data); // Asegúrate de que los datos están llegando
+      if (response.data && Array.isArray(response.data)) {
+        return response.data; // Devuelve las ciudades con sus paisId
+      } else {
+        console.error("No se encontraron ciudades en la respuesta de la API");
+        return [];
+      }
+    } catch (error) {
+      console.error("Error al obtener las ciudades y países:", error);
+      return [];
+    }
+  };
+  
+  
+  
+  const handleOpenAssignRutas = async (usuario) => {
     setSelectedUser(usuario.id);
     setSelectedRoutes(usuario.rutas.map((ruta) => ruta.id));
-
+  
+    // Obtener las ciudades con paisId desde la API
+    const ciudades = await fetchCiudadesYPaises();
+  
+    console.log("Ciudades recibidas:", ciudades); // Verifica aquí si se están recibiendo los datos
+    
+    if (!ciudades || ciudades.length === 0) {
+      toast({
+        title: "Error al obtener ciudades",
+        description: "No se encontraron ciudades.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+  
+    // Asignar el paisId a las rutas
+    const rutasConPais = rutas.map((ruta) => {
+      const ciudad = ciudades.find((c) => c.id === ruta.ciudadId);
+      return {
+        ...ruta,
+        paisId: ciudad ? ciudad.paisId : null,
+      };
+    });
+  
     // Filtrar las rutas que coincidan con el paisId del usuario
-    const rutasFiltradas = rutas.filter(
+    const rutasFiltradas = rutasConPais.filter(
       (ruta) => ruta.paisId === usuario.paisId
     );
     setFilteredRutas(rutasFiltradas); // Guardamos las rutas filtradas
-
     onOpen();
   };
+  
+
+  
 
   return (
     <>

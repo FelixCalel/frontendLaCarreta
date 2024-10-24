@@ -30,7 +30,7 @@ const CiudadSelector = ({ value, onChange }) => {
 // Añade la validación de props
 CiudadSelector.propTypes = {
   value: PropTypes.string.isRequired,  // 'value' debe ser una string y es obligatorio
-  onChange: PropTypes.func.isRequired, // 'onChange' debe ser una función y es obligatorio
+  // onChange: PropTypes.func.isRequired, // 'onChange' debe ser una función y es obligatorio
 };
 
 export default CiudadSelector;

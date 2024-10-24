@@ -69,7 +69,7 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
 // Validación de PropTypes
 DeuSelector.propTypes = {
   ciudadId: PropTypes.string.isRequired,  // Verifica que el ID de la ciudad es requerido
-  onSelect: PropTypes.func.isRequired,  // La función onSelect es requerida
+  // onSelect: PropTypes.func.isRequired,  // La función onSelect es requerida
 };
 
 export default DeuSelector;

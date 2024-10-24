@@ -26,12 +26,7 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
   useToast,
-  Tooltip,
   Spinner,
-  FormControl,
-  FormLabel,
-  Input,
-  Select
 } from "@chakra-ui/react";
 import {
   DeleteIcon,
@@ -42,7 +37,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import DeuSelector from "./componentes/DeuSelector";
 import CiudadSelector from "./componentes/CiudadSelector";
-import TiendaSelector from "./componentes/tiendaSelector";
+import TiendaSelector from "./componentes/tiendaSelector"; // Primer selector de tiendas
 import ProductosTable from "./componentes/detallesPedidosTable";
 import {
   addNewPedido,
@@ -50,6 +45,9 @@ import {
   deletePedido,
   togglePedidoStatus,
 } from "../../store/Pedidos/thunks";
+import axios from "axios";
+
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const DetallePedidoForm = () => {
   const dispatch = useDispatch();
@@ -66,29 +64,46 @@ const DetallePedidoForm = () => {
   // Obtener pedidos desde Redux
   const pedidos = useSelector((state) => state.pedidos.data);
   const usuarioId = localStorage.getItem("usuarioId");
+  const paisId = localStorage.getItem("paisId"); // Obteniendo el país del usuario
 
   // Estado del pedido actual
   const [currentPedido, setCurrentPedido] = useState({
     ciudadId: 0,
     deudorId: 0,
     tiendaId: 0,
+    tiendaId2: 0, // Agrega un segundo ID de tienda
     usuarioId: parseInt(usuarioId),
     estadoId: 1, // Estado inicial predeterminado
   });
 
+  const [tiendas, setTiendas] = useState([]); // Estado para las tiendas
   const [isPedidoFinalizado, setIsPedidoFinalizado] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState({});
   const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
   const [selectedPedidoId, setSelectedPedidoId] = useState(null);
 
-  // Cargar los pedidos al iniciar
+  // Cargar los pedidos y las tiendas al iniciar
   useEffect(() => {
     dispatch(tablaPedidos());
+    fetchTiendas(); // Cargar tiendas
   }, [dispatch]);
+
+  // Función para obtener las tiendas
+  const fetchTiendas = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/tienda/todas`);
+      setTiendas(response.data);
+    } catch (error) {
+      console.error("Error al obtener las tiendas:", error);
+    }
+  };
 
   // Cambios en los selectores
   const handleCiudadChange = (e) => {
-    setCurrentPedido((prev) => ({ ...prev, ciudadId: parseInt(e.target.value) }));
+    setCurrentPedido((prev) => ({
+      ...prev,
+      ciudadId: parseInt(e.target.value),
+    }));
   };
 
   const handleDeudorSelect = (deudorId) => {
@@ -97,6 +112,10 @@ const DetallePedidoForm = () => {
 
   const handleTiendaChange = (value) => {
     setCurrentPedido((prev) => ({ ...prev, tiendaId: value }));
+  };
+
+  const handleTiendaChange2 = (value) => {
+    setCurrentPedido((prev) => ({ ...prev, tiendaId2: value })); // Maneja el segundo selector de tiendas
   };
 
   // Validar campos del formulario
@@ -157,6 +176,7 @@ const DetallePedidoForm = () => {
       ciudadId: 0,
       deudorId: 0,
       tiendaId: 0,
+      tiendaId2: 0, // Resetea el segundo ID de tienda
       usuarioId: parseInt(usuarioId),
       estadoId: 1,
     });
@@ -167,7 +187,9 @@ const DetallePedidoForm = () => {
   // Confirmar la acción de realizar el pedido
   const handleRealizarPedido = async () => {
     try {
-      await dispatch(togglePedidoStatus({ id: selectedPedidoId, estadoId: 2 })).unwrap();
+      await dispatch(
+        togglePedidoStatus({ id: selectedPedidoId, estadoId: 2 })
+      ).unwrap();
       dispatch(tablaPedidos());
       onDialogClose();
       toast({
@@ -246,7 +268,9 @@ const DetallePedidoForm = () => {
                 <Tr _hover={{ bg: "gray.100" }}>
                   <Td>{pedido.id}</Td>
                   <Td>{pedido.nombreCiudad || "N/A"}</Td>
-                  <Td>{`${pedido.nombreCorrelativo || ""} - ${pedido.nombreDeu || "N/A"}`}</Td>
+                  <Td>{`${pedido.nombreCorrelativo || ""} - ${
+                    pedido.nombreDeu || "N/A"
+                  }`}</Td>
                   <Td>{pedido.nombreTienda || "N/A"}</Td>
                   <Td>{pedido.estadoId || "N/A"}</Td>
                   <Td>
@@ -255,7 +279,11 @@ const DetallePedidoForm = () => {
                       colorScheme="blue"
                       onClick={() => handleToggleDetails(pedido.id)}
                     >
-                      {isDetailsOpen[pedido.id] ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                      {isDetailsOpen[pedido.id] ? (
+                        <ChevronUpIcon />
+                      ) : (
+                        <ChevronDownIcon />
+                      )}
                     </Button>
                   </Td>
                   <Td>
@@ -300,20 +328,34 @@ const DetallePedidoForm = () => {
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{isPedidoFinalizado ? "Agregar Productos" : "Agregar Pedido"}</ModalHeader>
+          <ModalHeader>
+            {isPedidoFinalizado ? "Agregar Productos" : "Agregar Pedido"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {!isPedidoFinalizado ? (
-              <>
-                <CiudadSelector value={currentPedido.ciudadId} onChange={handleCiudadChange} />
-                <DeuSelector ciudadId={currentPedido.ciudadId} onSelect={handleDeudorSelect} />
-                <TiendaSelector
+              <div>
+                <CiudadSelector
+                  value={currentPedido.ciudadId}
+                  onChange={handleCiudadChange}
+                />
+                <DeuSelector
                   ciudadId={currentPedido.ciudadId}
-                  deudorId={currentPedido.deudorId}
+                  onSelect={handleDeudorSelect}
+                />
+                <TiendaSelector
+                  rutaId={currentPedido.tiendaId} // Usa el ID de la ruta para el primer selector
+                  paisId={paisId} // Pasa el paisId para filtrar
                   value={currentPedido.tiendaId}
                   onChange={handleTiendaChange}
                 />
-              </>
+                <TiendaSelector
+                  rutaId={0} // Para el segundo selector, se pueden usar todas las tiendas
+                  paisId={paisId} // También pasa el paisId aquí
+                  value={currentPedido.tiendaId2}
+                  onChange={handleTiendaChange2}
+                />
+              </div>
             ) : (
               <ProductosTable pedidoId={pedidoIdGuardado} />
             )}
@@ -336,13 +378,19 @@ const DetallePedidoForm = () => {
         </ModalContent>
       </Modal>
 
-      <AlertDialog isOpen={isDialogOpen} leastDestructiveRef={cancelRef} onClose={onDialogClose}>
+      <AlertDialog
+        isOpen={isDialogOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onDialogClose}
+      >
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
               Confirmar Pedido
             </AlertDialogHeader>
-            <AlertDialogBody>¿Estás seguro de que quieres realizar este pedido?</AlertDialogBody>
+            <AlertDialogBody>
+              ¿Estás seguro de que quieres realizar este pedido?
+            </AlertDialogBody>
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={onDialogClose}>
                 No
