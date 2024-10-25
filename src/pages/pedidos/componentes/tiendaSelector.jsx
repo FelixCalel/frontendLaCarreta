@@ -1,49 +1,59 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { tablaTienda } from "../../../store/Tienda/thunks";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-const TiendaSelector = ({ rutaIds, paisId, value, onChange, isRutaFilter }) => {
+const TiendaSelector = ({
+  ciudadId,
+  deudorId,
+  rutaIds,
+  paisId,
+  value,
+  onChange,
+  isRutaFilter,
+}) => {
+  const dispatch = useDispatch();
   const [tiendas, setTiendas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const tiendasRedux = useSelector((state) => state.tiendas.data);
 
   useEffect(() => {
     const fetchTiendas = async () => {
       setLoading(true);
-      try {
-        let tiendasFiltradas = [];
-  
-        if (isRutaFilter && rutaIds.length > 0) {
-          // Filtrar por rutas
-          for (let rutaId of rutaIds) {
-            const response = await axios.get(`${BASE_URL}/tienda/by-ruta/${rutaId}`);
-            if (response && response.data) {
-              tiendasFiltradas = tiendasFiltradas.concat(response.data); // Añadir las tiendas a la lista
-            }
-          }
-        } else if (!isRutaFilter && paisId) {
-          console.log("Filtrando por paisId:", paisId); // Verificar valor de paisId
-          // Filtrar por país
-          const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
-          console.log("Respuesta de tiendas por país:", response.data); // Verificar respuesta de la API
+      let tiendasFiltradas = [];
+
+      if (ciudadId && deudorId) {
+        // Filtrar tiendas por ciudad y deudor desde Redux
+        dispatch(tablaTienda());
+        tiendasFiltradas = tiendasRedux.filter(
+          (tienda) => tienda.ciudadId === ciudadId && tienda.deudorId === deudorId
+        );
+      } else if (isRutaFilter && rutaIds.length > 0) {
+        // Filtrar por rutas
+        for (let rutaId of rutaIds) {
+          const response = await axios.get(`${BASE_URL}/tienda/by-ruta/${rutaId}`);
           if (response && response.data) {
-            tiendasFiltradas = response.data;
+            tiendasFiltradas = tiendasFiltradas.concat(response.data);
           }
         }
-  
-        setTiendas(tiendasFiltradas);
-      } catch (error) {
-        console.error("Error al obtener las tiendas:", error);
-        setTiendas([]);
-      } finally {
-        setLoading(false);
+      } else if (paisId) {
+        // Filtrar por país
+        console.log("Filtrando por paisId:", paisId);
+        const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
+        if (response && response.data) {
+          tiendasFiltradas = response.data;
+        }
       }
+
+      setTiendas(tiendasFiltradas);
+      setLoading(false);
     };
-  
+
     fetchTiendas();
-  }, [rutaIds, paisId, isRutaFilter]);
-  
+  }, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter, dispatch, tiendasRedux]);
 
   if (loading) {
     return <select disabled>Cargando tiendas...</select>;
@@ -69,11 +79,13 @@ const TiendaSelector = ({ rutaIds, paisId, value, onChange, isRutaFilter }) => {
 };
 
 TiendaSelector.propTypes = {
-  rutaIds: PropTypes.arrayOf(PropTypes.number).isRequired, // Lista de rutas del usuario
-  paisId: PropTypes.number.isRequired, // Requerido para el filtro por país
+  ciudadId: PropTypes.number,
+  deudorId: PropTypes.number, 
+  rutaIds: PropTypes.arrayOf(PropTypes.number), 
+  paisId: PropTypes.number.isRequired, 
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onChange: PropTypes.func.isRequired,
-  isRutaFilter: PropTypes.bool, // Indica si el selector debe filtrar por ruta o no
+  isRutaFilter: PropTypes.bool,
 };
 
 export default TiendaSelector;
