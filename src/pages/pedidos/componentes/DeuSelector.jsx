@@ -18,7 +18,7 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
 
   // Filtrar deudores cuando cambia la ciudad seleccionada
   useEffect(() => {
-    if (ciudadId) {
+    if (ciudadId && tiendas.length > 0) {
       const deudoresFiltrados = tiendas
         .filter((tienda) => tienda.ciudadId === ciudadId) // Filtrar tiendas por ciudad
         .map((tienda) => ({
@@ -56,22 +56,28 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
             onChange={handleInputChange}
           />
           <AutoCompleteList>
-            {filteredDeudores
-              .filter((deu) =>
-                `${deu.correlativo} - ${deu.nombre}`
-                  .toLowerCase()
-                  .includes(inputValue.toLowerCase())
-              )
-              .map((deu) => (
-                <AutoCompleteItem
-                  key={`deudor-${deu.id}`}
-                  value={`${deu.correlativo} - ${deu.nombre}`}
-                  textTransform="capitalize"
-                  onClick={() => handleSelectDeudor(deu)}
-                >
-                  {`${deu.correlativo} - ${deu.nombre}`}
-                </AutoCompleteItem>
-              ))}
+            {filteredDeudores.length > 0 ? (
+              filteredDeudores
+                .filter((deu) =>
+                  `${deu.correlativo} - ${deu.nombre}`
+                    .toLowerCase()
+                    .includes(inputValue.toLowerCase())
+                )
+                .map((deu) => (
+                  <AutoCompleteItem
+                    key={`deudor-${deu.id}`}
+                    value={`${deu.correlativo} - ${deu.nombre}`}
+                    textTransform="capitalize"
+                    onClick={() => handleSelectDeudor(deu)}
+                  >
+                    {`${deu.correlativo} - ${deu.nombre}`}
+                  </AutoCompleteItem>
+                ))
+            ) : (
+              <AutoCompleteItem value="" disabled>
+                No hay deudores disponibles
+              </AutoCompleteItem>
+            )}
           </AutoCompleteList>
         </AutoComplete>
         <FormHelperText mt="2">Seleccione el deudor de la ciudad</FormHelperText>
@@ -81,8 +87,8 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
 };
 
 DeuSelector.propTypes = {
-  ciudadId: PropTypes.number.isRequired,
-  onSelect: PropTypes.func.isRequired,
+  ciudadId: PropTypes.number.isRequired, // ID de la ciudad
+  onSelect: PropTypes.func.isRequired, // Función que se llama al seleccionar un deudor
 };
 
 export default DeuSelector;

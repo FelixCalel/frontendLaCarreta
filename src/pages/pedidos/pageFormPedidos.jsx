@@ -25,26 +25,18 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  FormControl,
+  FormLabel,
   useToast,
   Spinner,
 } from "@chakra-ui/react";
-import {
-  DeleteIcon,
-  AddIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from "@chakra-ui/icons";
+import { DeleteIcon, AddIcon, ChevronDownIcon, ChevronUpIcon } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import DeuSelector from "./componentes/DeuSelector";
 import CiudadSelector from "./componentes/CiudadSelector";
 import TiendaSelector from "./componentes/tiendaSelector";
 import ProductosTable from "./componentes/detallesPedidosTable";
-import {
-  addNewPedido,
-  tablaPedidos,
-  deletePedido,
-  togglePedidoStatus,
-} from "../../store/Pedidos/thunks";
+import { addNewPedido, tablaPedidos, deletePedido, togglePedidoStatus } from "../../store/Pedidos/thunks";
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -60,52 +52,46 @@ const DetallePedidoForm = () => {
   const cancelRef = useRef();
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isPedidoFinalizado, setIsPedidoFinalizado] = useState(false);
+  const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState({});
+  const [selectedPedidoId, setSelectedPedidoId] = useState(null);
 
-  // Obtener pedidos desde Redux
   const pedidos = useSelector((state) => state.pedidos.data);
   const usuarioId = localStorage.getItem("usuarioId");
 
-  // Obtener el paisId dinámicamente desde localStorage
   const [paisId, setPaisId] = useState(null);
 
   useEffect(() => {
-    const paisIdFromStorage = localStorage.getItem('paisId');  // Obtener el paisId del localStorage
+    const paisIdFromStorage = localStorage.getItem("paisId");
     if (paisIdFromStorage) {
-      setPaisId(parseInt(paisIdFromStorage, 10));  // Convertirlo a entero
+      setPaisId(parseInt(paisIdFromStorage, 10));
     } else {
-      console.error('No se encontró el paisId en el localStorage');
+      console.error("No se encontró el paisId en el localStorage");
     }
   }, []);
 
-  const [usuarioRutas, setUsuarioRutas] = useState([]); // Estado para las rutas del usuario
-
+  const [usuarioRutas, setUsuarioRutas] = useState([]);
   const [currentPedido, setCurrentPedido] = useState({
     ciudadId: 0,
     deudorId: 0,
-    tiendaId: 0,
-    tiendaId2: 0, // Agrega un segundo ID de tienda
+    tiendaId: 0, // Solo se usará un campo para la tienda seleccionada
     usuarioId: parseInt(usuarioId),
     estadoId: 1,
   });
 
-  const [tiendas, setTiendas] = useState([]); // Estado para las tiendas
-  const [isPedidoFinalizado, setIsPedidoFinalizado] = useState(false);
-  const [isDetailsOpen, setIsDetailsOpen] = useState({});
-  const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
-  const [selectedPedidoId, setSelectedPedidoId] = useState(null);
   const [tiendaSeleccionada, setTiendaSeleccionada] = useState(null);
+  const [isTienda1Disabled, setIsTienda1Disabled] = useState(false);
+  const [isTienda2Disabled, setIsTienda2Disabled] = useState(false);
 
-  // Cargar los pedidos al iniciar
   useEffect(() => {
     dispatch(tablaPedidos());
   }, [dispatch]);
 
   useEffect(() => {
-    // Obtener rutas asignadas del usuario
     const fetchUsuarioRutas = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/usuarios/todos`);
-
         const usuario = response.data.usuarios.find(
           (u) => u.id === parseInt(usuarioId)
         );
@@ -120,7 +106,6 @@ const DetallePedidoForm = () => {
         setUsuarioRutas([]);
       }
     };
-
     fetchUsuarioRutas();
   }, [usuarioId]);
 
@@ -136,12 +121,13 @@ const DetallePedidoForm = () => {
   };
 
   const handleTiendaChange = (value) => {
-    setTiendaSeleccionada(value);
-    console.log("Tienda seleccionada:", value);
+    setCurrentPedido((prev) => ({ ...prev, tiendaId: value }));
+    setIsTienda2Disabled(!!value); // Deshabilitar el segundo selector si se selecciona una tienda en el primero
   };
 
   const handleTiendaChange2 = (value) => {
-    setCurrentPedido((prev) => ({ ...prev, tiendaId2: value }));
+    setCurrentPedido((prev) => ({ ...prev, tiendaId: value }));
+    setIsTienda1Disabled(!!value); // Deshabilitar el primer selector si se selecciona una tienda en el segundo
   };
 
   const validateFields = () => {
@@ -150,12 +136,37 @@ const DetallePedidoForm = () => {
       formErrors.ciudadId = "La ciudad es obligatoria";
     if (!currentPedido.deudorId && !isPedidoFinalizado)
       formErrors.deudorId = "El deudor es obligatorio";
+    
+    // Validación ajustada para permitir que se seleccione solo una tienda
     if (!currentPedido.tiendaId && !isPedidoFinalizado)
-      formErrors.tiendaId = "La tienda es obligatoria";
+      formErrors.tiendaId = "Debe seleccionar una tienda";
+  
     return formErrors;
   };
 
   const handleSubmit = async () => {
+    // Obtener la fecha actual en formato YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
+    // Filtrar los pedidos del usuario en la misma tienda y en la fecha actual
+    const pedidosHoy = pedidos.filter(pedido => 
+      pedido.usuarioId === parseInt(usuarioId) &&
+      pedido.tiendaId === currentPedido.tiendaId &&
+      pedido.fecha?.split('T')[0] === today
+    );
+  
+    // Si ya existe un pedido en la tienda seleccionada hoy, mostrar un error
+    if (pedidosHoy.length > 0) {
+      toast({
+        title: "Error",
+        description: "Ya has realizado un pedido en esta tienda hoy. Puedes realizar otro pedido mañana.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+  
+    // Continuar con la validación normal de campos
     const formErrors = validateFields();
     if (Object.keys(formErrors).length > 0) {
       toast({
@@ -167,11 +178,11 @@ const DetallePedidoForm = () => {
       });
       return;
     }
-
+  
     setIsLoading(true);
-
+  
     if (!isPedidoFinalizado) {
-      const newPedido = { ...currentPedido };
+      const newPedido = { ...currentPedido, fecha: new Date().toISOString() };
       try {
         const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
         setPedidoIdGuardado(pedidoGuardado.id);
@@ -193,25 +204,24 @@ const DetallePedidoForm = () => {
     onClose();
     resetForm();
   };
+  
 
   const resetForm = () => {
     setCurrentPedido({
       ciudadId: 0,
       deudorId: 0,
       tiendaId: 0,
-      tiendaId2: 0,
       usuarioId: parseInt(usuarioId),
       estadoId: 1,
     });
     setIsPedidoFinalizado(false);
-    setPedidoIdGuardado(null);
+    setIsTienda1Disabled(false);
+    setIsTienda2Disabled(false);
   };
 
   const handleRealizarPedido = async () => {
     try {
-      await dispatch(
-        togglePedidoStatus({ id: selectedPedidoId, estadoId: 2 })
-      ).unwrap();
+      await dispatch(togglePedidoStatus({ id: selectedPedidoId, estadoId: 2 })).unwrap();
       dispatch(tablaPedidos());
       onDialogClose();
       toast({
@@ -297,11 +307,7 @@ const DetallePedidoForm = () => {
                       colorScheme="blue"
                       onClick={() => handleToggleDetails(pedido.id)}
                     >
-                      {isDetailsOpen[pedido.id] ? (
-                        <ChevronUpIcon />
-                      ) : (
-                        <ChevronDownIcon />
-                      )}
+                      {isDetailsOpen[pedido.id] ? <ChevronUpIcon /> : <ChevronDownIcon />}
                     </Button>
                   </Td>
                   <Td>
@@ -354,31 +360,32 @@ const DetallePedidoForm = () => {
             {!isPedidoFinalizado ? (
               <div>
                 <CiudadSelector
-                  value={
-                    currentPedido.ciudadId ? String(currentPedido.ciudadId) : ""
-                  }
+                  value={currentPedido.ciudadId ? String(currentPedido.ciudadId) : ""}
                   onChange={handleCiudadChange}
                 />
-                <DeuSelector
-                  ciudadId={currentPedido.ciudadId}
-                  onSelect={handleDeudorSelect}
-                />
-                <TiendaSelector
-                  rutaIds={usuarioRutas || []} // Asegúrate de pasar un array aunque esté vacío
-                  paisId={Number(paisId)} // ID del país del usuario dinámico
-                  value={tiendaSeleccionada} // La tienda seleccionada
-                  onChange={handleTiendaChange} // Función que maneja el cambio de tienda seleccionada
-                  isRutaFilter={true} // Indica que estamos filtrando por ruta
-                />
+                <DeuSelector ciudadId={currentPedido.ciudadId} onSelect={handleDeudorSelect} />
 
-                {/* Segundo selector que filtra por país */}
-                <TiendaSelector
-                  rutaIds={[]} // En este caso no filtramos por ruta
-                  paisId={Number(paisId)} // Filtrar por el paisId dinámico
-                  value={currentPedido.tiendaId2}
-                  onChange={handleTiendaChange2} // Función que maneja el segundo selector
-                  isRutaFilter={false} // No filtramos por ruta, solo por país
-                />
+                <FormControl isDisabled={isTienda2Disabled}>
+                  <FormLabel>Tiendas asignadas</FormLabel>
+                  <TiendaSelector
+                    rutaIds={usuarioRutas || []}
+                    paisId={Number(paisId)}
+                    value={tiendaSeleccionada}
+                    onChange={handleTiendaChange}
+                    isRutaFilter={true}
+                  />
+                </FormControl>
+
+                <FormControl isDisabled={isTienda1Disabled} mt={4}>
+                  <FormLabel>Todas las tiendas</FormLabel>
+                  <TiendaSelector
+                    rutaIds={[]}
+                    paisId={Number(paisId)}
+                    value={currentPedido.tiendaId2}
+                    onChange={handleTiendaChange2}
+                    isRutaFilter={false}
+                  />
+                </FormControl>
               </div>
             ) : (
               <ProductosTable pedidoId={pedidoIdGuardado} />
@@ -402,11 +409,7 @@ const DetallePedidoForm = () => {
         </ModalContent>
       </Modal>
 
-      <AlertDialog
-        isOpen={isDialogOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onDialogClose}
-      >
+      <AlertDialog isOpen={isDialogOpen} leastDestructiveRef={cancelRef} onClose={onDialogClose}>
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
@@ -436,4 +439,3 @@ const DetallePedidoForm = () => {
 };
 
 export default DetallePedidoForm;
-
