@@ -51,6 +51,7 @@ const PageFormTienda = () => {
     estaActivo: true,
     deudorId: "",
     ciudadId: "",
+    zona: "",
     rutaId: "",
     usuarioCreadoPorId: "",
   });
@@ -105,6 +106,7 @@ const PageFormTienda = () => {
       ...currentTienda,
       deudorCorrelativo: currentTienda.deudorCorrelativo,
       nombreDeu: currentTienda.nombreDeu,
+      zona: currentTienda.zona,
     };
 
     if (isEditMode) {
@@ -226,6 +228,7 @@ const PageFormTienda = () => {
             <Th>Estado</Th>
             <Th>Deudor</Th>
             <Th>Ciudad</Th>
+            <Th>Zona</Th>
             <Th>Ruta</Th>
             <Th>Acciones</Th>
           </Tr>
@@ -249,6 +252,7 @@ const PageFormTienda = () => {
                 tienda.nombreDeu || ""
               }`}</Td>
               <Td>{tienda.nombreCiudad}</Td>
+              <Td>{tienda.zona}</Td>
               <Td>{tienda.nombreRuta}</Td>
               <Td>
                 <Button
@@ -344,6 +348,15 @@ const PageFormTienda = () => {
               {errors.ciudadId && (
                 <FormErrorMessage>{errors.ciudadId}</FormErrorMessage>
               )}
+            </FormControl>
+
+            <FormControl mb={3}>
+              <FormLabel>Zona</FormLabel>
+              <Input
+                name="zona"
+                value={currentTienda.zona}
+                onChange={handleInputChange}
+              />
             </FormControl>
 
             <FormControl mb={3} isInvalid={errors.rutaId} isRequired>

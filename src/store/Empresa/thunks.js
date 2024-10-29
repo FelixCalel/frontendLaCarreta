@@ -68,3 +68,15 @@ export const sincronizarClientes = createAsyncThunk(
   }
 );
 
+export const sincronizarItems = createAsyncThunk(
+  'empresas/sincronizarItems',
+  async ({ dbsap, ipsap, empresaId, warehouses }) => {
+    const response = await axios.post(`${BASE_URL}/sap/items/sincronizarItems`, {
+      warehouses,
+      dbsap,
+      ipsap,
+      empresaId
+    });
+    return response.data;
+  }
+);

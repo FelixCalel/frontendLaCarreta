@@ -80,7 +80,6 @@ const DetallePedidoForm = () => {
     estadoId: 1,
   });
 
-  const [tiendaSeleccionada, setTiendaSeleccionada] = useState(null);
   const [isTienda1Disabled, setIsTienda1Disabled] = useState(false);
   const [isTienda2Disabled, setIsTienda2Disabled] = useState(false);
 
@@ -136,37 +135,12 @@ const DetallePedidoForm = () => {
       formErrors.ciudadId = "La ciudad es obligatoria";
     if (!currentPedido.deudorId && !isPedidoFinalizado)
       formErrors.deudorId = "El deudor es obligatorio";
-    
-    // Validación ajustada para permitir que se seleccione solo una tienda
     if (!currentPedido.tiendaId && !isPedidoFinalizado)
       formErrors.tiendaId = "Debe seleccionar una tienda";
-  
     return formErrors;
   };
 
   const handleSubmit = async () => {
-    // Obtener la fecha actual en formato YYYY-MM-DD
-    const today = new Date().toISOString().split('T')[0];
-    // Filtrar los pedidos del usuario en la misma tienda y en la fecha actual
-    const pedidosHoy = pedidos.filter(pedido => 
-      pedido.usuarioId === parseInt(usuarioId) &&
-      pedido.tiendaId === currentPedido.tiendaId &&
-      pedido.fecha?.split('T')[0] === today
-    );
-  
-    // Si ya existe un pedido en la tienda seleccionada hoy, mostrar un error
-    if (pedidosHoy.length > 0) {
-      toast({
-        title: "Error",
-        description: "Ya has realizado un pedido en esta tienda hoy. Puedes realizar otro pedido mañana.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-  
-    // Continuar con la validación normal de campos
     const formErrors = validateFields();
     if (Object.keys(formErrors).length > 0) {
       toast({
@@ -179,10 +153,33 @@ const DetallePedidoForm = () => {
       return;
     }
   
+    // Obtener la fecha de hoy en formato "YYYY-MM-DD"
+    const today = new Date().toISOString().split('T')[0];
+  
+    // Filtrar los pedidos del usuario en la misma tienda y en la fecha actual
+    const pedidosHoy = pedidos.filter(pedido => 
+      pedido.usuarioId === parseInt(usuarioId) && // Validar por usuario
+      pedido.tiendaId === currentPedido.tiendaId && // Validar la misma tienda
+      pedido.fecha?.split('T')[0] === today // Validar si la fecha coincide con hoy
+    );
+  
+    // Si ya hay un pedido con la misma tienda hoy, mostrar mensaje de error
+    if (pedidosHoy.length > 0) {
+      toast({
+        title: "Pedido duplicado",
+        description: "Ya has hecho un pedido en esta tienda hoy. No puedes realizar otro pedido en el mismo día.",
+        status: "error",
+        duration: 4000, // Aumentar la duración para que el usuario vea el mensaje
+        isClosable: true,
+      });
+      return;
+    }
+  
+    // Si no hay pedidos duplicados, continuar con la creación del pedido
     setIsLoading(true);
   
     if (!isPedidoFinalizado) {
-      const newPedido = { ...currentPedido, fecha: new Date().toISOString() };
+      const newPedido = { ...currentPedido, fecha: new Date().toISOString() }; // Añadir fecha actual
       try {
         const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
         setPedidoIdGuardado(pedidoGuardado.id);
@@ -197,6 +194,13 @@ const DetallePedidoForm = () => {
         });
       } catch (error) {
         console.error("Error al guardar el pedido:", error);
+        toast({
+          title: "Error",
+          description: "Hubo un error al guardar el pedido. Inténtalo de nuevo.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       } finally {
         setIsLoading(false);
       }
@@ -370,7 +374,7 @@ const DetallePedidoForm = () => {
                   <TiendaSelector
                     rutaIds={usuarioRutas || []}
                     paisId={Number(paisId)}
-                    value={tiendaSeleccionada}
+                    value={currentPedido.tiendaId}
                     onChange={handleTiendaChange}
                     isRutaFilter={true}
                   />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -29,58 +29,77 @@ import {
   Stack,
   Tooltip,
   useColorModeValue,
-} from '@chakra-ui/react';
-import { EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons';
-import { FaSyncAlt } from 'react-icons/fa';
-import { motion } from 'framer-motion';
-import { format } from 'date-fns';
-import { useDispatch, useSelector } from 'react-redux';
+} from "@chakra-ui/react";
+import { EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
+import { FaSyncAlt } from "react-icons/fa";
+import { motion } from "framer-motion";
+import { format } from "date-fns";
+import { useDispatch, useSelector } from "react-redux";
 import {
   tablaEmpresa,
   addNewEmpresa,
   deleteEmpresa,
   updateEmpresa,
-  toggleEmpresaStatus,
   tablaPais,
   sincronizarClientes,
-} from '../../store/Empresa/thunks';
+  sincronizarItems
+} from "../../store/Empresa/thunks";
 
 const MotionBox = motion(Box);
 
 const PageFormEmpresa = () => {
   const dispatch = useDispatch();
-  const { data, status, error, paises, paisesStatus, paisesError } = useSelector((state) => state.empresas);
+  const { data, status, error, paises, paisesStatus, paisesError } =
+    useSelector((state) => state.empresas);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentEmpresa, setCurrentEmpresa] = useState({ id: '', nombre: '', alias: '', estaActivo: true, baseDatos: '', ipBaseDatos: '', paisId: '' });
+  const [warehouseModalOpen, setWarehouseModalOpen] = useState(false);
+  const [warehouses, setWarehouses] = useState("");
+
+  const [currentEmpresa, setCurrentEmpresa] = useState({
+    id: "",
+    nombre: "",
+    alias: "",
+    estaActivo: true,
+    baseDatos: "",
+    ipBaseDatos: "",
+    paisId: "",
+  });
   const [errors, setErrors] = useState({});
   const isMobile = useBreakpointValue({ base: true, md: false });
   const [syncDisabled, setSyncDisabled] = useState({});
   const toast = useToast();
 
   useEffect(() => {
-    if (status === 'idle') {
+    if (status === "idle") {
       dispatch(tablaEmpresa());
     }
-    if (paisesStatus === 'idle') {
+    if (paisesStatus === "idle") {
       dispatch(tablaPais());
     }
   }, [dispatch, status, paisesStatus]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : (name === 'paisId' ? parseInt(value, 10) : value);
+    const newValue =
+      type === "checkbox"
+        ? checked
+        : name === "paisId"
+        ? parseInt(value, 10)
+        : value;
     setCurrentEmpresa({ ...currentEmpresa, [name]: newValue });
-    setErrors({ ...errors, [name]: '' });
+    setErrors({ ...errors, [name]: "" });
   };
 
   const validateFields = () => {
     let formErrors = {};
-    if (!currentEmpresa.nombre) formErrors.nombre = 'El nombre es obligatorio';
-    if (!currentEmpresa.alias) formErrors.alias = 'El alias es obligatorio';
-    if (!currentEmpresa.baseDatos) formErrors.baseDatos = 'La base de datos es obligatoria';
-    if (!currentEmpresa.ipBaseDatos) formErrors.ipBaseDatos = 'La IP SAP es obligatoria';
-    if (!currentEmpresa.paisId) formErrors.paisId = 'El país es obligatorio';
+    if (!currentEmpresa.nombre) formErrors.nombre = "El nombre es obligatorio";
+    if (!currentEmpresa.alias) formErrors.alias = "El alias es obligatorio";
+    if (!currentEmpresa.baseDatos)
+      formErrors.baseDatos = "La base de datos es obligatoria";
+    if (!currentEmpresa.ipBaseDatos)
+      formErrors.ipBaseDatos = "La IP SAP es obligatoria";
+    if (!currentEmpresa.paisId) formErrors.paisId = "El país es obligatorio";
     return formErrors;
   };
 
@@ -90,28 +109,25 @@ const PageFormEmpresa = () => {
       setErrors(formErrors);
       return;
     }
-  
+
     if (isEditMode) {
-      // Si estamos en modo de edición, actualizamos la empresa
       dispatch(updateEmpresa(currentEmpresa)).then(() => {
         onClose();
         dispatch(tablaEmpresa());
       });
     } else {
       try {
-        // Creamos la nueva empresa
         const result = await dispatch(addNewEmpresa(currentEmpresa));
-        
-        const newEmpresaId = result.payload?.id; // Aquí estamos obteniendo el ID de la nueva empresa desde el payload
-        
+        const newEmpresaId = result.payload?.id;
         if (newEmpresaId) {
-          // Ejecutamos la sincronización automáticamente después de crear la empresa
-          await handleSync(newEmpresaId, currentEmpresa.baseDatos, currentEmpresa.ipBaseDatos);
+          await handleSync(
+            newEmpresaId,
+            currentEmpresa.baseDatos,
+            currentEmpresa.ipBaseDatos
+          );
         } else {
           console.error("Error: No se pudo obtener el ID de la empresa creada.");
         }
-  
-        // Cerramos el modal y actualizamos la tabla de empresas
         onClose();
         dispatch(tablaEmpresa());
       } catch (error) {
@@ -119,70 +135,106 @@ const PageFormEmpresa = () => {
       }
     }
   };
-  
 
   const handleSync = async (empresaId, baseDatos, ipBaseDatos) => {
     try {
-      setSyncDisabled(prevState => ({ ...prevState, [empresaId]: true })); // Deshabilitar el botón de sincronización actual
-  
-      const syncResult = await dispatch(sincronizarClientes({
-        dbsap: baseDatos,
-        ipsap: ipBaseDatos,
-        empresaId: empresaId
-      }));
-  
+      setSyncDisabled((prevState) => ({ ...prevState, [empresaId]: true }));
+      const syncResult = await dispatch(
+        sincronizarClientes({
+          dbsap: baseDatos,
+          ipsap: ipBaseDatos,
+          empresaId: empresaId,
+        })
+      );
       if (syncResult.error) {
-        console.error('Error en la sincronización:', syncResult.error);
+        console.error("Error en la sincronización:", syncResult.error);
         toast({
-          title: 'Error en la sincronización.',
-          description: 'No se pudo completar la sincronización.',
-          status: 'error',
+          title: "Error en la sincronización.",
+          description: "No se pudo completar la sincronización.",
+          status: "error",
           duration: 2500,
           isClosable: true,
         });
       } else {
         toast({
-          title: 'Sincronización completada.',
-          description: 'La sincronización se completó correctamente.',
-          status: 'success',
+          title: "Sincronización completada.",
+          description: "La sincronización se completó correctamente.",
+          status: "success",
           duration: 2500,
           isClosable: true,
         });
       }
     } catch (error) {
       toast({
-        title: 'Error en la sincronización.',
-        description: 'No se pudo completar la sincronización.',
-        status: 'error',
+        title: "Error en la sincronización.",
+        description: "No se pudo completar la sincronización.",
+        status: "error",
         duration: 2500,
         isClosable: true,
       });
     } finally {
-      setSyncDisabled(prevState => ({ ...prevState, [empresaId]: false })); // Habilitar el botón después de que se complete la acción
+      setSyncDisabled((prevState) => ({ ...prevState, [empresaId]: false }));
     }
   };
-  
+
+  const handleSyncWithWarehouses = async () => {
+    const empresa = data.find((emp) => emp.id === currentEmpresa.id);
+    if (!empresa) return;
+
+    try {
+        setSyncDisabled(prevState => ({ ...prevState, [empresa.id]: true }));
+
+        // Formatear warehouses como un string en lugar de array
+        const formattedWarehouses = formatWarehouses(warehouses);
+
+        console.log("Datos enviados:", {
+            dbsap: empresa.baseDatos,
+            ipsap: empresa.ipBaseDatos,
+            empresaId: empresa.id,
+            warehouses: formattedWarehouses, // String en lugar de array
+        });
+
+        await dispatch(sincronizarItems({
+            dbsap: empresa.baseDatos,
+            ipsap: empresa.ipBaseDatos,
+            empresaId: empresa.id,
+            warehouses: formattedWarehouses,
+        }));
+
+        toast({
+            title: 'Sincronización completada.',
+            description: 'La sincronización se completó correctamente.',
+            status: 'success',
+            duration: 2500,
+            isClosable: true,
+        });
+    } catch (error) {
+        console.error("Error en la sincronización:", error);
+        toast({
+            title: 'Error en la sincronización.',
+            description: 'No se pudo completar la sincronización.',
+            status: 'error',
+            duration: 2500,
+            isClosable: true,
+        });
+    } finally {
+        setSyncDisabled(prevState => ({ ...prevState, [empresa.id]: false }));
+        setWarehouseModalOpen(false);
+    }
+  };
+
+  // Formatear warehouses como un string en lugar de array
+  const formatWarehouses = (warehouses) => {
+    return warehouses.split(',').map(wh => `'${wh.trim()}'`).join(', ');
+  };
 
   const handleDelete = (id) => {
     dispatch(deleteEmpresa(id)).then(() => {
       dispatch(tablaEmpresa());
       toast({
-        title: 'Empresa eliminada.',
-        description: 'La empresa ha sido eliminada correctamente.',
-        status: 'info',
-        duration: 2500,
-        isClosable: true,
-      });
-    });
-  };
-
-  const handleToggleStatus = (id, estaActivo) => {
-    dispatch(toggleEmpresaStatus({ id, estaActivo })).then(() => {
-      dispatch(tablaEmpresa());
-      toast({
-        title: 'Estado actualizado.',
-        description: 'El estado de la empresa ha sido actualizado.',
-        status: 'success',
+        title: "Empresa eliminada.",
+        description: "La empresa ha sido eliminada correctamente.",
+        status: "info",
         duration: 2500,
         isClosable: true,
       });
@@ -197,27 +249,40 @@ const PageFormEmpresa = () => {
 
   const formatDate = (dateString) => {
     try {
-      return dateString ? format(new Date(dateString), 'dd-MM-yyyy HH:mm:ss') : 'Fecha inválida';
+      return dateString
+        ? format(new Date(dateString), "dd-MM-yyyy HH:mm:ss")
+        : "Fecha inválida";
     } catch (error) {
       return "Fecha inválida";
     }
   };
 
-  const bg = useColorModeValue('white', 'gray.800');
-  const cardBg = useColorModeValue('gray.100', 'gray.700');
+  const cardBg = useColorModeValue("gray.100", "gray.700");
 
-  if (status === 'loading' || paisesStatus === 'loading') {
+  if (status === "loading" || paisesStatus === "loading") {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Spinner size="xl" />
       </Box>
     );
   }
 
-  if (status === 'failed' || paisesStatus === 'failed') {
+  if (status === "failed" || paisesStatus === "failed") {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-        <Text fontSize="2xl" color="red.500">Error al cargar los datos: {error || paisesError}</Text>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <Text fontSize="2xl" color="red.500">
+          Error al cargar los datos: {error || paisesError}
+        </Text>
       </Box>
     );
   }
@@ -235,18 +300,37 @@ const PageFormEmpresa = () => {
         mb={4}
       >
         <Flex justifyContent="space-between" alignItems="center">
-          <Text fontSize="2xl" fontWeight="bold">Empresas</Text>
+          <Text fontSize="2xl" fontWeight="bold">
+            Empresas
+          </Text>
           <Button
             colorScheme="teal"
             leftIcon={<AddIcon />}
-            onClick={() => { setIsEditMode(false); setCurrentEmpresa({ nombre: '', alias: '', estaActivo: true, baseDatos: '', ipBaseDatos: '', paisId: '' }); onOpen(); }}
+            onClick={() => {
+              setIsEditMode(false);
+              setCurrentEmpresa({
+                nombre: "",
+                alias: "",
+                estaActivo: true,
+                baseDatos: "",
+                ipBaseDatos: "",
+                paisId: "",
+              });
+              onOpen();
+            }}
           >
             Agregar Empresa
           </Button>
         </Flex>
       </MotionBox>
 
-      <SimpleGrid columns={[1, 2, 3]} spacing={4} w="100%" maxW="100vw" overflowX="hidden">
+      <SimpleGrid
+        columns={[1, 2, 3]}
+        spacing={4}
+        w="100%"
+        maxW="100vw"
+        overflowX="hidden"
+      >
         {data.map((empresa) => (
           <MotionBox
             key={empresa.id}
@@ -261,17 +345,32 @@ const PageFormEmpresa = () => {
           >
             <VStack align="start" spacing={2} w="100%">
               <HStack justifyContent="space-between" w="100%">
-                <Text fontSize="lg" fontWeight="bold">{empresa.nombre}</Text>
-                <Badge colorScheme={empresa.estaActivo ? 'green' : 'red'}>
-                  {empresa.estaActivo ? 'ACTIVO' : 'INACTIVO'}
+                <Text fontSize="lg" fontWeight="bold">
+                  {empresa.nombre}
+                </Text>
+                <Badge colorScheme={empresa.estaActivo ? "green" : "red"}>
+                  {empresa.estaActivo ? "ACTIVO" : "INACTIVO"}
                 </Badge>
               </HStack>
-              <Text><strong>Alias:</strong> {empresa.alias}</Text>
-              <Text><strong>Creada:</strong> {formatDate(empresa.creadoEl)}</Text>
-              <Text><strong>Actualizada:</strong> {formatDate(empresa.actualizadoEl)}</Text>
-              <Text><strong>Base de Datos:</strong> {empresa.baseDatos}</Text>
-              <Text><strong>IP SAP:</strong> {empresa.ipBaseDatos}</Text>
-              <Text><strong>País:</strong> {paisMap[empresa.paisId] || 'Sin país'}</Text>
+              <Text>
+                <strong>Alias:</strong> {empresa.alias}
+              </Text>
+              <Text>
+                <strong>Creada:</strong> {formatDate(empresa.creadoEl)}
+              </Text>
+              <Text>
+                <strong>Actualizada:</strong>{" "}
+                {formatDate(empresa.actualizadoEl)}
+              </Text>
+              <Text>
+                <strong>Base de Datos:</strong> {empresa.baseDatos}
+              </Text>
+              <Text>
+                <strong>IP SAP:</strong> {empresa.ipBaseDatos}
+              </Text>
+              <Text>
+                <strong>País:</strong> {paisMap[empresa.paisId] || "Sin país"}
+              </Text>
               <Stack direction="row" spacing={2} mt={2} w="100%">
                 <Tooltip label="Editar" aria-label="Editar">
                   <IconButton
@@ -289,14 +388,32 @@ const PageFormEmpresa = () => {
                     colorScheme="red"
                   />
                 </Tooltip>
-                <Tooltip label="Sincronizar" aria-label="Sincronizar">
+                <Tooltip label="Sincronizar Clientes" aria-label="Sincronizar Clientes">
                   <IconButton
                     icon={<FaSyncAlt />}
-                    onClick={() => handleSync(empresa.id, empresa.baseDatos, empresa.ipBaseDatos)}
+                    onClick={() =>
+                      handleSync(
+                        empresa.id,
+                        empresa.baseDatos,
+                        empresa.ipBaseDatos
+                      )
+                    }
                     variant="outline"
-                    colorScheme={syncDisabled[empresa.id] ? 'gray' : 'blue'}
+                    colorScheme={syncDisabled[empresa.id] ? "gray" : "blue"}
                     isDisabled={syncDisabled[empresa.id]}
-                    isLoading={syncDisabled[empresa.id]} 
+                    isLoading={syncDisabled[empresa.id]}
+                  />
+                </Tooltip>
+                <Tooltip label="Sincronizar Items" aria-label="Sincronizar Items">
+                  <IconButton
+                    icon={<FaSyncAlt />}
+                    onClick={() => {
+                      setCurrentEmpresa(empresa);
+                      setWarehouseModalOpen(true);
+                    }}
+                    variant="outline"
+                    colorScheme={syncDisabled[empresa.id] ? "gray" : "green"}
+                    isDisabled={syncDisabled[empresa.id]}
                   />
                 </Tooltip>
               </Stack>
@@ -305,10 +422,17 @@ const PageFormEmpresa = () => {
         ))}
       </SimpleGrid>
 
-      <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? 'full' : 'md'} motionPreset="slideInBottom">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size={isMobile ? "full" : "md"}
+        motionPreset="slideInBottom"
+      >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{isEditMode ? 'Actualizar Empresa' : 'Agregar Empresa'}</ModalHeader>
+          <ModalHeader>
+            {isEditMode ? "Actualizar Empresa" : "Agregar Empresa"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Stack spacing={4}>
@@ -320,7 +444,9 @@ const PageFormEmpresa = () => {
                   onChange={handleInputChange}
                   placeholder="Ingrese el nombre de la empresa"
                 />
-                {errors.nombre && <FormErrorMessage>{errors.nombre}</FormErrorMessage>}
+                {errors.nombre && (
+                  <FormErrorMessage>{errors.nombre}</FormErrorMessage>
+                )}
               </FormControl>
               <FormControl isInvalid={errors.alias} isRequired>
                 <FormLabel>Alias</FormLabel>
@@ -330,7 +456,9 @@ const PageFormEmpresa = () => {
                   onChange={handleInputChange}
                   placeholder="Ingrese el alias de la empresa"
                 />
-                {errors.alias && <FormErrorMessage>{errors.alias}</FormErrorMessage>}
+                {errors.alias && (
+                  <FormErrorMessage>{errors.alias}</FormErrorMessage>
+                )}
               </FormControl>
               <FormControl display="flex" alignItems="center">
                 <FormLabel mb="0">Activo</FormLabel>
@@ -349,7 +477,9 @@ const PageFormEmpresa = () => {
                   onChange={handleInputChange}
                   placeholder="Ingrese la base de datos"
                 />
-                {errors.baseDatos && <FormErrorMessage>{errors.baseDatos}</FormErrorMessage>}
+                {errors.baseDatos && (
+                  <FormErrorMessage>{errors.baseDatos}</FormErrorMessage>
+                )}
               </FormControl>
               <FormControl isInvalid={errors.ipBaseDatos} isRequired>
                 <FormLabel>IP SAP</FormLabel>
@@ -359,7 +489,9 @@ const PageFormEmpresa = () => {
                   onChange={handleInputChange}
                   placeholder="Ingrese la IP SAP"
                 />
-                {errors.ipBaseDatos && <FormErrorMessage>{errors.ipBaseDatos}</FormErrorMessage>}
+                {errors.ipBaseDatos && (
+                  <FormErrorMessage>{errors.ipBaseDatos}</FormErrorMessage>
+                )}
               </FormControl>
               <FormControl isInvalid={errors.paisId} isRequired>
                 <FormLabel>País</FormLabel>
@@ -375,15 +507,40 @@ const PageFormEmpresa = () => {
                     </option>
                   ))}
                 </Select>
-                {errors.paisId && <FormErrorMessage>{errors.paisId}</FormErrorMessage>}
+                {errors.paisId && (
+                  <FormErrorMessage>{errors.paisId}</FormErrorMessage>
+                )}
               </FormControl>
             </Stack>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="teal" mr={3} onClick={handleSubmit}>
-              {isEditMode ? 'Actualizar' : 'Guardar'}
+              {isEditMode ? "Actualizar" : "Guardar"}
             </Button>
             <Button onClick={onClose}>Cancelar</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      <Modal isOpen={warehouseModalOpen} onClose={() => setWarehouseModalOpen(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Sincronizar Items</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>Almacenes (separados por comas)</FormLabel>
+              <Input
+                placeholder="Ejemplo: CA-0300, CA-0100"
+                value={warehouses}
+                onChange={(e) => setWarehouses(e.target.value)}
+              />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="green" mr={3} onClick={() => handleSyncWithWarehouses()}>
+              Sincronizar
+            </Button>
+            <Button variant="ghost" onClick={() => setWarehouseModalOpen(false)}>Cancelar</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
