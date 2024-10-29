@@ -42,7 +42,7 @@ import {
   updateEmpresa,
   tablaPais,
   sincronizarClientes,
-  sincronizarItems
+  sincronizarItems,
 } from "../../store/Empresa/thunks";
 
 const MotionBox = motion(Box);
@@ -126,7 +126,9 @@ const PageFormEmpresa = () => {
             currentEmpresa.ipBaseDatos
           );
         } else {
-          console.error("Error: No se pudo obtener el ID de la empresa creada.");
+          console.error(
+            "Error: No se pudo obtener el ID de la empresa creada."
+          );
         }
         onClose();
         dispatch(tablaEmpresa());
@@ -181,51 +183,81 @@ const PageFormEmpresa = () => {
     const empresa = data.find((emp) => emp.id === currentEmpresa.id);
     if (!empresa) return;
 
+    // Deshabilitar el botón de sincronización dentro del modal
+    setSyncDisabled((prevState) => ({ ...prevState, [empresa.id]: true }));
+    toast({
+      title: "Sincronización en progreso...",
+      description: "Por favor, espera mientras se sincronizan los datos.",
+      status: "info",
+      duration: 15000,
+      isClosable: true,
+    });
+
     try {
-        setSyncDisabled(prevState => ({ ...prevState, [empresa.id]: true }));
+      // Formatear warehouses como un string
+      const formattedWarehouses = formatWarehouses(warehouses);
 
-        // Formatear warehouses como un string en lugar de array
-        const formattedWarehouses = formatWarehouses(warehouses);
+      console.log("Datos enviados:", {
+        dbsap: empresa.baseDatos,
+        ipsap: empresa.ipBaseDatos,
+        empresaId: empresa.id,
+        warehouses: formattedWarehouses,
+      });
 
-        console.log("Datos enviados:", {
-            dbsap: empresa.baseDatos,
-            ipsap: empresa.ipBaseDatos,
-            empresaId: empresa.id,
-            warehouses: formattedWarehouses, // String en lugar de array
-        });
+      // Realizar la sincronización
+      const syncResult = await dispatch(
+        sincronizarItems({
+          dbsap: empresa.baseDatos,
+          ipsap: empresa.ipBaseDatos,
+          empresaId: empresa.id,
+          warehouses: formattedWarehouses,
+        })
+      );
 
-        await dispatch(sincronizarItems({
-            dbsap: empresa.baseDatos,
-            ipsap: empresa.ipBaseDatos,
-            empresaId: empresa.id,
-            warehouses: formattedWarehouses,
-        }));
-
+      if (syncResult.error) {
+        console.error("Error en la sincronización:", syncResult.error);
         toast({
-            title: 'Sincronización completada.',
-            description: 'La sincronización se completó correctamente.',
-            status: 'success',
-            duration: 2500,
-            isClosable: true,
+          title: "Error en la sincronización.",
+          description:
+            "No se pudo completar la sincronización. Verifique los datos e intente nuevamente.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
         });
+      } else {
+        toast({
+          title: "Sincronización completada.",
+          description: "La sincronización se completó correctamente.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     } catch (error) {
-        console.error("Error en la sincronización:", error);
-        toast({
-            title: 'Error en la sincronización.',
-            description: 'No se pudo completar la sincronización.',
-            status: 'error',
-            duration: 2500,
-            isClosable: true,
-        });
+      console.error("Error en la sincronización:", error);
+      toast({
+        title: "Error en la sincronización.",
+        description: "Ocurrió un error inesperado. Intente nuevamente.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
-        setSyncDisabled(prevState => ({ ...prevState, [empresa.id]: false }));
-        setWarehouseModalOpen(false);
+      // Mantener el botón deshabilitado y habilitarlo después de un tiempo
+      setTimeout(() => {
+        setSyncDisabled((prevState) => ({ ...prevState, [empresa.id]: false }));
+      }, 5000); // Espera 5 segundos antes de habilitar el botón
+
+      setWarehouseModalOpen(false);
     }
   };
 
   // Formatear warehouses como un string en lugar de array
   const formatWarehouses = (warehouses) => {
-    return warehouses.split(',').map(wh => `'${wh.trim()}'`).join(', ');
+    return warehouses
+      .split(",")
+      .map((wh) => `'${wh.trim()}'`)
+      .join(", ");
   };
 
   const handleDelete = (id) => {
@@ -388,7 +420,10 @@ const PageFormEmpresa = () => {
                     colorScheme="red"
                   />
                 </Tooltip>
-                <Tooltip label="Sincronizar Clientes" aria-label="Sincronizar Clientes">
+                <Tooltip
+                  label="Sincronizar Deus"
+                  aria-label="Sincronizar Deus"
+                >
                   <IconButton
                     icon={<FaSyncAlt />}
                     onClick={() =>
@@ -404,7 +439,10 @@ const PageFormEmpresa = () => {
                     isLoading={syncDisabled[empresa.id]}
                   />
                 </Tooltip>
-                <Tooltip label="Sincronizar Items" aria-label="Sincronizar Items">
+                <Tooltip
+                  label="Sincronizar Items"
+                  aria-label="Sincronizar Items"
+                >
                   <IconButton
                     icon={<FaSyncAlt />}
                     onClick={() => {
@@ -413,7 +451,7 @@ const PageFormEmpresa = () => {
                     }}
                     variant="outline"
                     colorScheme={syncDisabled[empresa.id] ? "gray" : "green"}
-                    isDisabled={syncDisabled[empresa.id]}
+                    isDisabled={syncDisabled[empresa.id]} // Deshabilita el botón si `syncDisabled` es true
                   />
                 </Tooltip>
               </Stack>
@@ -521,7 +559,10 @@ const PageFormEmpresa = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      <Modal isOpen={warehouseModalOpen} onClose={() => setWarehouseModalOpen(false)}>
+      <Modal
+        isOpen={warehouseModalOpen}
+        onClose={() => setWarehouseModalOpen(false)}
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Sincronizar Items</ModalHeader>
@@ -537,10 +578,20 @@ const PageFormEmpresa = () => {
             </FormControl>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="green" mr={3} onClick={() => handleSyncWithWarehouses()}>
+            <Button
+              colorScheme="green"
+              mr={3}
+              onClick={handleSyncWithWarehouses}
+              isDisabled={syncDisabled[currentEmpresa.id]} // Deshabilita el botón durante la sincronización
+            >
               Sincronizar
             </Button>
-            <Button variant="ghost" onClick={() => setWarehouseModalOpen(false)}>Cancelar</Button>
+            <Button
+              variant="ghost"
+              onClick={() => setWarehouseModalOpen(false)}
+            >
+              Cancelar
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
