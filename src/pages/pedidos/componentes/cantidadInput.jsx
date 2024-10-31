@@ -9,9 +9,9 @@ const CantidadInput = ({ value, onChange, onBlur, error, placeholder, width }) =
         <Input
           name="cantidad"
           type="number"
-          value={value}
+          value={isNaN(value) ? "0" : value} // Evitar NaN
           onChange={onChange}
-          onBlur={onBlur}  // Llamará a la función `onBlur` pasada como prop cuando el usuario pierda el foco
+          onBlur={onBlur}
           placeholder={placeholder}
           width={width || "60px"}
           size="sm"
@@ -25,7 +25,7 @@ const CantidadInput = ({ value, onChange, onBlur, error, placeholder, width }) =
 CantidadInput.propTypes = {
   value: PropTypes.number.isRequired,
   onChange: PropTypes.func.isRequired,
-  onBlur: PropTypes.func,  // Agregar `onBlur` como prop opcional
+  onBlur: PropTypes.func,
   error: PropTypes.string,
   placeholder: PropTypes.string,
   width: PropTypes.string,

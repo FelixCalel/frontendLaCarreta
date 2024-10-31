@@ -44,9 +44,9 @@ export default function NavBar() {
 
   // Notificaciones personalizadas para el rol 2
   const notificacionesRol2 = [
-    { id: 1, mensaje: "Tienes 3 nuevas tareas asignadas." },
-    { id: 2, mensaje: "Revisa los informes de la semana." },
-    { id: 3, mensaje: "Nueva solicitud de reunión pendiente." },
+    // { id: 1, mensaje: "Tienes 3 nuevas tareas asignadas." },
+    // { id: 2, mensaje: "Revisa los informes de la semana." },
+    // { id: 3, mensaje: "Nueva solicitud de reunión pendiente." },
   ];
 
   // Manejo del colapso del cuadro de notificaciones

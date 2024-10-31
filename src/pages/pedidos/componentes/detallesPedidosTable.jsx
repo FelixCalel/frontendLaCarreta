@@ -9,6 +9,8 @@ import {
   IconButton,
   Tooltip,
   Heading,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react";
 import { DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
@@ -36,6 +38,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     productoId: "",
     nombreProducto: "",
     cantidad: 0,
+    cantidadDisponible: 0, // Añadimos cantidadDisponible aquí
   });
   const [isLoading, setIsLoading] = useState(false);
   const [resetFields, setResetFields] = useState(false);
@@ -52,14 +55,17 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           const productosComunes = await dispatch(
             getPedidosComunesByUsuarioId(usuarioId)
           ).unwrap();
-          setProductos(
-            productosComunes.map((prod) => ({
-              ...prod,
-              cantidad: 0, // Inicializamos cantidad editable en 0
-            }))
-          );
+          const mappedProducts = productosComunes.map((prod) => ({
+            ...prod,
+            cantidad: 0,
+            cantidadDisponible: prod.cantidadDisponible, // Asegurando que asignamos cantidadDisponible
+          }));
+
+          setProductos(mappedProducts);
+          console.log("Productos comunes cargados:", mappedProducts); // Consola para verificar datos
         } else {
           setProductos(detalles);
+          console.log("Detalles del pedido cargados:", detalles); // Consola para verificar datos
         }
       } catch (error) {
         console.error("Error al cargar los detalles del pedido:", error);
@@ -70,11 +76,16 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     cargarDetalles();
   }, [dispatch, pedidoId, usuarioId]);
 
-  const handleProductoChange = (productoId, nombreProducto) => {
+  const handleProductoChange = (
+    productoId,
+    nombreProducto,
+    cantidadDisponible
+  ) => {
     setNewProducto((prev) => ({
       ...prev,
       productoId,
       nombreProducto,
+      cantidadDisponible,
     }));
   };
 
@@ -98,6 +109,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           productoId: "",
           nombreProducto: "",
           cantidad: 0,
+          cantidadDisponible: 0,
         });
         setResetFields(true);
 
@@ -149,18 +161,14 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
   };
 
   const handleCantidadChange = async (detalleId, cantidad) => {
-    // Actualizar el estado local para que el cambio sea inmediato en la interfaz
     setProductos((prevProductos) =>
       prevProductos.map((producto) =>
-        producto.id === detalleId // Cambiar a `producto.id` en lugar de `producto.productoId`
-          ? { ...producto, cantidad }
-          : producto
+        producto.id === detalleId ? { ...producto, cantidad } : producto
       )
     );
 
-    // Llamar a la API para actualizar la cantidad en el backend
     try {
-      await dispatch(updateDetalleOrden({ id: detalleId, cantidad })).unwrap(); // Asegurarse de pasar `detalleId`
+      await dispatch(updateDetalleOrden({ id: detalleId, cantidad })).unwrap();
       toast({
         title: "Cantidad actualizada.",
         description: "La cantidad del producto se ha actualizado exitosamente.",
@@ -200,7 +208,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
             {productos.length > 0 ? (
               productos.map((producto) => (
                 <MotionBox
-                  key={producto.id} // Usar `producto.id` aquí
+                  key={producto.id}
                   p={1}
                   boxShadow="sm"
                   borderWidth="1px"
@@ -214,8 +222,15 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                   <HStack justifyContent="space-between" spacing={1}>
                     <Box>
                       <Text fontWeight="bold" fontSize="sm">
-                      {`${producto.codigo} - ${producto.nombreProducto}`}
+                        {`${producto.codigo} - ${producto.nombreProducto}`}
                       </Text>
+                      <Text fontSize="xs" color="gray.500">
+                        Cantidad Máxima:{" "}
+                        {producto.cantidadDisponible !== undefined
+                          ? producto.cantidadDisponible
+                          : "No disponible"}
+                      </Text>
+
                       <CantidadInput
                         value={producto.cantidad}
                         onChange={(e) =>
@@ -231,10 +246,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                           )
                         }
                         onBlur={() =>
-                          handleCantidadChange(
-                            producto.id, // Pasar el `id` del detalle aquí
-                            producto.cantidad
-                          )
+                          handleCantidadChange(producto.id, producto.cantidad)
                         }
                         placeholder="Cantidad"
                         size="sm"
@@ -246,7 +258,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                       <IconButton
                         icon={<DeleteIcon />}
                         colorScheme="red"
-                        onClick={() => handleRemoveProducto(producto.id)} // Usar `producto.id` en lugar de `producto.productoId`
+                        onClick={() => handleRemoveProducto(producto.id)}
                         size="xs"
                       />
                     </Tooltip>
@@ -271,7 +283,13 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
             >
               <HStack spacing={1} justifyContent="space-between">
                 <ProductoSelector
-                  onSelect={handleProductoChange}
+                  onSelect={(productoId, nombreProducto, cantidadDisponible) =>
+                    handleProductoChange(
+                      productoId,
+                      nombreProducto,
+                      cantidadDisponible
+                    )
+                  }
                   reset={resetFields}
                 />
                 <CantidadInput

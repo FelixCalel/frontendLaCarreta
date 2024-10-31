@@ -7,18 +7,13 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 export const tablaPedidos = createAsyncThunk(
   'pedidos/fetchPedidos',
   async () => {
-    try {
-      const response = await axios.get(`${BASE_URL}/form/pedidos/todos`);
-      const data = response.data;
-      data.sort((a, b) => a.id - b.id); 
-      return data;
-    } catch (error) {
-      // Registrar el error para entender qué salió mal
-      console.error("Error al obtener pedidos:", error.response ? error.response.data : error.message);
-      throw error;
-    }
+    const response = await axios.get(`${BASE_URL}/form/pedidos/todos`);
+    const data = response.data;
+    data.sort((a, b) => a.id - b.id); // Ordenar los datos
+    return data;
   }
 );
+
 
 
 // Add new Pedido
@@ -26,7 +21,6 @@ export const addNewPedido = createAsyncThunk(
   'pedidos/addNewPedido',
   async (newPedido) => {
     const response = await axios.post(`${BASE_URL}/form/pedidos/create`, newPedido);
-    console.log("Pedido Creado: ", newPedido);
     return response.data;
   }
 );
