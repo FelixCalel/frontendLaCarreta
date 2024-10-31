@@ -19,7 +19,8 @@ import {
   addNewDetalleOrden,
   getDetalleOrdenByPedidoId,
   deleteDetalleOrden,
-  getPedidosComunesByUsuarioId
+  getPedidosComunesByUsuarioId,
+  updateDetalleOrden
 } from "../../../store/Pedidos/DetallePedidos/thunks";
 import PropTypes from "prop-types";
 
@@ -43,10 +44,14 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     const cargarDetalles = async () => {
       try {
         setIsLoading(true);
-        const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+        const detalles = await dispatch(
+          getDetalleOrdenByPedidoId(pedidoId)
+        ).unwrap();
 
         if (detalles.length === 0) {
-          const productosComunes = await dispatch(getPedidosComunesByUsuarioId(usuarioId)).unwrap();
+          const productosComunes = await dispatch(
+            getPedidosComunesByUsuarioId(usuarioId)
+          ).unwrap();
           setProductos(
             productosComunes.map((prod) => ({
               ...prod,
@@ -84,7 +89,9 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         };
 
         await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
-        const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+        const detalles = await dispatch(
+          getDetalleOrdenByPedidoId(pedidoId)
+        ).unwrap();
         setProductos(detalles);
 
         setNewProducto({
@@ -117,7 +124,9 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
   const handleRemoveProducto = async (productoId) => {
     try {
       await dispatch(deleteDetalleOrden(productoId)).unwrap();
-      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+      const detalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedidoId)
+      ).unwrap();
       setProductos(detalles);
 
       toast({
@@ -139,18 +148,47 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     }
   };
 
-  const handleCantidadChange = (productoId, cantidad) => {
+  const handleCantidadChange = async (productoId, cantidad) => {
     setProductos((prevProductos) =>
       prevProductos.map((producto) =>
         producto.productoId === productoId ? { ...producto, cantidad } : producto
       )
     );
+  
+    // Llamar a la API para actualizar la cantidad en el backend
+    try {
+      await dispatch(
+        updateDetalleOrden({ id: productoId, cantidad })
+      ).unwrap();
+      toast({
+        title: "Cantidad actualizada.",
+        description: "La cantidad del producto se ha actualizado exitosamente.",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error al actualizar la cantidad del producto:", error);
+      toast({
+        title: "Error.",
+        description: "No se pudo actualizar la cantidad del producto.",
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+      });
+    }
   };
+  
 
   return (
     <Box p={1} borderRadius="md" boxShadow="sm" bg="white">
       {isLoading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minH="80px">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minH="80px"
+        >
           <Spinner size="sm" />
         </Box>
       ) : (
@@ -180,8 +218,18 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                       </Text>
                       <CantidadInput
                         value={producto.cantidad}
-                        onChange={(e) => handleCantidadChange(producto.productoId, parseFloat(e.target.value))}
-                        onBlur={() => handleAddProducto()}
+                        onChange={(e) =>
+                          handleCantidadChange(
+                            producto.productoId,
+                            parseFloat(e.target.value)
+                          )
+                        }
+                        onBlur={() =>
+                          handleCantidadChange(
+                            producto.productoId,
+                            producto.cantidad
+                          )
+                        } // Llama a la API cuando el usuario sale del campo
                         placeholder="Cantidad"
                         size="sm"
                         width="60px"
@@ -192,7 +240,9 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                       <IconButton
                         icon={<DeleteIcon />}
                         colorScheme="red"
-                        onClick={() => handleRemoveProducto(producto.productoId)}
+                        onClick={() =>
+                          handleRemoveProducto(producto.productoId)
+                        }
                         size="xs"
                       />
                     </Tooltip>

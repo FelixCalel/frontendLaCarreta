@@ -27,6 +27,7 @@ import {
   FormLabel,
   useToast,
   Spinner,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import {
   DeleteIcon,
@@ -376,7 +377,11 @@ const DetallePedidoForm = () => {
         Crear Pedido
       </Button>
 
-      <VStack spacing={4} w="100%" maxW="600px">
+      <SimpleGrid
+        columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
+        spacing={4}
+        w="100%"
+      >
         {pedidosUsuario.length > 0 ? (
           pedidosUsuario.map((pedido) => (
             <Box
@@ -450,22 +455,20 @@ const DetallePedidoForm = () => {
                 </Tooltip>
 
                 <Button
-  size="sm"
-  colorScheme="teal"
-  onClick={() => showRealizarPedidoConfirmation(pedido.id)}
-  isDisabled={pedido.estadoId === 2}
-  _hover={{
-    transform: "scale(1.05)",
-    transition: "0.2s",
-    boxShadow: "lg",
-    zIndex: isDetailsOpen[pedido.id] ? "1" : "-1", // Reducir zIndex si está abierta la lista
-  }}
-  _active={{ transform: "scale(0.95)", transition: "0.1s" }}
-  shadow="md"
->
-  Realizar Pedido
-</Button>
-
+                  size="sm"
+                  colorScheme="teal"
+                  onClick={() => showRealizarPedidoConfirmation(pedido.id)}
+                  isDisabled={pedido.estadoId === 2}
+                  _hover={{
+                    transform: "scale(1.05)",
+                    transition: "0.2s",
+                    boxShadow: "lg",
+                  }}
+                  _active={{ transform: "scale(0.95)", transition: "0.1s" }}
+                  shadow="md"
+                >
+                  Realizar Pedido
+                </Button>
               </HStack>
               {isDetailsOpen[pedido.id] && (
                 <Box>
@@ -477,7 +480,7 @@ const DetallePedidoForm = () => {
         ) : (
           <Text>No hay pedidos disponibles</Text>
         )}
-      </VStack>
+      </SimpleGrid>
 
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalOverlay />

@@ -60,10 +60,21 @@ export const deleteDetalleOrden = createAsyncThunk(
 export const updateDetalleOrden = createAsyncThunk(
   'detalleOrden/updateDetalleOrden',
   async (detalleOrden) => {
-    const response = await axios.put(`${BASE_URL}/detalle/pedido/actualizar/${detalleOrden.id}`, detalleOrden);
-    return response.data;
+    console.log("ID a actualizar:", detalleOrden.id); // Verificar el ID antes de la solicitud
+    try {
+      const response = await axios.put(`${BASE_URL}/detalle/pedido/actualizar/${detalleOrden.id}`, detalleOrden);
+      return response.data;
+    } catch (error) {
+      console.error("Error al actualizar el detalle de la orden:", error);
+      if (error.response) {
+        console.error("Error en la respuesta de la API:", error.response.data);
+      }
+      throw error;
+    }
   }
 );
+
+
 
 // Toggle DetalleOrden Status
 export const toggleDetalleOrdenStatus = createAsyncThunk(
@@ -133,4 +144,7 @@ export const getPedidosComunesByUsuarioId = createAsyncThunk(
     }
   }
 );
+
+
+
 
