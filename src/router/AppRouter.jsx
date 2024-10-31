@@ -21,10 +21,10 @@ export const AppRouter = () => {
   const dispatch = useDispatch();
   const status = useSelector((state) => state.auth.status);
   const [accesosPermitidos, setAccesosPermitidos] = useState({});
-  const [roleId, setRoleId] = useState(localStorage.getItem("roleId")); // Inicializa roleId directamente desde localStorage
+  const [loading, setLoading] = useState(true); // Bandera de carga
+  const [roleId, setRoleId] = useState(localStorage.getItem("roleId"));
   const usuarioId = localStorage.getItem("usuarioId");
 
-  // Mapeo de rutas con sus respectivos rutaId
   const rutasConRutaId = [
     { path: "/pais/*", rutaId: 1, component: PaginaPais },
     { path: "/ciudad/*", rutaId: 2, component: PaginaCiudad },
@@ -35,58 +35,57 @@ export const AppRouter = () => {
     { path: "/pedidos/*", rutaId: 7, component: PaginaPedidosEntrantes },
   ];
 
-  // Cargar roleId cuando el componente se monta o cuando localStorage cambia
   useEffect(() => {
     const storedRoleId = localStorage.getItem("roleId");
-    setRoleId(storedRoleId); // Esto asegura que el roleId esté disponible antes de verificar rutas
-    // console.log("Role ID obtenido desde localStorage:", storedRoleId);
+    setRoleId(storedRoleId);
   }, []);
 
-  // Realiza las verificaciones solo cuando el roleId esté disponible
   useEffect(() => {
-    // Verifica las rutas según el roleId y usuarioId
     if (roleId && usuarioId) {
-      rutasConRutaId.forEach(({ rutaId, path }) => {
-        dispatch(validarUsuario({ usuarioId, rutaId })).then((result) => {
-          setAccesosPermitidos((prev) => ({
-            ...prev,
-            [path]: result.payload,
-          }));
-        });
-      });
+      const verificarAccesos = async () => {
+        const nuevosAccesosPermitidos = {};
+
+        await Promise.all(
+          rutasConRutaId.map(async ({ rutaId, path }) => {
+            const result = await dispatch(validarUsuario({ usuarioId, rutaId }));
+            nuevosAccesosPermitidos[path] = result.payload;
+          })
+        );
+
+        setAccesosPermitidos(nuevosAccesosPermitidos);
+        setLoading(false); // Marcar como cargado
+      };
+
+      verificarAccesos();
+    } else {
+      setLoading(false); // Marcar como cargado si no hay roleId o usuarioId
     }
   }, [dispatch, usuarioId, roleId]);
 
-  // Definir roles que pueden acceder a las rutas de administración
-  const rolesPermitidosAdmin = ["1", "2", "3", "4"]; // Por ejemplo, rol 1 es admin, rol 2 es otro tipo de admin
+  const rolesPermitidosAdmin = ["1", "2", "3", "4"];
+
+  if (loading) {
+    // Mostrar componente de carga hasta que se obtengan los permisos
+    return <CheckingAuth />;
+  }
 
   return (
     <Routes>
-      {/* Rutas Públicas */}
       <Route path="/auth/*" element={<PublicRoute><PortalPagePublic /></PublicRoute>} />
-  
-      {/* Protege la ruta de home con PrivateRoute */}
       <Route path="/auth/home" element={<PrivateRoute><HomePage /></PrivateRoute>} />
-  
-      {/* Protege las rutas de administración */}
       {rolesPermitidosAdmin.includes(roleId) ? (
         <Route path="/admin/*" element={<PrivateRoute><PortalRouter /></PrivateRoute>} />
       ) : (
-        <Route path="*" element={<Navigate to="/auth/home" />} /> // Redirige a home si no es admin ni rol permitido
+        <Route path="/admin/*" element={<Navigate to="/auth/home" />} />
       )}
-  
-      {/* Verificación de permisos para cada ruta según rol y acceso permitido */}
       {rutasConRutaId.map(({ path, component: Component }) =>
         accesosPermitidos[path] ? (
           <Route key={path} path={path} element={<PrivateRoute><Component /></PrivateRoute>} />
         ) : (
-          <Route key={path} path="*" element={<Navigate to="/auth/home" replace />} /> // Redirige si no tiene acceso
+          <Route key={path} path={path} element={<div>Acceso denegado</div>} />
         )
       )}
-  
-      {/* Ruta predeterminada */}
       <Route path="*" element={<HomePage />} />
     </Routes>
   );
-  
 };

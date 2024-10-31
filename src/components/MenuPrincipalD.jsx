@@ -177,15 +177,15 @@ const agruparModulos = (data) => {
 const MenuPrincipalD = () => {
   const dispatch = useDispatch();
   const { modulos, loading } = useSelector((state) => state.modulos);
-  const [isExpanded, setIsExpanded] = useState(false); // Menu starts collapsed
+  const [isExpanded, setIsExpanded] = useState(false);
   const [openMenus, setOpenMenus] = useState({});
   const boxBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const menuRef = useRef(null); // To detect clicks outside
+  const menuRef = useRef(null);
 
   // Responsive width
   const menuWidth = useBreakpointValue({
-    base: "60px",
+    base: "200px",
     md: "150px",
     lg: "200px",
   });
@@ -197,12 +197,11 @@ const MenuPrincipalD = () => {
     }
   }, [dispatch]);
 
-  // Detectar click fuera del menú para cerrarlo
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setIsExpanded(false);
-        setOpenMenus({}); // Cierra también los submenús
+        setOpenMenus({});
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -218,21 +217,25 @@ const MenuPrincipalD = () => {
     }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
+  // Renderizar el contenido solo si `modulos` está cargado y `loading` es falso
+  if (!modulos || loading) {
+    return null; // No muestra nada mientras carga
   }
 
   const modulosAgrupados = agruparModulos(modulos);
 
-  if (modulosAgrupados.length === 0 && !loading) {
+  if (modulosAgrupados.length === 0) {
     return <div>No hay módulos disponibles.</div>;
   }
 
   return (
     <Box
-      ref={menuRef} // Ref to detect outside clicks
+      ref={menuRef}
       w={isExpanded ? menuWidth : "60px"}
       bg={boxBg}
+      position={isExpanded ? "absolute" : "relative"}
+      top={0}
+      zIndex={isExpanded ? 10 : "auto"}
       transition="width 0.5s"
       p={4}
       boxShadow="base"
@@ -244,8 +247,7 @@ const MenuPrincipalD = () => {
         aria-label="Toggle Menu"
         isRound
         variant="ghost"
-        mb={4} // Aquí agregas un margen inferior (margin-bottom)
-        // También podrías usar 'p' o 'm' para ajustar el padding o margen general
+        mb={4}
       />
       <VStack align="stretch" spacing={1}>
         {modulosAgrupados.map((modulo) => (

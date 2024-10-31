@@ -103,3 +103,34 @@ export const getDetalleOrdenByPedidoId = createAsyncThunk(
     }
   }
 );
+
+// Fetch pedidos comunes por usuarioId
+export const getPedidosComunesByUsuarioId = createAsyncThunk(
+  'detalleOrden/fetchPedidosComunesByUsuarioId',
+  async (usuarioId) => {
+    try {
+      // Realizar la petición a la API con el usuarioId
+      const response = await axios.get(`${BASE_URL}/detalle/pedido/pedidosComunes/${usuarioId}`);
+      
+      // Verificar y ordenar los datos si es necesario
+      const data = response.data;
+      data.sort((a, b) => a.id - b.id);
+
+      return data; // Retornar los datos obtenidos para ser usados en el estado de Redux
+    } catch (error) {
+      console.error("Error al obtener los pedidos comunes por usuarioId:", error);
+
+      // Manejo de error específico
+      if (error.response) {
+        console.error("Error en la respuesta de la API:", error.response.data);
+      } else if (error.request) {
+        console.error("No se recibió respuesta de la API:", error.request);
+      } else {
+        console.error("Error al configurar la petición:", error.message);
+      }
+
+      throw error; // Propagar el error para que pueda ser manejado en el estado de Redux
+    }
+  }
+);
+

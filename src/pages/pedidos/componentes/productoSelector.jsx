@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { Flex, FormControl, FormHelperText } from "@chakra-ui/react";
+import { Flex, FormControl, Box } from "@chakra-ui/react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   AutoComplete,
@@ -8,64 +8,60 @@ import {
   AutoCompleteItem,
   AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
-
-import { tablaItems } from "../../../store/items/thunks"; // Importa el thunk correcto
+import { tablaItems } from "../../../store/items/thunks";
 
 const ProductoSelector = ({ onSelect, reset }) => {
   const dispatch = useDispatch();
-  const [inputValue, setInputValue] = useState(""); // Estado para controlar el valor del input
+  const [inputValue, setInputValue] = useState("");
 
-  // Accedemos al estado `items` en lugar de `productos`
   const items = useSelector((state) => state.items.items);
 
   useEffect(() => {
-    dispatch(tablaItems()); // Despachamos el thunk para obtener los items
+    dispatch(tablaItems());
   }, [dispatch]);
 
-  // Función para manejar la selección de un producto
   const handleSelectItem = (item) => {
-    setInputValue(item.nombre); // Actualizamos el valor del input con el nombre del producto seleccionado
-    onSelect(item.id, item.nombre); // Pasamos el ID y el nombre del producto seleccionado al componente padre
+    setInputValue(item.nombre);
+    onSelect(item.id, item.nombre);
   };
 
-  // Función para manejar los cambios en el input manualmente
   const handleInputChange = (e) => {
-    setInputValue(e.target.value); // Actualizamos el valor del input cuando el usuario escribe
+    setInputValue(e.target.value);
   };
 
-  // Efecto para limpiar el campo de input cuando se agrega un producto
   useEffect(() => {
     if (reset) {
-      setInputValue(""); // Limpiar el campo de producto después de agregar
+      setInputValue("");
     }
   }, [reset]);
 
   return (
-    <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
+    <Flex pt="2" justify="start" align="center" w="full" flexDir="column" >
       <FormControl>
-        <AutoComplete openOnFocus>
-          <AutoCompleteInput
-            variant="outline"
-            placeholder="Seleccione un item"
-            value={inputValue} // Controlamos el valor del input
-            onChange={handleInputChange} // Controlamos los cambios en el input
-          />
-          <AutoCompleteList>
-            {items.map((item) => (
-              <AutoCompleteItem
-                key={`option-${item.id}`}
-                value={item.nombre}
-                textTransform="capitalize"
-                onClick={() => handleSelectItem(item)} // Selecciona el item
-              >
-                {item.nombre}
-              </AutoCompleteItem>
-            ))}
-          </AutoCompleteList>
-        </AutoComplete>
-        <FormHelperText mt="2">
-          Seleccione el item para el pedido
-        </FormHelperText>
+        <Box w="150px" maxW="250px" position="relative" > {/* Ajuste de posición y tamaño */}
+          <AutoComplete openOnFocus >
+            <AutoCompleteInput
+              variant="outline"
+              placeholder="Seleccione un item"
+              value={inputValue}
+              onChange={handleInputChange}
+              size="sm"
+              zIndex="1000"
+            />
+            <AutoCompleteList zIndex="1000"> {/* Asegura que esté encima */}
+              {items.map((item) => (
+                <AutoCompleteItem
+                  key={`option-${item.id}`}
+                  value={item.nombre}
+                  textTransform="capitalize"
+                  onClick={() => handleSelectItem(item)}
+                >
+                  {item.nombre}
+                </AutoCompleteItem>
+              ))}
+            </AutoCompleteList>
+          </AutoComplete>
+        </Box>
       </FormControl>
     </Flex>
   );
@@ -73,7 +69,7 @@ const ProductoSelector = ({ onSelect, reset }) => {
 
 ProductoSelector.propTypes = {
   onSelect: PropTypes.func.isRequired,
-  reset: PropTypes.bool.isRequired, // Se agrega una prop para saber si reiniciar el campo
+  reset: PropTypes.bool.isRequired,
 };
 
 export default ProductoSelector;
