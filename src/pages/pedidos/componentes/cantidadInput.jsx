@@ -1,9 +1,9 @@
 import PropTypes from "prop-types";
 import { FormControl, FormLabel, Input, FormErrorMessage, HStack } from "@chakra-ui/react";
 
-const CantidadInput = ({ value, onChange, error, placeholder, width }) => {
+const CantidadInput = ({ value, onChange, onBlur, error, placeholder, width }) => {
   return (
-    <HStack spacing={2} align="start"> {/* Usa HStack para alinear el selector y cantidad horizontalmente */}
+    <HStack spacing={2} align="start">
       <FormControl mb={2} isInvalid={error} isRequired>
         <FormLabel fontSize="sm" mb={1}>Cantidad</FormLabel>
         <Input
@@ -11,8 +11,9 @@ const CantidadInput = ({ value, onChange, error, placeholder, width }) => {
           type="number"
           value={value}
           onChange={onChange}
+          onBlur={onBlur}  // Llamará a la función `onBlur` pasada como prop cuando el usuario pierda el foco
           placeholder={placeholder}
-          width={width || "60px"}  // Usa el ancho pasado como prop o un valor predeterminado
+          width={width || "60px"}
           size="sm"
         />
         {error && <FormErrorMessage>{error}</FormErrorMessage>}
@@ -24,9 +25,10 @@ const CantidadInput = ({ value, onChange, error, placeholder, width }) => {
 CantidadInput.propTypes = {
   value: PropTypes.number.isRequired,
   onChange: PropTypes.func.isRequired,
+  onBlur: PropTypes.func,  // Agregar `onBlur` como prop opcional
   error: PropTypes.string,
   placeholder: PropTypes.string,
-  width: PropTypes.string,  // Prop para permitir ajustar el ancho
+  width: PropTypes.string,
 };
 
 export default CantidadInput;

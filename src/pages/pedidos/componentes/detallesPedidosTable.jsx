@@ -20,7 +20,7 @@ import {
   getDetalleOrdenByPedidoId,
   deleteDetalleOrden,
   getPedidosComunesByUsuarioId,
-  updateDetalleOrden
+  updateDetalleOrden,
 } from "../../../store/Pedidos/DetallePedidos/thunks";
 import PropTypes from "prop-types";
 
@@ -148,18 +148,19 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     }
   };
 
-  const handleCantidadChange = async (productoId, cantidad) => {
+  const handleCantidadChange = async (detalleId, cantidad) => {
+    // Actualizar el estado local para que el cambio sea inmediato en la interfaz
     setProductos((prevProductos) =>
       prevProductos.map((producto) =>
-        producto.productoId === productoId ? { ...producto, cantidad } : producto
+        producto.id === detalleId // Cambiar a `producto.id` en lugar de `producto.productoId`
+          ? { ...producto, cantidad }
+          : producto
       )
     );
-  
+
     // Llamar a la API para actualizar la cantidad en el backend
     try {
-      await dispatch(
-        updateDetalleOrden({ id: productoId, cantidad })
-      ).unwrap();
+      await dispatch(updateDetalleOrden({ id: detalleId, cantidad })).unwrap(); // Asegurarse de pasar `detalleId`
       toast({
         title: "Cantidad actualizada.",
         description: "La cantidad del producto se ha actualizado exitosamente.",
@@ -178,7 +179,6 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
-  
 
   return (
     <Box p={1} borderRadius="md" boxShadow="sm" bg="white">
@@ -200,7 +200,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
             {productos.length > 0 ? (
               productos.map((producto) => (
                 <MotionBox
-                  key={producto.productoId}
+                  key={producto.id} // Usar `producto.id` aquí
                   p={1}
                   boxShadow="sm"
                   borderWidth="1px"
@@ -214,22 +214,28 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                   <HStack justifyContent="space-between" spacing={1}>
                     <Box>
                       <Text fontWeight="bold" fontSize="sm">
-                        {producto.nombreProducto}
+                      {`${producto.codigo} - ${producto.nombreProducto}`}
                       </Text>
                       <CantidadInput
                         value={producto.cantidad}
                         onChange={(e) =>
-                          handleCantidadChange(
-                            producto.productoId,
-                            parseFloat(e.target.value)
+                          setProductos((prevProductos) =>
+                            prevProductos.map((prod) =>
+                              prod.id === producto.id
+                                ? {
+                                    ...prod,
+                                    cantidad: parseFloat(e.target.value) || 0,
+                                  }
+                                : prod
+                            )
                           )
                         }
                         onBlur={() =>
                           handleCantidadChange(
-                            producto.productoId,
+                            producto.id, // Pasar el `id` del detalle aquí
                             producto.cantidad
                           )
-                        } // Llama a la API cuando el usuario sale del campo
+                        }
                         placeholder="Cantidad"
                         size="sm"
                         width="60px"
@@ -240,9 +246,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                       <IconButton
                         icon={<DeleteIcon />}
                         colorScheme="red"
-                        onClick={() =>
-                          handleRemoveProducto(producto.productoId)
-                        }
+                        onClick={() => handleRemoveProducto(producto.id)} // Usar `producto.id` en lugar de `producto.productoId`
                         size="xs"
                       />
                     </Tooltip>
@@ -254,6 +258,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                 No hay productos añadidos.
               </Text>
             )}
+
             <MotionBox
               p={1}
               boxShadow="sm"

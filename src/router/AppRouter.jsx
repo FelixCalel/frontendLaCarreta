@@ -41,25 +41,23 @@ export const AppRouter = () => {
   }, []);
 
   useEffect(() => {
-    if (roleId && usuarioId) {
-      const verificarAccesos = async () => {
+    const verificarAccesos = async () => {
+      if (roleId && usuarioId) {
         const nuevosAccesosPermitidos = {};
-
+  
         await Promise.all(
           rutasConRutaId.map(async ({ rutaId, path }) => {
             const result = await dispatch(validarUsuario({ usuarioId, rutaId }));
             nuevosAccesosPermitidos[path] = result.payload;
           })
         );
-
+  
         setAccesosPermitidos(nuevosAccesosPermitidos);
-        setLoading(false); // Marcar como cargado
-      };
+      }
+      setLoading(false); // Marcar como cargado al terminar de verificar
+    };
 
-      verificarAccesos();
-    } else {
-      setLoading(false); // Marcar como cargado si no hay roleId o usuarioId
-    }
+    verificarAccesos();
   }, [dispatch, usuarioId, roleId]);
 
   const rolesPermitidosAdmin = ["1", "2", "3", "4"];
@@ -82,7 +80,7 @@ export const AppRouter = () => {
         accesosPermitidos[path] ? (
           <Route key={path} path={path} element={<PrivateRoute><Component /></PrivateRoute>} />
         ) : (
-          <Route key={path} path={path} element={<div>Acceso denegado</div>} />
+          <Route key={path} path={path} element={<Navigate to="/auth/home" />} />
         )
       )}
       <Route path="*" element={<HomePage />} />

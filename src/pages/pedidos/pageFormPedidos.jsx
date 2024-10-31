@@ -64,12 +64,14 @@ const DetallePedidoForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPedidoFinalizado, setIsPedidoFinalizado] = useState(false);
   const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState({});
+  const [isDetailsOpen, setIsDetailsOpen] = useState(null);
   const [selectedPedidoId, setSelectedPedidoId] = useState(null);
-  const [setProductos] = useState([]); // Añade esta línea en DetallePedidoForm
+  const [productos, setProductos] = useState([]);
+
 
   const pedidos = useSelector((state) => state.pedidos.data);
-  const usuarioId = localStorage.getItem("usuarioId");
+  const usuarioId = Number(localStorage.getItem("usuarioId"));
+
 
   const [paisId, setPaisId] = useState(null);
 
@@ -316,12 +318,8 @@ const DetallePedidoForm = () => {
   };
 
   const handleToggleDetails = (pedidoId) => {
-    setIsDetailsOpen((prev) => ({ ...prev, [pedidoId]: !prev[pedidoId] }));
-
-    // Si el pedido se está abriendo, forzamos la recarga de los productos
-    if (!isDetailsOpen[pedidoId]) {
-      cargarDetalles(pedidoId);
-    }
+    setIsDetailsOpen(isDetailsOpen === pedidoId ? null : pedidoId);
+    if (isDetailsOpen !== pedidoId) cargarDetalles(pedidoId);
   };
 
   // Mover la carga de detalles fuera del efecto en ProductosTable y pasarlo a una función
@@ -381,6 +379,7 @@ const DetallePedidoForm = () => {
         columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
         spacing={4}
         w="100%"
+        alignItems="flex-start"
       >
         {pedidosUsuario.length > 0 ? (
           pedidosUsuario.map((pedido) => (
@@ -404,7 +403,7 @@ const DetallePedidoForm = () => {
                   Pedido ID: {pedido.id}
                 </Text>
                 <Badge colorScheme={pedido.estadoId === 1 ? "green" : "gray"}>
-                  {pedido.estadoId === 1 ? "Pendiente" : "Realizado"}
+                  {pedido.estadoId === 1 ? "Creado" : "Realizado"}
                 </Badge>
               </Stack>
               <Text mt={2}>
@@ -431,7 +430,7 @@ const DetallePedidoForm = () => {
                     onClick={() => handleToggleDetails(pedido.id)}
                     _hover={{ transform: "scale(1.05)", transition: "0.2s" }}
                   >
-                    {isDetailsOpen[pedido.id] ? (
+                    {isDetailsOpen === pedido.id ? (
                       <ChevronUpIcon />
                     ) : (
                       <ChevronDownIcon />
@@ -470,9 +469,9 @@ const DetallePedidoForm = () => {
                   Realizar Pedido
                 </Button>
               </HStack>
-              {isDetailsOpen[pedido.id] && (
-                <Box>
-                  <ProductosTable pedidoId={pedido.id} />
+              {isDetailsOpen === pedido.id && (
+                <Box mt={2} width="100%" overflowY="auto" maxHeight="200px">
+                  <ProductosTable pedidoId={pedido.id} usuarioId={usuarioId} />
                 </Box>
               )}
             </Box>

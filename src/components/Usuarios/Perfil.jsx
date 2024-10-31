@@ -13,23 +13,30 @@ import {
   IconButton,
   useColorModeValue,
   Spinner,
+  Text,
+  VStack,
+  Divider,
 } from "@chakra-ui/react";
 import { FaCamera } from "react-icons/fa";
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 export const Perfil = () => {
-  const [userData, setUserData] = useState(null); // Estado para almacenar los datos del usuario
-  const [isLoading, setIsLoading] = useState(true); // Estado para manejar la carga
-  const [error, setError] = useState(null); // Estado para manejar errores
-  const usuarioId = localStorage.getItem("usuarioId"); // Obtener el ID del usuario desde localStorage
+  const [userData, setUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const usuarioId = localStorage.getItem("usuarioId");
+
+  const colorModeBg = useColorModeValue("gray.50", "gray.800");
+  const boxBgColor = useColorModeValue("white", "gray.700");
+  const textColor = useColorModeValue("gray.600", "gray.300");
 
   useEffect(() => {
-    // Función para obtener los usuarios desde la API
     const obtenerUsuarios = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/usuarios/todos"); // Petición a la API
+        const response = await axios.get(`${BASE_URL}/usuarios/todos`);
         const usuarios = response.data.usuarios;
 
-        // Filtrar el usuario que está logueado
         const usuarioLogueado = usuarios.find(
           (usuario) => usuario.id === parseInt(usuarioId)
         );
@@ -40,7 +47,7 @@ export const Perfil = () => {
             lastName: usuarioLogueado.apellido,
             phoneNumber: usuarioLogueado.telefono,
             email: usuarioLogueado.correo,
-            avatar: "", // Puedes agregar un campo para el avatar si lo tienes disponible
+            avatar: "",
           });
         } else {
           setError("Usuario no encontrado");
@@ -52,7 +59,6 @@ export const Perfil = () => {
       }
     };
 
-    // Ejecutar la función al montar el componente
     obtenerUsuarios();
   }, [usuarioId]);
 
@@ -79,112 +85,44 @@ export const Perfil = () => {
   };
 
   const handleSubmit = () => {
-    // Aquí puedes enviar los datos actualizados del usuario al servidor
     console.log(userData);
   };
-
-  if (isLoading) {
-    return (
-      <Flex align="center" justify="center" minHeight="100vh">
-        <Spinner size="xl" />
-      </Flex>
-    );
-  }
-
-  if (error) {
-    return (
-      <Flex align="center" justify="center" minHeight="100vh">
-        <Box>{error}</Box>
-      </Flex>
-    );
-  }
 
   return (
     <Flex
       direction="column"
-      justify="center"
       align="center"
       minHeight="100vh"
-      bg={useColorModeValue("gray.100", "gray.900")}
-      p={10}
+      bg={colorModeBg}
+      p={4}
     >
-      <Box
-        bg={useColorModeValue("white", "gray.700")}
-        boxShadow="xl"
-        rounded="lg"
-        p={8}
-        maxW="lg"
-        w="full"
-      >
-        <Heading as="h2" mb={6} textAlign="center" color="teal.500">
-          Perfil de Usuario
-        </Heading>
-        <Flex direction={{ base: "column", md: "row" }} justify="space-between">
-          {/* Datos personales */}
-          <Stack spacing={4} flex="1">
-            <FormControl id="firstName" isRequired>
-              <FormLabel>Nombres</FormLabel>
-              <Input
-                placeholder="Nombres"
-                name="firstName"
-                value={userData?.firstName || ""}
-                onChange={handleChange}
-              />
-            </FormControl>
-
-            <FormControl id="lastName" isRequired>
-              <FormLabel>Apellidos</FormLabel>
-              <Input
-                placeholder="Apellidos"
-                name="lastName"
-                value={userData?.lastName || ""}
-                onChange={handleChange}
-              />
-            </FormControl>
-
-            <FormControl id="phoneNumber">
-              <FormLabel>Teléfono</FormLabel>
-              <Input
-                placeholder="Teléfono"
-                name="phoneNumber"
-                value={userData?.phoneNumber || ""}
-                onChange={handleChange}
-              />
-            </FormControl>
-
-            <FormControl id="email">
-              <FormLabel>Correo Electrónico</FormLabel>
-              <Input
-                placeholder="Correo Electrónico"
-                name="email"
-                value={userData?.email || ""}
-                isReadOnly
-              />
-            </FormControl>
-          </Stack>
-
-          {/* Avatar y botón */}
-          <Stack
-            spacing={4}
-            align="center"
-            flex="1"
-            mt={{ base: 6, md: 0 }}
-            ml={{ md: 6 }}
-          >
+      {isLoading ? (
+        <Spinner size="xl" />
+      ) : error ? (
+        <Box>{error}</Box>
+      ) : (
+        <Box
+          bg={boxBgColor}
+          boxShadow="lg"
+          rounded="lg"
+          w={{ base: "90%", md: "80%", lg: "50%" }}
+          maxW="500px"
+          p={4}
+        >
+          <VStack spacing={4}>
             <Box position="relative">
               <Avatar
                 size="2xl"
                 name={`${userData?.firstName} ${userData?.lastName}`}
                 src={userData?.avatar}
-                mb={4}
               />
               <IconButton
                 aria-label="Cambiar avatar"
                 icon={<FaCamera />}
                 size="sm"
                 position="absolute"
-                bottom={2}
-                right={2}
+                bottom={0}
+                right={0}
                 colorScheme="teal"
                 onClick={() => document.getElementById("avatarInput").click()}
               />
@@ -196,17 +134,75 @@ export const Perfil = () => {
                 style={{ display: "none" }}
               />
             </Box>
+
+            <Heading as="h2" size="lg" textAlign="center" color="teal.500">
+              {userData?.firstName} {userData?.lastName}
+            </Heading>
+
+            <Text fontSize="md" color={textColor}>
+              Perfil de Usuario
+            </Text>
+
+            <Divider />
+
+            <Stack spacing={4} w="100%">
+              <FormControl id="firstName" isRequired>
+                <FormLabel>Nombres</FormLabel>
+                <Input
+                  placeholder="Nombres"
+                  name="firstName"
+                  value={userData?.firstName || ""}
+                  onChange={handleChange}
+                  variant="filled"
+                />
+              </FormControl>
+
+              <FormControl id="lastName" isRequired>
+                <FormLabel>Apellidos</FormLabel>
+                <Input
+                  placeholder="Apellidos"
+                  name="lastName"
+                  value={userData?.lastName || ""}
+                  onChange={handleChange}
+                  variant="filled"
+                />
+              </FormControl>
+
+              <FormControl id="phoneNumber">
+                <FormLabel>Teléfono</FormLabel>
+                <Input
+                  placeholder="Teléfono"
+                  name="phoneNumber"
+                  value={userData?.phoneNumber || ""}
+                  onChange={handleChange}
+                  variant="filled"
+                />
+              </FormControl>
+
+              <FormControl id="email">
+                <FormLabel>Correo Electrónico</FormLabel>
+                <Input
+                  placeholder="Correo Electrónico"
+                  name="email"
+                  value={userData?.email || ""}
+                  isReadOnly
+                  variant="filled"
+                />
+              </FormControl>
+            </Stack>
+
             <Button
               w="full"
               colorScheme="teal"
               size="lg"
               onClick={handleSubmit}
+              _hover={{ bg: "teal.600" }}
             >
               Guardar Cambios
             </Button>
-          </Stack>
-        </Flex>
-      </Box>
+          </VStack>
+        </Box>
+      )}
     </Flex>
   );
 };

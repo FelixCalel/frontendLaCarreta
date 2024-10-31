@@ -21,8 +21,8 @@ const ProductoSelector = ({ onSelect, reset }) => {
   }, [dispatch]);
 
   const handleSelectItem = (item) => {
-    setInputValue(item.nombre);
-    onSelect(item.id, item.nombre);
+    setInputValue(`${item.codigo} - ${item.nombre}`);
+    onSelect(item.id, `${item.codigo} - ${item.nombre}`);
   };
 
   const handleInputChange = (e) => {
@@ -52,11 +52,11 @@ const ProductoSelector = ({ onSelect, reset }) => {
               {items.map((item) => (
                 <AutoCompleteItem
                   key={`option-${item.id}`}
-                  value={item.nombre}
+                  value={`${item.codigo} - ${item.nombre}`}
                   textTransform="capitalize"
                   onClick={() => handleSelectItem(item)}
                 >
-                  {item.nombre}
+                  {`${item.codigo} - ${item.nombre}`}
                 </AutoCompleteItem>
               ))}
             </AutoCompleteList>
