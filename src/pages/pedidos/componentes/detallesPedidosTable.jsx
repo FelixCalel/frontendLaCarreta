@@ -230,7 +230,6 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                           ? producto.cantidadDisponible
                           : "No disponible"}
                       </Text>
-
                       <CantidadInput
                         value={producto.cantidad}
                         onChange={(e) =>
@@ -239,8 +238,11 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                               prod.id === producto.id
                                 ? {
                                     ...prod,
-                                    cantidad: parseFloat(e.target.value) || 0,
-                                  }
+                                    cantidad: Math.min(
+                                      parseFloat(e.target.value) || 0,
+                                      producto.cantidadDisponible
+                                    ),
+                                  } // Limitar al máximo
                                 : prod
                             )
                           )
@@ -252,6 +254,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                         size="sm"
                         width="60px"
                         maxWidth="60px"
+                        max={producto.cantidadDisponible} // Establecer el límite máximo
                       />
                     </Box>
                     <Tooltip label="Eliminar producto" hasArrow>
