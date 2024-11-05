@@ -9,8 +9,6 @@ import {
   IconButton,
   Tooltip,
   Heading,
-  FormControl,
-  FormLabel,
 } from "@chakra-ui/react";
 import { DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
@@ -19,9 +17,9 @@ import ProductoSelector from "./productoSelector";
 import CantidadInput from "./cantidadInput";
 import {
   addNewDetalleOrden,
-  getDetalleOrdenByPedidoId,
   deleteDetalleOrden,
   getPedidosComunesByUsuarioId,
+  getDetalleOrdenByPedidoId,
   updateDetalleOrden,
 } from "../../../store/Pedidos/DetallePedidos/thunks";
 import PropTypes from "prop-types";
@@ -38,54 +36,47 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     productoId: "",
     nombreProducto: "",
     cantidad: 0,
-    cantidadDisponible: 0, // Añadimos cantidadDisponible aquí
+    cantidadDisponible: 0,
+    codigo: "", // Añadimos el código aquí
   });
   const [isLoading, setIsLoading] = useState(false);
   const [resetFields, setResetFields] = useState(false);
 
   useEffect(() => {
-    const cargarDetalles = async () => {
+    const cargarProductosComunes = async () => {
       try {
         setIsLoading(true);
-        const detalles = await dispatch(
-          getDetalleOrdenByPedidoId(pedidoId)
-        ).unwrap();
 
-        if (detalles.length === 0) {
-          const productosComunes = await dispatch(
-            getPedidosComunesByUsuarioId(usuarioId)
-          ).unwrap();
-          const mappedProducts = productosComunes.map((prod) => ({
-            ...prod,
-            cantidad: 0,
-            cantidadDisponible: prod.cantidadDisponible, // Asegurando que asignamos cantidadDisponible
-          }));
+        // Cargar productos comunes según el usuarioId
+        const productosComunes = await dispatch(getPedidosComunesByUsuarioId(usuarioId)).unwrap();
+        
+        // Mapeamos los productos comunes para añadir cantidadDisponible, cantidad inicial a 0, y código del producto
+        const mappedProducts = productosComunes.map((prod) => ({
+          ...prod,
+          cantidad: 0,
+          cantidadDisponible: prod.cantidadDisponible,
+          codigo: prod.codigo || "Sin código", // Asigna el código o un valor por defecto
+        }));
 
-          setProductos(mappedProducts);
-          console.log("Productos comunes cargados:", mappedProducts); // Consola para verificar datos
-        } else {
-          setProductos(detalles);
-          console.log("Detalles del pedido cargados:", detalles); // Consola para verificar datos
-        }
+        setProductos(mappedProducts);
+        console.log("Productos comunes cargados:", mappedProducts);
       } catch (error) {
-        console.error("Error al cargar los detalles del pedido:", error);
+        console.error("Error al cargar los productos comunes:", error);
       } finally {
         setIsLoading(false);
       }
     };
-    cargarDetalles();
-  }, [dispatch, pedidoId, usuarioId]);
 
-  const handleProductoChange = (
-    productoId,
-    nombreProducto,
-    cantidadDisponible
-  ) => {
+    cargarProductosComunes();
+  }, [dispatch, usuarioId]);
+
+  const handleProductoChange = (productoId, nombreProducto, cantidadDisponible, codigo) => {
     setNewProducto((prev) => ({
       ...prev,
       productoId,
       nombreProducto,
       cantidadDisponible,
+      codigo, // Asegura que el código del producto se asigna
     }));
   };
 
@@ -100,9 +91,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         };
 
         await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
-        const detalles = await dispatch(
-          getDetalleOrdenByPedidoId(pedidoId)
-        ).unwrap();
+        const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
         setProductos(detalles);
 
         setNewProducto({
@@ -110,6 +99,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           nombreProducto: "",
           cantidad: 0,
           cantidadDisponible: 0,
+          codigo: "",
         });
         setResetFields(true);
 
@@ -136,9 +126,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
   const handleRemoveProducto = async (productoId) => {
     try {
       await dispatch(deleteDetalleOrden(productoId)).unwrap();
-      const detalles = await dispatch(
-        getDetalleOrdenByPedidoId(pedidoId)
-      ).unwrap();
+      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
       setProductos(detalles);
 
       toast({
@@ -191,12 +179,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
   return (
     <Box p={1} borderRadius="md" boxShadow="sm" bg="white">
       {isLoading ? (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minH="80px"
-        >
+        <Box display="flex" justifyContent="center" alignItems="center" minH="80px">
           <Spinner size="sm" />
         </Box>
       ) : (
@@ -208,7 +191,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
             {productos.length > 0 ? (
               productos.map((producto) => (
                 <MotionBox
-                  key={producto.id}
+                  key={producto.productoId}
                   p={1}
                   boxShadow="sm"
                   borderWidth="1px"
@@ -222,7 +205,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                   <HStack justifyContent="space-between" spacing={1}>
                     <Box>
                       <Text fontWeight="bold" fontSize="sm">
-                        {`${producto.codigo} - ${producto.nombreProducto}`}
+                        {`${producto.codigo || "Sin código"} - ${producto.nombreProducto}`}
                       </Text>
                       <Text fontSize="xs" color="gray.500">
                         Cantidad Máxima:{" "}
@@ -235,33 +218,33 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                         onChange={(e) =>
                           setProductos((prevProductos) =>
                             prevProductos.map((prod) =>
-                              prod.id === producto.id
+                              prod.productoId === producto.productoId
                                 ? {
                                     ...prod,
                                     cantidad: Math.min(
                                       parseFloat(e.target.value) || 0,
                                       producto.cantidadDisponible
                                     ),
-                                  } // Limitar al máximo
+                                  }
                                 : prod
                             )
                           )
                         }
                         onBlur={() =>
-                          handleCantidadChange(producto.id, producto.cantidad)
+                          handleCantidadChange(producto.productoId, producto.cantidad)
                         }
                         placeholder="Cantidad"
                         size="sm"
                         width="60px"
                         maxWidth="60px"
-                        max={producto.cantidadDisponible} // Establecer el límite máximo
+                        max={producto.cantidadDisponible}
                       />
                     </Box>
                     <Tooltip label="Eliminar producto" hasArrow>
                       <IconButton
                         icon={<DeleteIcon />}
                         colorScheme="red"
-                        onClick={() => handleRemoveProducto(producto.id)}
+                        onClick={() => handleRemoveProducto(producto.productoId)}
                         size="xs"
                       />
                     </Tooltip>
@@ -286,12 +269,8 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
             >
               <HStack spacing={1} justifyContent="space-between">
                 <ProductoSelector
-                  onSelect={(productoId, nombreProducto, cantidadDisponible) =>
-                    handleProductoChange(
-                      productoId,
-                      nombreProducto,
-                      cantidadDisponible
-                    )
+                  onSelect={(productoId, nombreProducto, cantidadDisponible, codigo) =>
+                    handleProductoChange(productoId, nombreProducto, cantidadDisponible, codigo)
                   }
                   reset={resetFields}
                 />

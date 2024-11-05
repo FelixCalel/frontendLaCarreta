@@ -60,7 +60,7 @@ export const AppRouter = () => {
     verificarAccesos();
   }, [dispatch, usuarioId, roleId]);
 
-  const rolesPermitidosAdmin = ["1", "2", "3", "4"];
+  const rolesPermitidosAdmin = ["1"];
 
   if (loading) {
     // Mostrar componente de carga hasta que se obtengan los permisos
@@ -83,7 +83,8 @@ export const AppRouter = () => {
           <Route key={path} path={path} element={<Navigate to="/auth/home" />} />
         )
       )}
-      <Route path="*" element={<HomePage />} />
+
+      <Route path="*" element={<Navigate to = "/auth/login" />} />
     </Routes>
   );
 };

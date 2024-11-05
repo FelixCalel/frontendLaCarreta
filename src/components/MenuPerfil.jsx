@@ -13,7 +13,6 @@ import {
 } from "@chakra-ui/react";
 import {
   FaUser,
-  FaBuilding,
   FaUsers,
   FaKey,
   FaShieldAlt,
