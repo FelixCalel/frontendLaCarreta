@@ -46,18 +46,21 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     const cargarProductosComunes = async () => {
       try {
         setIsLoading(true);
-
-        // Cargar productos comunes según el usuarioId
-        const productosComunes = await dispatch(getPedidosComunesByUsuarioId(usuarioId)).unwrap();
-        
-        // Mapeamos los productos comunes para añadir cantidadDisponible, cantidad inicial a 0, y código del producto
+  
+        // Cargar productos comunes según el usuarioId y pedidoId
+        const productosComunes = await dispatch(getPedidosComunesByUsuarioId({
+          usuarioId: Number(usuarioId), 
+          pedidoId: Number(pedidoId)
+        })).unwrap();
+  
+        // Procesar los productos comunes
         const mappedProducts = productosComunes.map((prod) => ({
           ...prod,
           cantidad: 0,
           cantidadDisponible: prod.cantidadDisponible,
-          codigo: prod.codigo || "Sin código", // Asigna el código o un valor por defecto
+          codigo: prod.codigo || "Sin código",
         }));
-
+  
         setProductos(mappedProducts);
         console.log("Productos comunes cargados:", mappedProducts);
       } catch (error) {
@@ -66,11 +69,19 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         setIsLoading(false);
       }
     };
+  
+    if (usuarioId && pedidoId) { // Solo cargar si ambos valores están definidos
+      cargarProductosComunes();
+    }
+  }, [dispatch, usuarioId, pedidoId]);
+  
 
-    cargarProductosComunes();
-  }, [dispatch, usuarioId]);
-
-  const handleProductoChange = (productoId, nombreProducto, cantidadDisponible, codigo) => {
+  const handleProductoChange = (
+    productoId,
+    nombreProducto,
+    cantidadDisponible,
+    codigo
+  ) => {
     setNewProducto((prev) => ({
       ...prev,
       productoId,
@@ -91,7 +102,9 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         };
 
         await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
-        const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+        const detalles = await dispatch(
+          getDetalleOrdenByPedidoId(pedidoId)
+        ).unwrap();
         setProductos(detalles);
 
         setNewProducto({
@@ -125,10 +138,11 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
 
   const handleRemoveProducto = async (productoId) => {
     try {
+      console.log("Intentando eliminar producto con ID:", productoId); // Log para verificar el ID
       await dispatch(deleteDetalleOrden(productoId)).unwrap();
       const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
       setProductos(detalles);
-
+  
       toast({
         title: "Producto eliminado.",
         description: "El producto ha sido eliminado exitosamente.",
@@ -147,15 +161,10 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
-
+  
   const handleCantidadChange = async (detalleId, cantidad) => {
-    setProductos((prevProductos) =>
-      prevProductos.map((producto) =>
-        producto.id === detalleId ? { ...producto, cantidad } : producto
-      )
-    );
-
     try {
+      console.log("Intentando actualizar cantidad del producto con ID:", detalleId, " a ", cantidad); // Log para verificar los datos
       await dispatch(updateDetalleOrden({ id: detalleId, cantidad })).unwrap();
       toast({
         title: "Cantidad actualizada.",
@@ -175,11 +184,16 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
-
+  
   return (
     <Box p={1} borderRadius="md" boxShadow="sm" bg="white">
       {isLoading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minH="80px">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minH="80px"
+        >
           <Spinner size="sm" />
         </Box>
       ) : (
@@ -205,7 +219,9 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                   <HStack justifyContent="space-between" spacing={1}>
                     <Box>
                       <Text fontWeight="bold" fontSize="sm">
-                        {`${producto.codigo || "Sin código"} - ${producto.nombreProducto}`}
+                        {`${producto.codigo || "Sin código"} - ${
+                          producto.nombreProducto
+                        }`}
                       </Text>
                       <Text fontSize="xs" color="gray.500">
                         Cantidad Máxima:{" "}
@@ -231,7 +247,10 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                           )
                         }
                         onBlur={() =>
-                          handleCantidadChange(producto.productoId, producto.cantidad)
+                          handleCantidadChange(
+                            producto.productoId,
+                            producto.cantidad
+                          )
                         }
                         placeholder="Cantidad"
                         size="sm"
@@ -244,7 +263,9 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                       <IconButton
                         icon={<DeleteIcon />}
                         colorScheme="red"
-                        onClick={() => handleRemoveProducto(producto.productoId)}
+                        onClick={() =>
+                          handleRemoveProducto(producto.productoId)
+                        }
                         size="xs"
                       />
                     </Tooltip>
@@ -269,8 +290,18 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
             >
               <HStack spacing={1} justifyContent="space-between">
                 <ProductoSelector
-                  onSelect={(productoId, nombreProducto, cantidadDisponible, codigo) =>
-                    handleProductoChange(productoId, nombreProducto, cantidadDisponible, codigo)
+                  onSelect={(
+                    productoId,
+                    nombreProducto,
+                    cantidadDisponible,
+                    codigo
+                  ) =>
+                    handleProductoChange(
+                      productoId,
+                      nombreProducto,
+                      cantidadDisponible,
+                      codigo
+                    )
                   }
                   reset={resetFields}
                 />

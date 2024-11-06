@@ -64,10 +64,18 @@ export const getDetalleOrdenByPedidoId = createAsyncThunk(
 // Fetch pedidos comunes por usuarioId
 export const getPedidosComunesByUsuarioId = createAsyncThunk(
   'detalleOrden/fetchPedidosComunesByUsuarioId',
-  async (usuarioId) => {
-    const response = await axios.get(`${BASE_URL}/detalle/pedido/pedidosComunes/${usuarioId}`);
+  async ({ usuarioId, pedidoId }) => {
+    usuarioId = Number(usuarioId);
+    pedidoId = Number(pedidoId);
+    const response = await axios.get(`${BASE_URL}/detalle/pedido/pedidosComunes/${usuarioId}/${pedidoId}`);
     const data = response.data;
-    data.sort((a, b) => a.id - b.id); // Ordenar los datos
+    if (Array.isArray(data)) {
+      data.sort((a, b) => a.id - b.id); // Ordenar los datos si es un array
+    }
+    console.log("Datos recibidos del backend:", data);
     return data;
   }
 );
+
+
+

@@ -471,7 +471,7 @@ const DetallePedidoForm = () => {
               </HStack>
               {isDetailsOpen === pedido.id && (
                 <Box mt={2} width="100%" overflowY="auto" maxHeight="200px">
-                  <ProductosTable pedidoId={pedido.id} usuarioId={usuarioId} />
+                  <ProductosTable pedidoId={Number(pedido.id)} usuarioId={Number(usuarioId)} />
                 </Box>
               )}
             </Box>
