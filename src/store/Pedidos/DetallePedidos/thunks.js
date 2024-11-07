@@ -33,13 +33,17 @@ export const deleteDetalleOrden = createAsyncThunk(
 );
 
 // Update DetalleOrden
+// Update DetalleOrden
 export const updateDetalleOrden = createAsyncThunk(
   'detalleOrden/updateDetalleOrden',
-  async (detalleOrden) => {
-    const response = await axios.put(`${BASE_URL}/detalle/pedido/actualizar/${detalleOrden.id}`, detalleOrden);
+  async ({ id, pedidoId, cantidad }) => {
+    const response = await axios.put(`${BASE_URL}/detalle/pedido/actualizar/${pedidoId}/${id}`, { cantidad });
     return response.data;
   }
 );
+
+
+
 
 // Toggle DetalleOrden Status
 export const toggleDetalleOrdenStatus = createAsyncThunk(

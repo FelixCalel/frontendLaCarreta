@@ -46,13 +46,15 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     const cargarProductosComunes = async () => {
       try {
         setIsLoading(true);
-  
+
         // Cargar productos comunes según el usuarioId y pedidoId
-        const productosComunes = await dispatch(getPedidosComunesByUsuarioId({
-          usuarioId: Number(usuarioId), 
-          pedidoId: Number(pedidoId)
-        })).unwrap();
-  
+        const productosComunes = await dispatch(
+          getPedidosComunesByUsuarioId({
+            usuarioId: Number(usuarioId),
+            pedidoId: Number(pedidoId),
+          })
+        ).unwrap();
+
         // Procesar los productos comunes
         const mappedProducts = productosComunes.map((prod) => ({
           ...prod,
@@ -60,7 +62,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           cantidadDisponible: prod.cantidadDisponible,
           codigo: prod.codigo || "Sin código",
         }));
-  
+
         setProductos(mappedProducts);
         console.log("Productos comunes cargados:", mappedProducts);
       } catch (error) {
@@ -69,12 +71,12 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         setIsLoading(false);
       }
     };
-  
-    if (usuarioId && pedidoId) { // Solo cargar si ambos valores están definidos
+
+    if (usuarioId && pedidoId) {
+      // Solo cargar si ambos valores están definidos
       cargarProductosComunes();
     }
   }, [dispatch, usuarioId, pedidoId]);
-  
 
   const handleProductoChange = (
     productoId,
@@ -140,9 +142,11 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     try {
       console.log("Intentando eliminar producto con ID:", productoId); // Log para verificar el ID
       await dispatch(deleteDetalleOrden(productoId)).unwrap();
-      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+      const detalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedidoId)
+      ).unwrap();
       setProductos(detalles);
-  
+
       toast({
         title: "Producto eliminado.",
         description: "El producto ha sido eliminado exitosamente.",
@@ -161,11 +165,31 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
-  
+
   const handleCantidadChange = async (detalleId, cantidad) => {
+    if (!detalleId || !pedidoId) {
+      console.error("El detalleId o pedidoId son undefined o inválidos", {
+        detalleId,
+        pedidoId,
+      });
+      return;
+    }
     try {
-      console.log("Intentando actualizar cantidad del producto con ID:", detalleId, " a ", cantidad); // Log para verificar los datos
-      await dispatch(updateDetalleOrden({ id: detalleId, cantidad })).unwrap();
+      console.log(
+        "Actualizando cantidad del producto con detalle ID:",
+        detalleId,
+        "y pedido ID:",
+        pedidoId,
+        "a",
+        cantidad
+      );
+      await dispatch(
+        updateDetalleOrden({
+          id: Number(detalleId), // Usamos 'id' porque el backend espera 'id' como nombre de parámetro
+          pedidoId: Number(pedidoId),
+          cantidad,
+        })
+      ).unwrap();
       toast({
         title: "Cantidad actualizada.",
         description: "La cantidad del producto se ha actualizado exitosamente.",
@@ -184,7 +208,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
-  
+
   return (
     <Box p={1} borderRadius="md" boxShadow="sm" bg="white">
       {isLoading ? (
@@ -203,75 +227,86 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           </Heading>
           <VStack spacing={1} align="stretch">
             {productos.length > 0 ? (
-              productos.map((producto) => (
-                <MotionBox
-                  key={producto.productoId}
-                  p={1}
-                  boxShadow="sm"
-                  borderWidth="1px"
-                  rounded="md"
-                  bg="gray.50"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <HStack justifyContent="space-between" spacing={1}>
-                    <Box>
-                      <Text fontWeight="bold" fontSize="sm">
-                        {`${producto.codigo || "Sin código"} - ${
-                          producto.nombreProducto
-                        }`}
-                      </Text>
-                      <Text fontSize="xs" color="gray.500">
-                        Cantidad Máxima:{" "}
-                        {producto.cantidadDisponible !== undefined
-                          ? producto.cantidadDisponible
-                          : "No disponible"}
-                      </Text>
-                      <CantidadInput
-                        value={producto.cantidad}
-                        onChange={(e) =>
-                          setProductos((prevProductos) =>
-                            prevProductos.map((prod) =>
-                              prod.productoId === producto.productoId
-                                ? {
-                                    ...prod,
-                                    cantidad: Math.min(
-                                      parseFloat(e.target.value) || 0,
-                                      producto.cantidadDisponible
-                                    ),
-                                  }
-                                : prod
+              productos.map((producto) => {
+                console.log("Producto:", producto); // Revisa la estructura de `producto`
+
+                return (
+                  <MotionBox
+                    key={producto.detallePedidoId} // Usa `detallePedidoId` como clave única
+                    p={1}
+                    boxShadow="sm"
+                    borderWidth="1px"
+                    rounded="md"
+                    bg="gray.50"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <HStack justifyContent="space-between" spacing={1}>
+                      <Box>
+                        <Text fontWeight="bold" fontSize="sm">
+                          {`${producto.codigo || "Sin código"} - ${
+                            producto.nombreProducto
+                          }`}
+                        </Text>
+                        <Text fontSize="xs" color="gray.500">
+                          Cantidad Máxima:{" "}
+                          {producto.cantidadDisponible !== undefined
+                            ? producto.cantidadDisponible
+                            : "No disponible"}
+                        </Text>
+                        <CantidadInput
+                          value={producto.cantidad}
+                          onChange={(e) =>
+                            setProductos((prevProductos) =>
+                              prevProductos.map((prod) =>
+                                prod.detallePedidoId ===
+                                producto.detallePedidoId
+                                  ? {
+                                      ...prod,
+                                      cantidad: Math.min(
+                                        parseFloat(e.target.value) || 0,
+                                        producto.cantidadDisponible
+                                      ),
+                                    }
+                                  : prod
+                              )
                             )
-                          )
-                        }
-                        onBlur={() =>
-                          handleCantidadChange(
-                            producto.productoId,
-                            producto.cantidad
-                          )
-                        }
-                        placeholder="Cantidad"
-                        size="sm"
-                        width="60px"
-                        maxWidth="60px"
-                        max={producto.cantidadDisponible}
-                      />
-                    </Box>
-                    <Tooltip label="Eliminar producto" hasArrow>
-                      <IconButton
-                        icon={<DeleteIcon />}
-                        colorScheme="red"
-                        onClick={() =>
-                          handleRemoveProducto(producto.productoId)
-                        }
-                        size="xs"
-                      />
-                    </Tooltip>
-                  </HStack>
-                </MotionBox>
-              ))
+                          }
+                          onBlur={() => {
+                            console.log(
+                              "ID del detalle:",
+                              producto.detallePedidoId,
+                              "ID del pedido:",
+                              pedidoId
+                            );
+                            handleCantidadChange(
+                              producto.detallePedidoId, // Pasamos detallePedidoId como detalleId
+                              producto.cantidad
+                            );
+                          }}
+                          placeholder="Cantidad"
+                          size="sm"
+                          width="60px"
+                          maxWidth="60px"
+                          max={producto.cantidadDisponible}
+                        />
+                      </Box>
+                      <Tooltip label="Eliminar producto" hasArrow>
+                        <IconButton
+                          icon={<DeleteIcon />}
+                          colorScheme="red"
+                          onClick={() =>
+                            handleRemoveProducto(producto.productoId)
+                          }
+                          size="xs"
+                        />
+                      </Tooltip>
+                    </HStack>
+                  </MotionBox>
+                );
+              })
             ) : (
               <Text textAlign="center" color="gray.500" fontSize="sm">
                 No hay productos añadidos.
