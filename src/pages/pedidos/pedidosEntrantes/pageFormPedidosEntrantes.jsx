@@ -154,15 +154,15 @@ const EntrantesPage = () => {
   const handleExportarExcel = async (pedido) => {
     try {
       const detalles = await dispatch(getDetalleOrdenByPedidoId(pedido.id)).unwrap();
-
+  
       if (!detalles || detalles.length === 0) {
         console.error("No hay detalles disponibles para el pedido:", pedido.id);
         return;
       }
-
+  
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet(`Pedido_${pedido.id}`);
-
+  
       worksheet.columns = [
         { header: "ID Pedido", key: "id", width: 15 },
         { header: "Deudor", key: "deudor", width: 30 },
@@ -170,7 +170,7 @@ const EntrantesPage = () => {
         { header: "Cantidad", key: "cantidad", width: 15 },
         { header: "Fecha", key: "fecha", width: 25 },
       ];
-
+  
       const headerRow = worksheet.getRow(1);
       headerRow.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
       headerRow.fill = {
@@ -187,7 +187,8 @@ const EntrantesPage = () => {
           right: { style: "thick", color: { argb: "FF228B22" } },
         };
       });
-
+  
+      // Agregar cada detalle en una fila separada
       detalles.forEach((detalle, index) => {
         const row = worksheet.addRow({
           id: `P-${pedido.id}`,
@@ -196,7 +197,7 @@ const EntrantesPage = () => {
           cantidad: detalle.cantidad,
           fecha: pedido.fechaOrden,
         });
-
+  
         row.eachCell({ includeEmpty: false }, (cell) => {
           cell.border = {
             top: { style: "thin", color: { argb: "FF228B22" } },
@@ -206,7 +207,7 @@ const EntrantesPage = () => {
           };
           cell.alignment = { vertical: "middle", horizontal: "center" };
         });
-
+  
         if (index % 2 === 0) {
           row.fill = {
             type: "pattern",
@@ -215,20 +216,21 @@ const EntrantesPage = () => {
           };
         }
       });
-
+  
       worksheet.autoFilter = { from: "A1", to: `E${detalles.length + 1}` };
       worksheet.views = [{ state: 'frozen', ySplit: 1 }];
-
+  
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       saveAs(blob, `pedido_${pedido.id}.xlsx`);
-
+  
     } catch (error) {
       console.error(`Error al exportar pedido ${pedido.id}:`, error);
     }
   };
+  
 
   return (
     <Box p={6} boxShadow="xl" bg="white" rounded="lg">
