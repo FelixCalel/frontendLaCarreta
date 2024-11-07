@@ -38,7 +38,7 @@ const EntrantesPage = () => {
   const toast = useToast();
 
   const pedidos = useSelector((state) => state.pedidos.data);
-  const [montos, setMontos] = useState({});
+  const [setMontos] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPedidos, setSelectedPedidos] = useState([]);
   const [detallesPedido, setDetallesPedido] = useState([]);
@@ -79,7 +79,7 @@ const EntrantesPage = () => {
       setMontos(montosTemp);
     };
     cargarMontos();
-  }, [dispatch, pedidosEntrantes]);
+  }, [dispatch, pedidosEntrantes, setMontos]);
 
   const handleSelectPedido = (pedidoId) => {
     if (selectedPedidos.includes(pedidoId)) {

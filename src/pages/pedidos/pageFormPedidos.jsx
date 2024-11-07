@@ -27,7 +27,12 @@ import {
   FormLabel,
   useToast,
   Spinner,
-  SimpleGrid,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
 } from "@chakra-ui/react";
 import {
   DeleteIcon,
@@ -66,12 +71,10 @@ const DetallePedidoForm = () => {
   const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(null);
   const [selectedPedidoId, setSelectedPedidoId] = useState(null);
-  const [productos, setProductos] = useState([]);
-
+  const [productos, setProductos] = useState([]); // Asegúrate de que este estado se maneje aquí
 
   const pedidos = useSelector((state) => state.pedidos.data);
   const usuarioId = Number(localStorage.getItem("usuarioId"));
-
 
   const [paisId, setPaisId] = useState(null);
 
@@ -88,7 +91,7 @@ const DetallePedidoForm = () => {
   const [currentPedido, setCurrentPedido] = useState({
     ciudadId: 0,
     deudorId: 0,
-    tiendaId: 0, // Solo se usará un campo para la tienda seleccionada
+    tiendaId: 0,
     usuarioId: parseInt(usuarioId),
     estadoId: 1,
   });
@@ -134,12 +137,12 @@ const DetallePedidoForm = () => {
 
   const handleTiendaChange = (value) => {
     setCurrentPedido((prev) => ({ ...prev, tiendaId: value }));
-    setIsTienda2Disabled(!!value); // Deshabilitar el segundo selector si se selecciona una tienda en el primero
+    setIsTienda2Disabled(!!value);
   };
 
   const handleTiendaChange2 = (value) => {
     setCurrentPedido((prev) => ({ ...prev, tiendaId: value }));
-    setIsTienda1Disabled(!!value); // Deshabilitar el primer selector si se selecciona una tienda en el segundo
+    setIsTienda1Disabled(!!value);
   };
 
   const validateFields = () => {
@@ -166,35 +169,31 @@ const DetallePedidoForm = () => {
       return;
     }
 
-    // Obtener la fecha de hoy en formato "YYYY-MM-DD"
     const today = new Date().toISOString().split("T")[0];
 
-    // Filtrar los pedidos del usuario en la misma tienda y en la fecha actual
     const pedidosHoy = pedidos.filter(
       (pedido) =>
-        pedido.usuarioId === parseInt(usuarioId) && // Validar por usuario
-        pedido.tiendaId === currentPedido.tiendaId && // Validar la misma tienda
-        pedido.fecha?.split("T")[0] === today // Validar si la fecha coincide con hoy
+        pedido.usuarioId === parseInt(usuarioId) &&
+        pedido.tiendaId === currentPedido.tiendaId &&
+        pedido.fecha?.split("T")[0] === today
     );
 
-    // Si ya hay un pedido con la misma tienda hoy, mostrar mensaje de error
     if (pedidosHoy.length > 0) {
       toast({
         title: "Pedido duplicado",
         description:
           "Ya has hecho un pedido en esta tienda hoy. No puedes realizar otro pedido en el mismo día.",
         status: "error",
-        duration: 4000, // Aumentar la duración para que el usuario vea el mensaje
+        duration: 4000,
         isClosable: true,
       });
       return;
     }
 
-    // Si no hay pedidos duplicados, continuar con la creación del pedido
     setIsLoading(true);
 
     if (!isPedidoFinalizado) {
-      const newPedido = { ...currentPedido, fecha: new Date().toISOString() }; // Añadir fecha actual
+      const newPedido = { ...currentPedido, fecha: new Date().toISOString() };
       try {
         const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
         setPedidoIdGuardado(pedidoGuardado.id);
@@ -240,13 +239,11 @@ const DetallePedidoForm = () => {
 
   const handleRealizarPedido = async () => {
     try {
-      // Verificar si hay productos asociados al pedido
       const detalles = await dispatch(
         getDetalleOrdenByPedidoId(selectedPedidoId)
       ).unwrap();
 
       if (!detalles || detalles.length === 0) {
-        // Si no hay productos, mostrar un mensaje de error
         toast({
           title: "Error",
           description:
@@ -255,11 +252,10 @@ const DetallePedidoForm = () => {
           duration: 3000,
           isClosable: true,
         });
-        onDialogClose(); // Cierra el diálogo si no hay productos
+        onDialogClose();
         return;
       }
 
-      // Si hay productos, proceder con el cambio de estado del pedido
       await dispatch(
         togglePedidoStatus({ id: selectedPedidoId, estadoId: 2 })
       ).unwrap();
@@ -299,7 +295,7 @@ const DetallePedidoForm = () => {
           duration: 3000,
           isClosable: true,
         });
-        return; // Detener la ejecución si no hay productos
+        return;
       }
 
       setSelectedPedidoId(pedidoId);
@@ -322,14 +318,13 @@ const DetallePedidoForm = () => {
     if (isDetailsOpen !== pedidoId) cargarDetalles(pedidoId);
   };
 
-  // Mover la carga de detalles fuera del efecto en ProductosTable y pasarlo a una función
   const cargarDetalles = async (pedidoId) => {
     try {
       setIsLoading(true);
       const detalles = await dispatch(
         getDetalleOrdenByPedidoId(pedidoId)
       ).unwrap();
-      setProductos(detalles);
+      setProductos(detalles); // Cambia setProductos aquí para usar el estado adecuado
     } catch (error) {
       console.error("Error al cargar los detalles del pedido:", error);
     } finally {
@@ -357,6 +352,14 @@ const DetallePedidoForm = () => {
     .filter((pedido) => pedido.usuarioId === parseInt(usuarioId))
     .filter((pedido) => pedido.estadoId === 1);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <Box mt={-8} p={-4}>
       <Button
@@ -375,111 +378,145 @@ const DetallePedidoForm = () => {
         Crear Pedido
       </Button>
 
-      <SimpleGrid
-        columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
-        spacing={4}
-        w="100%"
-        alignItems="flex-start"
-      >
-        {pedidosUsuario.length > 0 ? (
-          pedidosUsuario.map((pedido) => (
-            <Box
-              key={pedido.id}
-              bg="white"
-              p={4}
-              rounded="md"
-              shadow="md"
-              w="100%"
-              border="1px solid"
-              borderColor="gray.200"
-              _hover={{
-                boxShadow: "xl",
-                transform: "scale(1.02)",
-                transition: "0.2s",
-              }}
-            >
-              <Stack direction="row" justifyContent="space-between">
-                <Text fontSize="lg" fontWeight="bold">
-                  Pedido ID: {pedido.id}
+      {pedidosUsuario.length > 0 ? (
+        isMobile ? (
+          <VStack spacing={4} align="stretch">
+            {pedidosUsuario.map((pedido) => (
+              <Box
+                key={pedido.id}
+                p={3}
+                borderWidth="1px"
+                borderColor="gray.200"
+                rounded="md"
+                bg="white"
+                _hover={{
+                  boxShadow: "md",
+                  transition: "0.2s",
+                }}
+              >
+                <Stack direction="row" justifyContent="space-between">
+                  <Text fontWeight="bold">Pedido ID: {pedido.id}</Text>
+                  <Badge colorScheme={pedido.estadoId === 1 ? "green" : "gray"}>
+                    {pedido.estadoId === 1 ? "Creado" : "Realizado"}
+                  </Badge>
+                </Stack>
+                <Text>
+                  <strong>Ciudad:</strong> {pedido.nombreCiudad || "N/A"}
                 </Text>
-                <Badge colorScheme={pedido.estadoId === 1 ? "green" : "gray"}>
-                  {pedido.estadoId === 1 ? "Creado" : "Realizado"}
-                </Badge>
-              </Stack>
-              <Text mt={2}>
-                <strong>Ciudad:</strong> {pedido.nombreCiudad || "N/A"}
-              </Text>
-              <Text>
-                <strong>Deudor:</strong> {pedido.nombreCorrelativo} -{" "}
-                {pedido.nombreDeu || "N/A"}
-              </Text>
-              <Text>
-                <strong>Tienda:</strong> {pedido.nombreTienda || "N/A"}
-              </Text>
-              <HStack spacing={3} mt={4}>
-                <Tooltip
-                  label="Ver Detalles"
-                  hasArrow
-                  bg="gray.800"
-                  color="white"
-                  shadow="lg"
-                >
+                <Text>
+                  <strong>Deudor:</strong> {pedido.nombreCorrelativo} -{" "}
+                  {pedido.nombreDeu || "N/A"}
+                </Text>
+                <Text>
+                  <strong>Tienda:</strong> {pedido.nombreTienda || "N/A"}
+                </Text>
+                <HStack spacing={3} mt={2}>
+                  <Tooltip label="Ver Detalles" hasArrow>
+                    <IconButton
+                      icon={
+                        isDetailsOpen === pedido.id ? (
+                          <ChevronUpIcon />
+                        ) : (
+                          <ChevronDownIcon />
+                        )
+                      }
+                      onClick={() => handleToggleDetails(pedido.id)}
+                      colorScheme="blue"
+                      size="sm"
+                    />
+                  </Tooltip>
+                  <Tooltip label="Eliminar Pedido" hasArrow>
+                    <IconButton
+                      icon={<DeleteIcon />}
+                      colorScheme="red"
+                      onClick={() => handleDeletePedido(pedido.id)}
+                      size="sm"
+                    />
+                  </Tooltip>
                   <Button
+                    colorScheme="teal"
+                    onClick={() => showRealizarPedidoConfirmation(pedido.id)}
+                    isDisabled={pedido.estadoId === 2}
                     size="sm"
-                    colorScheme="blue"
-                    onClick={() => handleToggleDetails(pedido.id)}
-                    _hover={{ transform: "scale(1.05)", transition: "0.2s" }}
                   >
-                    {isDetailsOpen === pedido.id ? (
-                      <ChevronUpIcon />
-                    ) : (
-                      <ChevronDownIcon />
-                    )}
+                    Realizar Pedido
                   </Button>
-                </Tooltip>
-                <Tooltip
-                  label="Eliminar Pedido"
-                  hasArrow
-                  bg="red.600"
-                  color="white"
-                  shadow="lg"
-                >
-                  <IconButton
-                    icon={<DeleteIcon />}
-                    colorScheme="red"
-                    onClick={() => handleDeletePedido(pedido.id)}
-                    size="sm"
-                    _hover={{ transform: "scale(1.1)", transition: "0.2s" }}
-                  />
-                </Tooltip>
-
-                <Button
-                  size="sm"
-                  colorScheme="teal"
-                  onClick={() => showRealizarPedidoConfirmation(pedido.id)}
-                  isDisabled={pedido.estadoId === 2}
-                  _hover={{
-                    transform: "scale(1.05)",
-                    transition: "0.2s",
-                    boxShadow: "lg",
-                  }}
-                  _active={{ transform: "scale(0.95)", transition: "0.1s" }}
-                  shadow="md"
-                >
-                  Realizar Pedido
-                </Button>
-              </HStack>
-              {isDetailsOpen === pedido.id && (
-                <Box mt={2} width="100%" overflowY="auto" maxHeight="200px">
-                  <ProductosTable pedidoId={Number(pedido.id)} usuarioId={Number(usuarioId)} />
-                </Box>
-              )}
-            </Box>
-          ))
+                </HStack>
+                {isDetailsOpen === pedido.id && (
+                  <Box mt={2}>
+                    <ProductosTable
+                      pedidoId={pedido.id}
+                      usuarioId={usuarioId}
+                    />
+                  </Box>
+                )}
+              </Box>
+            ))}
+          </VStack>
         ) : (
-          <Text>No hay pedidos disponibles</Text>
-        )}
-      </SimpleGrid>
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>ID</Th>
+                <Th>Ciudad</Th>
+                <Th>Deudor</Th>
+                <Th>Tienda</Th>
+                <Th>Acciones</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {pedidosUsuario.map((pedido) => (
+                <Tr key={pedido.id}>
+                  <Td>{pedido.id}</Td>
+                  <Td>{pedido.nombreCiudad || "N/A"}</Td>
+                  <Td>
+                    {pedido.nombreCorrelativo} - {pedido.nombreDeu || "N/A"}
+                  </Td>
+                  <Td>{pedido.nombreTienda || "N/A"}</Td>
+                  <Td>
+                    <HStack spacing={3}>
+                      <Tooltip label="Ver Detalles" hasArrow>
+                        <IconButton
+                          icon={
+                            isDetailsOpen === pedido.id ? (
+                              <ChevronUpIcon />
+                            ) : (
+                              <ChevronDownIcon />
+                            )
+                          }
+                          onClick={() => handleToggleDetails(pedido.id)}
+                          colorScheme="blue"
+                          size="sm"
+                        />
+                      </Tooltip>
+                      <Tooltip label="Eliminar Pedido" hasArrow>
+                        <IconButton
+                          icon={<DeleteIcon />}
+                          colorScheme="red"
+                          onClick={() => handleDeletePedido(pedido.id)}
+                          size="sm"
+                        />
+                      </Tooltip>
+                      <Button
+                        colorScheme="teal"
+                        onClick={() =>
+                          showRealizarPedidoConfirmation(pedido.id)
+                        }
+                        isDisabled={pedido.estadoId === 2}
+                        size="sm"
+                      >
+                        Realizar Pedido
+                      </Button>
+                    </HStack>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        )
+      ) : (
+        <Text>No hay pedidos disponibles</Text>
+      )}
 
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalOverlay />
@@ -523,10 +560,12 @@ const DetallePedidoForm = () => {
                 </FormControl>
               </VStack>
             ) : (
-              <ProductosTable pedidoId={pedidoIdGuardado} />
+              <ProductosTable
+                pedidoId={pedidoIdGuardado}
+                usuarioId={usuarioId}
+              />
             )}
           </ModalBody>
-
           <ModalFooter>
             <Button
               colorScheme="green"
@@ -542,7 +581,6 @@ const DetallePedidoForm = () => {
             >
               {isPedidoFinalizado ? "Agregar" : "Guardar"}
             </Button>
-
             <Button variant="ghost" onClick={onClose}>
               Cancelar
             </Button>
