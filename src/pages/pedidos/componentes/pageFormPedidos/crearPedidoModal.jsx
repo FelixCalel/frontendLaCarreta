@@ -4,7 +4,7 @@ import PropTypes from "prop-types"; // Importa PropTypes
 import CiudadSelector from "./CiudadSelector";
 import DeuSelector from "./DeuSelector";
 import TiendaSelector from "./tiendaSelector";
-import ProductosTable from "../";
+import ProductosTable from "../detallesPedidosTable";
 
 const NuevoPedidoModal = ({ isOpen, onClose, isPedidoFinalizado }) => {
   const [isLoading, setIsLoading] = useState(false);
