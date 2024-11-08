@@ -71,7 +71,7 @@ const DetallePedidoForm = () => {
   const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(null);
   const [selectedPedidoId, setSelectedPedidoId] = useState(null);
-  const [productos, setProductos] = useState([]); // Asegúrate de que este estado se maneje aquí
+  const [setProductos] = useState([]); // Asegúrate de que este estado se maneje aquí
 
   const pedidos = useSelector((state) => state.pedidos.data);
   const usuarioId = Number(localStorage.getItem("usuarioId"));
@@ -511,6 +511,17 @@ const DetallePedidoForm = () => {
                   </Td>
                 </Tr>
               ))}
+              {/* Renderizar los detalles del pedido en la versión de escritorio */}
+              {isDetailsOpen && (
+                <Tr>
+                  <Td colSpan={5}>
+                    <ProductosTable
+                      pedidoId={isDetailsOpen}
+                      usuarioId={usuarioId}
+                    />
+                  </Td>
+                </Tr>
+              )}
             </Tbody>
           </Table>
         )
@@ -622,4 +633,3 @@ const DetallePedidoForm = () => {
 };
 
 export default DetallePedidoForm;
-
