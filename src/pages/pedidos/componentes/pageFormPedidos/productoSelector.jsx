@@ -8,7 +8,7 @@ import {
   AutoCompleteItem,
   AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
-import { tablaItems } from "../../../store/items/thunks";
+import { tablaItems } from "../../../../store/items/thunks";
 
 const ProductoSelector = ({ onSelect, reset }) => {
   const dispatch = useDispatch();

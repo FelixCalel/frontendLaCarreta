@@ -19,8 +19,8 @@ import {
 import { DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
-import ProductoSelector from "./productoSelector";
-import CantidadInput from "./cantidadInput";
+import ProductoSelector from "./pageFormPedidos/productoSelector";
+import CantidadInput from "./pageFormPedidos/cantidadInput";
 import {
   addNewDetalleOrden,
   deleteDetalleOrden,

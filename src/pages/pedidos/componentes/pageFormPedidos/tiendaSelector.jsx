@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { tablaTienda } from "../../../store/Tienda/thunks";
+import { tablaTienda } from "../../../../store/Tienda/thunks";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import PropTypes from "prop-types";
 import { useSelector, useDispatch } from "react-redux";
-import { tablaCiudad } from "../../../store/Ciudad/thunks";
+import { tablaCiudad } from "../../../../store/Ciudad/thunks";
 
 const CiudadSelector = ({ value, onChange }) => {
   const dispatch = useDispatch();
