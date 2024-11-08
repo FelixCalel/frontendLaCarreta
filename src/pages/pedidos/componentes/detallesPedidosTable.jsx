@@ -57,14 +57,14 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
             pedidoId: Number(pedidoId),
           })
         ).unwrap();
-
+  
         const mappedProducts = productosComunes.map((prod) => ({
           ...prod,
-          cantidad: 0,
+          cantidad: prod.cantidad || 0,
           cantidadDisponible: prod.cantidadDisponible,
           codigo: prod.codigo || "Sin código",
         }));
-
+  
         setProductos(mappedProducts);
       } catch (error) {
         console.error("Error al cargar los productos comunes:", error);
@@ -72,11 +72,13 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         setIsLoading(false);
       }
     };
-
+  
+    // Solo cargamos productos comunes al inicio o si cambian usuarioId o pedidoId
     if (usuarioId && pedidoId) {
       cargarProductosComunes();
     }
   }, [dispatch, usuarioId, pedidoId]);
+  
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -144,14 +146,16 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     }
   };
 
-  const handleRemoveProducto = async (productoId) => {
+  const handleRemoveProducto = async (detallePedidoId) => {
     try {
-      await dispatch(deleteDetalleOrden(productoId)).unwrap();
-      const detalles = await dispatch(
-        getDetalleOrdenByPedidoId(pedidoId)
-      ).unwrap();
-      setProductos(detalles);
-
+      console.log("Intentando eliminar el detalle:", detallePedidoId);
+      await dispatch(deleteDetalleOrden(detallePedidoId)).unwrap();
+      
+      // Filtra el producto eliminado del estado de productos en el frontend
+      setProductos((prevProductos) =>
+        prevProductos.filter((prod) => prod.detallePedidoId !== detallePedidoId)
+      );
+  
       toast({
         title: "Producto eliminado.",
         description: "El producto ha sido eliminado exitosamente.",
@@ -170,6 +174,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
+  
 
   const handleCantidadChange = async (detalleId, cantidad) => {
     if (!detalleId || !pedidoId) {
@@ -187,6 +192,14 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           cantidad,
         })
       ).unwrap();
+  
+      // Actualiza la cantidad en el estado de productos
+      setProductos((prevProductos) =>
+        prevProductos.map((prod) =>
+          prod.detallePedidoId === detalleId ? { ...prod, cantidad } : prod
+        )
+      );
+  
       toast({
         title: "Cantidad actualizada.",
         description: "La cantidad del producto se ha actualizado exitosamente.",
@@ -205,8 +218,9 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
+  
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);// Detección de vista móvil
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Detección de vista móvil
 
   return (
     <Box p={1} borderRadius="md" boxShadow="sm" bg="white">
@@ -248,14 +262,16 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                           }`}
                         </Text>
                         <Text fontSize="xs" color="gray.500">
-                          Cantidad Máxima: {producto.cantidadDisponible || "N/A"}
+                          Cantidad Máxima:{" "}
+                          {producto.cantidadDisponible || "N/A"}
                         </Text>
                         <CantidadInput
                           value={producto.cantidad}
                           onChange={(e) =>
                             setProductos((prevProductos) =>
                               prevProductos.map((prod) =>
-                                prod.detallePedidoId === producto.detallePedidoId
+                                prod.detallePedidoId ===
+                                producto.detallePedidoId
                                   ? {
                                       ...prod,
                                       cantidad: Math.min(
@@ -285,15 +301,15 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                           icon={<DeleteIcon />}
                           colorScheme="red"
                           onClick={() =>
-                            handleRemoveProducto(producto.productoId)
-                          }
+                            handleRemoveProducto(producto.detallePedidoId)
+                          } // Aquí debe ser detallePedidoId
                           size="xs"
                         />
                       </Tooltip>
                     </HStack>
                   </MotionBox>
                 ))}
-  
+
                 <MotionBox
                   p={2}
                   boxShadow="sm"
@@ -371,7 +387,8 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                           onChange={(e) =>
                             setProductos((prevProductos) =>
                               prevProductos.map((prod) =>
-                                prod.detallePedidoId === producto.detallePedidoId
+                                prod.detallePedidoId ===
+                                producto.detallePedidoId
                                   ? {
                                       ...prod,
                                       cantidad: Math.min(
@@ -410,6 +427,34 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                       </Td>
                     </Tr>
                   ))}
+                  <Tr>
+                    <Td colSpan={2}>
+                      <ProductoSelector
+                        onSelect={handleProductoChange}
+                        reset={resetFields}
+                      />
+                    </Td>
+                    <Td>
+                      <CantidadInput
+                        value={newProducto.cantidad}
+                        onChange={(e) =>
+                          setNewProducto({
+                            ...newProducto,
+                            cantidad: parseFloat(e.target.value),
+                          })
+                        }
+                        placeholder="Cantidad"
+                      />
+                    </Td>
+                    <Td colSpan={2}>
+                      <IconButton
+                        icon={<AddIcon />}
+                        colorScheme="teal"
+                        onClick={handleAddProducto}
+                        size="sm"
+                      />
+                    </Td>
+                  </Tr>
                 </Tbody>
               </Table>
             )
@@ -422,8 +467,6 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       )}
     </Box>
   );
-  
-  
 };
 
 ProductosTable.propTypes = {

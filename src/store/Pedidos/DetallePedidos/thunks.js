@@ -27,10 +27,13 @@ export const addNewDetalleOrden = createAsyncThunk(
 export const deleteDetalleOrden = createAsyncThunk(
   'detalleOrden/deleteDetalleOrden',
   async (id) => {
+    console.log(`Eliminando detalle con ID: ${id}`); // Agrega un log aquí
     await axios.delete(`${BASE_URL}/detalle/pedido/eliminar/${id}`);
     return id;
   }
 );
+
+
 
 // Update DetalleOrden
 // Update DetalleOrden
