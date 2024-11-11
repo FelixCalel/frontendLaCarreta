@@ -455,17 +455,18 @@ const DetallePedidoForm = () => {
           </VStack>
         ) : (
           <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>ID</Th>
-                <Th>Ciudad</Th>
-                <Th>Deudor</Th>
-                <Th>Tienda</Th>
-                <Th>Acciones</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {pedidosUsuario.map((pedido) => (
+          <Thead>
+            <Tr>
+              <Th>ID</Th>
+              <Th>Ciudad</Th>
+              <Th>Deudor</Th>
+              <Th>Tienda</Th>
+              <Th>Acciones</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {pedidosUsuario.map((pedido) => (
+              <>
                 <Tr key={pedido.id}>
                   <Td>{pedido.id}</Td>
                   <Td>{pedido.nombreCiudad || "N/A"}</Td>
@@ -499,9 +500,7 @@ const DetallePedidoForm = () => {
                       </Tooltip>
                       <Button
                         colorScheme="teal"
-                        onClick={() =>
-                          showRealizarPedidoConfirmation(pedido.id)
-                        }
+                        onClick={() => showRealizarPedidoConfirmation(pedido.id)}
                         isDisabled={pedido.estadoId === 2}
                         size="sm"
                       >
@@ -510,20 +509,17 @@ const DetallePedidoForm = () => {
                     </HStack>
                   </Td>
                 </Tr>
-              ))}
-              {/* Renderizar los detalles del pedido en la versión de escritorio */}
-              {isDetailsOpen && (
-                <Tr>
-                  <Td colSpan={5}>
-                    <ProductosTable
-                      pedidoId={isDetailsOpen}
-                      usuarioId={usuarioId}
-                    />
-                  </Td>
-                </Tr>
-              )}
-            </Tbody>
-          </Table>
+                {isDetailsOpen === pedido.id && (
+                  <Tr key={`detalle-${pedido.id}`}>
+                    <Td colSpan={5}>
+                      <ProductosTable pedidoId={pedido.id} usuarioId={usuarioId} />
+                    </Td>
+                  </Tr>
+                )}
+              </>
+            ))}
+          </Tbody>
+        </Table>
         )
       ) : (
         <Text>No hay pedidos disponibles</Text>

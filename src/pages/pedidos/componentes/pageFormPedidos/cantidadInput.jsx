@@ -1,22 +1,30 @@
 import PropTypes from "prop-types";
-import { FormControl, FormLabel, Input, FormErrorMessage, HStack } from "@chakra-ui/react";
+import { FormControl, Input, FormErrorMessage, HStack } from "@chakra-ui/react";
 
-const CantidadInput = ({ value, onChange, onBlur, error, placeholder, width, max }) => {
+const CantidadInput = ({
+  value,
+  onChange,
+  onBlur,
+  error,
+  placeholder,
+  width,
+  max,
+}) => {
   return (
     <HStack spacing={2} align="start">
-      <FormControl mb={2} isInvalid={error} isRequired>
-        <FormLabel fontSize="sm" mb={1}>Cantidad</FormLabel>
+      <FormControl mb={2} isInvalid={error}>
         <Input
           name="cantidad"
           type="number"
           value={value}
           onChange={onChange}
-          onBlur={onBlur}
+          onBlur={() => onBlur && onBlur(value)}
           placeholder={placeholder}
           width={width || "60px"}
           size="sm"
-          max={max} // Aplicar el límite máximo
+          max={max}
         />
+
         {error && <FormErrorMessage>{error}</FormErrorMessage>}
       </FormControl>
     </HStack>

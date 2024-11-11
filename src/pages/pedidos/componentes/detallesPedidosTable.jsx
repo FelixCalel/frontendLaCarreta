@@ -37,6 +37,8 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
   const toast = useToast();
 
   const [productos, setProductos] = useState([]);
+  const [productosCargados, setProductosCargados] = useState(false);
+
   const [newProducto, setNewProducto] = useState({
     productoId: "",
     nombreProducto: "",
@@ -44,6 +46,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     cantidadDisponible: 0,
     codigo: "",
   });
+
   const [isLoading, setIsLoading] = useState(false);
   const [resetFields, setResetFields] = useState(false);
 
@@ -51,34 +54,51 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     const cargarProductosComunes = async () => {
       try {
         setIsLoading(true);
+
+        // Verificar si los productos ya están en sessionStorage
+        const productosGuardados = sessionStorage.getItem(
+          `productos_${pedidoId}`
+        );
+        if (productosGuardados) {
+          setProductos(JSON.parse(productosGuardados));
+          setProductosCargados(true);
+          setIsLoading(false);
+          return;
+        }
+
         const productosComunes = await dispatch(
           getPedidosComunesByUsuarioId({
             usuarioId: Number(usuarioId),
             pedidoId: Number(pedidoId),
           })
         ).unwrap();
-  
+
         const mappedProducts = productosComunes.map((prod) => ({
           ...prod,
           cantidad: prod.cantidad || 0,
           cantidadDisponible: prod.cantidadDisponible,
           codigo: prod.codigo || "Sin código",
         }));
-  
+
         setProductos(mappedProducts);
+        setProductosCargados(true);
+
+        // Guardar en sessionStorage
+        sessionStorage.setItem(
+          `productos_${pedidoId}`,
+          JSON.stringify(mappedProducts)
+        );
       } catch (error) {
         console.error("Error al cargar los productos comunes:", error);
       } finally {
         setIsLoading(false);
       }
     };
-  
-    // Solo cargamos productos comunes al inicio o si cambian usuarioId o pedidoId
-    if (usuarioId && pedidoId) {
+
+    if (usuarioId && pedidoId && !productosCargados) {
       cargarProductosComunes();
     }
-  }, [dispatch, usuarioId, pedidoId]);
-  
+  }, [dispatch, usuarioId, pedidoId, productosCargados]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -115,7 +135,14 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         const detalles = await dispatch(
           getDetalleOrdenByPedidoId(pedidoId)
         ).unwrap();
+
         setProductos(detalles);
+
+        // Actualizar sessionStorage con los nuevos detalles
+        sessionStorage.setItem(
+          `productos_${pedidoId}`,
+          JSON.stringify(detalles)
+        );
 
         setNewProducto({
           productoId: "",
@@ -150,12 +177,17 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     try {
       console.log("Intentando eliminar el detalle:", detallePedidoId);
       await dispatch(deleteDetalleOrden(detallePedidoId)).unwrap();
-      
-      // Filtra el producto eliminado del estado de productos en el frontend
-      setProductos((prevProductos) =>
-        prevProductos.filter((prod) => prod.detallePedidoId !== detallePedidoId)
+
+      // Filtrar el producto eliminado del estado y actualizar sessionStorage
+      const productosActualizados = productos.filter(
+        (prod) => prod.detallePedidoId !== detallePedidoId
       );
-  
+      setProductos(productosActualizados);
+      sessionStorage.setItem(
+        `productos_${pedidoId}`,
+        JSON.stringify(productosActualizados)
+      );
+
       toast({
         title: "Producto eliminado.",
         description: "El producto ha sido eliminado exitosamente.",
@@ -174,7 +206,6 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
-  
 
   const handleCantidadChange = async (detalleId, cantidad) => {
     if (!detalleId || !pedidoId) {
@@ -185,6 +216,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       return;
     }
     try {
+      // Continuar con la actualización solo si detalleId y pedidoId son válidos
       await dispatch(
         updateDetalleOrden({
           id: Number(detalleId),
@@ -193,11 +225,13 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         })
       ).unwrap();
   
-      // Actualiza la cantidad en el estado de productos
-      setProductos((prevProductos) =>
-        prevProductos.map((prod) =>
-          prod.detallePedidoId === detalleId ? { ...prod, cantidad } : prod
-        )
+      const productosActualizados = productos.map((prod) =>
+        prod.detallePedidoId === detalleId ? { ...prod, cantidad } : prod
+      );
+      setProductos(productosActualizados);
+      sessionStorage.setItem(
+        `productos_${pedidoId}`,
+        JSON.stringify(productosActualizados)
       );
   
       toast({
@@ -283,17 +317,22 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                               )
                             )
                           }
-                          onBlur={() => {
+                          onBlur={() =>
                             handleCantidadChange(
                               producto.detallePedidoId,
                               producto.cantidad
-                            );
-                          }}
+                            )
+                          }
                           placeholder="Cantidad"
                           size="sm"
-                          width="60px"
-                          maxWidth="60px"
+                          width="50px"
+                          maxWidth="50px"
                           max={producto.cantidadDisponible}
+                          style={{
+                            margin: "0",
+                            padding: "1px",
+                            fontSize: "0.85rem",
+                          }}
                         />
                       </Box>
                       <Tooltip label="Eliminar producto" hasArrow>
@@ -302,67 +341,13 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                           colorScheme="red"
                           onClick={() =>
                             handleRemoveProducto(producto.detallePedidoId)
-                          } // Aquí debe ser detallePedidoId
+                          }
                           size="xs"
                         />
                       </Tooltip>
                     </HStack>
                   </MotionBox>
                 ))}
-
-                <MotionBox
-                  p={2}
-                  boxShadow="sm"
-                  borderWidth="1px"
-                  rounded="md"
-                  bg="teal.50"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <HStack spacing={2} justifyContent="space-between">
-                    <ProductoSelector
-                      onSelect={(
-                        productoId,
-                        nombreProducto,
-                        cantidadDisponible,
-                        codigo
-                      ) =>
-                        handleProductoChange(
-                          productoId,
-                          nombreProducto,
-                          cantidadDisponible,
-                          codigo
-                        )
-                      }
-                      reset={resetFields}
-                    />
-                    <CantidadInput
-                      value={newProducto.cantidad}
-                      onChange={(e) =>
-                        setNewProducto({
-                          ...newProducto,
-                          cantidad: parseFloat(e.target.value),
-                        })
-                      }
-                      placeholder="0"
-                      size="sm"
-                      width="60px"
-                      maxWidth="60px"
-                    />
-                    <Tooltip label="Agregar producto" hasArrow>
-                      <IconButton
-                        icon={<AddIcon />}
-                        colorScheme="teal"
-                        onClick={() => {
-                          handleAddProducto();
-                          setResetFields(false);
-                        }}
-                        size="sm"
-                      />
-                    </Tooltip>
-                  </HStack>
-                </MotionBox>
               </VStack>
             ) : (
               <Table variant="simple">
@@ -377,11 +362,21 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                 </Thead>
                 <Tbody>
                   {productos.map((producto) => (
-                    <Tr key={producto.detallePedidoId}>
-                      <Td>{producto.codigo || "Sin código"}</Td>
-                      <Td>{producto.nombreProducto}</Td>
-                      <Td>{producto.cantidadDisponible}</Td>
-                      <Td>
+                    <Tr
+                      key={producto.detallePedidoId}
+                      style={{ padding: "0px", height: "10px" }}
+                    >
+                      {/* Altura de la fila ajustada */}
+                      <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
+                        {producto.codigo || "Sin código"}
+                      </Td>
+                      <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
+                        {producto.nombreProducto}
+                      </Td>
+                      <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
+                        {producto.cantidadDisponible}
+                      </Td>
+                      <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
                         <CantidadInput
                           value={producto.cantidad}
                           onChange={(e) =>
@@ -408,53 +403,31 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                           }}
                           placeholder="Cantidad"
                           size="sm"
-                          width="60px"
-                          maxWidth="60px"
+                          width="50px"
+                          maxWidth="50px"
                           max={producto.cantidadDisponible}
+                          style={{
+                            margin: "0",
+                            padding: "1px",
+                            fontSize: "0.85rem",
+                          }} // Reducir padding del input
                         />
                       </Td>
-                      <Td>
+                      <Td style={{ padding: "2px 4px" }}>
                         <Tooltip label="Eliminar producto" hasArrow>
                           <IconButton
                             icon={<DeleteIcon />}
                             colorScheme="red"
                             onClick={() =>
-                              handleRemoveProducto(producto.productoId)
+                              handleRemoveProducto(producto.detallePedidoId)
                             }
                             size="xs"
+                            style={{ margin: "0", padding: "0" }} // Eliminar margen y padding adicional
                           />
                         </Tooltip>
                       </Td>
                     </Tr>
                   ))}
-                  <Tr>
-                    <Td colSpan={2}>
-                      <ProductoSelector
-                        onSelect={handleProductoChange}
-                        reset={resetFields}
-                      />
-                    </Td>
-                    <Td>
-                      <CantidadInput
-                        value={newProducto.cantidad}
-                        onChange={(e) =>
-                          setNewProducto({
-                            ...newProducto,
-                            cantidad: parseFloat(e.target.value),
-                          })
-                        }
-                        placeholder="Cantidad"
-                      />
-                    </Td>
-                    <Td colSpan={2}>
-                      <IconButton
-                        icon={<AddIcon />}
-                        colorScheme="teal"
-                        onClick={handleAddProducto}
-                        size="sm"
-                      />
-                    </Td>
-                  </Tr>
                 </Tbody>
               </Table>
             )
@@ -463,6 +436,63 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
               No hay productos añadidos.
             </Text>
           )}
+
+          {/* Siempre mostrar ProductoSelector, CantidadInput y botón de agregar */}
+          <Box mt={4}>
+            <MotionBox
+              p={2}
+              boxShadow="sm"
+              borderWidth="1px"
+              rounded="md"
+              bg="teal.50"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <HStack spacing={2} justifyContent="space-between">
+                <ProductoSelector
+                  onSelect={(
+                    productoId,
+                    nombreProducto,
+                    cantidadDisponible,
+                    codigo
+                  ) =>
+                    handleProductoChange(
+                      productoId,
+                      nombreProducto,
+                      cantidadDisponible,
+                      codigo
+                    )
+                  }
+                  reset={resetFields}
+                />
+                <CantidadInput
+                  value={newProducto.cantidad}
+                  onChange={(e) =>
+                    setNewProducto({
+                      ...newProducto,
+                      cantidad: parseFloat(e.target.value),
+                    })
+                  }
+                  placeholder="0"
+                  size="sm"
+                  width="60px"
+                  maxWidth="60px"
+                />
+                <Tooltip label="Agregar producto" hasArrow>
+                  <IconButton
+                    icon={<AddIcon />}
+                    colorScheme="teal"
+                    onClick={() => {
+                      handleAddProducto();
+                      setResetFields(false);
+                    }}
+                    size="sm"
+                  />
+                </Tooltip>
+              </HStack>
+            </MotionBox>
+          </Box>
         </>
       )}
     </Box>
