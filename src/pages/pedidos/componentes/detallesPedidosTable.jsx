@@ -51,42 +51,86 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
   const [resetFields, setResetFields] = useState(false);
 
   useEffect(() => {
+    const cargarDetallesPedido = async () => {
+      try {
+        setIsLoading(true);
+  
+        // Verificar si los detalles del pedido están en sessionStorage
+        const detallesGuardados = sessionStorage.getItem(
+          `productos_${pedidoId}`
+        );
+  
+        if (detallesGuardados) {
+          const detallesGuardadosParsed = JSON.parse(detallesGuardados);
+          setProductos(detallesGuardadosParsed);
+          setProductosCargados(true);
+          setIsLoading(false);
+          return;
+        }
+  
+        // Cargar solo los detalles del pedido desde la API
+        const detalles = await dispatch(
+          getDetalleOrdenByPedidoId(pedidoId)
+        ).unwrap();
+  
+        setProductos(detalles);
+        setProductosCargados(true);
+  
+        // Guardar en sessionStorage
+        sessionStorage.setItem(
+          `productos_${pedidoId}`,
+          JSON.stringify(detalles)
+        );
+      } catch (error) {
+        console.error("Error al cargar los detalles del pedido:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    if (usuarioId && pedidoId && !productosCargados) {
+      cargarDetallesPedido();
+    }
+  }, [dispatch, usuarioId, pedidoId, productosCargados]);
+  
+
+  useEffect(() => {
     const cargarProductosComunes = async () => {
       try {
         setIsLoading(true);
-
+  
         // Verificar si los productos ya están en sessionStorage
         const productosGuardados = sessionStorage.getItem(
           `productos_${pedidoId}`
         );
         if (productosGuardados) {
-          setProductos(JSON.parse(productosGuardados));
+          const productosGuardadosParsed = JSON.parse(productosGuardados);
+          setProductos(productosGuardadosParsed);
           setProductosCargados(true);
           setIsLoading(false);
           return;
         }
-
+  
+        // Cargar los productos comunes desde la API
         const productosComunes = await dispatch(
           getPedidosComunesByUsuarioId({
             usuarioId: Number(usuarioId),
             pedidoId: Number(pedidoId),
           })
         ).unwrap();
-
-        const mappedProducts = productosComunes.map((prod) => ({
-          ...prod,
-          cantidad: prod.cantidad || 0,
-          cantidadDisponible: prod.cantidadDisponible,
-          codigo: prod.codigo || "Sin código",
-        }));
-
-        setProductos(mappedProducts);
+  
+        // Excluir productos eliminados que no deben recargarse
+        const productosActualizados = productosComunes.filter(
+          (prod) => !productos.some((producto) => producto.productoId === prod.productoId)
+        );
+  
+        setProductos(productosActualizados);
         setProductosCargados(true);
-
+  
         // Guardar en sessionStorage
         sessionStorage.setItem(
           `productos_${pedidoId}`,
-          JSON.stringify(mappedProducts)
+          JSON.stringify(productosActualizados)
         );
       } catch (error) {
         console.error("Error al cargar los productos comunes:", error);
@@ -94,12 +138,13 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         setIsLoading(false);
       }
     };
-
+  
     if (usuarioId && pedidoId && !productosCargados) {
       cargarProductosComunes();
     }
-  }, [dispatch, usuarioId, pedidoId, productosCargados]);
-
+  }, [dispatch, usuarioId, pedidoId, productosCargados, productos]);
+  
+  
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
@@ -184,11 +229,24 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       console.error("DetallePedidoId no válido:", detallePedidoId);
       return;
     }
+  
     try {
+      // Eliminar producto de la base de datos
       await dispatch(deleteDetalleOrden(detallePedidoId)).unwrap();
-      setProductos((prevProductos) =>
-        prevProductos.filter((prod) => prod.detallePedidoId !== detallePedidoId)
+  
+      // Actualizar la lista local de productos
+      const productosActualizados = productos.filter(
+        (prod) => prod.detallePedidoId !== detallePedidoId
       );
+      setProductos(productosActualizados);
+  
+      // Actualizar sessionStorage con la lista actualizada
+      sessionStorage.setItem(
+        `productos_${pedidoId}`,
+        JSON.stringify(productosActualizados)
+      );
+  
+      // Mostrar mensaje de éxito
       toast({
         title: "Producto eliminado.",
         description: "El producto ha sido eliminado exitosamente.",
@@ -207,6 +265,10 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
+  
+  
+  
+  
 
   const handleCantidadChange = async (detalleId, cantidad) => {
     if (!detalleId || !pedidoId) {
