@@ -131,17 +131,29 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           precio: 0,
         };
 
-        await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
+        console.log("Intentando agregar nuevo detalle:", newDetalleOrden);
+
+        const result = await dispatch(
+          addNewDetalleOrden(newDetalleOrden)
+        ).unwrap();
+        console.log("Resultado de la creación de detalle:", result);
+
         const detalles = await dispatch(
           getDetalleOrdenByPedidoId(pedidoId)
         ).unwrap();
+        console.log("Detalles después de agregar producto:", detalles);
 
-        setProductos(detalles);
+        // Verifica que cada producto tenga detallePedidoId
+        const detallesConId = detalles.map((detalle) => ({
+          ...detalle,
+          detallePedidoId: detalle.id, // Mapear id a detallePedidoId
+        }));
+        setProductos(detallesConId);
 
-        // Actualizar sessionStorage con los nuevos detalles
+        console.log("Estado actualizado de productos:", detallesConId);
         sessionStorage.setItem(
           `productos_${pedidoId}`,
-          JSON.stringify(detalles)
+          JSON.stringify(detallesConId)
         );
 
         setNewProducto({
@@ -152,14 +164,6 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           codigo: "",
         });
         setResetFields(true);
-
-        toast({
-          title: "Producto agregado.",
-          description: "El producto ha sido añadido exitosamente.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
       } catch (error) {
         console.error("Error al guardar el detalle del pedido:", error);
         toast({
@@ -170,24 +174,21 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           isClosable: true,
         });
       }
+    } else {
+      console.log("Producto inválido o cantidad cero:", newProducto);
     }
   };
 
   const handleRemoveProducto = async (detallePedidoId) => {
+    if (!detallePedidoId) {
+      console.error("DetallePedidoId no válido:", detallePedidoId);
+      return;
+    }
     try {
-      console.log("Intentando eliminar el detalle:", detallePedidoId);
       await dispatch(deleteDetalleOrden(detallePedidoId)).unwrap();
-
-      // Filtrar el producto eliminado del estado y actualizar sessionStorage
-      const productosActualizados = productos.filter(
-        (prod) => prod.detallePedidoId !== detallePedidoId
+      setProductos((prevProductos) =>
+        prevProductos.filter((prod) => prod.detallePedidoId !== detallePedidoId)
       );
-      setProductos(productosActualizados);
-      sessionStorage.setItem(
-        `productos_${pedidoId}`,
-        JSON.stringify(productosActualizados)
-      );
-
       toast({
         title: "Producto eliminado.",
         description: "El producto ha sido eliminado exitosamente.",
@@ -215,8 +216,15 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
       return;
     }
+
+    console.log(
+      "Actualizando cantidad para detalleId:",
+      detalleId,
+      "con cantidad:",
+      cantidad
+    );
+
     try {
-      // Continuar con la actualización solo si detalleId y pedidoId son válidos
       await dispatch(
         updateDetalleOrden({
           id: Number(detalleId),
@@ -224,7 +232,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           cantidad,
         })
       ).unwrap();
-  
+
       const productosActualizados = productos.map((prod) =>
         prod.detallePedidoId === detalleId ? { ...prod, cantidad } : prod
       );
@@ -233,7 +241,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         `productos_${pedidoId}`,
         JSON.stringify(productosActualizados)
       );
-  
+
       toast({
         title: "Cantidad actualizada.",
         description: "La cantidad del producto se ha actualizado exitosamente.",
@@ -252,7 +260,6 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
-  
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Detección de vista móvil
 
@@ -300,38 +307,32 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                           {producto.cantidadDisponible || "N/A"}
                         </Text>
                         <CantidadInput
-                          value={producto.cantidad}
-                          onChange={(e) =>
+                          value={
+                            isNaN(producto.cantidad) ? 0 : producto.cantidad
+                          }
+                          onChange={(e) => {
+                            const cantidad = parseInt(e.target.value, 10) || 0;
                             setProductos((prevProductos) =>
                               prevProductos.map((prod) =>
                                 prod.detallePedidoId ===
                                 producto.detallePedidoId
-                                  ? {
-                                      ...prod,
-                                      cantidad: Math.min(
-                                        parseFloat(e.target.value) || 0,
-                                        producto.cantidadDisponible
-                                      ),
-                                    }
+                                  ? { ...prod, cantidad }
                                   : prod
                               )
-                            )
-                          }
-                          onBlur={() =>
-                            handleCantidadChange(
-                              producto.detallePedidoId,
-                              producto.cantidad
-                            )
-                          }
-                          placeholder="Cantidad"
-                          size="sm"
-                          width="50px"
-                          maxWidth="50px"
-                          max={producto.cantidadDisponible}
-                          style={{
-                            margin: "0",
-                            padding: "1px",
-                            fontSize: "0.85rem",
+                            );
+                          }}
+                          onBlur={() => {
+                            if (producto.detallePedidoId) {
+                              handleCantidadChange(
+                                producto.detallePedidoId,
+                                producto.cantidad
+                              );
+                            } else {
+                              console.error(
+                                "DetallePedidoId no encontrado:",
+                                producto
+                              );
+                            }
                           }}
                         />
                       </Box>
@@ -339,9 +340,16 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                         <IconButton
                           icon={<DeleteIcon />}
                           colorScheme="red"
-                          onClick={() =>
-                            handleRemoveProducto(producto.detallePedidoId)
-                          }
+                          onClick={() => {
+                            if (producto.detallePedidoId) {
+                              handleRemoveProducto(producto.detallePedidoId);
+                            } else {
+                              console.error(
+                                "DetallePedidoId no encontrado:",
+                                producto
+                              );
+                            }
+                          }}
                           size="xs"
                         />
                       </Tooltip>
