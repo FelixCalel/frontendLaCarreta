@@ -66,7 +66,7 @@ export const LoginForm = () => {
   
         // Actualizar el estado global con Redux y luego el efecto se encargará de la redirección
         dispatch(loginAuth({ token, nombre, correo: correoUsuario, roleId }));
-  
+        window.location.reload();
         // // Recargar la página después de iniciar sesión
         // window.location.reload(); 
       } else {

@@ -71,8 +71,8 @@ const DetallePedidoForm = () => {
   const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(null);
   const [selectedPedidoId, setSelectedPedidoId] = useState(null);
-  const [setProductos] = useState([]); // Asegúrate de que este estado se maneje aquí
-
+  const [, setProductos] = useState([]);
+// eslint-disable-next-line no-unused-vars
   const pedidos = useSelector((state) => state.pedidos.data);
   const usuarioId = Number(localStorage.getItem("usuarioId"));
 

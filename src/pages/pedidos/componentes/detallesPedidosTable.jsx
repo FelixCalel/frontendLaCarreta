@@ -268,8 +268,6 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
   
   
   
-  
-
   const handleCantidadChange = async (detalleId, cantidad) => {
     if (!detalleId || !pedidoId) {
       console.error("El detalleId o pedidoId son undefined o inválidos", {

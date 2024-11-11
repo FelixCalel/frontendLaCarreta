@@ -6,7 +6,6 @@ import { PrivateRoute } from "./PrivateRoute";
 import { PublicRoute } from "./PublicRoute";
 import { PortalPagePublic } from "./PortalPagePublic";
 import CheckingAuth from "../ui/components/CheckingAuth";
-import { logout, login, obtenerDatosLogeado } from "../store/auth";
 import HomePage from "../pages/auth/HomePage";
 import { PaginaPais } from "./PaisRoute";
 import { PaginaEmpresa } from "./EmpresaRoute";
