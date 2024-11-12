@@ -65,10 +65,8 @@ export const LoginForm = () => {
         // console.log("roleId guardado en localStorage:", localStorage.getItem("roleId"));
   
         // Actualizar el estado global con Redux y luego el efecto se encargará de la redirección
-        dispatch(loginAuth({ token, nombre, correo: correoUsuario, roleId }));
         window.location.reload();
-        // // Recargar la página después de iniciar sesión
-        // window.location.reload(); 
+        dispatch(loginAuth({ token, nombre, correo: correoUsuario, roleId }));
       } else {
         setError("Credenciales incorrectas");
       }

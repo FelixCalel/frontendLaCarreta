@@ -167,7 +167,18 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
   };
 
   const handleAddProducto = async () => {
-    if (newProducto.productoId && newProducto.cantidad > 0) {
+    if (newProducto.productoId && newProducto.cantidad >= 0) {
+      if (newProducto.cantidad > newProducto.cantidadDisponible) {
+        toast({
+          title: "Error",
+          description: `La cantidad no puede exceder el máximo permitido de ${newProducto.cantidadDisponible}.`,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+  
       try {
         const newDetalleOrden = {
           pedidoId,
@@ -175,32 +186,23 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           cantidad: newProducto.cantidad,
           precio: 0,
         };
-
+  
         console.log("Intentando agregar nuevo detalle:", newDetalleOrden);
-
-        const result = await dispatch(
-          addNewDetalleOrden(newDetalleOrden)
-        ).unwrap();
+  
+        const result = await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
         console.log("Resultado de la creación de detalle:", result);
-
-        const detalles = await dispatch(
-          getDetalleOrdenByPedidoId(pedidoId)
-        ).unwrap();
+  
+        const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
         console.log("Detalles después de agregar producto:", detalles);
-
-        // Verifica que cada producto tenga detallePedidoId
+  
         const detallesConId = detalles.map((detalle) => ({
           ...detalle,
-          detallePedidoId: detalle.id, // Mapear id a detallePedidoId
+          detallePedidoId: detalle.id,
         }));
         setProductos(detallesConId);
-
-        console.log("Estado actualizado de productos:", detallesConId);
-        sessionStorage.setItem(
-          `productos_${pedidoId}`,
-          JSON.stringify(detallesConId)
-        );
-
+  
+        sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(detallesConId));
+  
         setNewProducto({
           productoId: "",
           nombreProducto: "",
@@ -223,6 +225,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       console.log("Producto inválido o cantidad cero:", newProducto);
     }
   };
+  
 
   const handleRemoveProducto = async (detallePedidoId) => {
     if (!detallePedidoId) {

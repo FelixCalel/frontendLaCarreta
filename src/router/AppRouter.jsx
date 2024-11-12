@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch,  } from "react-redux";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { PortalRouter } from "./PortalRouter";
 import { PrivateRoute } from "./PrivateRoute";
@@ -18,7 +18,7 @@ import { validarUsuario } from "../store/RolPermisoUsuario/thunks";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
-  const status = useSelector((state) => state.auth.status);
+  // const status = useSelector((state) => state.auth.status);
   const [accesosPermitidos, setAccesosPermitidos] = useState({});
   const [loading, setLoading] = useState(true); // Bandera de carga
   const [roleId, setRoleId] = useState(localStorage.getItem("roleId"));

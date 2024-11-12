@@ -10,6 +10,15 @@ const CantidadInput = ({
   width,
   max,
 }) => {
+  const handleInputChange = (e) => {
+    const inputValue = parseFloat(e.target.value);
+    if (inputValue > max) {
+      onChange({ target: { value: max } }); // Ajustar al máximo permitido
+    } else {
+      onChange(e);
+    }
+  };
+
   return (
     <HStack spacing={2} align="start">
       <FormControl mb={2} isInvalid={error}>
@@ -17,14 +26,19 @@ const CantidadInput = ({
           name="cantidad"
           type="number"
           value={value}
-          onChange={onChange}
-          onBlur={() => onBlur && onBlur(value)}
+          onChange={handleInputChange}
+          onBlur={() => {
+            if (value > max) {
+              onChange({ target: { value: max } }); // Ajustar al máximo permitido
+              alert(`La cantidad máxima permitida es ${max}`);
+            }
+            onBlur && onBlur(value);
+          }}
           placeholder={placeholder}
           width={width || "60px"}
           size="sm"
           max={max}
         />
-
         {error && <FormErrorMessage>{error}</FormErrorMessage>}
       </FormControl>
     </HStack>
@@ -38,7 +52,7 @@ CantidadInput.propTypes = {
   error: PropTypes.string,
   placeholder: PropTypes.string,
   width: PropTypes.string,
-  max: PropTypes.number, // Definir el tipo de `max` como número
+  max: PropTypes.number,
 };
 
 export default CantidadInput;

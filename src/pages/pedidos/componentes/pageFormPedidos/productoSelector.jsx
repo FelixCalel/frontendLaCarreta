@@ -24,14 +24,15 @@ const ProductoSelector = ({ onSelect, reset }) => {
 
   const handleSelectItem = (item) => {
     setInputValue(`${item.codigo} - ${item.nombre}`);
-    setSelectedItem(item); // Guardamos el item seleccionado
-    onSelect(item.id, `${item.codigo} - ${item.nombre}`);
-    
-    // Verificamos la cantidad disponible y actualizamos el mensaje de error si es necesario
+    setSelectedItem(item);
+
+    // Llama a `onSelect` con la cantidad disponible
+    onSelect(item.id, `${item.codigo} - ${item.nombre}`, item.cantidadDisponible, item.codigo);
+
     if (item.cantidadDisponible === 0) {
       setError("Cantidad máxima disponible: 0");
     } else {
-      setError(""); // Reiniciar el error si hay cantidad disponible
+      setError("");
     }
   };
 
