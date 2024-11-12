@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchrole } from './thunks';
+import { fetchRoles } from './thunks';
 import { fetchRolesMetadata } from './thunks';
 
 const roleSlice = createSlice({
@@ -13,15 +13,15 @@ const roleSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(fetchrole.pending, (state) => {
+            .addCase(fetchRoles.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchrole.fulfilled, (state, action) => {
+            .addCase(fetchRoles.fulfilled, (state, action) => {
                 state.roles = action.payload;
                 state.loading = false;
             })
-            .addCase(fetchrole.rejected, (state, action) => {
+            .addCase(fetchRoles.rejected, (state, action) => {
                 state.error = action.error.message;
                 state.loading = false;
             })

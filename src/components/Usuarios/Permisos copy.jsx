@@ -25,11 +25,11 @@ import {
   AlertDialogOverlay,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchModulosTabla } from "../../store/proveedores/Modulos/thunks";
-import { fetchPermisos } from "../../store/proveedores/Permisos/thunks";
-import { fetchPermisosRoles, createasignacionPermisosRoles, deleteasignacionPermisosRoles } from "../../store/proveedores/AsignarPermisosAroles/thunks";
-import { fetchrole } from "../../store/proveedores/PaginaRole/thunks";
-import { fetchOpciones } from "../../store/proveedores/Opciones/thunks";
+import { fetchModulosTabla } from "../../store/Modulos/thunks";
+import { fetchPermisos } from "../../store/Permisos/thunks";
+import { fetchPermisosRoles, createasignacionPermisosRoles, deleteasignacionPermisosRoles } from "../../store/AsignarPermisosAroles/thunks";
+import { fetchrole } from "../../store/PaginaRole/thunks";
+import { fetchOpciones } from "../../store/Opciones/thunks";
 
 export const Permisos = () => {
   const dispatch = useDispatch();
