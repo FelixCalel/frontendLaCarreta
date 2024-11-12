@@ -1,5 +1,3 @@
-
-
 import { configureStore } from '@reduxjs/toolkit'
 import { authSlice } from './auth'
 import { usuariosReducer  } from './usuarios/usuariosSlice'
@@ -9,13 +7,12 @@ import ciudadReducer from './Ciudad/ciudadSlice'
 import tiendaReducer from './Tienda/tiendaSlice'
 import rutaReducer from './Ruta/rutaSlice'
 import deusReducer from './Deus/deuSlice'
-import pedidosReducer from './Pedidos/pedidoSlice'
-import detalleOrdenReducer from './Pedidos/DetallePedidos/detalleOrdenSlice'
-import itemReducer from './items/itemSlice'
+import modulosSlice from './Modulos/modulosSlice'
 import roleReducer from './Roles/roleSlice'
-import permisoReducer from './Permisos/permisoSlice'
-import assignReducer from './RolPermisoUsuario/RolPermisoUsuarioSlice'
-import modulosReducer from './RolPermisoUsuario/RolPermisoUsuarioSlice'
+import PermisosSlice from './Permisos/permisoSlice'
+import opcionesSlice from './Opciones/opcionesSlice'
+import PermisosRolesSlice from './AsignarPermisosAroles/asignarPermisosSlice'
+import asignacionMOSlice from './asignacionMO/asignacionMOSlice.js'
 
 export const store = configureStore({
   reducer: {
@@ -27,12 +24,11 @@ export const store = configureStore({
     tiendas: tiendaReducer,  
     rutas: rutaReducer,
     deudores: deusReducer,
-    pedidos: pedidosReducer,
-    detalleOrden: detalleOrdenReducer,
-    items: itemReducer,
+    modulos: modulosSlice,
+    opciones: opcionesSlice,
     roles: roleReducer,
-    permisos: permisoReducer,
-    assignments: assignReducer,
-    modulos: modulosReducer,
+    Permisos: PermisosSlice,
+    PermisosRoles: PermisosRolesSlice,
+    asignacionMO: asignacionMOSlice,
   },
 })

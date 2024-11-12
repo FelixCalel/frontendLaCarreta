@@ -1,2 +1,2 @@
-export * from './permisoSlice';
+export * from  './permisosSlice';
 export * from './thunks';
