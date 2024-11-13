@@ -1,5 +1,5 @@
 import {
-    Table, Thead, Tbody, Tr, Th, Td, Box, useColorModeValue, IconButton, Tooltip, Flex, Button
+    Table, Thead, Tbody, Tr, Th, Td, Box, useColorModeValue, IconButton, Tooltip, Flex
 } from '@chakra-ui/react';
 import { useState, useCallback } from 'react';
 import { ChevronUpIcon, ChevronDownIcon } from '@chakra-ui/icons';

@@ -4,13 +4,13 @@ import PropTypes from 'prop-types';
 import { ModalV1 } from '../Modal/modalV1';
 import { useDisclosure } from '@chakra-ui/react'; 
 import { useDispatch } from 'react-redux';
-import { createModulo } from '../../../../store/proveedores/Modulos/thunks'; // Asegúrate de importar todas las acciones necesarias
-import { createOpciones } from '../../../../store/proveedores/Opciones/thunks';
+import { createModulo } from '../../../../store/Modulos/thunks'; // Asegúrate de importar todas las acciones necesarias
+import { createOpciones } from '../../../../store/Opciones/thunks';
 import { useState, useRef } from 'react';
-import { createpermisos } from '../../../../store/proveedores/Permisos/thunks';
-import { createRol } from '../../../../store/proveedores/PaginaRole/thunks';
+import { createpermisos } from '../../../../store/Permisos/thunks';
+import { createRol } from '../../../../store/PaginaRole/thunks';
 import { createusuarios } from '../../../../store/usuarios/usuariosSlice';
-import { createasignacionPermisosRoles } from '../../../../store/proveedores/AsignarPermisosAroles/thunks';
+import { createasignacionPermisosRoles } from '../../../../store/AsignarPermisosAroles/thunks';
 
 export const BotonCrear = ({ nombreBoton, metadata }) => {
     const { isOpen, onOpen, onClose } = useDisclosure(); // Hook para manejar el estado del modal

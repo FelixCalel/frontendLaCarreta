@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { fetchModulosTabla, fetchMetadataModulos } from '../../store/Modulos/thunks';
 import { ListarDatos } from "../../components/Genericos/Crud/listas/listarDatos.jsx";
 import { Box, Button, useColorModeValue, Spinner } from "@chakra-ui/react";
-import iconCatalog from '../../components/Iconos/IconCatalog'; // Importamos el catálogo de íconos
+import iconCatalog from '../../components/Iconos/IconCatalog.jsx'; // Importamos el catálogo de íconos
 import ModalEdit from '../../components/Genericos/Crud/Modal/modalEdit';
 
 export const PageModulos = () => {

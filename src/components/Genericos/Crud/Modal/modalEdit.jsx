@@ -16,7 +16,7 @@ import {
     Button, 
     Flex 
 } from "@chakra-ui/react";
-import iconCatalog from '../../../Iconos/IconCatalog'; // Importamos el catálogo de íconos
+import iconCatalog from '../../../Iconos/IconCatalog.jsx'; // Importamos el catálogo de íconos
 
 const ModalEdit = ({ 
     isOpen, 

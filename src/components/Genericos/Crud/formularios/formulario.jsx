@@ -1,6 +1,6 @@
 import { FormControl, FormLabel, Grid, GridItem, Input, Switch, Button, Box, Flex } from "@chakra-ui/react";
 import { useState } from "react";
-import iconCatalog from '../../../Iconos/IconCatalog'; // Asegúrate de que la ruta es correcta
+import iconCatalog from '../../../Iconos/IconCatalog.jsx'; // Asegúrate de que la ruta es correcta
 
 export const Formulario = ({ formData = {}, metadata, onClose, onSubmit }) => {
     const [formDataState, setFormDataState] = useState(formData); // Si no hay datos, iniciamos con objeto vacío

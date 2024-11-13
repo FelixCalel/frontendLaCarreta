@@ -28,6 +28,20 @@ export const fetchUsuarios = createAsyncThunk(
   }
 );
 
+
+export const fetchUsuariosMetadata = createAsyncThunk('Usuarios/fetchUsuariosMetadata',
+  async (_, thunkAPI) => {
+    try {
+      const apiUrl = import.meta.env.VITE_PORT;
+      // Hacemos la petición a la API
+      const response = await axios.get(`${apiUrl}/usuarios/metadata`);
+      return response.data;  // Asegúrate de que los datos retornados sean correctos
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
 export const createusuarios = createAsyncThunk('usuarios/createusuarios',
   async (usuariosData, thunkAPI) => {
     try {

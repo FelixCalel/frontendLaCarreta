@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchPermisosRoles } from '../../store/proveedores/AsignarPermisosAroles/thunks'; // Importa las acciones necesarias
+import { fetchPermisosRoles } from '../../store/AsignarPermisosAroles/thunks'; // Importa las acciones necesarias
 import { ListarDatos } from "../../components/Genericos/Crud/listas/listarDatos.jsx";
 import { Box, Button, useColorModeValue, Spinner } from "@chakra-ui/react";
 import ModalEditOpciones from "../../components/Genericos/Crud/Modal/modalEditOpciones"; // Asegúrate de que este archivo exista
-import { fetchPermisosRolesMetadata } from '../../store/proveedores/AsignarPermisosAroles/thunks'; // Importa las acciones necesarias
+import { fetchPermisosRolesMetadata } from '../../store/AsignarPermisosAroles/thunks'; // Importa las acciones necesarias
 
 export const PagePermisosRoles = () => {
   const bgColor = useColorModeValue('gray.50', '#1e1e2e');

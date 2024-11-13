@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchrole } from '../../store/proveedores/PaginaRole/thunks'; // Importa las acciones necesarias
+import { fetchrole } from '../../store/PaginaRole/thunks'; // Importa las acciones necesarias
 import { ListarDatos } from '../../components/Genericos/Crud/listas/listarDatos.jsx';
-import { Box, useColorModeValue, Spinner, Alert, AlertIcon, Button } from '@chakra-ui/react';
+import { Box, useColorModeValue, Spinner, Button } from '@chakra-ui/react';
 import ModalEditOpciones from "../../components/Genericos/Crud/Modal/modalEditOpciones"; // Asegúrate de que este archivo exista
-import { fetchRolesMetadata } from '../../store/proveedores/PaginaRole/thunks';
+import { fetchRolesMetadata } from '../../store/PaginaRole/thunks';
 
 export const PaginaRole = () => {
     const bgColor = useColorModeValue('gray.50', '#1e1e2e');
