@@ -28,6 +28,32 @@ export const fetchUsuarios = createAsyncThunk(
   }
 );
 
+export const createusuarios = createAsyncThunk('usuarios/createusuarios',
+  async (usuariosData, thunkAPI) => {
+    try {
+      // Agregar los campos faltantes a los datos del módulo
+      const state = thunkAPI.getState();
+      const auth = state.auth;  // Asegurarse de que auth contiene los datos del usuario actual
+
+      // Formatear los datos de creación
+      const usuarios = {
+        ...usuariosData,
+        created_by: auth.userId || 1,  // ID del usuario autenticado
+        updated_by: auth.userId || 1,  // Asumimos que es el mismo usuario que lo actualiza
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Llamada a la API para crear el módulo
+      const response = await axios.post(`${apiUrl}/api/usuarios/crear`, usuarios);
+      return response.data;
+    } catch (error) {
+      // Manejo de errores
+      return thunkAPI.rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
 // Define tu slice de Redux
 export const usuariosSlice = createSlice({
   name: 'usuarios',

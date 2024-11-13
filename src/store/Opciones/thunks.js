@@ -1,5 +1,5 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios'; 
+import { createAsyncThunk } from '@reduxjs/toolkit';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 

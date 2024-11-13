@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchasignacionMO } from '../../store/proveedores/asignacionMO/thunks'; // Importa la acción que obtiene los asignacionMO
-import { ListarDatos } from "../../components/Genericos/Crud/listas/listarDatos";
+import { ListarDatos } from "../../components/Genericos/Crud/listas/listarDatos.jsx";
 import { Box, Button, useColorModeValue, Spinner } from "@chakra-ui/react";
 import ModalEditOpciones from "../../components/Genericos/Crud/Modal/modalEditOpciones"; // Asegúrate de que este archivo exista
 import { fetchasignacionMOMetadata } from '../../store/proveedores/asignacionMO/thunks'; // Importa las acciones necesarias
