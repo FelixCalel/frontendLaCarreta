@@ -1,5 +1,0 @@
-export * from './LoginForm'
-export * from './RecuperarClave'
-export * from './Registro/RegisterForm'
-export * from './ConfirmacionRegistro'
-export * from './ActivarUsuarioDep'
