@@ -5,7 +5,7 @@ import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 
-export const fetchPermisosRoles = createAsyncThunk(
+export const fetchPermisosRoles = createAsyncThunk( 
   'Permisos/fetchPermisosRoles',
   async (_, thunkAPI) => {
     try {
@@ -37,7 +37,6 @@ export const createasignacionPermisosRoles = createAsyncThunk(
   'permisos/createasignacionPermisosRoles',
   async ({ accessMatrix }, thunkAPI) => {
     try {
-
       const createPayload = accessMatrix;
 
       if (createPayload.length > 0) {
@@ -47,10 +46,13 @@ export const createasignacionPermisosRoles = createAsyncThunk(
 
       return { message: "Permisos actualizados correctamente." };
     } catch (error) {
+      console.error("Error al crear asignación de permisos:", error);
+      console.error("Detalles del error:", error.response?.data || error.message);
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
     }
   }
 );
+
 
 
 export const deleteasignacionPermisosRoles = createAsyncThunk(

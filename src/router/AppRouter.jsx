@@ -32,6 +32,8 @@ export const AppRouter = () => {
     { path: "/empresa/*", rutaId: 5, component: PaginaEmpresa },
     { path: "/pedido/*", rutaId: 6, component: PaginaPedido },
     { path: "/pedidos/*", rutaId: 7, component: PaginaPedidosEntrantes },
+    { path: "/admin/*", rutaId: 8, component: PaginaPedidosEntrantes },
+
   ];
 
   useEffect(() => {

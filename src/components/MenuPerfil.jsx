@@ -17,7 +17,9 @@ import {
   FaKey,
   FaShieldAlt,
   FaSignOutAlt,
-} from "react-icons/fa"; // Iconos adicionales
+  FaBoxes, // Icono para Módulos
+  FaThList
+} from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "../store/auth";
@@ -27,7 +29,6 @@ export const MenuPerfil = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Estados para almacenar el nombre y correo del usuario
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [correoUsuario, setCorreoUsuario] = useState("");
   const roleId = localStorage.getItem("roleId");
@@ -35,25 +36,19 @@ export const MenuPerfil = () => {
   useEffect(() => {
     const nombre = localStorage.getItem("nombreUsuario");
     const correo = localStorage.getItem("correoUsuario");
-    // const roleId = localStorage.getItem("roleId"); // Obtener el roleId
-    
-    // console.log("Role ID obtenido del localStorage en MenuPerfil:", roleId); // Verificación de roleId
-  
+
     if (nombre && correo) {
       setNombreUsuario(nombre);
       setCorreoUsuario(correo);
     }
   }, []);
-  
-  
-  
+
   const onLogout = () => {
-    localStorage.clear(); // Limpiar todo el localStorage
+    localStorage.clear();
     dispatch(logout());
     navigate("/auth/login", { replace: true });
   };
 
-  // Variables de estilo
   const bgColor = useColorModeValue("white", "gray.800");
   const hoverBg = useColorModeValue("green.500", "white");
   const focusBg = useColorModeValue("green.500", "white");
@@ -72,16 +67,30 @@ export const MenuPerfil = () => {
             size="lg"
             color={useColorModeValue("gray.600", "white")}
           />
-          <MenuList bg={bgColor} borderRadius="md" boxShadow="xl" p={0} minW="240px">
+          <MenuList
+            bg={bgColor}
+            borderRadius="md"
+            boxShadow="xl"
+            p={0}
+            minW="240px"
+          >
             <Flex direction="column" alignItems="center" p={4} bg="teal.500">
-              <Avatar size="lg" name={nombreUsuario} bg={useColorModeValue("gray.300", "gray.600")} mb={2} />
-              <Text fontWeight="bold" color="white">{nombreUsuario || "Nombre Usuario"}</Text>
-              <Text fontSize="sm" color="whiteAlpha.800">{correoUsuario || "usuario@correo.com"}</Text>
+              <Avatar
+                size="lg"
+                name={nombreUsuario}
+                bg={useColorModeValue("gray.300", "gray.600")}
+                mb={2}
+              />
+              <Text fontWeight="bold" color="white">
+                {nombreUsuario || "Nombre Usuario"}
+              </Text>
+              <Text fontSize="sm" color="whiteAlpha.800">
+                {correoUsuario || "usuario@correo.com"}
+              </Text>
             </Flex>
 
-            {/* Mostrar las opciones solo si el `roleId` es 1 */}
-
-            { <MenuItem
+            {/* Opciones del menú de perfil */}
+            <MenuItem
               as={Link}
               to="/admin/perfil"
               icon={<FaUser />}
@@ -90,38 +99,63 @@ export const MenuPerfil = () => {
               py={2}
             >
               Perfil
-            </MenuItem> }
+            </MenuItem>
+
             {roleId === "1" && (
               <>
-            {/* Opciones del menú */}
-
-
-            {/* { <MenuItem
-              as={Link}
-              to="/admin/empresas"
-              icon={<FaBuilding />}
-              _hover={{ bg: hoverBg, color: "white" }}
-              _focus={{ bg: focusBg, color: "white" }}
-              py={2}
-            >
-              Empresas
-            </MenuItem> } */}
-
-                <MenuItem as={Link} to="/admin/usuarios" icon={<FaUsers />} _hover={{ bg: hoverBg, color: "white" }}>
+                {/* Opciones de administración */}
+                <MenuItem
+                  as={Link}
+                  to="/admin/usuarios"
+                  icon={<FaUsers />}
+                  _hover={{ bg: hoverBg, color: "white" }}
+                >
                   Usuarios
                 </MenuItem>
-                <MenuItem as={Link} to="/admin/roles" icon={<FaKey />} _hover={{ bg: hoverBg, color: "white" }}>
+                <MenuItem
+                  as={Link}
+                  to="/admin/listarRoles"
+                  icon={<FaKey />}
+                  _hover={{ bg: hoverBg, color: "white" }}
+                >
                   Roles
                 </MenuItem>
-                <MenuItem as={Link} to="/admin/permisos" icon={<FaShieldAlt />} _hover={{ bg: hoverBg, color: "white" }}>
+                <MenuItem
+                  as={Link}
+                  to="/admin/permisos"
+                  icon={<FaShieldAlt />}
+                  _hover={{ bg: hoverBg, color: "white" }}
+                >
                   Permisos
+                </MenuItem>
+                {/* Nueva opción para Módulos */}
+                <MenuItem
+                  as={Link}
+                  to="/admin/listarModulos"
+                  icon={<FaBoxes />}
+                  _hover={{ bg: hoverBg, color: "white" }}
+                >
+                  Módulos
+                </MenuItem>
+                {/* Nueva opción para Opciones */}
+                <MenuItem
+                  as={Link}
+                  to="/admin/listarOpciones"
+                  icon={<FaThList />}
+                  _hover={{ bg: hoverBg, color: "white" }}
+                >
+                  Opciones
                 </MenuItem>
               </>
             )}
 
             <Divider my={1} />
 
-            <MenuItem icon={<FaSignOutAlt />} _hover={{ bg: "red.500", color: "white" }} onClick={onLogout}>
+            <MenuItem
+              icon={<FaSignOutAlt />}
+              _hover={{ bg: "red.500", color: "white" }}
+              onClick={onLogout}
+            >
               Cerrar sesión
             </MenuItem>
           </MenuList>

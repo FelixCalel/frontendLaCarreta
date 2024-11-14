@@ -28,7 +28,7 @@ import {
   FaShoppingCart,
   FaTools,
 } from "react-icons/fa";
-import { MdLocationCity, MdDirections } from "react-icons/md";
+import { MdLocationCity, MdDirections, MdPerson } from "react-icons/md";
 
 // Mapa de iconos
 const iconMap = {
@@ -42,6 +42,7 @@ const iconMap = {
   FaClipboardList: FaClipboardList,
   FaShoppingCart: FaShoppingCart,
   FaTools: FaTools,
+  MdPerson: MdPerson,
 };
 
 // Componente MenuItem

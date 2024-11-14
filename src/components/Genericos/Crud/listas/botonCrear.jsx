@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { ModalV1 } from '../Modal/modalV1';
 import { useDisclosure } from '@chakra-ui/react'; 
 import { useDispatch } from 'react-redux';
-import { createModulo } from '../../../../store/Modulos/thunks'; // Asegúrate de importar todas las acciones necesarias
+import { createModulo } from '../../../../store/Modulos/thunks'; 
 import { createOpciones } from '../../../../store/Opciones/thunks';
 import { useState, useRef } from 'react';
 import { createpermisos } from '../../../../store/Permisos/thunks';
