@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchasignacionMO } from '../../store/asignacionMO/thunks'; // Importa la acción que obtiene los asignacionMO
-import { ListarDatos } from "../../components/Genericos/Crud/listas/listarDatos.jsx";
+import { ListarDatos } from "../../components/Genericos/Crud/listas/listarDatos";
 import { Box, Button, useColorModeValue, Spinner } from "@chakra-ui/react";
-import ModalEditOpciones from "../../components/Genericos/Crud/Modal/modalEditOpciones"; // Asegúrate de que este archivo exista
 import { fetchasignacionMOMetadata } from '../../store/asignacionMO/thunks'; // Importa las acciones necesarias
 
 export const PageasignacionMO = () => {
@@ -91,15 +90,6 @@ export const PageasignacionMO = () => {
           return rowData[columnKey];
         }}
       />
-      {isEditModalOpen && (
-        <ModalEditOpciones
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          selectedOpcion={selectedOpcion}
-          setSelectedOpcion={setSelectedOpcion}
-          handleGuardarCambios={handleGuardarCambios}
-        />
-      )}
     </Box>
   );
 };

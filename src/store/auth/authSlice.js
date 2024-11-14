@@ -6,8 +6,6 @@ export const authSlice = createSlice({
         status:'checking',
         uid: null,
         email: null,
-        // nombre_empresa: null,
-        // nit: null,
         displayName: null,
         photoURL: null,
         errorMessage: null,

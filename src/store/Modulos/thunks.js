@@ -81,3 +81,38 @@ export const createModulo = createAsyncThunk('modulos/createModulo',
     }
   }
 );
+
+
+export const updateModulo = createAsyncThunk(
+  'modulos/updateModulo',
+  async (moduloData, { rejectWithValue }) => {
+      try {
+          const response = await axios.put(`${BASE_URL}/api/modulos/update`, moduloData);
+          return response.data;
+      } catch (error) {
+          if (error.response && error.response.data) {
+              return rejectWithValue(error.response.data);
+          } else {
+              return rejectWithValue(error.message);
+          }
+      }
+  }
+);
+
+export const deleteModulo = createAsyncThunk(
+  'modulos/deleteModulo',
+  async (id, { rejectWithValue }) => {
+      try {
+          const response = await axios.delete(`${BASE_URL}/api/modulos/eliminar/${id}`);
+          return response.data;
+      } catch (error) {
+          if (error.response && error.response.data) {
+              return rejectWithValue(error.response.data);
+          } else {
+              return rejectWithValue(error.message);
+          }
+      }
+  }
+);
+
+

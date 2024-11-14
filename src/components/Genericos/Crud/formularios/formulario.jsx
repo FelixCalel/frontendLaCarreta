@@ -1,6 +1,6 @@
 import { FormControl, FormLabel, Grid, GridItem, Input, Switch, Button, Box, Flex } from "@chakra-ui/react";
 import { useState } from "react";
-import iconCatalog from '../../../Iconos/IconCatalog.jsx'; // Asegúrate de que la ruta es correcta
+import iconCatalog from '../../../Iconos/IconCatalog'; // Asegúrate de que la ruta es correcta
 
 export const Formulario = ({ formData = {}, metadata, onClose, onSubmit }) => {
     const [formDataState, setFormDataState] = useState(formData); // Si no hay datos, iniciamos con objeto vacío
@@ -102,10 +102,15 @@ export const Formulario = ({ formData = {}, metadata, onClose, onSubmit }) => {
             )}
 
             <Flex mt={6} justify="space-between">
-                <Button colorScheme="red" size="lg" onClick={onClose}>
+                <Button  colorScheme="teal"
+                variant="outline"
+                borderRadius="full" size="lg" onClick={onClose}>
                     Cerrar
                 </Button>
-                <Button type="submit" colorScheme="green" size="lg">
+                <Button type="submit" colorScheme="teal"
+                    variant="outline"
+                    size="lg"
+                    borderRadius="full">
                     Enviar
                 </Button>
             </Flex>

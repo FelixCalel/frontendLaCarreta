@@ -1,104 +1,105 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchrole } from '../../store/PaginaRole/thunks'; // Importa las acciones necesarias
-import { ListarDatos } from '../../components/Genericos/Crud/listas/listarDatos.jsx';
-import { Box, useColorModeValue, Spinner, Button } from '@chakra-ui/react';
-import ModalEditOpciones from "../../components/Genericos/Crud/Modal/modalEditOpciones"; // Asegúrate de que este archivo exista
-import { fetchRolesMetadata } from '../../store/PaginaRole/thunks';
+import { fetchrole, fetchRolesMetadata } from '../../store/PaginaRole/thunks'; // Importa las acciones necesarias
+import { ListarDatos } from '../../components/Genericos/Crud/listas/listarDatos';
+import { Box, useColorModeValue, Spinner } from '@chakra-ui/react';
+import { BotonEditar } from '../../components/Genericos/Crud/listas/botonEditar'; // Botón de editar genérico
+import { BotonEliminar } from '../../components/Genericos/Crud/listas/botonEliminar'; // Botón de eliminar genérico
 
 export const PaginaRole = () => {
     const bgColor = useColorModeValue('gray.50', '#1e1e2e');
     const dispatch = useDispatch();
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Estado del modal
-    const [selectedOpcion, setSelectedOpcion] = useState(null);    // Opción seleccionada para edición
+
+    const [datosConIconos, setDatosConIconos] = useState([]);
+    const [metadataProcesada, setMetadataProcesada] = useState([]); // Estado local para la metadata procesada
+    const [filtroBusqueda, setFiltroBusqueda] = useState(''); // Estado para la búsqueda
 
     // Accediendo al estado de los roles desde Redux
     const { roles, loading, error, metadata } = useSelector(state => state.roles);
 
     // Cargar los roles al montar el componente
-
     useEffect(() => {
-        if (!roles || roles.length === 0) {
-            dispatch(fetchrole());
-            dispatch(fetchRolesMetadata());
+        dispatch(fetchrole());
+        dispatch(fetchRolesMetadata());
+    }, [dispatch]);
+
+    // Filtrar los datos con base en la búsqueda
+    useEffect(() => {
+        if (roles && roles.length > 0) {
+            const datosFiltrados = roles
+                .filter(role => role.nombre.toLowerCase().includes(filtroBusqueda.toLowerCase()));
+            setDatosConIconos(datosFiltrados); // Actualizamos los datos una vez filtrados
         }
-    }, [dispatch, roles]);
+    }, [roles, filtroBusqueda]);
+    
 
+    // Procesar la metadata cuando cambie
+    useEffect(() => {
+        if (metadata && metadata.length > 0) {
+            const metadataTransformada = metadata.map(item => ({
+                ...item,
+            }));
+            setMetadataProcesada(metadataTransformada);  // Guardamos el valor transformado en el estado
+        }
+    }, [metadata]);
 
+    // Mostrar un spinner mientras se cargan los datos
     if (loading) {
-        return <Spinner />;  // Muestra un spinner mientras se cargan los datos
+        return <Spinner />;
     }
 
+    // Mostrar un mensaje de error si hay algún problema
     if (error) {
-        return <p>Error: {error}</p>;  // Muestra el mensaje de error si existe
+        return <p>Error: {error}</p>;
     }
 
+    // Mostrar un mensaje si no hay roles disponibles
     if (!roles || roles.length === 0) {
-        return <p>No hay usuarios disponibles.</p>;  // Muestra este mensaje si no hay datos
+        return <p>No hay roles disponibles.</p>;
     }
 
     // Columnas para la lista de roles
     const columnasRoles = [
-        { nombre: 'ID', acceso: 'id' },
         { nombre: 'Nombre', acceso: 'nombre' },
         { nombre: 'Descripción', acceso: 'descripcion' },
-        { nombre: 'Acciones', acceso: 'acciones' },  // Columna para el botón de edición
+        { nombre: 'Estado', acceso: 'estado' },
+        { nombre: 'Acciones', acceso: 'acciones' },
     ];
-
-
-    // Manejar la edición de un rol
-    const handleEditarOpcion = (opcion) => {
-        setSelectedOpcion(opcion);
-        setIsEditModalOpen(true);
-    };
-
-    // Manejar el guardado de cambios en el modal
-    const handleGuardarCambios = () => {
-        setIsEditModalOpen(false);  // Cierra el modal
-    };
 
     return (
         <Box p={8} bg={bgColor} minH="100vh">
-          <ListarDatos
-            nombre="Listado de Roles"
-            columnas={columnasRoles}
-            datos={roles}
-            nombreBoton="Crear Rol"
-            onCrear={() => console.log("Creando nuevo Rol")}
-            metadata={metadata}
-            renderCustomCell={(columnKey, rowData) => {
-              if (columnKey === 'activo') {
-                // Ajustado para manejar 'activo' en lugar de 'estado'
-                return rowData.activo ? "Activo" : "Inactivo";
-              }
-              if (columnKey === 'acciones') {
-                return (
-                  <Button
-                    colorScheme="green"
-                    variant="outline"
-                    size="sm"
-                    borderRadius="md"
-                    _hover={{ bg: "green.500", color: "white" }}
-                    onClick={() => handleEditarOpcion(rowData)}
-                  >
-                    Editar
-                  </Button>
-                );
-              }
-              return rowData[columnKey];
-            }}
-          />
-          {isEditModalOpen && (
-            <ModalEditOpciones
-              isOpen={isEditModalOpen}
-              onClose={() => setIsEditModalOpen(false)}
-              selectedOpcion={selectedOpcion}
-              setSelectedOpcion={setSelectedOpcion}
-              handleGuardarCambios={handleGuardarCambios}
+            <ListarDatos
+                nombre="Lista de Roles"
+                columnas={columnasRoles}
+                datos={datosConIconos}
+                nombreBoton="Crear Rol"
+                onCrear={() => console.log("Creando nuevo Rol")}
+                metadata={metadataProcesada.length > 0 ? metadataProcesada : []}
+                onSearch={setFiltroBusqueda} // Pasa la función de búsqueda
+                renderCustomCell={(columnKey, rowData) => {
+                    if (columnKey === 'estado') {
+                        return rowData.estado ? "Activo" : "Inactivo"; // Verifica si estado es true o false
+                    }
+                    if (columnKey === 'acciones') {
+                        return (
+                            <>
+                                <BotonEditar
+                                    nombreBoton="Editar Rol"
+                                    metadata={metadataProcesada}
+                                    formData={rowData}
+                                />
+                                <BotonEliminar
+                                    nombreBoton="Eliminar Rol"
+                                    formData={rowData}
+                                />
+                            </>
+                        );
+                    }
+                    return rowData[columnKey];
+                }}
             />
-          )}
         </Box>
-      );
-    };
+    );
+};
 
-export default PaginaRole; 
+export default PaginaRole;

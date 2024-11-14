@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchPermisosRoles } from '../../store/AsignarPermisosAroles/thunks'; // Importa las acciones necesarias
-import { ListarDatos } from "../../components/Genericos/Crud/listas/listarDatos.jsx";
+import { ListarDatos } from "../../components/Genericos/Crud/listas/listarDatos";
 import { Box, Button, useColorModeValue, Spinner } from "@chakra-ui/react";
-import ModalEditOpciones from "../../components/Genericos/Crud/Modal/modalEditOpciones"; // Asegúrate de que este archivo exista
 import { fetchPermisosRolesMetadata } from '../../store/AsignarPermisosAroles/thunks'; // Importa las acciones necesarias
 
 export const PagePermisosRoles = () => {
@@ -88,15 +87,6 @@ export const PagePermisosRoles = () => {
           return rowData[columnKey]; // Renderizar los datos como texto para los demás campos
         }}
       />
-      {isEditModalOpen && (
-        <ModalEditOpciones
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          selectedOpcion={selectedOpcion}
-          setSelectedOpcion={setSelectedOpcion}
-          handleGuardarCambios={handleGuardarCambios}
-        />
-      )}
     </Box>
   );
 };

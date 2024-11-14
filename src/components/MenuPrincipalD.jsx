@@ -18,6 +18,8 @@ import {
 } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchModulos } from "../store/RolPermisoUsuario/thunks";
+import iconCatalog from '../components/Iconos/IconCatalog'; // Importa el catálogo de iconos
+
 import {
   FaHistory,
   FaInbox,
@@ -29,21 +31,6 @@ import {
   FaTools,
 } from "react-icons/fa";
 import { MdLocationCity, MdDirections, MdPerson } from "react-icons/md";
-
-// Mapa de iconos
-const iconMap = {
-  FaInbox: FaInbox,
-  FaHistory: FaHistory,
-  FaBuilding: FaBuilding,
-  FaStore: FaStore,
-  FaGlobe: FaGlobe,
-  MdLocationCity: MdLocationCity,
-  MdDirections: MdDirections,
-  FaClipboardList: FaClipboardList,
-  FaShoppingCart: FaShoppingCart,
-  FaTools: FaTools,
-  MdPerson: MdPerson,
-};
 
 // Componente MenuItem
 const MenuItem = ({
@@ -150,8 +137,8 @@ const agruparModulos = (data) => {
 
   data.forEach((entry) => {
     const moduloId = entry.modulo.id;
-    const IconoModulo = iconMap[entry.modulo.icono];
-    const IconoOpcion = iconMap[entry.opcion.icono];
+    const IconoModulo = iconCatalog[entry.modulo.icono];
+    const IconoOpcion = iconCatalog[entry.opcion.icono];
 
     if (!modulosAgrupados[moduloId]) {
       modulosAgrupados[moduloId] = {

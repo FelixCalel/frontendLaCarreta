@@ -28,9 +28,9 @@ export const fetchRolesMetadata = createAsyncThunk('Roles/fetchRolesMetadata',
   export const createRol = createAsyncThunk('Rol/createRol',
     async (RolData, thunkAPI) => {
       try {
-        // Agregar los campos faltantes a los datos del módulo
+        // Agregar los campos faltantes a los datos del rol
         const state = thunkAPI.getState();
-        const auth = state.auth;  // Asegurarse de que auth contiene los datos del usuario actual
+        const auth = state.auth;  // Asegúrate de que auth contiene los datos del usuario actual
   
         // Formatear los datos de creación
         const Rol = {
@@ -41,12 +41,48 @@ export const fetchRolesMetadata = createAsyncThunk('Roles/fetchRolesMetadata',
           updated_at: new Date().toISOString(),
         };
   
-        // Llamada a la API para crear el módulo
-        const response = await axios.post(`${BASE_URL}/api/Rol/crear`, Rol);
+        // Log para ver los datos que se están enviando
+        console.log("Datos enviados al servidor para crear el rol:", Rol);
+  
+        // Llamada a la API para crear el rol
+        const response = await axios.post(`${BASE_URL}/api/roles/crear`, Rol);
         return response.data;
       } catch (error) {
         // Manejo de errores
+        console.error("Error al crear el rol:", error);
         return thunkAPI.rejectWithValue(error.response ? error.response.data : error.message);
       }
+    }
+  );
+  
+  export const deleteRol = createAsyncThunk(
+    'Rol/deleteRol',
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await axios.delete(`${BASE_URL}/api/roles/eliminar/${id}`);
+            return response.data;  // Asegúrate de que se retorna la respuesta correcta
+        } catch (error) {
+            if (error.response && error.response.data) {
+                return rejectWithValue(error.response.data);
+            } else {
+                return rejectWithValue(error.message);
+            }
+        }
+    }
+  );
+
+  export const updateRol= createAsyncThunk(
+    'Roles/updateRol',
+    async (RolData, { rejectWithValue }) => {
+        try {
+            const response = await axios.put(`${BASE_URL}/api/roles/update`, RolData);
+            return response.data;
+        } catch (error) {
+            if (error.response && error.response.data) {
+                return rejectWithValue(error.response.data);
+            } else {
+                return rejectWithValue(error.message);
+            }
+        }
     }
   );

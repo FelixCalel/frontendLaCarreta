@@ -1,56 +1,80 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchOpciones } from '../../store/Opciones/thunks';  // Importa la acción que obtiene las opciones
-import { ListarDatos } from "../../components/Genericos/Crud/listas/listarDatos.jsx";
-import { Box, Button, useColorModeValue, Spinner } from "@chakra-ui/react";
-import ModalEditOpciones from "../../components/Genericos/Crud/Modal/modalEditOpciones";
-import {fetchOpcionesMetadata} from '../../store/Opciones/thunks';
+import { fetchOpciones, fetchMetadataOpciones } from '../../store/Opciones/thunks';
+import { ListarDatos } from "../../components/Genericos/Crud/listas/listarDatos";
+import { Box, useColorModeValue, Spinner } from "@chakra-ui/react";
+import { BotonEditar } from '../../components/Genericos/Crud/listas/botonEditar.jsx'; // Botón de editar genérico
+import { BotonEliminar } from '../../components/Genericos/Crud/listas/botonEliminar.jsx'; // Botón de eliminar genérico
+import iconCatalog from '../../components/Iconos/IconCatalog';
 
 export const PageOpciones = () => {
     const bgColor = useColorModeValue('gray.50', '#1e1e2e');
     const dispatch = useDispatch();
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Estado del modal
-    const [selectedOpcion, setSelectedOpcion] = useState(null);    // Opción seleccionada para edición
+
+    const [datosConIconos, setDatosConIconos] = useState([]);
+    const [metadataProcesada, setMetadataProcesada] = useState([]); // Estado local para la metadata procesada
+    const [filtroBusqueda, setFiltroBusqueda] = useState(''); // Estado para la búsqueda
 
     const { opciones, loading, error, metadata } = useSelector((state) => state.opciones);
 
-
-
+    // Cargar los datos y metadata al montar el componente
     useEffect(() => {
         dispatch(fetchOpciones());
-        dispatch(fetchOpcionesMetadata());
+        dispatch(fetchMetadataOpciones());
     }, [dispatch]);
 
-    
+    // Filtrar los datos con base en la búsqueda
+    useEffect(() => {
+        if (opciones && opciones.length > 0) {
+            const datosFiltrados = opciones
+                .filter(opcion => opcion.nombre.toLowerCase().includes(filtroBusqueda.toLowerCase()))
+                .map(opcion => ({
+                    ...opcion,
+                    estado: opcion.estado ? 'Activo' : 'Inactivo',
+                }));
+            setDatosConIconos(datosFiltrados); // Actualizamos los datos una vez filtrados
+        }
+    }, [opciones, filtroBusqueda]);
 
+    // Procesar la metadata cuando cambie
+    useEffect(() => {
+        if (metadata && metadata.length > 0) {
+            const metadataTransformada = metadata.map(item => ({
+                ...item,
+            }));
+            setMetadataProcesada(metadataTransformada);  // Guardamos el valor transformado en el estado
+        }
+    }, [metadata]);
+
+    // Mostrar un spinner mientras se cargan los datos
     if (loading) {
         return <Spinner />;
     }
 
+    // Mostrar un mensaje de error si hay algún problema
     if (error) {
         return <p>Error: {error}</p>;
     }
 
+    // Mostrar un mensaje si no hay Opciones disponibles
     if (!opciones || opciones.length === 0) {
-        return <p>No hay opciones disponibles.</p>;
+        return <p>No hay Opciones disponibles.</p>;
     }
 
     const columnasOpciones = [
         { nombre: 'Nombre', acceso: 'nombre' },
         { nombre: 'Descripción', acceso: 'descripcion' },
-        { nombre: 'Ruta', acceso: 'ruta' },
+        { nombre: 'Ícono', acceso: 'icono' },
         { nombre: 'Estado', acceso: 'estado' },
-        { nombre: 'Acciones', acceso: 'acciones' }, // Columna para las acciones
+        { nombre: 'Acciones', acceso: 'acciones' },
     ];
 
-    const handleEditarOpcion = (opcion) => {
-        setSelectedOpcion(opcion);
-        setIsEditModalOpen(true);
-    };
-
-    const handleGuardarCambios = () => {
-        // Implementa la lógica para guardar los cambios de la opción editada
-        setIsEditModalOpen(false);  // Cerrar el modal después de guardar
+    const renderIcono = (iconName) => {
+        const IconComponent = iconCatalog[iconName];
+        if (!IconComponent) {
+            return <p>Icono no disponible</p>;
+        }
+        return <IconComponent style={{ width: '24px', height: '24px' }} />;
     };
 
     return (
@@ -58,38 +82,32 @@ export const PageOpciones = () => {
             <ListarDatos
                 nombre="Lista de Opciones"
                 columnas={columnasOpciones}
-                datos={opciones}
-                nombreBoton="Crear Opciones"
+                datos={datosConIconos}
+                nombreBoton="Crear Opción"
                 onCrear={() => console.log("Creando nueva opción")}
-                metadata={metadata}
+                metadata={metadataProcesada.length > 0 ? metadataProcesada : []}
+                onSearch={setFiltroBusqueda} // Pasa la función de búsqueda
                 renderCustomCell={(columnKey, rowData) => {
-                    if (columnKey === 'estado') {
-                        // Si el valor de 'estado' es verdadero, mostrar "Activo", de lo contrario "Inactivo"
-                        return rowData.estado ? "Activo" : "Inactivo";
+                    if (columnKey === 'icono') {
+                        return renderIcono(rowData.icono);
                     }
                     if (columnKey === 'acciones') {
                         return (
-                            <Button
-                                colorScheme="green"  // Cambiado a verde
-                                variant="outline" 
-                                size="sm" 
-                                borderRadius="md"
-                                _hover={{ bg: "green.500", color: "white" }}  // Hover ahora usa verde
-                                onClick={() => handleEditarOpcion(rowData)}
-                            >
-                                Editar
-                            </Button>
+                            <>
+                                <BotonEditar
+                                    nombreBoton="Editar Opción"
+                                    metadata={metadataProcesada}
+                                    formData={rowData}
+                                />
+                                <BotonEliminar
+                                    nombreBoton="Eliminar Opción"
+                                    formData={rowData}
+                                />
+                            </>
                         );
                     }
                     return rowData[columnKey];
                 }}
-            />
-            <ModalEditOpciones
-                isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
-                selectedOpcion={selectedOpcion}
-                setSelectedOpcion={setSelectedOpcion}
-                handleGuardarCambios={handleGuardarCambios}
             />
         </Box>
     );

@@ -2,15 +2,17 @@ import { Button, useToast, AlertDialog, AlertDialogBody, AlertDialogFooter, Aler
 import { FaPlus } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import { ModalV1 } from '../Modal/modalV1';
-import { useDisclosure } from '@chakra-ui/react'; 
+import { useDisclosure } from '@chakra-ui/react';
 import { useDispatch } from 'react-redux';
-import { createModulo } from '../../../../store/Modulos/thunks'; 
+import { createModulo } from '../../../../store/Modulos/thunks'; // Asegúrate de importar todas las acciones necesarias
 import { createOpciones } from '../../../../store/Opciones/thunks';
 import { useState, useRef } from 'react';
 import { createpermisos } from '../../../../store/Permisos/thunks';
 import { createRol } from '../../../../store/PaginaRole/thunks';
 import { createusuarios } from '../../../../store/usuarios/usuariosSlice';
 import { createasignacionPermisosRoles } from '../../../../store/AsignarPermisosAroles/thunks';
+// import { createProcesos } from '../../../../store/Procesos/thunks';
+// import { createEtapa } from '../../../../store/Etapas';
 
 export const BotonCrear = ({ nombreBoton, metadata }) => {
     const { isOpen, onOpen, onClose } = useDisclosure(); // Hook para manejar el estado del modal
@@ -21,6 +23,8 @@ export const BotonCrear = ({ nombreBoton, metadata }) => {
 
     // Función para manejar el envío de datos al API adecuado
     const handleSubmit = (formData) => {
+
+
         switch (nombreBoton) {
             case 'Crear Usuario':
                 dispatch(createusuarios(formData))
@@ -48,7 +52,7 @@ export const BotonCrear = ({ nombreBoton, metadata }) => {
                     });
                 break;
 
-            case 'Crear Opciones':
+            case 'Crear Opción':
                 dispatch(createOpciones(formData))
                     .then((result) => {
                         if (result.meta.requestStatus === 'fulfilled') {
@@ -74,7 +78,7 @@ export const BotonCrear = ({ nombreBoton, metadata }) => {
                     });
                 break;
 
-            case 'Crear Permisos':
+            case 'Crear Permiso':
                 dispatch(createpermisos(formData))
                     .then((result) => {
                         if (result.meta.requestStatus === 'fulfilled') {
@@ -100,9 +104,35 @@ export const BotonCrear = ({ nombreBoton, metadata }) => {
                     });
                 break;
 
+            // case 'Crear Proceso':
+            //     dispatch(createProcesos(formData))
+            //         .then((result) => {
+            //             if (result.meta.requestStatus === 'fulfilled') {
+            //                 setIsAlertOpen(true);
+            //                 onClose();
+            //             } else {
+            //                 console.error('Error al crear el proceso', result.payload);
+            //                 mostrarToastError('proceso');
+            //             }
+            //         });
+            //     break;
+
             default:
                 console.log('Acción no reconocida:', nombreBoton);
                 break;
+
+            // case 'Crear Etapas':
+            //     dispatch(createEtapa(formData))
+            //         .then((result) => {
+            //             if (result.meta.requestStatus === 'fulfilled') {
+            //                 setIsAlertOpen(true);
+            //                 onClose();
+            //             } else {
+            //                 console.error('Error al crear etapa:', result.payload);
+            //                 mostrarToastError('etapa');
+            //             }
+            //         });
+            //     break;
         }
     };
 
@@ -127,19 +157,21 @@ export const BotonCrear = ({ nombreBoton, metadata }) => {
         <>
             <Button
                 leftIcon={<FaPlus />}
-                colorScheme="green"
+                colorScheme="teal"
+                variant="outline"
                 size="md"
+                borderRadius="full"
                 onClick={onOpen} // Abre el modal
                 mt={4} // Margen superior para alineación estética
             >
                 {nombreBoton} {/* Texto dinámico del botón */}
             </Button>
             {/* Renderiza el Modal y pasa las funciones onClose, isOpen y handleSubmit */}
-            <ModalV1 
-                isOpen={isOpen} 
-                onClose={onClose} 
-                titulo={nombreBoton} 
-                metadata={metadata || []} 
+            <ModalV1
+                isOpen={isOpen}
+                onClose={onClose}
+                titulo={nombreBoton}
+                metadata={metadata || []}
                 onSubmit={handleSubmit} // Pasamos la función de envío
             />
 
@@ -161,7 +193,10 @@ export const BotonCrear = ({ nombreBoton, metadata }) => {
                         </AlertDialogBody>
 
                         <AlertDialogFooter>
-                            <Button ref={cancelRef} onClick={onAlertClose} colorScheme="green">
+                            <Button ref={cancelRef} onClick={onAlertClose} colorScheme="teal"
+                                variant="outline"
+                                size="md"
+                                borderRadius="full">
                                 Aceptar
                             </Button>
                         </AlertDialogFooter>

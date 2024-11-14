@@ -5,7 +5,7 @@ import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 
-export const fetchPermisosRoles = createAsyncThunk( 
+export const fetchPermisosRoles = createAsyncThunk(
   'Permisos/fetchPermisosRoles',
   async (_, thunkAPI) => {
     try {
@@ -37,17 +37,34 @@ export const createasignacionPermisosRoles = createAsyncThunk(
   'permisos/createasignacionPermisosRoles',
   async ({ accessMatrix }, thunkAPI) => {
     try {
-      const createPayload = accessMatrix;
+      // Asegúrate de que los datos en `createPayload` tengan el tipo de dato correcto
+      const createPayload = accessMatrix.map(item => ({
+        role_id: Number(item.role_id),
+        modulo_id: Number(item.modulo_id),
+        opcion_id: Number(item.opcion_id),
+        permiso_id: Number(item.permiso_id),
+        created_by: Number(item.created_by),
+        updated_by: Number(item.updated_by),
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+      }));
+      
+
+      console.log("Payload que se enviará al backend:", JSON.stringify(createPayload));
+
 
       if (createPayload.length > 0) {
-        const response = await axios.post(`${BASE_URL}/api/asignarRMOP/crear`, createPayload);
+        const response = await axios.post(`${BASE_URL}/api/asignarRMOP/crear`, createPayload, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         return response.data;
       }
 
       return { message: "Permisos actualizados correctamente." };
     } catch (error) {
-      console.error("Error al crear asignación de permisos:", error);
-      console.error("Detalles del error:", error.response?.data || error.message);
+      console.error("Error al crear permisos:", error);
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
     }
   }

@@ -131,7 +131,7 @@ export const MenuPerfil = () => {
                 {/* Nueva opción para Módulos */}
                 <MenuItem
                   as={Link}
-                  to="/admin/listarModulos"
+                  to="/admin/Modulos/listarModulos"
                   icon={<FaBoxes />}
                   _hover={{ bg: hoverBg, color: "white" }}
                 >

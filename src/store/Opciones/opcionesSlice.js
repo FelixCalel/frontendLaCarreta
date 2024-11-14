@@ -1,11 +1,11 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { fetchOpciones } from './thunks';
-import { fetchOpcionesMetadata } from './thunks';
+import { fetchMetadataOpciones } from './thunks';
 
 const opcionesSlice = createSlice({
   name: 'opciones',
   initialState: {
-    Opciones: [],
+    opciones: [],
     metadata: [],
     loading: false,
     error: null,
@@ -25,15 +25,15 @@ const opcionesSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       })
-      .addCase(fetchOpcionesMetadata.pending, (state) => {
+      .addCase(fetchMetadataOpciones.pending, (state) => {
         state.loading = true;
         state.error = null;
       })  
-      .addCase(fetchOpcionesMetadata.fulfilled, (state, action) => {
+      .addCase(fetchMetadataOpciones.fulfilled, (state, action) => {
         state.metadata = action.payload;
         state.loading = false;
       })
-      .addCase(fetchOpcionesMetadata.rejected, (state, action) => {
+      .addCase(fetchMetadataOpciones.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
       });

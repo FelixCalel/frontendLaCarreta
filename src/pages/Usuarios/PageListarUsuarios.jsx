@@ -1,111 +1,119 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchUsuarios } from '../../store/usuarios/usuariosSlice'; // Importa la acción que obtiene los usuarios
-import { ListarDatos } from '../../components/Genericos/Crud/listas/listarDatos.jsx';
-import { Box, Button, useColorModeValue, Spinner } from '@chakra-ui/react';
-import ModalEditOpciones from '../../components/Genericos/Crud/Modal/modalEditOpciones';
-import { fetchUsuariosMetadata } from '../../store/usuarios/usuariosSlice'; // Asegúrate de que este archivo exista
+import { fetchUsuarios, fetchUsuariosMetadata } from '../../store/usuarios/usuariosSlice'; // Importa la acción que obtiene los usuarios y la metadata
+import { ListarDatos } from '../../components/Genericos/Crud/listas/listarDatos';
+import { Box, useColorModeValue, Spinner } from '@chakra-ui/react';
+import { BotonEditar } from '../../components/Genericos/Crud/listas/botonEditar'; // Botón de editar genérico
+import { BotonEliminar } from '../../components/Genericos/Crud/listas/botonEliminar'; // Botón de eliminar genérico
+import iconCatalog from '../../components/Iconos/IconCatalog';
 
 export const PageListarUsuarios = () => {
-  const bgColor = useColorModeValue('gray.50', '#1e1e2e');
-  const dispatch = useDispatch();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Estado del modal
-  const [selectedOpcion, setSelectedOpcion] = useState(null);    // Opción seleccionada para edición
+    const bgColor = useColorModeValue('gray.50', '#1e1e2e');
+    const dispatch = useDispatch();
+    const [datosConIconos, setDatosConIconos] = useState([]);
+    const [metadataProcesada, setMetadataProcesada] = useState([]); // Estado local para la metadata procesada
+    const [filtroBusqueda, setFiltroBusqueda] = useState(''); // Estado para la búsqueda
 
-  // Utiliza 'items' aquí para referirse a los usuarios
-  const { items: usuarios, loading, error, metadata } = useSelector(state => state.usuarios);
+    // Utiliza 'items' aquí para referirse a los usuarios
+    const { items: usuarios, loading, error, metadata } = useSelector(state => state.usuarios);
 
-  // Cargar los usuarios al montar el componente
-  useEffect(() => {
-    if (!usuarios || usuarios.length === 0) {
-      dispatch(fetchUsuarios());
-      dispatch(fetchUsuariosMetadata());
+    // Cargar los usuarios al montar el componente
+    useEffect(() => {
+        dispatch(fetchUsuarios());
+        dispatch(fetchUsuariosMetadata());
+    }, [dispatch]);
+
+    // Filtrar los datos con base en la búsqueda
+    useEffect(() => {
+        if (usuarios && usuarios.length > 0) {
+            const datosFiltrados = usuarios
+                .filter(usuario => usuario.nombres.toLowerCase().includes(filtroBusqueda.toLowerCase()))
+                .map(usuario => ({
+                    ...usuario,
+                    estado: usuario.estado ? 'Activo' : 'Inactivo',
+                }));
+            setDatosConIconos(datosFiltrados); // Actualizamos los datos una vez filtrados
+        }
+    }, [usuarios, filtroBusqueda]);
+
+    // Procesar la metadata cuando cambie
+    useEffect(() => {
+        if (metadata && metadata.length > 0) {
+            const metadataTransformada = metadata.map(item => ({
+                ...item,
+            }));
+            setMetadataProcesada(metadataTransformada);  // Guardamos el valor transformado en el estado
+        }
+    }, [metadata]);
+
+    // Mostrar un spinner mientras se cargan los datos
+    if (loading) {
+        return <Spinner />;
     }
-  }, [dispatch, usuarios]);  // Dependencias correctas aquí
 
-  if (loading) {
-    return <Spinner />;  // Muestra un spinner mientras se cargan los datos
-  }
+    // Mostrar un mensaje de error si hay algún problema
+    if (error) {
+        return <p>Error: {error}</p>;
+    }
 
-  if (error) {
-    return <p>Error: {error}</p>;  // Muestra el mensaje de error si existe
-  }
+    // Mostrar un mensaje si no hay usuarios disponibles
+    if (!usuarios || usuarios.length === 0) {
+        return <p>No hay usuarios disponibles.</p>;
+    }
 
-  if (!usuarios || usuarios.length === 0) {
-    return <p>No hay usuarios disponibles.</p>;  // Muestra este mensaje si no hay datos
-  }
+    // Definimos explícitamente la columna 'acciones' junto con otras columnas
+    const columnasUsuarios = [
+        { nombre: 'Nombre', acceso: 'nombres' },
+        { nombre: 'Apellido', acceso: 'apellidos' },
+        { nombre: 'Correo Electrónico', acceso: 'correo_electronico' },
+        { nombre: 'Rol', acceso: 'role.nombre' },
+        { nombre: 'Estado', acceso: 'estado' },
+        { nombre: 'Acciones', acceso: 'acciones' }, // Columna para las acciones
+    ];
 
-  // Columnas de la tabla, incluyendo el acceso a role.nombre
-  const columnasUsuarios = [
-    { nombre: 'ID', acceso: 'id' },
-    { nombre: 'Nombre', acceso: 'nombres' },
-    { nombre: 'Apellido', acceso: 'apellidos' },
-    { nombre: 'Correo Electrónico', acceso: 'correo_electronico' },
-    { nombre: 'Rol', acceso: 'role.nombre' },
-    { nombre: 'Estado', acceso: 'estado' },
-    { nombre: 'Acciones', acceso: 'acciones' }, // Columna para las acciones
-  ];
+    // Renderizar íconos si es necesario (en este caso no hay íconos asociados a usuarios, pero lo dejo por consistencia)
+    const renderIcono = (iconName) => {
+        const IconComponent = iconCatalog[iconName];
+        if (!IconComponent) {
+            return <p>Icono no disponible</p>;
+        }
+        return <IconComponent style={{ width: '24px', height: '24px' }} />;
+    };
 
-  // Función para editar usuario
-  const handleEditarOpcion = (opcion) => {
-    setSelectedOpcion(opcion);
-    setIsEditModalOpen(true);
-  };
-
-  // Guardar cambios en el modal de edición
-  const handleGuardarCambios = () => {
-    // Implementa la lógica para guardar los cambios de la opción editada
-    setIsEditModalOpen(false);  // Cerrar el modal después de guardar
-  };
-
-  return (
-    <Box p={8} bg={bgColor} minH="100vh">
-      <ListarDatos
-        nombre="Lista de Usuarios"
-        columnas={columnasUsuarios}
-        datos={usuarios}
-        nombreBoton="Crear Usuario"
-        onCrear={() => console.log("Creando nuevo usuario")}
-        metadata={metadata}
-        renderCustomCell={(columnKey, rowData) => {
-          // Mostrar "Activo" o "Inactivo" según el estado
-          if (columnKey === 'estado') {
-            return rowData.estado ? "Activo" : "Inactivo";
-          }
-          // Renderizar las acciones (botón de editar)
-          if (columnKey === 'acciones') {
-            return (
-              <Button
-                colorScheme="green"
-                variant="outline"
-                size="sm"
-                borderRadius="md"
-                _hover={{ bg: "green.500", color: "white" }}
-                onClick={() => handleEditarOpcion(rowData)}
-              >
-                Editar
-              </Button>
-            );
-          }
-          // Renderizar el nombre del rol de manera segura (si existe role)
-          if (columnKey === 'role.nombre') {
-            return rowData.role ? rowData.role.nombre : 'Sin Rol';
-          }
-          // Renderizar el resto de los campos normalmente
-          return rowData[columnKey];
-        }}
-      />
-      {isEditModalOpen && (
-        <ModalEditOpciones
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          selectedOpcion={selectedOpcion}
-          setSelectedOpcion={setSelectedOpcion}
-          handleGuardarCambios={handleGuardarCambios}
-        />
-      )}
-    </Box>
-  );
+    return (
+        <Box p={8} bg={bgColor} minH="100vh">
+            <ListarDatos
+                nombre="Lista de Usuarios"
+                columnas={columnasUsuarios}
+                datos={datosConIconos}
+                nombreBoton="Crear Usuario"
+                onCrear={() => console.log("Creando nuevo usuario")}
+                metadata={metadataProcesada.length > 0 ? metadataProcesada : []}
+                onSearch={setFiltroBusqueda} // Pasa la función de búsqueda
+                renderCustomCell={(columnKey, rowData) => {
+                    if (columnKey === 'role.nombre') {
+                        return rowData.role ? rowData.role.nombre : 'Sin Rol';
+                    }
+                    if (columnKey === 'acciones') {
+                        return (
+                            <>
+                                <BotonEditar
+                                    nombreBoton="Editar Usuario"
+                                    metadata={metadataProcesada}
+                                    formData={rowData}
+                                />
+                                <BotonEliminar
+                                    nombreBoton="Eliminar Usuario"
+                                    formData={rowData}
+                                />
+                            </>
+                        );
+                    }
+                    return rowData[columnKey];
+                }}
+            />
+        </Box>
+    );
 };
 
 export default PageListarUsuarios;

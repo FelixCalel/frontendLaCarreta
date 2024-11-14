@@ -14,6 +14,7 @@ import { PageasignacionMO } from "../pages/asignacionMO/asignacionMO";
 
 
 
+
  
 export const PortalRouter = () => {
   return (
@@ -33,7 +34,7 @@ export const PortalRouter = () => {
         <Route path="logout" element={<Logout /> }></Route>
 
         <Route path="listarUsuarios" element={<PageListarUsuarios />}> </Route>
-        <Route path="listarModulos" element={<PageModulos />} > </Route>
+        <Route path="Modulos/listarModulos" element={<PageModulos />} > </Route>
         <Route path="listarOpciones" element={<PageOpciones />} > </Route>
         <Route path="listarRoles" element={<PaginaRole />} > </Route>
         <Route path="listarPermisos" element={<PagePermiso />} > </Route>

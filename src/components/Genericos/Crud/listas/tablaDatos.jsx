@@ -1,5 +1,5 @@
 import {
-    Table, Thead, Tbody, Tr, Th, Td, Box, useColorModeValue, IconButton, Tooltip, Flex
+    Table, Thead, Tbody, Tr, Th, Td, Box, useColorModeValue, IconButton, Tooltip, Flex, Button
 } from '@chakra-ui/react';
 import { useState, useCallback } from 'react';
 import { ChevronUpIcon, ChevronDownIcon } from '@chakra-ui/icons';
@@ -28,7 +28,7 @@ export const TablaDatos = ({ columnas, datos, renderCustomCell, metadata }) => {
     const headerTextColor = useColorModeValue('#1c1c1e', '#f1f1f1');  // Texto en el header
     const cellTextColor = useColorModeValue('#1c1c1e', '#f1f1f1');  // Texto en las celdas
     const borderColor = useColorModeValue('#dddddd', '#444444');  // Bordes suaves
-    const rowHoverBg = useColorModeValue('#f1f1f1', '#2F855A');  // Hover suave
+    const rowHoverBg = useColorModeValue('#c8f6d0', 'Teal');  // Hover suave
     const selectedRowBg = useColorModeValue('#d1e7dd', '#2F855A');  // Fila seleccionada en tonos verdes
     const oddRowBg = useColorModeValue('#ffffff', '#2D3748 ');  // Color alterno claro
     const evenRowBg = useColorModeValue('#f7f7f7', '#3E4A5A ');  // Color alterno oscuro
