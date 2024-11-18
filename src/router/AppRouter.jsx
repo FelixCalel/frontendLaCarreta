@@ -16,6 +16,9 @@ import { PaginaPedido } from "./PedidosRouter";
 import { PaginaPedidosEntrantes } from "./PedidosEntrantesRouter";
 import { validarUsuario } from "../store/RolPermisoUsuario/thunks";
 import { PaginaDeu } from "../router/DeuRoute";
+import { PaginaItem } from "../router/ItemRouter";
+
+
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -34,6 +37,7 @@ export const AppRouter = () => {
     { path: "/pedido/*", rutaId: 6, component: PaginaPedido },
     { path: "/pedidos/*", rutaId: 7, component: PaginaPedidosEntrantes },
     { path: "/deus/*", rutaId: 8, component: PaginaDeu},
+    { path: "/items/*", rutaId: 10, component: PaginaItem},
 
   ];
 

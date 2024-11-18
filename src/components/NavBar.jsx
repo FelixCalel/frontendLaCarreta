@@ -1,3 +1,4 @@
+import React, { useEffect, useRef } from "react";
 import {
   Box,
   Flex,
@@ -9,65 +10,52 @@ import {
   Badge,
   Collapse,
   Text,
-  Divider,
   useOutsideClick,
 } from "@chakra-ui/react";
-import { FiSearch, FiBell } from "react-icons/fi";
+import { FiBell } from "react-icons/fi";
 import { MenuPerfil } from "./MenuPerfil";
-import SearchBar from "./Dashboard/SearchBar";
+import SearchBar from "./component/searchBar";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useDisclosure } from "@chakra-ui/react";
-import { useEffect, useRef } from "react";
 import { tablaPedidos } from "../store/Pedidos/thunks";
 
 export default function NavBar() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const roleId = localStorage.getItem("roleId");
-  // console.log("Role ID from localStorage:", roleId); // Verificar si está correctamente guardado en localStorage
 
-  // Obtener la Lista de pedidos desde Redux
   const pedidos = useSelector((state) => state.pedidos.data || []);
 
-  // Cargar los pedidos desde la base de datos cuando se monta el componente
   useEffect(() => {
     dispatch(tablaPedidos());
   }, [dispatch]);
 
-  // Filtrar y contar los pedidos por estadoId
+  // Filtrar y contar los pedidos según su estado
   const pedidosNuevos = pedidos.filter((pedido) => pedido.estadoId === 2); // Pedidos pendientes
-  const countAprobados = pedidos.filter((pedido) => pedido.estadoId === 3).length;
-  const countEnProceso = pedidos.filter((pedido) => pedido.estadoId === 1).length;
-  const countCancelados = pedidos.filter((pedido) => pedido.estadoId === 4).length;
+  const countAprobados = pedidos.filter((pedido) => pedido.estadoId === 3).length; // Pedidos aprobados
+  const countEnProceso = pedidos.filter((pedido) => pedido.estadoId === 1).length; // Pedidos en proceso
+  const countCancelados = pedidos.filter((pedido) => pedido.estadoId === 4).length; // Pedidos cancelados
 
-  // Notificaciones personalizadas para el rol 2
-  const notificacionesRol2 = [
-    // { id: 1, mensaje: "Tienes 3 nuevas tareas asignadas." },
-    // { id: 2, mensaje: "Revisa los informes de la semana." },
-    // { id: 3, mensaje: "Nueva solicitud de reunión pendiente." },
-  ];
-
-  // Manejo del colapso del cuadro de notificaciones
   const { isOpen, onToggle, onClose } = useDisclosure();
-
-  // Crear una referencia para el contenedor del cuadro de notificaciones
   const ref = useRef();
 
-  // Cerrar el desplegable si se hace clic afuera
   useOutsideClick({
-    ref: ref, // Referencia del contenedor del cuadro de notificaciones
+    ref: ref,
     handler: () => {
       if (isOpen) {
-        onClose(); // Cierra el desplegable si está abierto
+        onClose();
       }
     },
   });
 
-  // Función para redirigir al hacer clic en la notificación
   const handleNotificationClick = () => {
     navigate("/pedidos/entrantes");
+  };
+
+  const handleSearch = (query) => {
+    console.log("Buscar:", query);
+    // Aquí podrías redirigir a una página de resultados de búsqueda o realizar otras acciones.
   };
 
   return (
@@ -85,7 +73,6 @@ export default function NavBar() {
       boxShadow="sm"
     >
       <Box display="flex" alignItems="center">
-        {/* Logo envuelto en un Link que redirige a /auth/home */}
         <Link to="/auth/home">
           <Image
             src="/images/LogoLaCarreta.png"
@@ -97,38 +84,13 @@ export default function NavBar() {
         </Link>
       </Box>
 
-      {/* Barra de búsqueda centrada */}
-      <Box
-        flex={1}
-        mx={{ base: "5px", md: "10px" }}
-        display="flex"
-        justifyContent="center"
-      >
-        <Box display={{ base: "block", md: "none" }}>
-          <Link to="/buscar">
-            <Tooltip label="Buscar" aria-label="Buscar Tooltip">
-              <IconButton
-                variant="ghost"
-                aria-label="Buscar"
-                icon={<FiSearch />}
-                size="lg"
-              />
-            </Tooltip>
-          </Link>
-        </Box>
-        <Box display={{ base: "none", md: "block" }} flex={1}>
-          <SearchBar />
-        </Box>
+      <Box flex={1} mx={{ base: "5px", md: "10px" }} display="flex" justifyContent="center">
+        <SearchBar placeholder="Buscar..." onSearch={handleSearch} />
       </Box>
 
       <Spacer />
 
-      {/* Iconos del lado derecho */}
-      <HStack
-        spacing={{ base: "10px", md: "20px" }}
-        pr={{ base: "5px", md: "10px" }}
-      >
-        {/* Icono de notificaciones */}
+      <HStack spacing={{ base: "10px", md: "20px" }} pr={{ base: "5px", md: "10px" }}>
         <Tooltip label="Notificaciones" aria-label="Notificaciones Tooltip">
           <Box position="relative" onClick={onToggle}>
             <IconButton
@@ -142,7 +104,6 @@ export default function NavBar() {
               }}
               transition="all 0.2s ease-in-out"
             />
-            {/* Mostrar el Badge solo si el roleId es "3" */}
             {roleId === "3" && pedidosNuevos.length > 0 && (
               <Badge
                 colorScheme="red"
@@ -156,31 +117,15 @@ export default function NavBar() {
                 {pedidosNuevos.length}
               </Badge>
             )}
-            {/* Mostrar el Badge para el rol 2 si hay notificaciones personalizadas */}
-            {roleId === "2" && notificacionesRol2.length > 0 && (
-              <Badge
-                colorScheme="blue"
-                borderRadius="full"
-                position="absolute"
-                top="-1px"
-                right="-1px"
-                fontSize="xs"
-                p="4px"
-              >
-                {notificacionesRol2.length}
-              </Badge>
-            )}
           </Box>
         </Tooltip>
 
-        {/* Menú de perfil */}
         <MenuPerfil />
       </HStack>
 
-      {/* Cuadro flotante que muestra los pedidos nuevos */}
       <Collapse in={isOpen} animateOpacity>
         <Box
-          ref={ref} // Referencia al contenedor del cuadro de notificaciones
+          ref={ref}
           pos="absolute"
           top="60px"
           right="20px"
@@ -195,68 +140,35 @@ export default function NavBar() {
           border="1px solid #E2E8F0"
           transition="all 0.3s ease"
         >
-          {/* Notificaciones personalizadas para el rol 3 */}
           {roleId === "3" ? (
-            <>
-              <Box onClick={handleNotificationClick} _hover={{ bg: "gray.50" }}>
-                {pedidosNuevos.length > 0 ? (
-                  <Text
-                    fontWeight="medium"
-                    textAlign="center"
-                    color="gray.700"
-                    fontSize="sm"
-                  >
-                    Tienes <strong>{pedidosNuevos.length}</strong> solicitudes
-                    de pedidos pendientes.
-                  </Text>
-                ) : (
-                  <Text fontSize="sm" color="gray.500" textAlign="center">
-                    No hay nuevas solicitudes de pedidos.
-                  </Text>
-                )}
-              </Box>
-
-              <Divider my={3} />
-
-              {/* Sección de estados de los pedidos */}
-              <Box>
-                <Text fontSize="md" color="gray.700" fontWeight="bold">
-                  Estado de tus pedidos:
-                </Text>
-                <Box mt={2}>
-                  <Text fontSize="sm" color="green.600">
-                    Aprobados: {countAprobados}
-                  </Text>
-                  <Text fontSize="sm" color="yellow.600">
-                    En Proceso: {countEnProceso}
-                  </Text>
-                  <Text fontSize="sm" color="red.600">
-                    Cancelados: {countCancelados}
-                  </Text>
-                </Box>
-              </Box>
-            </>
-          ) : roleId === "2" ? (
-            <>
-              {/* Contenido visible solo para el rol 2 */}
-              <Box>
+            <Box onClick={handleNotificationClick} _hover={{ bg: "gray.50" }}>
+              {pedidosNuevos.length > 0 ? (
                 <Text fontWeight="medium" textAlign="center" color="gray.700" fontSize="sm">
-                EJEMPLO  
-                  Notificaciones para el Rol 2:
+                  Tienes <strong>{pedidosNuevos.length}</strong> solicitudes de pedidos pendientes.
                 </Text>
-                {notificacionesRol2.map((notificacion) => (
-                  <Box key={notificacion.id} mt={2} _hover={{ bg: "gray.50" }}>
-                    <Text fontSize="sm" color="gray.600">
-                      {notificacion.mensaje}
-                    </Text>
-                  </Box>
-                ))}
-              </Box>
-            </>
+              ) : (
+                <Text fontSize="sm" color="gray.500" textAlign="center">
+                  No hay nuevas solicitudes de pedidos.
+                </Text>
+              )}
+            </Box>
           ) : (
-            <Text textAlign="center" fontSize="sm" color="gray.500">
-              No tienes notificaciones pendientes.
-            </Text>
+            <Box>
+              <Text fontSize="md" color="gray.700" fontWeight="bold">
+                Estado de tus pedidos:
+              </Text>
+              <Box mt={2}>
+                <Text fontSize="sm" color="green.600">
+                  Aprobados: {countAprobados}
+                </Text>
+                <Text fontSize="sm" color="yellow.600">
+                  En Proceso: {countEnProceso}
+                </Text>
+                <Text fontSize="sm" color="red.600">
+                  Cancelados: {countCancelados}
+                </Text>
+              </Box>
+            </Box>
           )}
         </Box>
       </Collapse>
