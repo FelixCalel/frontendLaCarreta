@@ -54,12 +54,12 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
     const cargarDetallesPedido = async () => {
       try {
         setIsLoading(true);
-  
+
         // Verificar si los detalles del pedido están en sessionStorage
         const detallesGuardados = sessionStorage.getItem(
           `productos_${pedidoId}`
         );
-  
+
         if (detallesGuardados) {
           const detallesGuardadosParsed = JSON.parse(detallesGuardados);
           setProductos(detallesGuardadosParsed);
@@ -67,15 +67,15 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           setIsLoading(false);
           return;
         }
-  
+
         // Cargar solo los detalles del pedido desde la API
         const detalles = await dispatch(
           getDetalleOrdenByPedidoId(pedidoId)
         ).unwrap();
-  
+
         setProductos(detalles);
         setProductosCargados(true);
-  
+
         // Guardar en sessionStorage
         sessionStorage.setItem(
           `productos_${pedidoId}`,
@@ -87,18 +87,17 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         setIsLoading(false);
       }
     };
-  
+
     if (usuarioId && pedidoId && !productosCargados) {
       cargarDetallesPedido();
     }
   }, [dispatch, usuarioId, pedidoId, productosCargados]);
-  
 
   useEffect(() => {
     const cargarProductosComunes = async () => {
       try {
         setIsLoading(true);
-  
+
         // Verificar si los productos ya están en sessionStorage
         const productosGuardados = sessionStorage.getItem(
           `productos_${pedidoId}`
@@ -110,7 +109,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           setIsLoading(false);
           return;
         }
-  
+
         // Cargar los productos comunes desde la API
         const productosComunes = await dispatch(
           getPedidosComunesByUsuarioId({
@@ -118,15 +117,18 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
             pedidoId: Number(pedidoId),
           })
         ).unwrap();
-  
+
         // Excluir productos eliminados que no deben recargarse
         const productosActualizados = productosComunes.filter(
-          (prod) => !productos.some((producto) => producto.productoId === prod.productoId)
+          (prod) =>
+            !productos.some(
+              (producto) => producto.productoId === prod.productoId
+            )
         );
-  
+
         setProductos(productosActualizados);
         setProductosCargados(true);
-  
+
         // Guardar en sessionStorage
         sessionStorage.setItem(
           `productos_${pedidoId}`,
@@ -138,13 +140,12 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         setIsLoading(false);
       }
     };
-  
+
     if (usuarioId && pedidoId && !productosCargados) {
       cargarProductosComunes();
     }
   }, [dispatch, usuarioId, pedidoId, productosCargados, productos]);
-  
-  
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
@@ -168,10 +169,11 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
 
   const handleAddProducto = async () => {
     if (newProducto.productoId && newProducto.cantidad >= 0) {
-      if (newProducto.cantidad > newProducto.cantidadDisponible) {
+      // Validar solo valores negativos
+      if (newProducto.cantidad < 0) {
         toast({
           title: "Error",
-          description: `La cantidad no puede exceder el máximo permitido de ${newProducto.cantidadDisponible}.`,
+          description: "La cantidad no puede ser menor a 0.",
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -184,25 +186,33 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           pedidoId,
           productoId: newProducto.productoId,
           cantidad: newProducto.cantidad,
-          precio: 0,
+          precio: 0, // Si hay un precio que manejar, este se debe actualizar
         };
   
         console.log("Intentando agregar nuevo detalle:", newDetalleOrden);
   
+        // Enviar el detalle del producto al backend
         const result = await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
         console.log("Resultado de la creación de detalle:", result);
   
+        // Obtener la lista actualizada de detalles del pedido
         const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
         console.log("Detalles después de agregar producto:", detalles);
   
+        // Agregar el ID del detalle en el frontend
         const detallesConId = detalles.map((detalle) => ({
           ...detalle,
           detallePedidoId: detalle.id,
         }));
         setProductos(detallesConId);
   
-        sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(detallesConId));
+        // Guardar los datos actualizados en el sessionStorage
+        sessionStorage.setItem(
+          `productos_${pedidoId}`,
+          JSON.stringify(detallesConId)
+        );
   
+        // Reiniciar el formulario para agregar un nuevo producto
         setNewProducto({
           productoId: "",
           nombreProducto: "",
@@ -210,7 +220,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           cantidadDisponible: 0,
           codigo: "",
         });
-        setResetFields(true);
+        setResetFields(true); // Reiniciar campos del formulario
       } catch (error) {
         console.error("Error al guardar el detalle del pedido:", error);
         toast({
@@ -222,7 +232,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         });
       }
     } else {
-      console.log("Producto inválido o cantidad cero:", newProducto);
+      console.log("Producto inválido o cantidad no válida:", newProducto);
     }
   };
   
@@ -232,23 +242,23 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       console.error("DetallePedidoId no válido:", detallePedidoId);
       return;
     }
-  
+
     try {
       // Eliminar producto de la base de datos
       await dispatch(deleteDetalleOrden(detallePedidoId)).unwrap();
-  
+
       // Actualizar la lista local de productos
       const productosActualizados = productos.filter(
         (prod) => prod.detallePedidoId !== detallePedidoId
       );
       setProductos(productosActualizados);
-  
+
       // Actualizar sessionStorage con la lista actualizada
       sessionStorage.setItem(
         `productos_${pedidoId}`,
         JSON.stringify(productosActualizados)
       );
-  
+
       // Mostrar mensaje de éxito
       toast({
         title: "Producto eliminado.",
@@ -268,9 +278,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
-  
-  
-  
+
   const handleCantidadChange = async (detalleId, cantidad) => {
     if (!detalleId || !pedidoId) {
       console.error("El detalleId o pedidoId son undefined o inválidos", {
@@ -279,14 +287,14 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
       return;
     }
-
+  
     console.log(
       "Actualizando cantidad para detalleId:",
       detalleId,
       "con cantidad:",
       cantidad
     );
-
+  
     try {
       await dispatch(
         updateDetalleOrden({
@@ -295,7 +303,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           cantidad,
         })
       ).unwrap();
-
+  
       const productosActualizados = productos.map((prod) =>
         prod.detallePedidoId === detalleId ? { ...prod, cantidad } : prod
       );
@@ -304,7 +312,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         `productos_${pedidoId}`,
         JSON.stringify(productosActualizados)
       );
-
+  
       toast({
         title: "Cantidad actualizada.",
         description: "La cantidad del producto se ha actualizado exitosamente.",
@@ -323,6 +331,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
+  
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Detección de vista móvil
 
@@ -370,33 +379,30 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                           {producto.cantidadDisponible || "N/A"}
                         </Text>
                         <CantidadInput
-                          value={
-                            isNaN(producto.cantidad) ? 0 : producto.cantidad
-                          }
-                          onChange={(e) => {
-                            const cantidad = parseInt(e.target.value, 10) || 0;
+                          value={producto.cantidad}
+                          onChange={(e) =>
                             setProductos((prevProductos) =>
                               prevProductos.map((prod) =>
                                 prod.detallePedidoId ===
                                 producto.detallePedidoId
-                                  ? { ...prod, cantidad }
+                                  ? {
+                                      ...prod,
+                                      cantidad: parseFloat(e.target.value) || 0,
+                                    }
                                   : prod
                               )
+                            )
+                          }
+                          onBlur={() => {
+                            handleCantidadChange(
+                              producto.detallePedidoId,
+                              producto.cantidad
                             );
                           }}
-                          onBlur={() => {
-                            if (producto.detallePedidoId) {
-                              handleCantidadChange(
-                                producto.detallePedidoId,
-                                producto.cantidad
-                              );
-                            } else {
-                              console.error(
-                                "DetallePedidoId no encontrado:",
-                                producto
-                              );
-                            }
-                          }}
+                          placeholder="Cantidad"
+                          size="sm"
+                          width="60px"
+                          maxWidth="60px"
                         />
                       </Box>
                       <Tooltip label="Eliminar producto" hasArrow>
