@@ -15,6 +15,7 @@ import { PaginaRuta } from "./RutaRouter";
 import { PaginaPedido } from "./PedidosRouter";
 import { PaginaPedidosEntrantes } from "./PedidosEntrantesRouter";
 import { validarUsuario } from "../store/RolPermisoUsuario/thunks";
+import { PaginaDeu } from "../router/DeuRoute";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -32,7 +33,7 @@ export const AppRouter = () => {
     { path: "/empresa/*", rutaId: 5, component: PaginaEmpresa },
     { path: "/pedido/*", rutaId: 6, component: PaginaPedido },
     { path: "/pedidos/*", rutaId: 7, component: PaginaPedidosEntrantes },
-    { path: "/admin/*", rutaId: 8, component: PaginaPedidosEntrantes },
+    { path: "/deus/*", rutaId: 8, component: PaginaDeu},
 
   ];
 
