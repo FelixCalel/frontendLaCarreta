@@ -17,6 +17,8 @@ import { PaginaPedidosEntrantes } from "./PedidosEntrantesRouter";
 import { validarUsuario } from "../store/RolPermisoUsuario/thunks";
 import { PaginaDeu } from "../router/DeuRoute";
 import { PaginaItem } from "../router/ItemRouter";
+import { PaginaHistorialPedido } from "../router/HistorialPedidoRouter";
+
 
 
 
@@ -38,6 +40,7 @@ export const AppRouter = () => {
     { path: "/pedidos/*", rutaId: 7, component: PaginaPedidosEntrantes },
     { path: "/deus/*", rutaId: 8, component: PaginaDeu},
     { path: "/items/*", rutaId: 10, component: PaginaItem},
+    { path: "/historialPedido/*", rutaId: 11, component: PaginaHistorialPedido},
 
   ];
 
