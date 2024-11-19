@@ -8,7 +8,7 @@ import {
   Tooltip,
   useDisclosure,
 } from "@chakra-ui/react";
-import { FiSearch, FiBell } from "react-icons/fi";
+import { FiSearch } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { MenuPerfil } from "./MenuPerfil";
 import SearchBar from "./component/searchBar";
@@ -16,6 +16,18 @@ import Notifications from "./Notificaciones";
 
 export default function NavBar() {
   const { isOpen, onToggle, onClose } = useDisclosure();
+
+  // Función de búsqueda
+  const handleSearch = (query) => {
+    console.log("Búsqueda realizada:", query);
+    // Implementar lógica de búsqueda aquí (navegación, API, etc.)
+  };
+
+  // Acción al hacer clic en una sugerencia
+  const handleSuggestionClick = (suggestion) => {
+    console.log("Sugerencia seleccionada:", suggestion);
+    // Implementar lógica para manejar sugerencias aquí
+  };
 
   return (
     <Flex
@@ -64,7 +76,7 @@ export default function NavBar() {
           </Link>
         </Box>
         <Box display={{ base: "none", md: "block" }} flex={1}>
-          <SearchBar />
+          <SearchBar onSearch={handleSearch} onSuggestionClick={handleSuggestionClick} />
         </Box>
       </Box>
 
