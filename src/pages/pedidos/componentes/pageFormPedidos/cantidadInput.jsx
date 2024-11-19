@@ -3,6 +3,7 @@ import { FormControl, Input, FormErrorMessage, HStack } from "@chakra-ui/react";
 
 const CantidadInput = ({
   value,
+  max,
   onChange,
   onBlur,
   error,
@@ -14,6 +15,14 @@ const CantidadInput = ({
 
     // Permitir valores numéricos y vacíos
     if (!isNaN(inputValue) || inputValue === "") {
+      const parsedValue = parseFloat(inputValue) || 0;
+
+      // Validar que no exceda la cantidad máxima
+      if (parsedValue > max) {
+        onChange({ target: { value: max } }); // Limitar al valor máximo permitido
+        return;
+      }
+
       onChange({ target: { value: inputValue } });
     }
   };
@@ -39,6 +48,7 @@ const CantidadInput = ({
 
 CantidadInput.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  max: PropTypes.number.isRequired, // Cantidad máxima permitida
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func,
   error: PropTypes.string,

@@ -169,11 +169,11 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
 
   const handleAddProducto = async () => {
     if (newProducto.productoId && newProducto.cantidad >= 0) {
-      // Validar solo valores negativos
-      if (newProducto.cantidad < 0) {
+      // Validar que la cantidad no exceda la cantidad disponible
+      if (newProducto.cantidad > newProducto.cantidadDisponible) {
         toast({
-          title: "Error",
-          description: "La cantidad no puede ser menor a 0.",
+          title: "Cantidad excedida",
+          description: `No puedes agregar más de ${newProducto.cantidadDisponible} unidades para este producto.`,
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -189,27 +189,21 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           precio: 0, // Si hay un precio que manejar, este se debe actualizar
         };
   
-        console.log("Intentando agregar nuevo detalle:", newDetalleOrden);
-  
         // Enviar el detalle del producto al backend
         const result = await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
-        console.log("Resultado de la creación de detalle:", result);
-  
+        if (result && result.success) {
+          console.log("Producto agregado correctamente:", result.data);
+        }
         // Obtener la lista actualizada de detalles del pedido
         const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
-        console.log("Detalles después de agregar producto:", detalles);
   
-        // Agregar el ID del detalle en el frontend
-        const detallesConId = detalles.map((detalle) => ({
-          ...detalle,
-          detallePedidoId: detalle.id,
-        }));
-        setProductos(detallesConId);
+        // Actualizar los productos en el estado local
+        setProductos(detalles);
   
         // Guardar los datos actualizados en el sessionStorage
         sessionStorage.setItem(
           `productos_${pedidoId}`,
-          JSON.stringify(detallesConId)
+          JSON.stringify(detalles)
         );
   
         // Reiniciar el formulario para agregar un nuevo producto
@@ -221,10 +215,18 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           codigo: "",
         });
         setResetFields(true); // Reiniciar campos del formulario
+  
+        toast({
+          title: "Producto agregado",
+          description: "El producto ha sido agregado exitosamente.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
       } catch (error) {
         console.error("Error al guardar el detalle del pedido:", error);
         toast({
-          title: "Error.",
+          title: "Error",
           description: "Hubo un problema al agregar el producto.",
           status: "error",
           duration: 3000,
@@ -232,9 +234,16 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         });
       }
     } else {
-      console.log("Producto inválido o cantidad no válida:", newProducto);
+      toast({
+        title: "Error",
+        description: "Selecciona un producto y una cantidad válida.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
+  
   
 
   const handleRemoveProducto = async (detallePedidoId) => {
