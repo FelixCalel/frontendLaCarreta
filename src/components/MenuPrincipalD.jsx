@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import PropTypes from "prop-types";
 import {
   Box,
   Flex,
@@ -18,19 +19,7 @@ import {
 } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchModulos } from "../store/RolPermisoUsuario/thunks";
-import iconCatalog from '../components/Iconos/IconCatalog'; // Importa el catálogo de iconos
-
-import {
-  FaHistory,
-  FaInbox,
-  FaBuilding,
-  FaStore,
-  FaGlobe,
-  FaClipboardList,
-  FaShoppingCart,
-  FaTools,
-} from "react-icons/fa";
-import { MdLocationCity, MdDirections, MdPerson } from "react-icons/md";
+import iconCatalog from "../components/Iconos/IconCatalog"; // Importa el catálogo de iconos
 
 // Componente MenuItem
 const MenuItem = ({
@@ -131,8 +120,36 @@ const MenuItem = ({
   );
 };
 
+// **PropTypes para MenuItem**
+MenuItem.propTypes = {
+  item: PropTypes.shape({
+    nombre: PropTypes.string.isRequired,
+    ruta: PropTypes.string,
+    icono: PropTypes.elementType,
+    opciones: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        nombre: PropTypes.string.isRequired,
+        ruta: PropTypes.string,
+        icono: PropTypes.elementType,
+      })
+    ),
+  }).isRequired,
+  isExpanded: PropTypes.bool.isRequired,
+  toggleMenu: PropTypes.func.isRequired,
+  indentLevel: PropTypes.number,
+  openMenus: PropTypes.object.isRequired,
+  setOpenMenus: PropTypes.func.isRequired,
+};
+
 // Función para agrupar opciones bajo módulos por `modulo_id`
 const agruparModulos = (data) => {
+  // Verificar si `data` es un array
+  if (!Array.isArray(data)) {
+    console.error("Error: data no es un array. Valor recibido:", data);
+    return []; // Retornar un array vacío para evitar errores
+  }
+
   const modulosAgrupados = {};
 
   data.forEach((entry) => {
@@ -210,11 +227,17 @@ const MenuPrincipalD = () => {
     return null; // No muestra nada mientras carga
   }
 
-  const modulosAgrupados = agruparModulos(modulos);
+  const modulosAgrupados = Array.isArray(modulos)
+    ? agruparModulos(modulos)
+    : [];
 
-  if (modulosAgrupados.length === 0) {
-    return <div>No hay módulos disponibles.</div>;
-  }
+    if (loading) {
+      return <div>Cargando módulos...</div>; // Mostrar un mensaje de carga si está en proceso
+    }
+  
+    if (!modulosAgrupados.length) {
+      return <div>No hay módulos disponibles.</div>;
+    }
 
   return (
     <Box
