@@ -95,14 +95,13 @@ const PageFormPedidos = () => {
   // Validar campos del formulario
   const validateFields = () => {
     const formErrors = {};
-    if (!currentPedido.ciudadId && !isPedidoFinalizado)
-      formErrors.ciudadId = "La ciudad es obligatoria";
-    if (!currentPedido.deudorId && !isPedidoFinalizado)
-      formErrors.deudorId = "El deudor es obligatorio";
-    if (!currentPedido.tiendaId && !isPedidoFinalizado)
-      formErrors.tiendaId = "Debe seleccionar una tienda";
+    if (!currentPedido.ciudadId) formErrors.ciudadId = "La ciudad es obligatoria";
+    if (!currentPedido.deudorId) formErrors.deudorId = "El deudor es obligatorio";
+    if (!currentPedido.tiendaId && !currentPedido.tiendaId2)
+      formErrors.tienda = "Debe seleccionar una tienda";
     return formErrors;
   };
+  
 
   // Manejar envío del formulario
   const handleSubmit = async () => {
@@ -117,16 +116,19 @@ const PageFormPedidos = () => {
       });
       return;
     }
-
+  
     setIsLoading(true);
+  
     const today = new Date().toISOString().split("T")[0];
+    const tiendaSeleccionada = currentPedido.tiendaId || currentPedido.tiendaId2; // Priorizar la tienda seleccionada
+  
     const pedidosHoy = pedidos.filter(
       (pedido) =>
         pedido.usuarioId === parseInt(usuarioId) &&
-        pedido.tiendaId === currentPedido.tiendaId &&
+        pedido.tiendaId === tiendaSeleccionada && // Validar la tienda seleccionada
         pedido.fecha?.split("T")[0] === today
     );
-
+  
     if (pedidosHoy.length > 0) {
       toast({
         title: "Pedido duplicado",
@@ -138,16 +140,20 @@ const PageFormPedidos = () => {
       setIsLoading(false);
       return;
     }
-
+  
     try {
       if (!isPedidoFinalizado) {
-        const newPedido = { ...currentPedido, fecha: new Date().toISOString() };
+        const newPedido = {
+          ...currentPedido,
+          tiendaId: tiendaSeleccionada, // Usar la tienda seleccionada
+          fecha: new Date().toISOString(),
+        };
         const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
         setPedidoIdGuardado(pedidoGuardado.id);
         setIsPedidoFinalizado(false);
-
+  
         dispatch(tablaPedidos());
-
+  
         toast({
           title: "Pedido creado",
           description: "El pedido ha sido guardado correctamente",
@@ -155,29 +161,38 @@ const PageFormPedidos = () => {
           duration: 3000,
           isClosable: true,
         });
-
-        // Aquí cerramos el modal y reiniciamos el formulario
+  
         onClose();
-        resetForm(); // Esta función debe reiniciar `currentPedido` a los valores iniciales
+        resetForm();
       }
     } catch (error) {
       console.error("Error al guardar el pedido:", error);
+      toast({
+        title: "Error",
+        description: "Hubo un problema al crear el pedido.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   const resetForm = () => {
     setCurrentPedido({
       ciudadId: 0,
       deudorId: 0,
-      tiendaId: 0,
+      tiendaId: null,
+      tiendaId2: null,
       usuarioId: parseInt(usuarioId),
       estadoId: 1,
     });
     setIsTienda1Disabled(false);
     setIsTienda2Disabled(false);
   };
+  
 
   // Manejar confirmación para realizar pedido
   const handleRealizarPedido = async () => {

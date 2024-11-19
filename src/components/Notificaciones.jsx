@@ -14,6 +14,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useRef, useState } from "react";
 import { useOutsideClick } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
 import { tablaPedidos } from "../store/Pedidos/thunks";
 
 export default function Notifications({ isOpen, onToggle, onClose }) {
@@ -21,53 +22,48 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const dispatch = useDispatch();
   const ref = useRef();
 
-  // Obtener el rol del usuario desde el localStorage
+  // Usuario actual
+  const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = localStorage.getItem("roleId");
 
-  // Pedidos desde Redux
+  // Pedidos obtenidos desde Redux
   const pedidos = useSelector((state) => state.pedidos.data || []);
-  const [notificaciones, setNotificaciones] = useState([]);
 
-  // Recuperar notificaciones eliminadas desde el localStorage
+  // Estados locales
+  const [notificaciones, setNotificaciones] = useState([]);
   const [deletedNotifications, setDeletedNotifications] = useState(() => {
-    const storedDeleted = localStorage.getItem(`deletedNotifications_${roleId}`);
+    const storedDeleted = localStorage.getItem(`deletedNotifications_${usuarioId}`);
     return storedDeleted ? JSON.parse(storedDeleted) : [];
   });
 
-  // Actualizar el localStorage cuando cambien las notificaciones eliminadas
+  // Actualizar localStorage cuando se eliminen notificaciones
   useEffect(() => {
-    localStorage.setItem(`deletedNotifications_${roleId}`, JSON.stringify(deletedNotifications));
-  }, [deletedNotifications, roleId]);
+    localStorage.setItem(`deletedNotifications_${usuarioId}`, JSON.stringify(deletedNotifications));
+  }, [deletedNotifications, usuarioId]);
 
-  // Filtrar y ordenar pedidos según los estados y el rol
+  // Filtrar notificaciones por rol
   useEffect(() => {
-    if (roleId === "3") {
-      // Para rol 3 (pedidos pendientes)
-      const pendientes = pedidos
-        .filter(
-          (pedido) =>
-            pedido.estadoId === 2 && !deletedNotifications.includes(pedido.id)
-        )
-        .sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden)); // Ordenar por fecha descendente
-      setNotificaciones(pendientes);
-    } else if (roleId === "2") {
-      // Para rol 2 (pedidos aprobados o cancelados)
-      const usuarioPedidos = pedidos
-        .filter(
-          (pedido) =>
-            (pedido.estadoId === 3 || pedido.estadoId === 4) &&
-            !deletedNotifications.includes(pedido.id)
-        )
-        .sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden)); // Ordenar por fecha descendente
-      setNotificaciones(usuarioPedidos);
-    }
-  }, [pedidos, roleId, deletedNotifications]);
+    const usuarioPedidos = pedidos
+      .filter(
+        (pedido) =>
+          pedido.usuarioId === usuarioId || roleId === "3" // Para el rol 3, incluir todos los pedidos pendientes
+      )
+      .filter((pedido) =>
+        roleId === "3"
+          ? pedido.estadoId === 2 && !deletedNotifications.includes(pedido.id) // Pendientes para rol 3
+          : (pedido.estadoId === 3 || pedido.estadoId === 4) && !deletedNotifications.includes(pedido.id) // Aprobados o cancelados para rol 2
+      )
+      .sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden)); // Orden descendente
 
+    setNotificaciones(usuarioPedidos);
+  }, [pedidos, roleId, usuarioId, deletedNotifications]);
+
+  // Cargar pedidos al inicializar
   useEffect(() => {
-    // Obtener pedidos desde la base de datos al cargar el componente
     dispatch(tablaPedidos());
   }, [dispatch]);
 
+  // Manejar clic fuera del contenedor para cerrar notificaciones
   useOutsideClick({
     ref: ref,
     handler: () => {
@@ -75,23 +71,30 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     },
   });
 
-  const handleNotificationClick = (pedidoId) => {
+  // Manejo de redirecciones
+  const handleNotificationClick = () => {
     if (roleId === "3") {
-      navigate("/pedidos/entrantes");
+      navigate(`/pedidos/entrantes`);
     } else if (roleId === "2") {
-      navigate("/historialPedido/listar");
+      navigate(`/historialPedido/listar`);
     }
   };
 
+  // Manejo de eliminación de notificaciones
   const handleDeleteNotification = (pedidoId) => {
-    // Agregar la notificación a la lista de eliminadas y actualizar el localStorage
     setDeletedNotifications((prev) => [...prev, pedidoId]);
   };
 
-  // Conteo de estados para el rol 3
-  const countAprobados = pedidos.filter((pedido) => pedido.estadoId === 3).length;
-  const countEnProceso = pedidos.filter((pedido) => pedido.estadoId === 1).length;
-  const countCancelados = pedidos.filter((pedido) => pedido.estadoId === 4).length;
+  // Conteo de estados para el resumen (solo para rol 3)
+  const countAprobados = pedidos.filter(
+    (pedido) => pedido.estadoId === 3 && pedido.usuarioId === usuarioId
+  ).length;
+  const countEnProceso = pedidos.filter(
+    (pedido) => pedido.estadoId === 1 && pedido.usuarioId === usuarioId
+  ).length;
+  const countCancelados = pedidos.filter(
+    (pedido) => pedido.estadoId === 4 && pedido.usuarioId === usuarioId
+  ).length;
 
   return (
     <Box position="relative">
@@ -148,13 +151,13 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
                 _hover={{ bg: "gray.50" }}
               >
                 <Box
-                  onClick={() => handleNotificationClick(pedido.id)}
+                  onClick={handleNotificationClick}
                   cursor="pointer"
                   flex={1}
                 >
                   {roleId === "3" ? (
                     <Text fontSize="sm" fontWeight="medium" color="gray.700">
-                      Tienes un pedido pendiente: <strong>ID: {pedido.id}</strong>.
+                      Nuevo pedido pendiente: <strong>ID: {pedido.id}</strong>.
                     </Text>
                   ) : (
                     <Text fontSize="sm" fontWeight="medium" color="gray.700">
@@ -203,3 +206,10 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     </Box>
   );
 }
+
+// Agregar validación de PropTypes
+Notifications.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onToggle: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
+};

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { Flex, FormControl, FormHelperText } from "@chakra-ui/react";
+import { Flex, FormControl, FormHelperText, HStack, IconButton } from "@chakra-ui/react";
+import { CloseIcon } from "@chakra-ui/icons";
 import {
   AutoComplete,
   AutoCompleteInput,
@@ -11,6 +12,7 @@ import { useSelector } from "react-redux";
 
 const DeuSelector = ({ ciudadId, onSelect }) => {
   const [inputValue, setInputValue] = useState("");
+  const [selectedDeudor, setSelectedDeudor] = useState(null); // Estado para manejar el deudor seleccionado
   const [filteredDeudores, setFilteredDeudores] = useState([]);
 
   // Obtener tiendas del estado (los deudores están asociados a las tiendas)
@@ -42,44 +44,66 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
 
   const handleSelectDeudor = (deu) => {
     setInputValue(`${deu.correlativo} - ${deu.nombre}`); // Actualizar el valor del input con el deudor seleccionado
+    setSelectedDeudor(deu); // Actualizar el estado del deudor seleccionado
     onSelect(deu.id); // Llamar a la función onSelect con el id del deudor seleccionado
+  };
+
+  const handleClearInput = () => {
+    setInputValue(""); // Limpiar el input
+    setSelectedDeudor(null); // Limpiar el deudor seleccionado
+    onSelect(null); // Notificar al componente padre que no hay un deudor seleccionado
   };
 
   return (
     <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
       <FormControl>
-        <AutoComplete openOnFocus>
-          <AutoCompleteInput
-            variant="outline"
-            placeholder="Seleccione un deudor"
-            value={inputValue}
-            onChange={handleInputChange}
-          />
-          <AutoCompleteList>
-            {filteredDeudores.length > 0 ? (
-              filteredDeudores
-                .filter((deu) =>
-                  `${deu.correlativo} - ${deu.nombre}`
-                    .toLowerCase()
-                    .includes(inputValue.toLowerCase())
-                )
-                .map((deu) => (
-                  <AutoCompleteItem
-                    key={`deudor-${deu.id}`}
-                    value={`${deu.correlativo} - ${deu.nombre}`}
-                    textTransform="capitalize"
-                    onClick={() => handleSelectDeudor(deu)}
-                  >
-                    {`${deu.correlativo} - ${deu.nombre}`}
-                  </AutoCompleteItem>
-                ))
-            ) : (
-              <AutoCompleteItem value="" disabled>
-                No hay deudores disponibles
-              </AutoCompleteItem>
-            )}
-          </AutoCompleteList>
-        </AutoComplete>
+        {/* Contenedor horizontal para el campo de texto y el botón de limpiar */}
+        <HStack spacing={2} w="100%" maxW="600px" align="center">
+          <AutoComplete openOnFocus flex="1">
+            <AutoCompleteInput
+              variant="outline"
+              placeholder="Seleccione un deudor"
+              value={inputValue}
+              onChange={handleInputChange}
+              size="lg"
+              w="full"
+            />
+            <AutoCompleteList>
+              {filteredDeudores.length > 0 ? (
+                filteredDeudores
+                  .filter((deu) =>
+                    `${deu.correlativo} - ${deu.nombre}`
+                      .toLowerCase()
+                      .includes(inputValue.toLowerCase())
+                  )
+                  .map((deu) => (
+                    <AutoCompleteItem
+                      key={`deudor-${deu.id}`}
+                      value={`${deu.correlativo} - ${deu.nombre}`}
+                      textTransform="capitalize"
+                      onClick={() => handleSelectDeudor(deu)}
+                    >
+                      {`${deu.correlativo} - ${deu.nombre}`}
+                    </AutoCompleteItem>
+                  ))
+              ) : (
+                <AutoCompleteItem value="" disabled>
+                  No hay deudores disponibles
+                </AutoCompleteItem>
+              )}
+            </AutoCompleteList>
+          </AutoComplete>
+          {selectedDeudor && (
+            <IconButton
+              aria-label="Limpiar campo"
+              icon={<CloseIcon />}
+              size="sm"
+              onClick={handleClearInput}
+              colorScheme="red"
+              variant="outline"
+            />
+          )}
+        </HStack>
         <FormHelperText mt="2">Seleccione el deudor de la ciudad</FormHelperText>
       </FormControl>
     </Flex>

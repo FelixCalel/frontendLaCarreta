@@ -8,43 +8,64 @@ const PedidosCardList = ({ pedidos, roleId, onVerDetalles }) => (
     {pedidos.map((pedido) => (
       <Box
         key={pedido.id}
-        p={3}
+        p={4}
         borderWidth="1px"
-        borderColor="gray.200"
-        rounded="md"
+        borderColor="gray.300"
+        rounded="lg"
         bg="white"
-        shadow="sm"
-        _hover={{ shadow: "md" }}
+        shadow="md"
+        _hover={{ shadow: "lg", transform: "scale(1.02)", transition: "0.2s" }}
+        transition="all 0.2s"
       >
-        <HStack justifyContent="space-between">
-          <Text fontWeight="bold">Pedido ID: {pedido.id}</Text>
-          <Badge colorScheme={pedido.estadoId === 3 ? "green" : "red"}>
-            {pedido.estadoId === 3 ? "Aprobado" : "Cancelado"}
+        <HStack justifyContent="space-between" alignItems="center" mb={2}>
+          <Text fontWeight="bold" fontSize="lg" color="gray.700">
+            Pedido ID: {pedido.id}
+          </Text>
+          <Badge
+            colorScheme={
+              pedido.estadoId === 3
+                ? "green"
+                : pedido.estadoId === 2
+                ? "yellow"
+                : "red"
+            }
+            fontSize="sm"
+            px={3}
+            py={1}
+            rounded="full"
+          >
+            {pedido.estadoId === 3
+              ? "Aprobado"
+              : pedido.estadoId === 2
+              ? "Pendiente"
+              : "Cancelado"}
           </Badge>
         </HStack>
-        <Text>
+        <Text color="gray.600" fontSize="sm">
           <strong>Deudor:</strong>{" "}
           {`${pedido.nombreCorrelativo} - ${pedido.nombreDeu || "N/A"}`}
         </Text>
-        <Text>
+        <Text color="gray.600" fontSize="sm">
           <strong>Tienda:</strong> {pedido.nombreTienda || "N/A"}
         </Text>
         {roleId === 1 || roleId === 3 ? (
-          <Text>
+          <Text color="gray.600" fontSize="sm">
             <strong>Usuario:</strong> {pedido.nombreUsuario || "N/A"}
           </Text>
         ) : null}
-        <Text>
+        <Text color="gray.600" fontSize="sm">
           <strong>Fecha:</strong>{" "}
           {format(new Date(pedido.fechaOrden), "dd MMM yyyy, HH:mm", {
             locale: es,
           })}
         </Text>
         <Button
-          mt={2}
+          mt={3}
           colorScheme="blue"
           size="sm"
           onClick={() => onVerDetalles(pedido)}
+          _hover={{ bg: "blue.600" }}
+          fontSize="sm"
         >
           Ver Detalles
         </Button>

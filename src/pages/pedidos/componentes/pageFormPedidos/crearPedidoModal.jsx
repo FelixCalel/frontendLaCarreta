@@ -1,4 +1,4 @@
-import PropTypes from "prop-types"; // Importa PropTypes
+import PropTypes from "prop-types";
 import {
   Modal,
   ModalOverlay,
@@ -10,16 +10,18 @@ import {
   Button,
   Spinner,
   VStack,
-  HStack,
   FormControl,
   FormLabel,
+  HStack,
+  Icon,
   Box,
   Text,
 } from "@chakra-ui/react";
+import { FaCity, FaStoreAlt } from "react-icons/fa"; // Iconos
+import { MdOutlinePerson } from "react-icons/md";
 import CiudadSelector from "./CiudadSelector";
 import DeuSelector from "./DeuSelector";
 import TiendaSelector from "./tiendaSelector";
-import ProductosTable from "../detallesPedidosTable";
 
 const PedidoModal = ({
   isOpen,
@@ -31,8 +33,6 @@ const PedidoModal = ({
   handleSubmit,
   usuarioRutas,
   paisId,
-  pedidoIdGuardado,
-  usuarioId,
   isTienda1Disabled,
   isTienda2Disabled,
   setIsTienda1Disabled,
@@ -51,24 +51,48 @@ const PedidoModal = ({
   };
 
   const handleTiendaChange = (value) => {
-    setCurrentPedido((prev) => ({ ...prev, tiendaId: value }));
-    setIsTienda2Disabled(!!value);
+    setCurrentPedido((prev) => ({
+      ...prev,
+      tiendaId: value,
+      tiendaId2: null, // Limpia el otro selector
+    }));
+    setIsTienda2Disabled(!!value); // Desactiva el otro selector si hay valor
   };
 
   const handleTiendaChange2 = (value) => {
-    setCurrentPedido((prev) => ({ ...prev, tiendaId: value }));
-    setIsTienda1Disabled(!!value);
+    setCurrentPedido((prev) => ({
+      ...prev,
+      tiendaId: null, // Limpia el primer selector
+      tiendaId2: value,
+    }));
+    setIsTienda1Disabled(!!value); // Desactiva el primer selector si hay valor
+  };
+
+  const clearTienda = () => {
+    setCurrentPedido((prev) => ({
+      ...prev,
+      tiendaId: null,
+      tiendaId2: null,
+    }));
+    setIsTienda1Disabled(false);
+    setIsTienda2Disabled(false);
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "lg" }}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      isCentered
+      motionPreset="slideInBottom"
+      size={{ base: "md", md: "lg" }}
+    >
       <ModalOverlay />
       <ModalContent
-        borderRadius="lg"
-        boxShadow="xl"
-        p={4}
+        borderRadius="xl"
+        boxShadow="2xl"
         bg="white"
-        maxW={{ base: "95%", md: "600px" }}
+        maxW={{ base: "90%", md: "600px" }}
+        p={4}
       >
         <ModalHeader
           fontSize="2xl"
@@ -84,9 +108,13 @@ const PedidoModal = ({
           {!isPedidoFinalizado ? (
             <VStack spacing={5}>
               <FormControl>
-                <FormLabel fontSize="sm" color="gray.600">
-                  Seleccione una ciudad
+                <FormLabel fontSize="md" fontWeight="bold" color="gray.600">
+                  <HStack>
+                    <Icon as={FaCity} color="teal.500" />
+                    <Text>Seleccione una ciudad</Text>
+                  </HStack>
                 </FormLabel>
+
                 <CiudadSelector
                   value={
                     currentPedido.ciudadId ? String(currentPedido.ciudadId) : ""
@@ -96,8 +124,11 @@ const PedidoModal = ({
               </FormControl>
 
               <FormControl>
-                <FormLabel fontSize="sm" color="gray.600">
-                  Seleccione un deudor
+                <FormLabel fontSize="md" fontWeight="bold" color="gray.600">
+                  <HStack>
+                    <Icon as={MdOutlinePerson} color="teal.500" />
+                    <Text>Seleccione un deudor</Text>
+                  </HStack>
                 </FormLabel>
                 <DeuSelector
                   ciudadId={currentPedido.ciudadId}
@@ -107,8 +138,15 @@ const PedidoModal = ({
 
               <HStack spacing={4} w="full" alignItems="flex-start">
                 <FormControl flex="1" isDisabled={isTienda2Disabled}>
-                  <FormLabel fontSize="sm" color="gray.600">
-                    Tiendas asignadas
+                  <FormLabel
+                    fontSize="md"
+                    fontWeight="bold"
+                    color="gray.600" // Ajusta el color para ser consistente
+                  >
+                    <HStack>
+                      <Icon as={FaStoreAlt} color="teal.500" />
+                      <Text>Tiendas asignadas</Text>
+                    </HStack>
                   </FormLabel>
                   <TiendaSelector
                     rutaIds={usuarioRutas || []}
@@ -120,8 +158,15 @@ const PedidoModal = ({
                 </FormControl>
 
                 <FormControl flex="1" isDisabled={isTienda1Disabled}>
-                  <FormLabel fontSize="sm" color="gray.600">
-                    Todas las tiendas
+                  <FormLabel
+                    fontSize="md"
+                    fontWeight="bold"
+                    color="gray.600" // Ajusta el color para ser consistente
+                  >
+                    <HStack>
+                      <Icon as={FaStoreAlt} color="teal.500" />
+                      <Text>Todas las tiendas</Text>
+                    </HStack>
                   </FormLabel>
                   <TiendaSelector
                     rutaIds={[]}
@@ -135,13 +180,9 @@ const PedidoModal = ({
             </VStack>
           ) : (
             <Box>
-              <Text fontSize="md" fontWeight="medium" mb={3}>
+              <Text fontSize="lg" fontWeight="medium" mb={3} textAlign="center">
                 Agregue productos al pedido:
               </Text>
-              <ProductosTable
-                pedidoId={pedidoIdGuardado}
-                usuarioId={usuarioId}
-              />
             </Box>
           )}
         </ModalBody>
@@ -150,22 +191,23 @@ const PedidoModal = ({
           <HStack spacing={4}>
             <Button
               colorScheme="teal"
-              size="md"
+              size="lg"
               onClick={handleSubmit}
               isLoading={isLoading}
               spinner={<Spinner size="sm" color="white" />}
-              _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
+              _hover={{ transform: "scale(1.1)", boxShadow: "lg" }}
             >
               {isPedidoFinalizado ? "Agregar" : "Guardar"}
             </Button>
             <Button
               variant="outline"
-              size="md"
+              size="lg"
               onClick={() => {
                 onClose();
                 resetForm();
+                clearTienda();
               }}
-              _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
+              _hover={{ transform: "scale(1.1)", boxShadow: "lg" }}
             >
               Cancelar
             </Button>
@@ -185,7 +227,7 @@ PedidoModal.propTypes = {
     ciudadId: PropTypes.number,
     deudorId: PropTypes.number,
     tiendaId: PropTypes.number,
-    tiendaId2: PropTypes.number, // Agregado aquí
+    tiendaId2: PropTypes.number,
   }).isRequired,
   setCurrentPedido: PropTypes.func.isRequired,
   handleSubmit: PropTypes.func.isRequired,
