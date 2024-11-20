@@ -115,18 +115,34 @@ const PageFormPedidos = () => {
       return;
     }
   
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date();
+    const todayFormatted = today.toISOString().split("T")[0];
     const tiendaSeleccionada = currentPedido.tiendaId || currentPedido.tiendaId2;
   
+    console.log("Datos para validación:", {
+      usuarioId,
+      tiendaSeleccionada,
+      todayFormatted,
+    });
+  
     // Validar si ya existe un pedido para la misma tienda en el mismo día
-    const pedidosHoy = pedidos.filter(
-      (pedido) =>
+    const pedidosHoy = pedidos.filter((pedido) => {
+      let fechaPedido = pedido.fechaOrden;
+  
+      // Convertir fechaOrden a Date si es necesario
+      if (typeof fechaPedido === "string") {
+        fechaPedido = new Date(fechaPedido);
+      }
+  
+      // Validar formato de fecha
+      return (
         pedido.usuarioId === usuarioId &&
         pedido.tiendaId === tiendaSeleccionada &&
-        pedido.fecha?.split("T")[0] === today
-    );
+        fechaPedido.toISOString().split("T")[0] === todayFormatted
+      );
+    });
   
-    console.log("Pedidos encontrados hoy:", pedidosHoy); // Agregamos para depuración
+    console.log("Pedidos encontrados hoy:", pedidosHoy);
   
     if (pedidosHoy.length > 0) {
       toast({
@@ -145,7 +161,7 @@ const PageFormPedidos = () => {
       const newPedido = {
         ...currentPedido,
         tiendaId: tiendaSeleccionada,
-        fecha: new Date().toISOString(),
+        fechaOrden: today, // Usamos la fecha actual
       };
   
       const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
@@ -175,7 +191,6 @@ const PageFormPedidos = () => {
       setIsLoading(false);
     }
   };
-  
   
   
 
