@@ -26,11 +26,9 @@ const PageFormPedidos = () => {
     onOpen: onDialogOpen,
     onClose: onDialogClose,
   } = useDisclosure();
-  // const cancelRef = useRef();
 
   const pedidos = useSelector((state) => state.pedidos.data);
-  const usuarioId = Number(localStorage.getItem("usuarioId"));
-
+  const usuarioId = Number(localStorage.getItem("usuarioId")) || 0; // Valor predeterminado
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [paisId, setPaisId] = useState(null);
   const [usuarioRutas, setUsuarioRutas] = useState([]);
@@ -38,7 +36,7 @@ const PageFormPedidos = () => {
     ciudadId: 0,
     deudorId: 0,
     tiendaId: 0,
-    usuarioId: parseInt(usuarioId),
+    usuarioId: usuarioId,
     estadoId: 1,
   });
   const [isPedidoFinalizado, setIsPedidoFinalizado] = useState(false);
@@ -63,6 +61,7 @@ const PageFormPedidos = () => {
       setPaisId(parseInt(paisIdFromStorage, 10));
     } else {
       console.error("No se encontró el paisId en el localStorage");
+      setPaisId(0); // Valor predeterminado
     }
   }, []);
 
@@ -72,7 +71,7 @@ const PageFormPedidos = () => {
       try {
         const response = await axios.get(`${BASE_URL}/usuarios/todos`);
         const usuario = response.data.usuarios.find(
-          (u) => u.id === parseInt(usuarioId)
+          (u) => u.id === usuarioId
         );
         if (usuario && Array.isArray(usuario.rutas)) {
           const rutasAsignadas = usuario.rutas.map((ruta) => ruta.id);
@@ -84,7 +83,7 @@ const PageFormPedidos = () => {
         console.error("Error al obtener rutas del usuario:", error);
       }
     };
-    fetchUsuarioRutas();
+    if (usuarioId) fetchUsuarioRutas();
   }, [usuarioId]);
 
   // Efecto para cargar pedidos
@@ -101,7 +100,6 @@ const PageFormPedidos = () => {
       formErrors.tienda = "Debe seleccionar una tienda";
     return formErrors;
   };
-  
 
   // Manejar envío del formulario
   const handleSubmit = async () => {
@@ -116,19 +114,19 @@ const PageFormPedidos = () => {
       });
       return;
     }
-  
+
     setIsLoading(true);
-  
+
     const today = new Date().toISOString().split("T")[0];
-    const tiendaSeleccionada = currentPedido.tiendaId || currentPedido.tiendaId2; // Priorizar la tienda seleccionada
-  
+    const tiendaSeleccionada = currentPedido.tiendaId || currentPedido.tiendaId2;
+
     const pedidosHoy = pedidos.filter(
       (pedido) =>
-        pedido.usuarioId === parseInt(usuarioId) &&
-        pedido.tiendaId === tiendaSeleccionada && // Validar la tienda seleccionada
+        pedido.usuarioId === usuarioId &&
+        pedido.tiendaId === tiendaSeleccionada &&
         pedido.fecha?.split("T")[0] === today
     );
-  
+
     if (pedidosHoy.length > 0) {
       toast({
         title: "Pedido duplicado",
@@ -140,20 +138,20 @@ const PageFormPedidos = () => {
       setIsLoading(false);
       return;
     }
-  
+
     try {
       if (!isPedidoFinalizado) {
         const newPedido = {
           ...currentPedido,
-          tiendaId: tiendaSeleccionada, // Usar la tienda seleccionada
+          tiendaId: tiendaSeleccionada,
           fecha: new Date().toISOString(),
         };
         const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
         setPedidoIdGuardado(pedidoGuardado.id);
         setIsPedidoFinalizado(false);
-  
+
         dispatch(tablaPedidos());
-  
+
         toast({
           title: "Pedido creado",
           description: "El pedido ha sido guardado correctamente",
@@ -161,7 +159,7 @@ const PageFormPedidos = () => {
           duration: 3000,
           isClosable: true,
         });
-  
+
         onClose();
         resetForm();
       }
@@ -178,7 +176,6 @@ const PageFormPedidos = () => {
       setIsLoading(false);
     }
   };
-  
 
   const resetForm = () => {
     setCurrentPedido({
@@ -186,13 +183,12 @@ const PageFormPedidos = () => {
       deudorId: 0,
       tiendaId: null,
       tiendaId2: null,
-      usuarioId: parseInt(usuarioId),
+      usuarioId: usuarioId,
       estadoId: 1,
     });
     setIsTienda1Disabled(false);
     setIsTienda2Disabled(false);
   };
-  
 
   // Manejar confirmación para realizar pedido
   const handleRealizarPedido = async () => {
@@ -217,7 +213,7 @@ const PageFormPedidos = () => {
       dispatch(tablaPedidos());
       toast({
         title: "Pedido realizado",
-        description: "El pedio esta en revisión.",
+        description: "El pedido está en revisión.",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -231,7 +227,7 @@ const PageFormPedidos = () => {
 
   const pedidosUsuario = pedidos.filter(
     (pedido) =>
-      pedido.usuarioId === parseInt(usuarioId) && pedido.estadoId === 1
+      pedido.usuarioId === usuarioId && pedido.estadoId === 1
   );
 
   return (
@@ -262,13 +258,14 @@ const PageFormPedidos = () => {
         setCurrentPedido={setCurrentPedido}
         handleSubmit={handleSubmit}
         usuarioRutas={usuarioRutas}
-        paisId={paisId}
+        paisId={paisId || 0}
+        usuarioId={usuarioId || 0}
         pedidoIdGuardado={pedidoIdGuardado}
         isTienda1Disabled={isTienda1Disabled}
         isTienda2Disabled={isTienda2Disabled}
         setIsTienda1Disabled={setIsTienda1Disabled}
         setIsTienda2Disabled={setIsTienda2Disabled}
-        resetForm={resetForm} // Agregamos el reset aquí
+        resetForm={resetForm}
       />
 
       <ConfirmDialog
