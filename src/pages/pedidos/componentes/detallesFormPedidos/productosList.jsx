@@ -29,9 +29,6 @@ const ProductosList = ({ productos, onRemove, onCantidadChange }) => {
                 }
                 placeholder="Cantidad"
                 size="sm"
-                width="50px"
-                maxWidth="50px"
-                max={producto.cantidadDisponible}
               />
             </Td>
             <Td>
@@ -52,18 +49,9 @@ const ProductosList = ({ productos, onRemove, onCantidadChange }) => {
 };
 
 ProductosList.propTypes = {
-  productos: PropTypes.arrayOf(
-    PropTypes.shape({
-      detallePedidoId: PropTypes.number.isRequired,
-      codigo: PropTypes.string,
-      nombreProducto: PropTypes.string.isRequired,
-      cantidadDisponible: PropTypes.number.isRequired,
-      cantidad: PropTypes.number.isRequired,
-    })
-  ).isRequired,
+  productos: PropTypes.array.isRequired,
   onRemove: PropTypes.func.isRequired,
   onCantidadChange: PropTypes.func.isRequired,
-  usuarioId: PropTypes.number.isRequired,
 };
 
 export default ProductosList;

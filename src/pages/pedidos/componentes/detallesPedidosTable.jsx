@@ -181,6 +181,22 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         return;
       }
   
+      // **Nueva Validación**: Comprobar si el producto ya existe en la lista de detalles actuales
+      const productoExistente = productos.some(
+        (prod) => prod.productoId === newProducto.productoId
+      );
+  
+      if (productoExistente) {
+        toast({
+          title: "Producto ya agregado",
+          description: "Este producto ya existe en los detalles del pedido.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+  
       try {
         const newDetalleOrden = {
           pedidoId,
@@ -191,20 +207,21 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
   
         // Enviar el detalle del producto al backend
         const result = await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
-        if (result && result.success) {
-          console.log("Producto agregado correctamente:", result.data);
+        if (!result || !result.id) {
+          throw new Error("El backend no devolvió un detallePedidoId válido.");
         }
-        // Obtener la lista actualizada de detalles del pedido
-        const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+  
+        const detalleConId = {
+          ...result,
+          detallePedidoId: result.id, // Mapear id a detallePedidoId
+        };
   
         // Actualizar los productos en el estado local
-        setProductos(detalles);
+        const nuevosProductos = [...productos, detalleConId];
+        setProductos(nuevosProductos);
   
         // Guardar los datos actualizados en el sessionStorage
-        sessionStorage.setItem(
-          `productos_${pedidoId}`,
-          JSON.stringify(detalles)
-        );
+        sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(nuevosProductos));
   
         // Reiniciar el formulario para agregar un nuevo producto
         setNewProducto({
@@ -245,7 +262,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
   };
   
   
-
+  
   const handleRemoveProducto = async (detallePedidoId) => {
     if (!detallePedidoId) {
       console.error("DetallePedidoId no válido:", detallePedidoId);

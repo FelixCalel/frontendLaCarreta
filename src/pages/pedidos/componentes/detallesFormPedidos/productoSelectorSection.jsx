@@ -1,19 +1,11 @@
 import { Box, HStack, IconButton, Tooltip } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
-import MotionBox from "./motionBox"; // Un contenedor con animaciones (ya estaba definido)
-import ProductoSelector from "../pageFormPedidos/productoSelector"; // Selector de productos existente
-import CantidadInput from "../pageFormPedidos/cantidadInput"; // Input para cantidad
+import ProductoSelector from "../pageFormPedidos/productoSelector";
+import CantidadInput from "../pageFormPedidos/cantidadInput";
+import MotionBox from "./motionBox";
 import PropTypes from "prop-types";
 
 const ProductoSelectorSection = ({ newProducto, setNewProducto, onAddProducto, resetFields }) => {
-  const handleAdd = () => {
-    if (newProducto.productoId && newProducto.cantidad > 0) {
-      onAddProducto(newProducto);
-    } else {
-      console.error("Debe seleccionar un producto y una cantidad válida");
-    }
-  };
-
   return (
     <Box mt={4}>
       <MotionBox
@@ -48,16 +40,9 @@ const ProductoSelectorSection = ({ newProducto, setNewProducto, onAddProducto, r
               }))
             }
             placeholder="Cantidad"
-            size="sm"
-            width="60px"
           />
           <Tooltip label="Agregar producto" hasArrow>
-            <IconButton
-              icon={<AddIcon />}
-              colorScheme="teal"
-              onClick={handleAdd}
-              size="sm"
-            />
+            <IconButton icon={<AddIcon />} colorScheme="teal" onClick={onAddProducto} size="sm" />
           </Tooltip>
         </HStack>
       </MotionBox>
@@ -66,13 +51,7 @@ const ProductoSelectorSection = ({ newProducto, setNewProducto, onAddProducto, r
 };
 
 ProductoSelectorSection.propTypes = {
-  newProducto: PropTypes.shape({
-    productoId: PropTypes.string.isRequired,
-    nombreProducto: PropTypes.string.isRequired,
-    cantidad: PropTypes.number.isRequired,
-    cantidadDisponible: PropTypes.number.isRequired,
-    codigo: PropTypes.string,
-  }).isRequired,
+  newProducto: PropTypes.object.isRequired,
   setNewProducto: PropTypes.func.isRequired,
   onAddProducto: PropTypes.func.isRequired,
   resetFields: PropTypes.bool.isRequired,
