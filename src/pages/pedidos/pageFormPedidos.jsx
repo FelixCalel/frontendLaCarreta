@@ -70,9 +70,7 @@ const PageFormPedidos = () => {
     const fetchUsuarioRutas = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/usuarios/todos`);
-        const usuario = response.data.usuarios.find(
-          (u) => u.id === usuarioId
-        );
+        const usuario = response.data.usuarios.find((u) => u.id === usuarioId);
         if (usuario && Array.isArray(usuario.rutas)) {
           const rutasAsignadas = usuario.rutas.map((ruta) => ruta.id);
           setUsuarioRutas(rutasAsignadas);
@@ -94,8 +92,10 @@ const PageFormPedidos = () => {
   // Validar campos del formulario
   const validateFields = () => {
     const formErrors = {};
-    if (!currentPedido.ciudadId) formErrors.ciudadId = "La ciudad es obligatoria";
-    if (!currentPedido.deudorId) formErrors.deudorId = "El deudor es obligatorio";
+    if (!currentPedido.ciudadId)
+      formErrors.ciudadId = "La ciudad es obligatoria";
+    if (!currentPedido.deudorId)
+      formErrors.deudorId = "El deudor es obligatorio";
     if (!currentPedido.tiendaId && !currentPedido.tiendaId2)
       formErrors.tienda = "Debe seleccionar una tienda";
     return formErrors;
@@ -114,19 +114,20 @@ const PageFormPedidos = () => {
       });
       return;
     }
-
-    setIsLoading(true);
-
+  
     const today = new Date().toISOString().split("T")[0];
     const tiendaSeleccionada = currentPedido.tiendaId || currentPedido.tiendaId2;
-
+  
+    // Validar si ya existe un pedido para la misma tienda en el mismo día
     const pedidosHoy = pedidos.filter(
       (pedido) =>
         pedido.usuarioId === usuarioId &&
         pedido.tiendaId === tiendaSeleccionada &&
         pedido.fecha?.split("T")[0] === today
     );
-
+  
+    console.log("Pedidos encontrados hoy:", pedidosHoy); // Agregamos para depuración
+  
     if (pedidosHoy.length > 0) {
       toast({
         title: "Pedido duplicado",
@@ -135,34 +136,32 @@ const PageFormPedidos = () => {
         duration: 3000,
         isClosable: true,
       });
-      setIsLoading(false);
-      return;
+      return; // Bloquear la creación del pedido
     }
-
+  
+    setIsLoading(true);
+  
     try {
-      if (!isPedidoFinalizado) {
-        const newPedido = {
-          ...currentPedido,
-          tiendaId: tiendaSeleccionada,
-          fecha: new Date().toISOString(),
-        };
-        const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
-        setPedidoIdGuardado(pedidoGuardado.id);
-        setIsPedidoFinalizado(false);
-
-        dispatch(tablaPedidos());
-
-        toast({
-          title: "Pedido creado",
-          description: "El pedido ha sido guardado correctamente",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-
-        onClose();
-        resetForm();
-      }
+      const newPedido = {
+        ...currentPedido,
+        tiendaId: tiendaSeleccionada,
+        fecha: new Date().toISOString(),
+      };
+  
+      const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
+      setPedidoIdGuardado(pedidoGuardado.id);
+      dispatch(tablaPedidos());
+  
+      toast({
+        title: "Pedido creado",
+        description: "El pedido ha sido guardado correctamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+  
+      onClose();
+      resetForm();
     } catch (error) {
       console.error("Error al guardar el pedido:", error);
       toast({
@@ -176,6 +175,9 @@ const PageFormPedidos = () => {
       setIsLoading(false);
     }
   };
+  
+  
+  
 
   const resetForm = () => {
     setCurrentPedido({
@@ -226,8 +228,7 @@ const PageFormPedidos = () => {
   };
 
   const pedidosUsuario = pedidos.filter(
-    (pedido) =>
-      pedido.usuarioId === usuarioId && pedido.estadoId === 1
+    (pedido) => pedido.usuarioId === usuarioId && pedido.estadoId === 1
   );
 
   return (
@@ -256,7 +257,7 @@ const PageFormPedidos = () => {
         isLoading={isLoading}
         currentPedido={currentPedido}
         setCurrentPedido={setCurrentPedido}
-        handleSubmit={handleSubmit}
+        handleSubmit={handleSubmit} // Aquí
         usuarioRutas={usuarioRutas}
         paisId={paisId || 0}
         usuarioId={usuarioId || 0}

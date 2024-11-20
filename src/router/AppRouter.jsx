@@ -69,7 +69,7 @@ export const AppRouter = () => {
     verificarAccesos();
   }, [dispatch, usuarioId, roleId]);
 
-  const rolesPermitidosAdmin = ["1"];
+  const rolesPermitidosAdmin = ["1", "2", "3"];
 
   if (loading) {
     // Mostrar componente de carga hasta que se obtengan los permisos
