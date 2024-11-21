@@ -180,12 +180,12 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         });
         return;
       }
-  
+
       // **Nueva Validación**: Comprobar si el producto ya existe en la lista de detalles actuales
       const productoExistente = productos.some(
         (prod) => prod.productoId === newProducto.productoId
       );
-  
+
       if (productoExistente) {
         toast({
           title: "Producto ya agregado",
@@ -196,7 +196,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         });
         return;
       }
-  
+
       try {
         const newDetalleOrden = {
           pedidoId,
@@ -204,25 +204,30 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           cantidad: newProducto.cantidad,
           precio: 0, // Si hay un precio que manejar, este se debe actualizar
         };
-  
+
         // Enviar el detalle del producto al backend
-        const result = await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
+        const result = await dispatch(
+          addNewDetalleOrden(newDetalleOrden)
+        ).unwrap();
         if (!result || !result.id) {
           throw new Error("El backend no devolvió un detallePedidoId válido.");
         }
-  
+
         const detalleConId = {
           ...result,
           detallePedidoId: result.id, // Mapear id a detallePedidoId
         };
-  
+
         // Actualizar los productos en el estado local
         const nuevosProductos = [...productos, detalleConId];
         setProductos(nuevosProductos);
-  
+
         // Guardar los datos actualizados en el sessionStorage
-        sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(nuevosProductos));
-  
+        sessionStorage.setItem(
+          `productos_${pedidoId}`,
+          JSON.stringify(nuevosProductos)
+        );
+
         // Reiniciar el formulario para agregar un nuevo producto
         setNewProducto({
           productoId: "",
@@ -232,7 +237,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           codigo: "",
         });
         setResetFields(true); // Reiniciar campos del formulario
-  
+
         toast({
           title: "Producto agregado",
           description: "El producto ha sido agregado exitosamente.",
@@ -260,9 +265,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
-  
-  
-  
+
   const handleRemoveProducto = async (detallePedidoId) => {
     if (!detallePedidoId) {
       console.error("DetallePedidoId no válido:", detallePedidoId);
@@ -313,14 +316,14 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
       return;
     }
-  
+
     console.log(
       "Actualizando cantidad para detalleId:",
       detalleId,
       "con cantidad:",
       cantidad
     );
-  
+
     try {
       await dispatch(
         updateDetalleOrden({
@@ -329,7 +332,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
           cantidad,
         })
       ).unwrap();
-  
+
       const productosActualizados = productos.map((prod) =>
         prod.detallePedidoId === detalleId ? { ...prod, cantidad } : prod
       );
@@ -338,7 +341,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
         `productos_${pedidoId}`,
         JSON.stringify(productosActualizados)
       );
-  
+
       toast({
         title: "Cantidad actualizada.",
         description: "La cantidad del producto se ha actualizado exitosamente.",
@@ -357,7 +360,6 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
       });
     }
   };
-  
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Detección de vista móvil
 
@@ -513,7 +515,7 @@ const ProductosTable = ({ pedidoId, usuarioId }) => {
                             margin: "0",
                             padding: "1px",
                             fontSize: "0.85rem",
-                          }} // Reducir padding del input
+                          }}
                         />
                       </Td>
                       <Td style={{ padding: "2px 4px" }}>
