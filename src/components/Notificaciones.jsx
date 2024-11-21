@@ -8,11 +8,11 @@ import {
   Tooltip,
   CloseButton,
   HStack,
+  useOutsideClick
 } from "@chakra-ui/react";
 import { FiBell } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useRef, useState } from "react";
-import { useOutsideClick } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { tablaPedidos } from "../store/Pedidos/thunks";
@@ -36,22 +36,32 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     return storedDeleted ? JSON.parse(storedDeleted) : [];
   });
 
-  // Actualizar localStorage cuando se eliminen notificaciones
+  // Sincronizar `deletedNotifications` con `localStorage` al actualizar usuario
   useEffect(() => {
-    localStorage.setItem(`deletedNotifications_${usuarioId}`, JSON.stringify(deletedNotifications));
+    const storedDeleted = localStorage.getItem(`deletedNotifications_${usuarioId}`);
+    setDeletedNotifications(storedDeleted ? JSON.parse(storedDeleted) : []);
+  }, [usuarioId]);
+
+  // Guardar en `localStorage` cada vez que cambien las notificaciones eliminadas
+  useEffect(() => {
+    localStorage.setItem(
+      `deletedNotifications_${usuarioId}`,
+      JSON.stringify(deletedNotifications)
+    );
   }, [deletedNotifications, usuarioId]);
 
-  // Filtrar notificaciones por rol
+  // Filtrar notificaciones según rol y estado, excluyendo eliminadas
   useEffect(() => {
     const usuarioPedidos = pedidos
       .filter(
         (pedido) =>
-          pedido.usuarioId === usuarioId || roleId === "3" // Para el rol 3, incluir todos los pedidos pendientes
+          (pedido.usuarioId === usuarioId || roleId === "3") && // Notificaciones propias o pendientes para rol 3
+          !deletedNotifications.includes(pedido.id) // Excluir eliminadas
       )
       .filter((pedido) =>
         roleId === "3"
-          ? pedido.estadoId === 2 && !deletedNotifications.includes(pedido.id) // Pendientes para rol 3
-          : (pedido.estadoId === 3 || pedido.estadoId === 4) && !deletedNotifications.includes(pedido.id) // Aprobados o cancelados para rol 2
+          ? pedido.estadoId === 2 // Pendientes para rol 3
+          : pedido.estadoId === 3 || pedido.estadoId === 4 // Aprobados o cancelados para rol 2
       )
       .sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden)); // Orden descendente
 
@@ -82,7 +92,13 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
 
   // Manejo de eliminación de notificaciones
   const handleDeleteNotification = (pedidoId) => {
-    setDeletedNotifications((prev) => [...prev, pedidoId]);
+    const updatedNotifications = [...deletedNotifications, pedidoId];
+    setDeletedNotifications(updatedNotifications);
+    // Actualizar localStorage inmediatamente al borrar
+    localStorage.setItem(
+      `deletedNotifications_${usuarioId}`,
+      JSON.stringify(updatedNotifications)
+    );
   };
 
   // Conteo de estados para el resumen (solo para rol 3)

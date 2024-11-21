@@ -16,6 +16,7 @@ import {
   Icon,
   Box,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import { FaCity, FaStoreAlt } from "react-icons/fa"; // Iconos
 import { MdOutlinePerson } from "react-icons/md";
@@ -38,6 +39,7 @@ const PedidoModal = ({
   setIsTienda1Disabled,
   setIsTienda2Disabled,
   resetForm,
+  copiarUltimoPedido,
 }) => {
   const handleCiudadChange = (e) => {
     setCurrentPedido((prev) => ({
@@ -45,6 +47,8 @@ const PedidoModal = ({
       ciudadId: parseInt(e.target.value),
     }));
   };
+
+  const toast = useToast();
 
   const handleDeudorSelect = (deudorId) => {
     setCurrentPedido((prev) => ({ ...prev, deudorId }));
@@ -190,6 +194,28 @@ const PedidoModal = ({
         <ModalFooter justifyContent="center">
           <HStack spacing={4}>
             <Button
+              colorScheme="blue"
+              onClick={() => {
+                if (currentPedido.tiendaId || currentPedido.tiendaId2) {
+                  copiarUltimoPedido(
+                    currentPedido.tiendaId || currentPedido.tiendaId2
+                  );
+                } else {
+                  toast({
+                    title: "Error",
+                    description: "Debe seleccionar una tienda primero.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                  });
+                }
+              }}
+              size="sm"
+              variant="outline"
+            >
+              Copiar Último Pedido
+            </Button>
+            <Button
               colorScheme="teal"
               size="lg"
               onClick={handleSubmit}
@@ -233,13 +259,14 @@ PedidoModal.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
   usuarioRutas: PropTypes.arrayOf(PropTypes.number).isRequired,
   paisId: PropTypes.number.isRequired,
-  pedidoIdGuardado: PropTypes.number,
-  usuarioId: PropTypes.number.isRequired,
+  // pedidoIdGuardado: PropTypes.number,
+  // usuarioId: PropTypes.number.isRequired,
   isTienda1Disabled: PropTypes.bool.isRequired,
   isTienda2Disabled: PropTypes.bool.isRequired,
   setIsTienda1Disabled: PropTypes.func.isRequired,
   setIsTienda2Disabled: PropTypes.func.isRequired,
   resetForm: PropTypes.func.isRequired,
+  copiarUltimoPedido: PropTypes.func.isRequired,
 };
 
 export default PedidoModal;

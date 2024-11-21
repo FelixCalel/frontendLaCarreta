@@ -80,6 +80,7 @@ export const toggleDetalleOrdenStatus = createAsyncThunk(
 export const getDetalleOrdenByPedidoId = createAsyncThunk(
   'detalleOrden/fetchByPedidoId',
   async (pedidoId) => {
+    console.log("Solicitando detalles del pedido con ID:", pedidoId);
     const response = await axios.get(`${BASE_URL}/detalle/pedido/listar/${pedidoId}`);
     const data = response.data;
     data.sort((a, b) => a.id - b.id); // Ordenar los datos

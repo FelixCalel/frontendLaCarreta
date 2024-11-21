@@ -32,6 +32,7 @@ const PageFormPedidos = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [paisId, setPaisId] = useState(null);
   const [usuarioRutas, setUsuarioRutas] = useState([]);
+  const [productosCopiados, setProductosCopiados] = useState([]);
   const [currentPedido, setCurrentPedido] = useState({
     ciudadId: 0,
     deudorId: 0,
@@ -39,7 +40,7 @@ const PageFormPedidos = () => {
     usuarioId: usuarioId,
     estadoId: 1,
   });
-  const [isPedidoFinalizado, setIsPedidoFinalizado] = useState(false);
+  const [isPedidoFinalizado] = useState(false);
   const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(null);
   const [selectedPedidoId, setSelectedPedidoId] = useState(null);
@@ -101,6 +102,80 @@ const PageFormPedidos = () => {
     return formErrors;
   };
 
+  const copiarUltimoPedido = async (tiendaId) => {
+    console.log("ID de tienda seleccionada:", tiendaId);
+  
+    try {
+      const pedidosTienda = pedidos.filter((pedido) => pedido.tiendaId === tiendaId);
+      console.log("Pedidos encontrados para esta tienda:", pedidosTienda);
+  
+      if (pedidosTienda.length === 0) {
+        toast({
+          title: "Sin pedidos previos",
+          description: "No se encontraron pedidos anteriores para esta tienda.",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+  
+      // Obtener el último pedido (ordenado por fecha)
+      const ultimoPedido = pedidosTienda.sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden))[0];
+      console.log("Último pedido encontrado:", ultimoPedido);
+  
+      // Verificar si el pedido tiene productos
+      if (!ultimoPedido || !ultimoPedido.id) {
+        toast({
+          title: "Error",
+          description: "No se encontró un ID válido para el pedido.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+  
+      // Obtener los detalles del pedido desde el backend
+      const detalles = await dispatch(getDetalleOrdenByPedidoId(ultimoPedido.id)).unwrap();
+      console.log("Detalles del último pedido:", detalles);
+  
+      if (!detalles || detalles.length === 0) {
+        // Si no hay productos en el pedido, informar al usuario
+        toast({
+          title: "Pedido vacío",
+          description: "El último pedido de esta tienda no tiene productos para copiar.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+  
+      // Actualizar el estado con los productos copiados
+      setProductosCopiados(detalles);
+  
+      toast({
+        title: "Productos copiados",
+        description: "Se han copiado los productos del último pedido.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error al copiar productos del último pedido:", error);
+      toast({
+        title: "Error",
+        description: `No se pudieron copiar los productos: ${error.message}`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+  
+  
+
   // Manejar envío del formulario
   const handleSubmit = async () => {
     const formErrors = validateFields();
@@ -114,26 +189,27 @@ const PageFormPedidos = () => {
       });
       return;
     }
-  
+
     const today = new Date();
     const todayFormatted = today.toISOString().split("T")[0];
-    const tiendaSeleccionada = currentPedido.tiendaId || currentPedido.tiendaId2;
-  
+    const tiendaSeleccionada =
+      currentPedido.tiendaId || currentPedido.tiendaId2;
+
     console.log("Datos para validación:", {
       usuarioId,
       tiendaSeleccionada,
       todayFormatted,
     });
-  
+
     // Validar si ya existe un pedido para la misma tienda en el mismo día
     const pedidosHoy = pedidos.filter((pedido) => {
       let fechaPedido = pedido.fechaOrden;
-  
+
       // Convertir fechaOrden a Date si es necesario
       if (typeof fechaPedido === "string") {
         fechaPedido = new Date(fechaPedido);
       }
-  
+
       // Validar formato de fecha
       return (
         pedido.usuarioId === usuarioId &&
@@ -141,9 +217,9 @@ const PageFormPedidos = () => {
         fechaPedido.toISOString().split("T")[0] === todayFormatted
       );
     });
-  
+
     console.log("Pedidos encontrados hoy:", pedidosHoy);
-  
+
     if (pedidosHoy.length > 0) {
       toast({
         title: "Pedido duplicado",
@@ -154,20 +230,21 @@ const PageFormPedidos = () => {
       });
       return; // Bloquear la creación del pedido
     }
-  
+
     setIsLoading(true);
-  
+
     try {
       const newPedido = {
         ...currentPedido,
         tiendaId: tiendaSeleccionada,
-        fechaOrden: today, // Usamos la fecha actual
+        fechaOrden: today,
+        productos: productosCopiados,
       };
-  
+
       const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
       setPedidoIdGuardado(pedidoGuardado.id);
       dispatch(tablaPedidos());
-  
+
       toast({
         title: "Pedido creado",
         description: "El pedido ha sido guardado correctamente",
@@ -175,7 +252,7 @@ const PageFormPedidos = () => {
         duration: 3000,
         isClosable: true,
       });
-  
+
       onClose();
       resetForm();
     } catch (error) {
@@ -191,8 +268,6 @@ const PageFormPedidos = () => {
       setIsLoading(false);
     }
   };
-  
-  
 
   const resetForm = () => {
     setCurrentPedido({
@@ -282,6 +357,7 @@ const PageFormPedidos = () => {
         setIsTienda1Disabled={setIsTienda1Disabled}
         setIsTienda2Disabled={setIsTienda2Disabled}
         resetForm={resetForm}
+        copiarUltimoPedido={copiarUltimoPedido}
       />
 
       <ConfirmDialog
