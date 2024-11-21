@@ -88,18 +88,18 @@ const PedidoModal = ({
       onClose={onClose}
       isCentered
       motionPreset="slideInBottom"
-      size={{ base: "md", md: "lg" }}
+      size={{ base: "sm", md: "md", lg: "lg" }} // Ajusta tamaños para adaptabilidad
     >
       <ModalOverlay />
       <ModalContent
-        borderRadius="xl"
-        boxShadow="2xl"
+        borderRadius="lg"
+        boxShadow="xl"
         bg="white"
-        maxW={{ base: "90%", md: "600px" }}
+        maxW={{ base: "95%", md: "600px" }}
         p={4}
       >
         <ModalHeader
-          fontSize="2xl"
+          fontSize={{ base: "lg", md: "2xl" }} // Tamaño del encabezado adaptativo
           fontWeight="bold"
           textAlign="center"
           color="teal.600"
@@ -110,15 +110,14 @@ const PedidoModal = ({
 
         <ModalBody>
           {!isPedidoFinalizado ? (
-            <VStack spacing={5}>
+            <VStack spacing={4}>
               <FormControl>
-                <FormLabel fontSize="md" fontWeight="bold" color="gray.600">
+                <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
                   <HStack>
                     <Icon as={FaCity} color="teal.500" />
                     <Text>Seleccione una ciudad</Text>
                   </HStack>
                 </FormLabel>
-
                 <CiudadSelector
                   value={
                     currentPedido.ciudadId ? String(currentPedido.ciudadId) : ""
@@ -128,7 +127,7 @@ const PedidoModal = ({
               </FormControl>
 
               <FormControl>
-                <FormLabel fontSize="md" fontWeight="bold" color="gray.600">
+                <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
                   <HStack>
                     <Icon as={MdOutlinePerson} color="teal.500" />
                     <Text>Seleccione un deudor</Text>
@@ -140,13 +139,9 @@ const PedidoModal = ({
                 />
               </FormControl>
 
-              <HStack spacing={4} w="full" alignItems="flex-start">
+              <HStack spacing={3} w="full" alignItems="flex-start">
                 <FormControl flex="1" isDisabled={isTienda2Disabled}>
-                  <FormLabel
-                    fontSize="md"
-                    fontWeight="bold"
-                    color="gray.600" // Ajusta el color para ser consistente
-                  >
+                  <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
                     <HStack>
                       <Icon as={FaStoreAlt} color="teal.500" />
                       <Text>Tiendas asignadas</Text>
@@ -162,11 +157,7 @@ const PedidoModal = ({
                 </FormControl>
 
                 <FormControl flex="1" isDisabled={isTienda1Disabled}>
-                  <FormLabel
-                    fontSize="md"
-                    fontWeight="bold"
-                    color="gray.600" // Ajusta el color para ser consistente
-                  >
+                  <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
                     <HStack>
                       <Icon as={FaStoreAlt} color="teal.500" />
                       <Text>Todas las tiendas</Text>
@@ -184,7 +175,7 @@ const PedidoModal = ({
             </VStack>
           ) : (
             <Box>
-              <Text fontSize="lg" fontWeight="medium" mb={3} textAlign="center">
+              <Text fontSize="md" fontWeight="medium" mb={3} textAlign="center">
                 Agregue productos al pedido:
               </Text>
             </Box>
@@ -192,7 +183,7 @@ const PedidoModal = ({
         </ModalBody>
 
         <ModalFooter justifyContent="center">
-          <HStack spacing={4}>
+          <HStack spacing={4} wrap="wrap" justify="center">
             <Button
               colorScheme="blue"
               onClick={() => {
@@ -210,32 +201,38 @@ const PedidoModal = ({
                   });
                 }
               }}
-              size="sm"
+              size="sm" // Botón más pequeño
+              px={3} // Padding reducido
+              py={2}
+              fontSize="sm"
+              width="auto" // Ajuste automático al texto
               variant="outline"
             >
               Copiar Último Pedido
             </Button>
             <Button
-              colorScheme="teal"
-              size="lg"
-              onClick={handleSubmit}
-              isLoading={isLoading}
-              spinner={<Spinner size="sm" color="white" />}
-              _hover={{ transform: "scale(1.1)", boxShadow: "lg" }}
-            >
-              {isPedidoFinalizado ? "Agregar" : "Guardar"}
-            </Button>
-            <Button
               variant="outline"
-              size="lg"
+              size="sm"
               onClick={() => {
                 onClose();
                 resetForm();
                 clearTienda();
               }}
-              _hover={{ transform: "scale(1.1)", boxShadow: "lg" }}
+              px={4}
+              py={2}
             >
               Cancelar
+            </Button>
+            <Button
+              colorScheme="teal"
+              size="sm"
+              onClick={handleSubmit}
+              isLoading={isLoading}
+              spinner={<Spinner size="xs" color="white" />}
+              px={4}
+              py={2}
+            >
+              {isPedidoFinalizado ? "Agregar" : "Guardar"}
             </Button>
           </HStack>
         </ModalFooter>
