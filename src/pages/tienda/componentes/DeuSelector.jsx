@@ -9,18 +9,16 @@ import {
   AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
 
-import { tablaDeudores } from "../../../store/Deus/thunks"; // Actualiza tu ruta según tu estructura
+import { tablaDeudores } from "../../../store/Deus/thunks";
 
 const DeuSelector = ({ ciudadId, onSelect }) => {
   const dispatch = useDispatch();
   const { deudores } = useSelector((state) => state.deudores);
 
   useEffect(() => {
-    // Si hay una ciudad seleccionada, obtener los deudores vinculados a esa ciudad
-    if (ciudadId) {
-      dispatch(tablaDeudores({ ciudadId })); // Filtra los deudores por ciudadId
-    }
-  }, [dispatch, ciudadId]);
+    // Cargar todos los deudores al iniciar
+    dispatch(tablaDeudores());
+  }, [dispatch]);
 
   const handleSelectDeudor = (deudor) => {
     onSelect({
@@ -30,13 +28,18 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
     });
   };
 
+  // Filtrar los deudores si hay ciudadId
+  const deudoresFiltrados = ciudadId
+    ? deudores.filter((deu) => deu.ciudadId === parseInt(ciudadId, 10))
+    : deudores;
+
   return (
     <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
       <AutoComplete openOnFocus>
         <AutoCompleteInput variant="outline" placeholder="Seleccione un deudor" />
         <AutoCompleteList>
-          {deudores.length > 0 ? (
-            deudores.map((deu) => (
+          {deudoresFiltrados.length > 0 ? (
+            deudoresFiltrados.map((deu) => (
               <AutoCompleteItem
                 key={`option-${deu.id}`}
                 value={`${deu.correlativo} - ${deu.nombre}`}
@@ -58,9 +61,9 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
         </AutoCompleteList>
       </AutoComplete>
       <FormHelperText mt="2">
-        {deudores.length > 0
+        {deudoresFiltrados.length > 0
           ? "Seleccione el deudor para esta tienda"
-          : "No hay deudores vinculados a esta ciudad"}
+          : "No hay deudores disponibles"}
       </FormHelperText>
     </Flex>
   );
@@ -68,8 +71,8 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
 
 // Validación de PropTypes
 DeuSelector.propTypes = {
-  ciudadId: PropTypes.string.isRequired,  // Verifica que el ID de la ciudad es requerido
-  // onSelect: PropTypes.func.isRequired,  // La función onSelect es requerida
+  ciudadId: PropTypes.string, // Opcional para que no dependa siempre de `ciudadId`
+  onSelect: PropTypes.func.isRequired, // La función onSelect es requerida
 };
 
 export default DeuSelector;

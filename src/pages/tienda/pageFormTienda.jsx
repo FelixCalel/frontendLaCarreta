@@ -106,6 +106,8 @@ const PageFormTienda = () => {
       ...currentTienda,
       deudorCorrelativo: currentTienda.deudorCorrelativo,
       nombreDeu: currentTienda.nombreDeu,
+      ciudadId: parseInt(currentTienda.ciudadId, 10), // Convertir a número
+      rutaId: parseInt(currentTienda.rutaId, 10), // Convertir a número
       zona: currentTienda.zona,
     };
 
@@ -131,12 +133,16 @@ const PageFormTienda = () => {
   const handleEdit = (tienda) => {
     setCurrentTienda({
       ...tienda,
-      deudorCorrelativo: tienda.deudorCorrelativo, // Cargar el correlativo correctamente al editar
-      nombreDeu: tienda.nombreDeu, // Cargar el nombre también
+      zona: tienda.zona,
+      ciudadId: tienda.ciudadId.toString(), // Convertir a string si es necesario para el selector
+      rutaId: tienda.rutaId.toString(), // Convertir a string
+      deudorCorrelativo: tienda.deudorCorrelativo,
+      nombreDeu: tienda.nombreDeu,
     });
     setIsEditMode(true);
     onOpen();
   };
+
 
   const handleDeudorSelect = (deudor) => {
     setCurrentTienda((prevState) => ({
