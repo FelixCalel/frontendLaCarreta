@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import NavBar from '../../components/NavBar';
 import MenuPrincipalD from '../../components/MenuPrincipalD';
-import { Box, Flex, Heading, Text, Stack, Button } from '@chakra-ui/react';
+import { Box, Flex, Heading, Text, Stack } from '@chakra-ui/react';
 
 const HomePage = () => {
   const [nombreUsuario, setNombreUsuario] = useState('');
