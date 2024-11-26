@@ -37,6 +37,7 @@ export const tablaDetalleOrden = createAsyncThunk(
 export const addNewDetalleOrden = createAsyncThunk(
   'detalleOrden/addNewDetalleOrden',
   async (newDetalleOrden) => {
+    console.log("Aca se crea un detalle:", newDetalleOrden);
     const response = await axios.post(`${BASE_URL}/detalle/pedido/create`, newDetalleOrden);
     return response.data;
   }
@@ -53,8 +54,6 @@ export const deleteDetalleOrden = createAsyncThunk(
 );
 
 
-
-// Update DetalleOrden
 // Update DetalleOrden
 export const updateDetalleOrden = createAsyncThunk(
   'detalleOrden/updateDetalleOrden',
@@ -83,6 +82,7 @@ export const getDetalleOrdenByPedidoId = createAsyncThunk(
     console.log("Solicitando detalles del pedido con ID:", pedidoId);
     const response = await axios.get(`${BASE_URL}/detalle/pedido/listar/${pedidoId}`);
     const data = response.data;
+    console.log("Detalles recibidos del pedido:", data);
     data.sort((a, b) => a.id - b.id); // Ordenar los datos
     return data;
   }
@@ -91,15 +91,15 @@ export const getDetalleOrdenByPedidoId = createAsyncThunk(
 // Fetch pedidos comunes por usuarioId
 export const getPedidosComunesByUsuarioId = createAsyncThunk(
   'detalleOrden/fetchPedidosComunesByUsuarioId',
-  async ({ deudorId, pedidoId }, { rejectWithValue }) => {
+  async ({ deudorId, pedidoId, tiendaId }, { rejectWithValue }) => {
     try {
       deudorId = Number(deudorId);
       pedidoId = Number(pedidoId);
 
-      console.log("Parámetros enviados al backend:", { deudorId, pedidoId });
+      console.log("Parámetros enviados al backend:", { deudorId, pedidoId, tiendaId });
 
       const response = await axios.get(
-        `${BASE_URL}/detalle/pedido/pedidosComunes/${deudorId}/${pedidoId}`
+        `${BASE_URL}/detalle/pedido/pedidosComunes/${deudorId}/${pedidoId}/${tiendaId}`
       );
 
       const data = response.data;

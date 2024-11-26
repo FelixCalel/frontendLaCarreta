@@ -12,17 +12,13 @@ import {
   useColorModeValue,
   Flex,
   Input,
-  Button,
-  useToast,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { tablaDeudores,  } from "../../store/Deus/thunks";
-import { sincronizarClientes  } from "../../store/Empresa/thunks"
+import { tablaDeudores } from "../../store/Deus/thunks";
 import Pagination from "../../components/pagination";
 
 const PageDeudores = () => {
   const dispatch = useDispatch();
-  const toast = useToast();
   const { deudores, status, error } = useSelector((state) => state.deudores);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState(""); // Estado para el campo de búsqueda
@@ -49,29 +45,6 @@ const PageDeudores = () => {
   const tableBg = useColorModeValue("white", "gray.800");
   const rowHoverBg = useColorModeValue("blue.50", "blue.900");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-
-  // Manejo de sincronización
-  const handleSincronizarClientes = async () => {
-    try {
-      await dispatch(sincronizarClientes ()).unwrap();
-      toast({
-        title: "Sincronización exitosa",
-        description: "Los clientes han sido sincronizados correctamente.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      dispatch(tablaDeudores()); // Refrescar los datos
-    } catch (err) {
-      toast({
-        title: "Error al sincronizar",
-        description: err.message || "Ocurrió un error al sincronizar los clientes.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
 
   if (status === "loading") {
     return (
@@ -103,7 +76,7 @@ const PageDeudores = () => {
 
   return (
     <Box padding="20px" maxWidth="1200px" margin="0 auto">
-      {/* Barra de búsqueda y botón de sincronización */}
+      {/* Barra de búsqueda */}
       <Flex justify="space-between" mb="20px" alignItems="center">
         <Text fontSize="2xl" fontWeight="bold" color="blue.600">
           Gestión de Deudores
@@ -116,12 +89,6 @@ const PageDeudores = () => {
             width="300px"
             borderColor="gray.400"
           />
-          <Button
-            colorScheme="blue"
-            onClick={handleSincronizarClientes}
-          >
-            Sincronizar Clientes
-          </Button>
         </Flex>
       </Flex>
 
@@ -139,6 +106,7 @@ const PageDeudores = () => {
             <Th color="white">ID</Th>
             <Th color="white">Nombre</Th>
             <Th color="white">Correlativo</Th>
+            <Th color="white">Estado</Th> {/* Nueva columna para el estado */}
           </Tr>
         </Thead>
         <Tbody>
@@ -154,11 +122,11 @@ const PageDeudores = () => {
               <Td>{index + 1 + (currentPage - 1) * itemsPerPage}</Td>
               <Td fontWeight="bold">{deudor.nombre}</Td>
               <Td>{deudor.correlativo}</Td>
+              <Td>{deudor.estaActivo === "Y" ? "Activo" : "Negativo"}</Td> {/* Muestra el estado */}
             </Tr>
           ))}
         </Tbody>
       </Table>
-
       {/* Paginación */}
       <Pagination
         currentPage={currentPage}

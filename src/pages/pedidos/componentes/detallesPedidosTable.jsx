@@ -52,77 +52,93 @@ const ProductosTable = ({ pedidoId, deudorId }) => {
 
   useEffect(() => {
     const cargarDetallesPedido = async () => {
-        try {
-            setIsLoading(true);
-
-            const detalles = await dispatch(
-                getDetalleOrdenByPedidoId(pedidoId)
-            ).unwrap();
-
-            setProductos(detalles);
-            setProductosCargados(true);
-
-            sessionStorage.setItem(
-                `productos_${pedidoId}`,
-                JSON.stringify(detalles)
-            );
-        } catch (error) {
-            console.error("Error al cargar los detalles del pedido:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    if (pedidoId) {
-        cargarDetallesPedido();
-    }
-}, [pedidoId, dispatch]);
-
-
-  useEffect(() => {
-    const cargarProductosComunes = async () => {
       try {
         setIsLoading(true);
 
-        // Verificar si los productos ya están en sessionStorage
-        const productosGuardados = sessionStorage.getItem(
-          `productos_comunes_${pedidoId}`
+        // Verificar si los detalles del pedido están en sessionStorage
+        const detallesGuardados = sessionStorage.getItem(
+          `productos_${pedidoId}`
         );
-        if (productosGuardados) {
-          const productosGuardadosParsed = JSON.parse(productosGuardados);
-          setProductos(productosGuardadosParsed);
+
+        if (detallesGuardados) {
+          const detallesGuardadosParsed = JSON.parse(detallesGuardados);
+          setProductos(detallesGuardadosParsed);
           setProductosCargados(true);
           setIsLoading(false);
           return;
         }
 
-        // Cargar los productos comunes desde la API usando deudorId
-        const productosComunes = await dispatch(
-          getPedidosComunesByUsuarioId({
-            deudorId: Number(deudorId),
-            pedidoId: Number(pedidoId),
-          })
+        // Cargar solo los detalles del pedido desde la API
+        const detalles = await dispatch(
+          getDetalleOrdenByPedidoId(pedidoId)
         ).unwrap();
 
-        setProductos(productosComunes);
+        setProductos(detalles);
         setProductosCargados(true);
 
         // Guardar en sessionStorage
         sessionStorage.setItem(
-          `productos_comunes_${pedidoId}`,
-          JSON.stringify(productosComunes)
+          `productos_${pedidoId}`,
+          JSON.stringify(detalles)
         );
       } catch (error) {
-        console.error("Error al cargar los productos comunes:", error);
+        console.error("Error al cargar los detalles del pedido:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (!productosCargados && deudorId && pedidoId) {
-      cargarProductosComunes();
+    if (deudorId && pedidoId && !productosCargados) {
+      cargarDetallesPedido();
     }
-  }, [deudorId, pedidoId, productosCargados, dispatch]);
+  }, [dispatch, deudorId, pedidoId, productosCargados]);
+
+useEffect(() => {
+  const cargarProductosComunes = async () => {
+    try {
+      setIsLoading(true);
+
+      // Verificar si los productos ya están en sessionStorage
+      const productosGuardados = sessionStorage.getItem(
+        `productos_comunes_${pedidoId}`
+      );
+      if (productosGuardados) {
+        const productosGuardadosParsed = JSON.parse(productosGuardados);
+        setProductos(productosGuardadosParsed);
+        setProductosCargados(true);
+        setIsLoading(false);
+        return;
+      }
+
+      // Cargar los productos comunes desde la API usando deudorId
+      const productosComunes = await dispatch(
+        getPedidosComunesByUsuarioId({
+          deudorId: Number(deudorId),
+          pedidoId: Number(pedidoId),
+        })
+      ).unwrap();
+
+      setProductos(productosComunes);
+      setProductosCargados(true);
+
+      // Guardar en sessionStorage
+      sessionStorage.setItem(
+        `productos_comunes_${pedidoId}`,
+        JSON.stringify(productosComunes)
+      );
+    } catch (error) {
+      console.error("Error al cargar los productos comunes:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!productosCargados && deudorId && pedidoId) {
+    cargarProductosComunes();
+  }
+}, [deudorId, pedidoId, productosCargados, dispatch]);
+
+  
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -147,56 +163,102 @@ const ProductosTable = ({ pedidoId, deudorId }) => {
 
   const handleAddProducto = async () => {
     if (newProducto.productoId && newProducto.cantidad >= 0) {
-        try {
-            const newDetalleOrden = {
-                pedidoId,
-                productoId: newProducto.productoId,
-                cantidad: newProducto.cantidad,
-                precio: 0,
-            };
-
-            await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
-
-            // Recargar los detalles desde el backend
-            const detallesActualizados = await dispatch(
-                getDetalleOrdenByPedidoId(pedidoId)
-            ).unwrap();
-
-            setProductos(detallesActualizados);
-
-            sessionStorage.setItem(
-                `productos_${pedidoId}`,
-                JSON.stringify(detallesActualizados)
-            );
-
-            toast({
-                title: "Producto agregado",
-                description: "El producto ha sido agregado exitosamente.",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-        } catch (error) {
-            console.error("Error al guardar el detalle del pedido:", error);
-            toast({
-                title: "Error",
-                description: "Hubo un problema al agregar el producto.",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-        }
-    } else {
+      // Validar que la cantidad no exceda la cantidad disponible
+      if (newProducto.cantidad > newProducto.cantidadDisponible) {
         toast({
-            title: "Error",
-            description: "Selecciona un producto y una cantidad válida.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
+          title: "Cantidad excedida",
+          description: `No puedes agregar más de ${newProducto.cantidadDisponible} unidades para este producto.`,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
         });
-    }
-};
+        return;
+      }
 
+      // **Nueva Validación**: Comprobar si el producto ya existe en la lista de detalles actuales
+      const productoExistente = productos.some(
+        (prod) => prod.productoId === newProducto.productoId
+      );
+
+      if (productoExistente) {
+        toast({
+          title: "Producto ya agregado",
+          description: "Este producto ya existe en los detalles del pedido.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      try {
+        const newDetalleOrden = {
+          pedidoId,
+          productoId: newProducto.productoId,
+          cantidad: newProducto.cantidad,
+          precio: 0, // Si hay un precio que manejar, este se debe actualizar
+        };
+
+        // Enviar el detalle del producto al backend
+        const result = await dispatch(
+          addNewDetalleOrden(newDetalleOrden)
+        ).unwrap();
+        if (!result || !result.id) {
+          throw new Error("El backend no devolvió un detallePedidoId válido.");
+        }
+
+        const detalleConId = {
+          ...result,
+          detallePedidoId: result.id, // Mapear id a detallePedidoId
+        };
+
+        // Actualizar los productos en el estado local
+        const nuevosProductos = [...productos, detalleConId];
+        setProductos(nuevosProductos);
+
+        // Guardar los datos actualizados en el sessionStorage
+        sessionStorage.setItem(
+          `productos_${pedidoId}`,
+          JSON.stringify(nuevosProductos)
+        );
+
+        // Reiniciar el formulario para agregar un nuevo producto
+        setNewProducto({
+          productoId: "",
+          nombreProducto: "",
+          cantidad: 0,
+          cantidadDisponible: 0,
+          codigo: "",
+        });
+        setResetFields(true); // Reiniciar campos del formulario
+
+        toast({
+          title: "Producto agregado",
+          description: "El producto ha sido agregado exitosamente.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        console.error("Error al guardar el detalle del pedido:", error);
+        toast({
+          title: "Error",
+          description: "Hubo un problema al agregar el producto.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } else {
+      toast({
+        title: "Error",
+        description: "Selecciona un producto y una cantidad válida.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   const handleRemoveProducto = async (detallePedidoId) => {
     if (!detallePedidoId) {
@@ -314,9 +376,9 @@ const ProductosTable = ({ pedidoId, deudorId }) => {
           {productos.length > 0 ? (
             isMobile ? (
               <VStack spacing={1} align="stretch">
-                {productos.map((producto, index) => (
+                {productos.map((producto) => (
                   <MotionBox
-                    key={producto.detallePedidoId || index}
+                    key={producto.detallePedidoId}
                     p={2}
                     boxShadow="sm"
                     borderWidth="1px"
@@ -442,7 +504,7 @@ const ProductosTable = ({ pedidoId, deudorId }) => {
                           size="sm"
                           width="50px"
                           maxWidth="50px"
-                          max={producto.cantidadDisponible || 0}
+                          max={producto.cantidadDisponible}
                           style={{
                             margin: "0",
                             padding: "1px",

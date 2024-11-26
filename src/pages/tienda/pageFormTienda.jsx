@@ -10,6 +10,8 @@ import {
   Spinner,
   Text,
   Button,
+  Input,
+  Select,
   useDisclosure,
   Modal,
   ModalOverlay,
@@ -18,7 +20,6 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
-  Input,
   FormControl,
   FormLabel,
   FormErrorMessage,
@@ -57,6 +58,11 @@ const PageFormTienda = () => {
   });
   const [errors, setErrors] = useState({});
   const [, setSelectedDeu] = useState(currentTienda.deudorId);
+
+  // Estados para los filtros
+  const [filtroCiudad, setFiltroCiudad] = useState("");
+  const [filtroRuta, setFiltroRuta] = useState("");
+  const [filtroZona, setFiltroZona] = useState("");
 
   useEffect(() => {
     if (status === "idle") {
@@ -143,7 +149,6 @@ const PageFormTienda = () => {
     onOpen();
   };
 
-
   const handleDeudorSelect = (deudor) => {
     setCurrentTienda((prevState) => ({
       ...prevState,
@@ -163,6 +168,15 @@ const PageFormTienda = () => {
       return "Fecha inválida";
     }
   };
+
+  // Filtro los datos basados en los valores de los filtros
+  const filteredData = data.filter((tienda) => {
+    return (
+      (filtroCiudad ? tienda.ciudadId.toString() === filtroCiudad : true) &&
+      (filtroRuta ? tienda.rutaId.toString() === filtroRuta : true) &&
+      (filtroZona ? tienda.zona.toLowerCase().includes(filtroZona.toLowerCase()) : true)
+    );
+  });
 
   if (
     status === "loading" ||
@@ -204,6 +218,48 @@ const PageFormTienda = () => {
 
   return (
     <Box padding="20px" overflowX="auto">
+      {/* Filtros */}
+      <Box mb="20px" display="flex" gap={4}>
+        <FormControl>
+          <FormLabel>Ciudad</FormLabel>
+          <Select
+            value={filtroCiudad}
+            onChange={(e) => setFiltroCiudad(e.target.value)}
+            placeholder="Seleccionar ciudad"
+          >
+            {data?.map((tienda) => (
+              <option key={tienda.ciudadId} value={tienda.ciudadId}>
+                {tienda.nombreCiudad}
+              </option>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl>
+          <FormLabel>Ruta</FormLabel>
+          <Select
+            value={filtroRuta}
+            onChange={(e) => setFiltroRuta(e.target.value)}
+            placeholder="Seleccionar ruta"
+          >
+            {data?.map((tienda) => (
+              <option key={tienda.rutaId} value={tienda.rutaId}>
+                {tienda.nombreRuta}
+              </option>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl>
+          <FormLabel>Zona</FormLabel>
+          <Input
+            value={filtroZona}
+            onChange={(e) => setFiltroZona(e.target.value)}
+            placeholder="Buscar zona"
+          />
+        </FormControl>
+      </Box>
+
       <Button
         colorScheme="green"
         onClick={() => {
@@ -223,6 +279,7 @@ const PageFormTienda = () => {
       >
         Agregar Tienda
       </Button>
+
       <Table variant="striped" colorScheme="teal" size="sm">
         <Thead>
           <Tr>
@@ -240,7 +297,7 @@ const PageFormTienda = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {data.map((tienda) => (
+          {filteredData.map((tienda) => (
             <Tr key={tienda.id}>
               <Td>{tienda.id}</Td>
               <Td>{tienda.nombre}</Td>

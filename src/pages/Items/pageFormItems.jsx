@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Spinner,
@@ -11,6 +11,7 @@ import {
   Td,
   useColorModeValue,
   Flex,
+  Input,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { tablaItems } from "../../store/items/thunks";
@@ -20,6 +21,7 @@ const PageItems = () => {
   const dispatch = useDispatch();
   const { items, status, error } = useSelector((state) => state.items);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState(""); // Estado para el campo de búsqueda
   const itemsPerPage = 15;
 
   useEffect(() => {
@@ -28,9 +30,18 @@ const PageItems = () => {
     }
   }, [dispatch, status]);
 
-  const filteredData = Array.isArray(items)
-    ? items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-    : [];
+  // Filtro por nombre o código
+  const filteredData = items?.filter(
+    (item) =>
+      item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
+
+  // Paginación
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const tableBg = useColorModeValue("white", "gray.800");
   const rowHoverBg = useColorModeValue("blue.50", "blue.900");
@@ -56,10 +67,20 @@ const PageItems = () => {
 
   return (
     <Box padding="20px" maxWidth="1200px" margin="10 auto">
+      {/* Barra de búsqueda */}
       <Flex justify="space-between" mb="20px" alignItems="center">
         <Text fontSize="2xl" fontWeight="bold" color="blue.600">
           Gestión de Items
         </Text>
+        <Flex gap={4}>
+          <Input
+            placeholder="Buscar por nombre o código"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            width="300px"
+            borderColor="gray.400"
+          />
+        </Flex>
       </Flex>
 
       {/* Tabla */}
@@ -78,10 +99,11 @@ const PageItems = () => {
             <Th color="white">Código</Th>
             <Th color="white">Código Almacén</Th>
             <Th color="white">Cantidad Disponible</Th>
+            <Th color="white">Estado</Th> {/* Nueva columna para el estado */}
           </Tr>
         </Thead>
         <Tbody>
-          {filteredData.map((item, index) => (
+          {paginatedData.map((item, index) => (
             <Tr
               key={item.id}
               _hover={{
@@ -95,14 +117,16 @@ const PageItems = () => {
               <Td>{item.codigo}</Td>
               <Td>{item.codigoAlmacen}</Td>
               <Td>{item.cantidadDisponible}</Td>
+              <Td>{item.estaActivo ? "Activo" : "Inactivo"}</Td> {/* Muestra el estado */}
             </Tr>
           ))}
         </Tbody>
       </Table>
 
+      {/* Paginación */}
       <Pagination
         currentPage={currentPage}
-        totalItems={items?.length || 0}
+        totalItems={filteredData.length || 0}
         itemsPerPage={itemsPerPage}
         onPageChange={(page) => setCurrentPage(page)}
       />

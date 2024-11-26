@@ -26,7 +26,9 @@ const PedidosTable = ({
   handleToggleDetails,
   handleDeletePedido,
   showRealizarPedidoConfirmation,
-  usuarioId,
+  deudorId,
+  tiendaId,
+
 }) => {
   return pedidosUsuario.length > 0 ? (
     isMobile ? (
@@ -94,7 +96,7 @@ const PedidosTable = ({
             </HStack>
             {isDetailsOpen === pedido.id && (
               <Box mt={2}>
-                <ProductosTable pedidoId={pedido.id} usuarioId={usuarioId} />
+                <ProductosTable pedidoId={pedido.id} deudorId={deudorId} tiendaId={tiendaId}/>
               </Box>
             )}
           </Box>
@@ -161,7 +163,8 @@ const PedidosTable = ({
                   <Td colSpan={5}>
                     <ProductosTable
                       pedidoId={pedido.id}
-                      usuarioId={usuarioId}
+                      deudorId={deudorId}
+                      tiendaId={tiendaId}
                     />
                   </Td>
                 </Tr>
@@ -195,6 +198,8 @@ PedidosTable.propTypes = {
   showRealizarPedidoConfirmation: PropTypes.func.isRequired,
   cargarDetalles: PropTypes.func,
   usuarioId: PropTypes.number.isRequired,
+  deudorId: PropTypes.number.isRequired,
+  tiendaId: PropTypes.number.isRequired,
 };
 
 export default PedidosTable;
