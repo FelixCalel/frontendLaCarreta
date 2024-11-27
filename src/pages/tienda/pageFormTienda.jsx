@@ -172,9 +172,11 @@ const PageFormTienda = () => {
   // Filtro los datos basados en los valores de los filtros
   const filteredData = data.filter((tienda) => {
     return (
-      (filtroCiudad ? tienda.ciudadId.toString() === filtroCiudad : true) &&
-      (filtroRuta ? tienda.rutaId.toString() === filtroRuta : true) &&
-      (filtroZona ? tienda.zona.toLowerCase().includes(filtroZona.toLowerCase()) : true)
+      (filtroCiudad ? tienda.nombreCiudad === filtroCiudad : true) &&
+      (filtroRuta ? tienda.nombreRuta === filtroRuta : true) &&
+      (filtroZona
+        ? tienda.zona.toLowerCase().includes(filtroZona.toLowerCase())
+        : true)
     );
   });
 
@@ -218,48 +220,6 @@ const PageFormTienda = () => {
 
   return (
     <Box padding="20px" overflowX="auto">
-      {/* Filtros */}
-      <Box mb="20px" display="flex" gap={4}>
-        <FormControl>
-          <FormLabel>Ciudad</FormLabel>
-          <Select
-            value={filtroCiudad}
-            onChange={(e) => setFiltroCiudad(e.target.value)}
-            placeholder="Seleccionar ciudad"
-          >
-            {data?.map((tienda) => (
-              <option key={tienda.ciudadId} value={tienda.ciudadId}>
-                {tienda.nombreCiudad}
-              </option>
-            ))}
-          </Select>
-        </FormControl>
-
-        <FormControl>
-          <FormLabel>Ruta</FormLabel>
-          <Select
-            value={filtroRuta}
-            onChange={(e) => setFiltroRuta(e.target.value)}
-            placeholder="Seleccionar ruta"
-          >
-            {data?.map((tienda) => (
-              <option key={tienda.rutaId} value={tienda.rutaId}>
-                {tienda.nombreRuta}
-              </option>
-            ))}
-          </Select>
-        </FormControl>
-
-        <FormControl>
-          <FormLabel>Zona</FormLabel>
-          <Input
-            value={filtroZona}
-            onChange={(e) => setFiltroZona(e.target.value)}
-            placeholder="Buscar zona"
-          />
-        </FormControl>
-      </Box>
-
       <Button
         colorScheme="green"
         onClick={() => {
@@ -279,6 +239,50 @@ const PageFormTienda = () => {
       >
         Agregar Tienda
       </Button>
+      <Box mb="20px" display="flex" gap={4}>
+        <FormControl>
+          <FormLabel>Ciudad</FormLabel>
+          <Select
+            value={filtroCiudad}
+            onChange={(e) => setFiltroCiudad(e.target.value)}
+            placeholder="Seleccionar ciudad"
+          >
+            {Array.from(new Set(data.map((tienda) => tienda.nombreCiudad))).map(
+              (nombreCiudad, index) => (
+                <option key={index} value={nombreCiudad}>
+                  {nombreCiudad}
+                </option>
+              )
+            )}
+          </Select>
+        </FormControl>
+
+        <FormControl>
+          <FormLabel>Ruta</FormLabel>
+          <Select
+            value={filtroRuta}
+            onChange={(e) => setFiltroRuta(e.target.value)}
+            placeholder="Seleccionar ruta"
+          >
+            {Array.from(new Set(data.map((tienda) => tienda.nombreRuta))).map(
+              (nombreRuta, index) => (
+                <option key={index} value={nombreRuta}>
+                  {nombreRuta}
+                </option>
+              )
+            )}
+          </Select>
+        </FormControl>
+
+        <FormControl>
+          <FormLabel>Zona</FormLabel>
+          <Input
+            value={filtroZona}
+            onChange={(e) => setFiltroZona(e.target.value)}
+            placeholder="Buscar zona"
+          />
+        </FormControl>
+      </Box>
 
       <Table variant="striped" colorScheme="teal" size="sm">
         <Thead>

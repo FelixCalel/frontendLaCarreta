@@ -18,7 +18,7 @@ import {
   FaShieldAlt,
   FaSignOutAlt,
   FaBoxes, // Icono para Módulos
-  FaThList
+  FaThList,
 } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -101,17 +101,21 @@ export const MenuPerfil = () => {
               Perfil
             </MenuItem>
 
+            {/* Mostrar la opción de "Usuarios" solo para el rol 1 (Admin) y rol 3 (Ventas) */}
+            {["1", "3"].includes(roleId) && (
+              <MenuItem
+                as={Link}
+                to="/admin/usuarios"
+                icon={<FaUsers />}
+                _hover={{ bg: hoverBg, color: "white" }}
+              >
+                Usuarios
+              </MenuItem>
+            )}
+
+            {/* Opciones adicionales solo para el rol 1 (Admin) */}
             {roleId === "1" && (
               <>
-                {/* Opciones de administración */}
-                <MenuItem
-                  as={Link}
-                  to="/admin/usuarios"
-                  icon={<FaUsers />}
-                  _hover={{ bg: hoverBg, color: "white" }}
-                >
-                  Usuarios
-                </MenuItem>
                 <MenuItem
                   as={Link}
                   to="/admin/listarRoles"
