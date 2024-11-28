@@ -148,13 +148,12 @@ const PedidoModal = ({
                   </FormLabel>
                   <TiendaSelector
                     rutaIds={usuarioRutas || []} // Pasando las rutas asignadas al usuario
-                    paisId={Number(paisId)}
-                    value={currentPedido.tiendaId}
-                    onChange={handleTiendaChange}
-                    deudorId={currentPedido.deudorId}
-                    ciudadId={currentPedido.ciudadId}
-                    isRutaFilter={true}
-                    rutasUsuario={usuarioRutas} // Asegúrate de pasar las rutas del usuario
+                    paisId={Number(paisId)} // ID del país
+                    value={currentPedido.tiendaId} // Tienda seleccionada
+                    onChange={handleTiendaChange} // Función que maneja el cambio de tienda
+                    deudorId={currentPedido.deudorId} // ID del deudor
+                    ciudadId={currentPedido.ciudadId} // ID de la ciudad
+                    isRutaFilter={true} // Habilitar filtro por rutas
                   />
                 </FormControl>
                 <FormControl flex="1" isDisabled={isTienda1Disabled}>
@@ -165,11 +164,11 @@ const PedidoModal = ({
                     </HStack>
                   </FormLabel>
                   <TiendaSelector
-                    rutaIds={[]}
-                    paisId={Number(paisId)}
-                    value={currentPedido.tiendaId2}
-                    onChange={handleTiendaChange2}
-                    isRutaFilter={false}
+                    rutaIds={[]} // No se pasan rutas para el segundo selector
+                    paisId={Number(paisId)} // ID del país
+                    value={currentPedido.tiendaId2} // Tienda seleccionada
+                    onChange={handleTiendaChange2} // Función que maneja el cambio de tienda
+                    isRutaFilter={false} // Deshabilitar filtro por rutas
                   />
                 </FormControl>
               </HStack>

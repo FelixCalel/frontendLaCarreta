@@ -26,44 +26,39 @@ const TiendaSelector = ({
   }, [dispatch]);
 
   // Lógica para filtrar las tiendas
-useEffect(() => {
-  const fetchTiendas = async () => {
-    setLoading(true); // Mostrar estado de carga
-    let tiendasFiltradas = [];
-
-    // Si ciudadId y deudorId están presentes, filtrar las tiendas
-    if (ciudadId && deudorId) {
-      tiendasFiltradas = tiendasRedux.filter(
-        (tienda) => 
-          tienda.ciudadId === ciudadId && 
-          tienda.deudorId === deudorId && 
-          (rutaIds.length === 0 || rutaIds.includes(tienda.rutaId)) // Filtrar por rutas asignadas
-      );
-    }
-    // Si el filtro por ruta está activado y el usuario tiene rutas asignadas
-    else if (isRutaFilter && rutaIds.length > 0) {
-      for (let rutaId of rutaIds) {
-        const response = await axios.get(`${BASE_URL}/tienda/by-ruta/${rutaId}`);
-        if (response && response.data) {
-          tiendasFiltradas = tiendasFiltradas.concat(response.data);
+  useEffect(() => {
+    const fetchTiendas = async () => {
+      setLoading(true); // Mostrar estado de carga
+      let tiendasFiltradas = [];
+  
+      // Si no se asigna una ruta y no es un filtro por rutas, no aplicar filtro
+      if (!isRutaFilter) {
+        if (paisId) {
+          // Si es el segundo selector, solo filtra por país
+          const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
+          if (response && response.data) {
+            tiendasFiltradas = response.data;
+          }
+        }
+      } else {
+        // Lógica de filtrado por ruta (como ya lo tienes)
+        if (ciudadId && deudorId) {
+          tiendasFiltradas = tiendasRedux.filter(
+            (tienda) => 
+              tienda.ciudadId === ciudadId && 
+              tienda.deudorId === deudorId && 
+              (rutaIds.length === 0 || rutaIds.includes(tienda.rutaId))
+          );
         }
       }
-    } 
-    // Filtrar por país si el país está presente
-    else if (paisId) {
-      const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
-      if (response && response.data) {
-        tiendasFiltradas = response.data;
-      }
-    }
-
-    setTiendas(tiendasFiltradas);
-    setLoading(false); // Desactivar estado de carga
-  };
-
-  fetchTiendas();
-}, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter, tiendasRedux]);
-
+  
+      setTiendas(tiendasFiltradas);
+      setLoading(false); // Desactivar estado de carga
+    };
+  
+    fetchTiendas();
+  }, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter, tiendasRedux]);
+  
 
   // Mostrar un mensaje de carga mientras las tiendas se están obteniendo
   if (loading) {
