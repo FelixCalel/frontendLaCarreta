@@ -16,20 +16,29 @@ const TiendaSelector = ({
   isRutaFilter,
 }) => {
   const dispatch = useDispatch();
-  const [tiendas, setTiendas] = useState([]); 
+  const [tiendas, setTiendas] = useState([]);
   const [loading, setLoading] = useState(true);
   const tiendasRedux = useSelector((state) => state.tiendas.data);
 
   useEffect(() => {
-    dispatch(tablaTienda())
+    dispatch(tablaTienda());
   }, [dispatch]);
 
   useEffect(() => {
     const fetchTiendas = async () => {
-      setLoading(true); 
+      setLoading(true);
       let tiendasFiltradas = [];
-  
+
+      // Verifica si el usuario tiene rutas asignadas
+      if (isRutaFilter && rutaIds.length === 0) {
+        // Si no tiene rutas asignadas, no mostramos ninguna tienda
+        setTiendas([]);
+        setLoading(false);
+        return;
+      }
+
       if (!isRutaFilter) {
+        // Si no hay filtro por ruta, mostramos todas las tiendas disponibles
         if (paisId) {
           const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
           if (response && response.data) {
@@ -37,32 +46,30 @@ const TiendaSelector = ({
           }
         }
       } else {
+        // Filtramos las tiendas según las rutas asignadas al usuario, ciudad y deudor
         if (ciudadId && deudorId) {
           tiendasFiltradas = tiendasRedux.filter(
-            (tienda) => 
-              tienda.ciudadId === ciudadId && 
-              tienda.deudorId === deudorId && 
+            (tienda) =>
+              tienda.ciudadId === ciudadId &&
+              tienda.deudorId === deudorId &&
               (rutaIds.length === 0 || rutaIds.includes(tienda.rutaId))
           );
         }
       }
-  
+
       setTiendas(tiendasFiltradas);
       setLoading(false);
     };
-  
+
     fetchTiendas();
   }, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter, tiendasRedux]);
-  
+
   if (loading) {
     return <select disabled>Cargando tiendas...</select>;
   }
 
   return (
-    <select
-      value={value ? String(value) : ""}
-      onChange={(e) => onChange(parseInt(e.target.value))}
-    >
+    <select value={value ? String(value) : ""} onChange={(e) => onChange(parseInt(e.target.value))}>
       <option value="">Seleccionar tienda</option>
       {tiendas.length > 0 ? (
         tiendas.map((tienda) => (

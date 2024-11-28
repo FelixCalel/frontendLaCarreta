@@ -23,7 +23,7 @@ import {
   ModalBody,
   ModalFooter,
   IconButton,
-  Switch
+  Switch,
 } from "@chakra-ui/react";
 import { FiUserPlus, FiSearch } from "react-icons/fi";
 import axios from "axios";
@@ -68,46 +68,46 @@ export const TablaBusuarios = () => {
         const tiendas = Array.isArray(response.data) ? response.data : [];
         console.log("Tiendas obtenidas:", tiendas);
 
-        // Extrae y filtra las rutas de las tiendas, asegurando que incluyes el paisId
+        // Aseguramos que rutas siempre sea un array
         const rutasExtraidas = tiendas.map((tienda) => ({
           id: tienda.rutaId,
           nombre: tienda.nombreRuta,
           ciudadId: tienda.ciudadId,
-          paisId: tienda.paisId, // Asegúrate de que este campo exista
+          paisId: tienda.paisId,
         }));
-        console.log("Rutas extraídas:", rutasExtraidas);
 
-        const rutasUnicas = rutasExtraidas.filter(
-          (ruta, index, self) =>
-            index === self.findIndex((r) => r.id === ruta.id)
-        );
-
-        setRutas(rutasUnicas); // Actualiza las rutas extraídas en el estado
+        setRutas(rutasExtraidas);
       } catch (error) {
         console.error(
           "Error al obtener las rutas vinculadas a tiendas:",
           error
         );
       }
-    };   
+    };
 
     fetchRutas();
   }, [toast]);
 
   const toggleUsuarioEstado = async (usuarioId, estaActivo) => {
     try {
-      const response = await axios.put(`${BASE_URL}/usuarios/estado/${usuarioId}`, {
-        estaActivo: !estaActivo,
-      });
-  
+      const response = await axios.put(
+        `${BASE_URL}/usuarios/estado/${usuarioId}`,
+        {
+          estaActivo: !estaActivo,
+        }
+      );
+
       const usuarioActualizado = response.data.usuario;
       setUsuarios((prevUsuarios) =>
         prevUsuarios.map((usuario) =>
           usuario.id === usuarioId ? usuarioActualizado : usuario
         )
       );
+
       toast({
-        title: `Usuario ${!estaActivo ? "activado" : "desactivado"} correctamente`,
+        title: `Usuario ${
+          !estaActivo ? "activado" : "desactivado"
+        } correctamente`,
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -134,31 +134,32 @@ export const TablaBusuarios = () => {
         });
         return;
       }
-
+  
       await axios.post(`${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`, {
         rutaId: selectedRoutes,
       });
-
+  
+      // Elimina rutas duplicadas al asignar
       setUsuarios((prevUsuarios) =>
         prevUsuarios.map((usuario) =>
           usuario.id === usuarioId
             ? {
                 ...usuario,
-                rutas: selectedRoutes.map((rutaId) => ({
-                  id: rutaId,
-                })),
+                rutas: [
+                  ...new Set([...usuario.rutas, ...selectedRoutes]),
+                ].map((rutaId) => ({ id: rutaId })),
               }
             : usuario
         )
       );
-
+  
       toast({
         title: "Rutas asignadas correctamente",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-
+  
       onClose();
     } catch (error) {
       console.error("Error al asignar rutas:", error);
@@ -170,13 +171,14 @@ export const TablaBusuarios = () => {
       });
     }
   };
+  
 
   const fetchCiudadesYPaises = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/ciudad/todos`);
-      console.log("Respuesta de la API de ciudades:", response.data); // Asegúrate de que los datos están llegando
+      console.log("Respuesta de la API de ciudades:", response.data);
       if (response.data && Array.isArray(response.data)) {
-        return response.data; // Devuelve las ciudades con sus paisId
+        return response.data;
       } else {
         console.error("No se encontraron ciudades en la respuesta de la API");
         return [];
@@ -189,12 +191,13 @@ export const TablaBusuarios = () => {
 
   const handleOpenAssignRutas = async (usuario) => {
     setSelectedUser(usuario.id);
-    setSelectedRoutes(usuario.rutas.map((ruta) => ruta.id));
+    setSelectedRoutes(
+      usuario.rutas ? usuario.rutas.map((ruta) => ruta.id) : []
+    );
 
-    // Obtener las ciudades con paisId desde la API
     const ciudades = await fetchCiudadesYPaises();
 
-    console.log("Ciudades recibidas:", ciudades); // Verifica aquí si se están recibiendo los datos
+    console.log("Ciudades recibidas:", ciudades);
 
     if (!ciudades || ciudades.length === 0) {
       toast({
@@ -207,20 +210,22 @@ export const TablaBusuarios = () => {
       return;
     }
 
-    // Asignar el paisId a las rutas
-    const rutasConPais = rutas.map((ruta) => {
-      const ciudad = ciudades.find((c) => c.id === ruta.ciudadId);
-      return {
-        ...ruta,
-        paisId: ciudad ? ciudad.paisId : null,
-      };
-    });
+    const rutasConPais =
+      rutas && rutas.length > 0
+        ? rutas.map((ruta) => {
+            const ciudad = ciudades.find((c) => c.id === ruta.ciudadId);
+            return {
+              ...ruta,
+              paisId: ciudad ? ciudad.paisId : null,
+            };
+          })
+        : [];
 
-    // Filtrar las rutas que coincidan con el paisId del usuario
-    const rutasFiltradas = rutasConPais.filter(
-      (ruta) => ruta.paisId === usuario.paisId
-    );
-    setFilteredRutas(rutasFiltradas); // Guardamos las rutas filtradas
+    const rutasFiltradas = Array.from(
+      new Set(rutasConPais.map((ruta) => ruta.id))
+    ).map((id) => rutasConPais.find((ruta) => ruta.id === id));
+
+    setFilteredRutas(rutasFiltradas);
     onOpen();
   };
 
@@ -271,22 +276,21 @@ export const TablaBusuarios = () => {
                     {usuario.nombre} {usuario.apellido}
                   </Td>
                   <Td>{usuario.correo}</Td>
-                  <Td>{usuario.telefono}</Td>
                   <Td>
-                    <Switch
-                      isChecked={usuario.estaActivo}
-                      onChange={() =>
-                        toggleUsuarioEstado(usuario.id, usuario.estaActivo)
-                      }
-                      colorScheme="green"
-                    />
-                  </Td>
-
+                      <Switch
+                        isChecked={usuario.estaActivo}
+                        onChange={() =>
+                          toggleUsuarioEstado(usuario.id, usuario.estaActivo)
+                        }
+                        colorScheme="green"
+                      />
+                    </Td>
+                  <Td>{usuario.telefono}</Td>
                   <Td>
                     <Stack align="center" direction="row">
                       <Button
                         size="sm"
-                        onClick={() => handleOpenAssignRutas(usuario)} // Usar la función de apertura aquí
+                        onClick={() => handleOpenAssignRutas(usuario)}
                         leftIcon={<FiUserPlus />}
                         colorScheme="green"
                         variant="solid"
@@ -302,7 +306,6 @@ export const TablaBusuarios = () => {
         </Table>
       </Box>
 
-      {/* Modal para asignar rutas */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -314,7 +317,7 @@ export const TablaBusuarios = () => {
               selectedRoutes={selectedRoutes}
               setSelectedRoutes={setSelectedRoutes}
               usuarioId={selectedUser}
-              filteredRutas={filteredRutas} // Pasa las rutas filtradas aquí
+              filteredRutas={filteredRutas}
             />
           </ModalBody>
           <ModalFooter>
