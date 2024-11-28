@@ -16,32 +16,27 @@ const TiendaSelector = ({
   isRutaFilter,
 }) => {
   const dispatch = useDispatch();
-  const [tiendas, setTiendas] = useState([]); // Estado para las tiendas filtradas
-  const [loading, setLoading] = useState(true); // Estado para la carga
-  const tiendasRedux = useSelector((state) => state.tiendas.data); // Tiendas del estado de Redux
+  const [tiendas, setTiendas] = useState([]); 
+  const [loading, setLoading] = useState(true);
+  const tiendasRedux = useSelector((state) => state.tiendas.data);
 
-  // Cargar tiendas desde Redux
   useEffect(() => {
-    dispatch(tablaTienda()); // Cargar tiendas si aún no se han cargado
+    dispatch(tablaTienda())
   }, [dispatch]);
 
-  // Lógica para filtrar las tiendas
   useEffect(() => {
     const fetchTiendas = async () => {
-      setLoading(true); // Mostrar estado de carga
+      setLoading(true); 
       let tiendasFiltradas = [];
   
-      // Si no se asigna una ruta y no es un filtro por rutas, no aplicar filtro
       if (!isRutaFilter) {
         if (paisId) {
-          // Si es el segundo selector, solo filtra por país
           const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
           if (response && response.data) {
             tiendasFiltradas = response.data;
           }
         }
       } else {
-        // Lógica de filtrado por ruta (como ya lo tienes)
         if (ciudadId && deudorId) {
           tiendasFiltradas = tiendasRedux.filter(
             (tienda) => 
@@ -53,14 +48,12 @@ const TiendaSelector = ({
       }
   
       setTiendas(tiendasFiltradas);
-      setLoading(false); // Desactivar estado de carga
+      setLoading(false);
     };
   
     fetchTiendas();
   }, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter, tiendasRedux]);
   
-
-  // Mostrar un mensaje de carga mientras las tiendas se están obteniendo
   if (loading) {
     return <select disabled>Cargando tiendas...</select>;
   }
@@ -85,13 +78,13 @@ const TiendaSelector = ({
 };
 
 TiendaSelector.propTypes = {
-  ciudadId: PropTypes.number, // Filtrar por ciudad si está presente
-  deudorId: PropTypes.number, // Filtrar por deudor si está presente
-  rutaIds: PropTypes.arrayOf(PropTypes.number), // Lista de rutas
-  paisId: PropTypes.number.isRequired, // ID del país es obligatorio
+  ciudadId: PropTypes.number,
+  deudorId: PropTypes.number,
+  rutaIds: PropTypes.arrayOf(PropTypes.number),
+  paisId: PropTypes.number.isRequired,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onChange: PropTypes.func.isRequired,
-  isRutaFilter: PropTypes.bool, // Indica si debe filtrar por ruta
+  isRutaFilter: PropTypes.bool,
 };
 
 export default TiendaSelector;
