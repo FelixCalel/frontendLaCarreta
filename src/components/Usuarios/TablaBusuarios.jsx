@@ -23,9 +23,9 @@ import {
   ModalBody,
   ModalFooter,
   IconButton,
-  Switch,
+  Switch
 } from "@chakra-ui/react";
-import { FiSearch } from "react-icons/fi";
+import { FiUserPlus, FiSearch } from "react-icons/fi";
 import axios from "axios";
 import RutaSelector from "./RutaSelector";
 
@@ -41,12 +41,12 @@ export const TablaBusuarios = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
-  // Fetch usuarios
   useEffect(() => {
     const fetchUsuarios = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/usuarios/todos`);
-        setUsuarios(response.data.usuarios || []);
+        console.log("Usuarios obtenidos:", response.data.usuarios);
+        setUsuarios(response.data.usuarios);
       } catch (error) {
         console.error("Error al obtener los usuarios:", error);
         toast({
@@ -57,75 +57,108 @@ export const TablaBusuarios = () => {
         });
       }
     };
+
     fetchUsuarios();
   }, [toast]);
 
-  // Fetch rutas
   useEffect(() => {
     const fetchRutas = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/tienda/todos`);
         const tiendas = Array.isArray(response.data) ? response.data : [];
+        console.log("Tiendas obtenidas:", tiendas);
+
+        // Extrae y filtra las rutas de las tiendas, asegurando que incluyes el paisId
         const rutasExtraidas = tiendas.map((tienda) => ({
           id: tienda.rutaId,
           nombre: tienda.nombreRuta,
           ciudadId: tienda.ciudadId,
-          paisId: tienda.paisId,
+          paisId: tienda.paisId, // Asegúrate de que este campo exista
         }));
+        console.log("Rutas extraídas:", rutasExtraidas);
 
         const rutasUnicas = rutasExtraidas.filter(
-          (ruta, index, self) => index === self.findIndex((r) => r.id === ruta.id)
+          (ruta, index, self) =>
+            index === self.findIndex((r) => r.id === ruta.id)
         );
-        setRutas(rutasUnicas);
+
+        setRutas(rutasUnicas); // Actualiza las rutas extraídas en el estado
       } catch (error) {
-        console.error("Error al obtener las rutas vinculadas a tiendas:", error);
+        console.error(
+          "Error al obtener las rutas vinculadas a tiendas:",
+          error
+        );
       }
-    };
+    };   
+
     fetchRutas();
   }, [toast]);
 
-  // Fetch ciudades y países
-  const fetchCiudadesYPaises = async () => {
+  const toggleUsuarioEstado = async (usuarioId, estaActivo) => {
     try {
-      const response = await axios.get(`${BASE_URL}/ciudad/todos`);
-      return Array.isArray(response.data) ? response.data : [];
-    } catch (error) {
-      console.error("Error al obtener las ciudades y países:", error);
-      return [];
-    }
-  };
-
-  // Asignar rutas al usuario
-  const asignarRutas = async (usuarioId) => {
-    if (selectedRoutes.length === 0) {
+      const response = await axios.put(`${BASE_URL}/usuarios/estado/${usuarioId}`, {
+        estaActivo: !estaActivo,
+      });
+  
+      const usuarioActualizado = response.data.usuario;
+      setUsuarios((prevUsuarios) =>
+        prevUsuarios.map((usuario) =>
+          usuario.id === usuarioId ? usuarioActualizado : usuario
+        )
+      );
       toast({
-        title: "Selecciona al menos una ruta",
-        status: "warning",
+        title: `Usuario ${!estaActivo ? "activado" : "desactivado"} correctamente`,
+        status: "success",
         duration: 3000,
         isClosable: true,
       });
-      return;
+    } catch (error) {
+      console.error("Error al actualizar el estado del usuario:", error);
+      toast({
+        title: "Error al actualizar el estado",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
+  };
+
+  const asignarRutas = async (usuarioId) => {
     try {
+      if (selectedRoutes.length === 0) {
+        toast({
+          title: "Selecciona al menos una ruta",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
       await axios.post(`${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`, {
         rutaId: selectedRoutes,
       });
+
       setUsuarios((prevUsuarios) =>
         prevUsuarios.map((usuario) =>
           usuario.id === usuarioId
             ? {
                 ...usuario,
-                rutas: selectedRoutes.map((rutaId) => ({ id: rutaId })),
+                rutas: selectedRoutes.map((rutaId) => ({
+                  id: rutaId,
+                })),
               }
             : usuario
         )
       );
+
       toast({
         title: "Rutas asignadas correctamente",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
+
       onClose();
     } catch (error) {
       console.error("Error al asignar rutas:", error);
@@ -138,13 +171,32 @@ export const TablaBusuarios = () => {
     }
   };
 
-  // Manejo de la apertura del modal para asignar rutas
+  const fetchCiudadesYPaises = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/ciudad/todos`);
+      console.log("Respuesta de la API de ciudades:", response.data); // Asegúrate de que los datos están llegando
+      if (response.data && Array.isArray(response.data)) {
+        return response.data; // Devuelve las ciudades con sus paisId
+      } else {
+        console.error("No se encontraron ciudades en la respuesta de la API");
+        return [];
+      }
+    } catch (error) {
+      console.error("Error al obtener las ciudades y países:", error);
+      return [];
+    }
+  };
+
   const handleOpenAssignRutas = async (usuario) => {
     setSelectedUser(usuario.id);
-    setSelectedRoutes(usuario.rutas ? usuario.rutas.map((ruta) => ruta.id) : []);
+    setSelectedRoutes(usuario.rutas.map((ruta) => ruta.id));
 
+    // Obtener las ciudades con paisId desde la API
     const ciudades = await fetchCiudadesYPaises();
-    if (ciudades.length === 0) {
+
+    console.log("Ciudades recibidas:", ciudades); // Verifica aquí si se están recibiendo los datos
+
+    if (!ciudades || ciudades.length === 0) {
       toast({
         title: "Error al obtener ciudades",
         description: "No se encontraron ciudades.",
@@ -165,50 +217,11 @@ export const TablaBusuarios = () => {
     });
 
     // Filtrar las rutas que coincidan con el paisId del usuario
-    const rutasFiltradas = rutasConPais.filter((ruta) => ruta.paisId === usuario.paisId);
-
-    setFilteredRutas(rutasFiltradas); // Asegúrate de que se actualiza correctamente
-  };
-
-  useEffect(() => {
-    if (filteredRutas.length > 0) {
-      onOpen(); // Abre el modal solo después de que las rutas se hayan filtrado
-    }
-  }, [filteredRutas, onOpen]);
-
-  // Toggle estado del usuario (activo/desactivado)
-  const toggleUsuarioEstado = async (usuarioId, estaActivo) => {
-    try {
-      const response = await axios.put(
-        `${BASE_URL}/usuarios/estado/${usuarioId}`,
-        { estaActivo: !estaActivo }
-      );
-      const usuarioActualizado = response.data.usuario;
-      setUsuarios((prevUsuarios) =>
-        prevUsuarios.map((usuario) =>
-          usuario.id === usuarioId ? usuarioActualizado : usuario
-        )
-      );
-      if (selectedUser === usuarioId) {
-        setSelectedUser(usuarioActualizado);
-      }
-      toast({
-        title: `Usuario ${
-          !estaActivo ? "activado" : "desactivado"
-        } correctamente`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error al actualizar el estado del usuario:", error);
-      toast({
-        title: "Error al actualizar el estado",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+    const rutasFiltradas = rutasConPais.filter(
+      (ruta) => ruta.paisId === usuario.paisId
+    );
+    setFilteredRutas(rutasFiltradas); // Guardamos las rutas filtradas
+    onOpen();
   };
 
   return (
@@ -258,22 +271,30 @@ export const TablaBusuarios = () => {
                     {usuario.nombre} {usuario.apellido}
                   </Td>
                   <Td>{usuario.correo}</Td>
+                  <Td>{usuario.telefono}</Td>
                   <Td>
                     <Switch
                       isChecked={usuario.estaActivo}
-                      onChange={() => toggleUsuarioEstado(usuario.id, usuario.estaActivo)}
+                      onChange={() =>
+                        toggleUsuarioEstado(usuario.id, usuario.estaActivo)
+                      }
                       colorScheme="green"
                     />
                   </Td>
-                  <Td>{usuario.telefono}</Td>
+
                   <Td>
-                    <Button
-                      colorScheme="green"
-                      size="sm"
-                      onClick={() => handleOpenAssignRutas(usuario)}
-                    >
-                      Asignar rutas
-                    </Button>
+                    <Stack align="center" direction="row">
+                      <Button
+                        size="sm"
+                        onClick={() => handleOpenAssignRutas(usuario)} // Usar la función de apertura aquí
+                        leftIcon={<FiUserPlus />}
+                        colorScheme="green"
+                        variant="solid"
+                        _hover={{ bg: "green.300" }}
+                      >
+                        Asignar Rutas
+                      </Button>
+                    </Stack>
                   </Td>
                 </Tr>
               ))}
@@ -285,31 +306,30 @@ export const TablaBusuarios = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Asignar Rutas a Usuario</ModalHeader>
+          <ModalHeader color="green.600">Asignar Rutas</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Stack spacing={4}>
-              <Text fontSize="lg" fontWeight="bold">Rutas Disponibles</Text>
-              {filteredRutas.length > 0 ? (
-                <RutaSelector
-                  rutas={filteredRutas}
-                  selectedRoutes={selectedRoutes}
-                  setSelectedRoutes={setSelectedRoutes}
-                />
-              ) : (
-                <Text>No hay rutas disponibles para este usuario.</Text>
-              )}
-            </Stack>
+            <Text mb={4}>Asignar rutas al usuario ID: {selectedUser}</Text>
+            <RutaSelector
+              selectedRoutes={selectedRoutes}
+              setSelectedRoutes={setSelectedRoutes}
+              usuarioId={selectedUser}
+              filteredRutas={filteredRutas} // Pasa las rutas filtradas aquí
+            />
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="green" mr={3} onClick={() => asignarRutas(selectedUser)}>
-              Asignar Rutas
+            <Button
+              colorScheme="green"
+              onClick={() => asignarRutas(selectedUser)}
+            >
+              Asignar
             </Button>
-            <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+            <Button variant="ghost" onClick={onClose}>
+              Cancelar
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
     </>
   );
 };
-

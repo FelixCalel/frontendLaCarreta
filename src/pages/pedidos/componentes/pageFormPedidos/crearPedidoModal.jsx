@@ -138,7 +138,6 @@ const PedidoModal = ({
                   onSelect={handleDeudorSelect}
                 />
               </FormControl>
-
               <HStack spacing={3} w="full" alignItems="flex-start">
                 <FormControl flex="1" isDisabled={isTienda2Disabled}>
                   <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
@@ -148,14 +147,16 @@ const PedidoModal = ({
                     </HStack>
                   </FormLabel>
                   <TiendaSelector
-                    rutaIds={usuarioRutas || []}
+                    rutaIds={usuarioRutas || []} // Pasando las rutas asignadas al usuario
                     paisId={Number(paisId)}
                     value={currentPedido.tiendaId}
                     onChange={handleTiendaChange}
+                    deudorId={currentPedido.deudorId}
+                    ciudadId={currentPedido.ciudadId}
                     isRutaFilter={true}
+                    rutasUsuario={usuarioRutas} // Asegúrate de pasar las rutas del usuario
                   />
                 </FormControl>
-
                 <FormControl flex="1" isDisabled={isTienda1Disabled}>
                   <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
                     <HStack>
@@ -256,8 +257,6 @@ PedidoModal.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
   usuarioRutas: PropTypes.arrayOf(PropTypes.number).isRequired,
   paisId: PropTypes.number.isRequired,
-  // pedidoIdGuardado: PropTypes.number,
-  // usuarioId: PropTypes.number.isRequired,
   isTienda1Disabled: PropTypes.bool.isRequired,
   isTienda2Disabled: PropTypes.bool.isRequired,
   setIsTienda1Disabled: PropTypes.func.isRequired,

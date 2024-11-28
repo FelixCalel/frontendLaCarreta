@@ -201,6 +201,18 @@ const PageFormPedidos = () => {
       todayFormatted,
     });
 
+    const pedidoData = {
+      ...currentPedido,
+      deudorId: currentPedido.deudorId, // Aquí pasas el deudorId
+      // Otros datos del pedido como tiendaId, ciudadId, etc.
+    };
+  
+    // Proceder con la creación o actualización del pedido
+    dispatch(addNewPedido(pedidoData)).then(() => {
+      onClose();
+      dispatch(tablaPedidos());
+    });
+
     // Validar si ya existe un pedido para la misma tienda en el mismo día
     const pedidosHoy = pedidos.filter((pedido) => {
       let fechaPedido = pedido.fechaOrden;

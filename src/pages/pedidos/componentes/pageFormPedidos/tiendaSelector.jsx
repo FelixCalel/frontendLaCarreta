@@ -26,40 +26,44 @@ const TiendaSelector = ({
   }, [dispatch]);
 
   // Lógica para filtrar las tiendas
-  useEffect(() => {
-    const fetchTiendas = async () => {
-      setLoading(true); // Mostrar estado de carga
-      let tiendasFiltradas = [];
+useEffect(() => {
+  const fetchTiendas = async () => {
+    setLoading(true); // Mostrar estado de carga
+    let tiendasFiltradas = [];
 
-      // Filtrar por ciudad y deudor si ambos están presentes
-      if (ciudadId && deudorId) {
-        tiendasFiltradas = tiendasRedux.filter(
-          (tienda) => tienda.ciudadId === ciudadId && tienda.deudorId === deudorId
-        );
-      } 
-      // Filtrar por rutas si se proporciona el filtro de rutas
-      else if (isRutaFilter && rutaIds.length > 0) {
-        for (let rutaId of rutaIds) {
-          const response = await axios.get(`${BASE_URL}/tienda/by-ruta/${rutaId}`);
-          if (response && response.data) {
-            tiendasFiltradas = tiendasFiltradas.concat(response.data);
-          }
-        }
-      } 
-      // Filtrar por país si se proporciona el país
-      else if (paisId) {
-        const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
+    // Si ciudadId y deudorId están presentes, filtrar las tiendas
+    if (ciudadId && deudorId) {
+      tiendasFiltradas = tiendasRedux.filter(
+        (tienda) => 
+          tienda.ciudadId === ciudadId && 
+          tienda.deudorId === deudorId && 
+          (rutaIds.length === 0 || rutaIds.includes(tienda.rutaId)) // Filtrar por rutas asignadas
+      );
+    }
+    // Si el filtro por ruta está activado y el usuario tiene rutas asignadas
+    else if (isRutaFilter && rutaIds.length > 0) {
+      for (let rutaId of rutaIds) {
+        const response = await axios.get(`${BASE_URL}/tienda/by-ruta/${rutaId}`);
         if (response && response.data) {
-          tiendasFiltradas = response.data;
+          tiendasFiltradas = tiendasFiltradas.concat(response.data);
         }
       }
+    } 
+    // Filtrar por país si el país está presente
+    else if (paisId) {
+      const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
+      if (response && response.data) {
+        tiendasFiltradas = response.data;
+      }
+    }
 
-      setTiendas(tiendasFiltradas);
-      setLoading(false); // Desactivar estado de carga
-    };
+    setTiendas(tiendasFiltradas);
+    setLoading(false); // Desactivar estado de carga
+  };
 
-    fetchTiendas();
-  }, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter, tiendasRedux]);
+  fetchTiendas();
+}, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter, tiendasRedux]);
+
 
   // Mostrar un mensaje de carga mientras las tiendas se están obteniendo
   if (loading) {
