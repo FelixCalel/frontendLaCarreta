@@ -32,7 +32,7 @@ import PropTypes from "prop-types";
 
 const MotionBox = motion(Box);
 
-const ProductosTable = ({ pedidoId, deudorId }) => {
+const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   const dispatch = useDispatch();
   const toast = useToast();
 
@@ -53,13 +53,25 @@ const ProductosTable = ({ pedidoId, deudorId }) => {
   useEffect(() => {
     const cargarDetallesPedido = async () => {
       try {
+        // Validación de los IDs antes de realizar la solicitud
+        if (isNaN(deudorId) || isNaN(pedidoId) || isNaN(tiendaId)) {
+          toast({
+            title: "Error",
+            description: "Uno de los IDs no es válido.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          return; // Termina la ejecución si alguno de los parámetros no es válido
+        }
+  
         setIsLoading(true);
-
+  
         // Verificar si los detalles del pedido están en sessionStorage
         const detallesGuardados = sessionStorage.getItem(
           `productos_${pedidoId}`
         );
-
+  
         if (detallesGuardados) {
           const detallesGuardadosParsed = JSON.parse(detallesGuardados);
           setProductos(detallesGuardadosParsed);
@@ -67,77 +79,100 @@ const ProductosTable = ({ pedidoId, deudorId }) => {
           setIsLoading(false);
           return;
         }
-
+  
         // Cargar solo los detalles del pedido desde la API
         const detalles = await dispatch(
           getDetalleOrdenByPedidoId(pedidoId)
         ).unwrap();
-
+  
         setProductos(detalles);
         setProductosCargados(true);
-
+  
         // Guardar en sessionStorage
         sessionStorage.setItem(
           `productos_${pedidoId}`,
           JSON.stringify(detalles)
         );
+        console.log(`productos_${pedidoId}`, JSON.stringify(detalles));
       } catch (error) {
         console.error("Error al cargar los detalles del pedido:", error);
       } finally {
         setIsLoading(false);
       }
     };
-
+  
     if (deudorId && pedidoId && !productosCargados) {
       cargarDetallesPedido();
     }
-  }, [dispatch, deudorId, pedidoId, productosCargados]);
+  }, [dispatch, deudorId, pedidoId, productosCargados, toast, tiendaId]); // Añadido toast y tiendaId como dependencias
+  
+  
 
-useEffect(() => {
-  const cargarProductosComunes = async () => {
-    try {
-      setIsLoading(true);
-
-      // Verificar si los productos ya están en sessionStorage
-      const productosGuardados = sessionStorage.getItem(
-        `productos_comunes_${pedidoId}`
-      );
-      if (productosGuardados) {
-        const productosGuardadosParsed = JSON.parse(productosGuardados);
-        setProductos(productosGuardadosParsed);
+  useEffect(() => {
+    const cargarProductosComunes = async () => {
+      try {
+        // Validación de los IDs antes de realizar la solicitud
+        if (isNaN(deudorId) || isNaN(pedidoId) || isNaN(tiendaId)) {
+          toast({
+            title: "Error",
+            description: "Uno de los IDs no es válido.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          return; // Termina la ejecución si alguno de los parámetros no es válido
+        }
+  
+        setIsLoading(true);
+  
+        // Verificar si los productos comunes ya están en sessionStorage
+        const productosGuardados = sessionStorage.getItem(
+          `productos_comunes_${pedidoId}`
+        );
+        if (productosGuardados) {
+          const productosGuardadosParsed = JSON.parse(productosGuardados);
+          setProductos(productosGuardadosParsed);
+          setProductosCargados(true);
+          setIsLoading(false);
+          return;
+        }
+  
+        // Asegurarse de que deudorId, pedidoId y tiendaId están definidos
+        if (!deudorId || !pedidoId || !tiendaId) {
+          throw new Error("Faltan parámetros requeridos.");
+        }
+  
+        // Cargar los productos comunes desde la API usando deudorId, pedidoId y tiendaId
+        const productosComunes = await dispatch(
+          getPedidosComunesByUsuarioId({
+            deudorId: Number(deudorId),
+            pedidoId: Number(pedidoId),
+            tiendaId: Number(tiendaId), // Asegúrate de pasar tiendaId aquí
+          })
+        ).unwrap();
+  
+        setProductos(productosComunes);
         setProductosCargados(true);
+  
+        // Guardar en sessionStorage
+        sessionStorage.setItem(
+          `productos_comunes_${pedidoId}`,
+          JSON.stringify(productosComunes)
+        );
+      } catch (error) {
+        console.error("Error al cargar los productos comunes:", error);
+      } finally {
         setIsLoading(false);
-        return;
       }
-
-      // Cargar los productos comunes desde la API usando deudorId
-      const productosComunes = await dispatch(
-        getPedidosComunesByUsuarioId({
-          deudorId: Number(deudorId),
-          pedidoId: Number(pedidoId),
-        })
-      ).unwrap();
-
-      setProductos(productosComunes);
-      setProductosCargados(true);
-
-      // Guardar en sessionStorage
-      sessionStorage.setItem(
-        `productos_comunes_${pedidoId}`,
-        JSON.stringify(productosComunes)
-      );
-    } catch (error) {
-      console.error("Error al cargar los productos comunes:", error);
-    } finally {
-      setIsLoading(false);
+    };
+  
+    if (!productosCargados && deudorId && pedidoId && tiendaId) {
+      cargarProductosComunes();
     }
-  };
+  }, [deudorId, pedidoId, tiendaId, productosCargados, dispatch, toast]); // Añadido toast y tiendaId como dependencias  
+  console.log("deudorId:", deudorId, "pedidoId:", pedidoId, "tiendaId:", tiendaId);
 
-  if (!productosCargados && deudorId && pedidoId) {
-    cargarProductosComunes();
-  }
-}, [deudorId, pedidoId, productosCargados, dispatch]);
-
+  
   
 
   useEffect(() => {
@@ -174,23 +209,7 @@ useEffect(() => {
         });
         return;
       }
-
-      // **Nueva Validación**: Comprobar si el producto ya existe en la lista de detalles actuales
-      const productoExistente = productos.some(
-        (prod) => prod.productoId === newProducto.productoId
-      );
-
-      if (productoExistente) {
-        toast({
-          title: "Producto ya agregado",
-          description: "Este producto ya existe en los detalles del pedido.",
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
+  
       try {
         const newDetalleOrden = {
           pedidoId,
@@ -198,7 +217,7 @@ useEffect(() => {
           cantidad: newProducto.cantidad,
           precio: 0, // Si hay un precio que manejar, este se debe actualizar
         };
-
+  
         // Enviar el detalle del producto al backend
         const result = await dispatch(
           addNewDetalleOrden(newDetalleOrden)
@@ -206,22 +225,22 @@ useEffect(() => {
         if (!result || !result.id) {
           throw new Error("El backend no devolvió un detallePedidoId válido.");
         }
-
+  
         const detalleConId = {
           ...result,
           detallePedidoId: result.id, // Mapear id a detallePedidoId
         };
-
+  
         // Actualizar los productos en el estado local
         const nuevosProductos = [...productos, detalleConId];
         setProductos(nuevosProductos);
-
+  
         // Guardar los datos actualizados en el sessionStorage
         sessionStorage.setItem(
           `productos_${pedidoId}`,
           JSON.stringify(nuevosProductos)
         );
-
+  
         // Reiniciar el formulario para agregar un nuevo producto
         setNewProducto({
           productoId: "",
@@ -231,7 +250,7 @@ useEffect(() => {
           codigo: "",
         });
         setResetFields(true); // Reiniciar campos del formulario
-
+  
         toast({
           title: "Producto agregado",
           description: "El producto ha sido agregado exitosamente.",
@@ -259,6 +278,7 @@ useEffect(() => {
       });
     }
   };
+  
 
   const handleRemoveProducto = async (detallePedidoId) => {
     if (!detallePedidoId) {
@@ -601,6 +621,7 @@ useEffect(() => {
 ProductosTable.propTypes = {
   pedidoId: PropTypes.number.isRequired,
   deudorId: PropTypes.number.isRequired,
+  tiendaId: PropTypes.number.isRequired,
 };
 
 export default ProductosTable;

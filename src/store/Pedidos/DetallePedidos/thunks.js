@@ -92,15 +92,29 @@ export const getDetalleOrdenByPedidoId = createAsyncThunk(
 export const getPedidosComunesByUsuarioId = createAsyncThunk(
   'detalleOrden/fetchPedidosComunesByUsuarioId',
   async ({ deudorId, pedidoId, tiendaId }, { rejectWithValue }) => {
+    // Log antes de la conversión para verificar los valores iniciales
+    console.log("Parámetros antes de la conversión:", { deudorId, pedidoId, tiendaId });
+
+    // Asegurarnos de que los IDs son números válidos
+    deudorId = Number(deudorId);
+    pedidoId = Number(pedidoId);
+    tiendaId = Number(tiendaId);
+
+    // Log después de la conversión para verificar que los valores son números
+    console.log("Parámetros después de la conversión:", { deudorId, pedidoId, tiendaId });
+
+    // Validar si los parámetros son números válidos
+    if (isNaN(deudorId) || isNaN(pedidoId) || isNaN(tiendaId)) {
+      console.error("Error: Uno de los IDs no es un número válido.");
+      return rejectWithValue("Uno de los IDs no es un número válido.");
+    }
+
+    // Intentar obtener la respuesta de la API
     try {
-      deudorId = Number(deudorId);
-      pedidoId = Number(pedidoId);
+      const url = `${BASE_URL}/detalle/pedido/pedidosComunes/${deudorId}/${pedidoId}/${tiendaId}`;
+      console.log("URL solicitada:", url);
 
-      console.log("Parámetros enviados al backend:", { deudorId, pedidoId, tiendaId });
-
-      const response = await axios.get(
-        `${BASE_URL}/detalle/pedido/pedidosComunes/${deudorId}/${pedidoId}/${tiendaId}`
-      );
+      const response = await axios.get(url);
 
       const data = response.data;
 
@@ -114,11 +128,10 @@ export const getPedidosComunesByUsuarioId = createAsyncThunk(
     } catch (error) {
       console.error("Error al obtener pedidos comunes:", error);
 
-      // Rechazar el valor con un mensaje personalizado
+      // Rechazar el valor con un mensaje de error
       return rejectWithValue(error.response?.data || "Error desconocido en la API");
     }
   }
 );
-
 
 
