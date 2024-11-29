@@ -159,7 +159,6 @@ const PageFormPedidos = () => {
         return;
       }
 
-      // Actualizar el estado con los productos copiados
       setProductosCopiados(detalles);
 
       toast({
@@ -181,12 +180,9 @@ const PageFormPedidos = () => {
     }
   };
 
-  // Manejar envío del formulario
   const handleSubmit = async () => {
-    // Validar los campos antes de proceder
-    const formErrors = validateFields(); // Esta es tu función de validación
+    const formErrors = validateFields();
 
-    // Si hay errores en los campos, mostrar mensaje y detener el envío
     if (Object.keys(formErrors).length > 0) {
       toast({
         title: "Error",
@@ -195,7 +191,7 @@ const PageFormPedidos = () => {
         duration: 3000,
         isClosable: true,
       });
-      return; // Detener la ejecución si hay errores
+      return;
     }
 
     const today = new Date();
@@ -209,7 +205,6 @@ const PageFormPedidos = () => {
       todayFormatted,
     });
 
-    // Verifica si ya existe un pedido para la misma tienda en el mismo día
     const pedidosHoy = pedidos.filter((pedido) => {
       let fechaPedido = pedido.fechaOrden;
       if (typeof fechaPedido === "string") {
@@ -226,14 +221,14 @@ const PageFormPedidos = () => {
       toast({
         title: "Pedido duplicado",
         description: "Ya has realizado un pedido en esta tienda hoy.",
-        status: "error",
+        status: "warning",
         duration: 3000,
         isClosable: true,
       });
-      return; // Detener si ya hay un pedido hecho para esa tienda hoy
+      console.log("Pedido duplicado detectado:", pedidosHoy); 
     }
+    
 
-    // Crear el objeto del nuevo pedido
     const newPedido = {
       ...currentPedido,
       tiendaId: tiendaSeleccionada,
@@ -241,15 +236,14 @@ const PageFormPedidos = () => {
       productos: productosCopiados,
     };
 
-    // Enviar el pedido al backend usando el thunk
     try {
-      setIsLoading(true); // Activar el estado de carga
+      setIsLoading(true);
 
       const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
-      setPedidoIdGuardado(pedidoGuardado.id); // Guardar el ID del nuevo pedido
+      setPedidoIdGuardado(pedidoGuardado.id);
+      window.location.reload(true);
 
-      // Actualizar la lista de pedidos en el estado local
-      dispatch(tablaPedidos()); // Actualizar el listado de pedidos
+      dispatch(tablaPedidos());
 
       toast({
         title: "Pedido creado",
@@ -271,7 +265,7 @@ const PageFormPedidos = () => {
         isClosable: true,
       });
     } finally {
-      setIsLoading(false); // Detener el estado de carga
+      setIsLoading(false); 
     }
   };
 
@@ -286,7 +280,6 @@ const PageFormPedidos = () => {
     setIsTienda2Disabled(false);
   };
 
-  // Manejar confirmación para realizar pedido
   const handleRealizarPedido = async () => {
     try {
       const detalles = await dispatch(
@@ -351,7 +344,7 @@ const PageFormPedidos = () => {
         isLoading={isLoading}
         currentPedido={currentPedido}
         setCurrentPedido={setCurrentPedido}
-        handleSubmit={handleSubmit} // Aquí
+        handleSubmit={handleSubmit}
         usuarioRutas={usuarioRutas}
         paisId={paisId || 0}
         usuarioId={usuarioId || 0}

@@ -10,7 +10,9 @@ import {
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-const usePedidosLogic = () => {
+const usePedidosLogic = ({
+  onClose, // Asegúrate de pasar la función onClose desde el componente que utiliza este hook
+}) => {
   const dispatch = useDispatch();
   const toast = useToast();
   const pedidos = useSelector((state) => state.pedidos.data);
@@ -103,9 +105,8 @@ const usePedidosLogic = () => {
   
     const today = new Date();
     const todayFormatted = today.toISOString().split("T")[0];
-    const tiendaSeleccionada =
-      currentPedido.tiendaId || currentPedido.tiendaId2;
-  
+    const tiendaSeleccionada = currentPedido.tiendaId || currentPedido.tiendaId2;
+    
     const pedidosHoy = pedidos.filter((pedido) => {
       let fechaPedido = new Date(pedido.fechaOrden);
       return (
@@ -114,17 +115,19 @@ const usePedidosLogic = () => {
         fechaPedido.toISOString().split("T")[0] === todayFormatted
       );
     });
-  
+    
     if (pedidosHoy.length > 0) {
       toast({
         title: "Pedido duplicado",
         description: "Ya has realizado un pedido en esta tienda hoy.",
-        status: "error",
+        status: "warning", // Usamos 'warning' para que no bloquee la creación del pedido
         duration: 3000,
         isClosable: true,
       });
-      return;
+      console.log("Pedido duplicado detectado:", pedidosHoy); // Mostrar log en consola
     }
+    
+    
   
     const newPedido = {
       ...currentPedido,
@@ -134,14 +137,14 @@ const usePedidosLogic = () => {
     };
   
     try {
-      setIsLoading(true); // Activa el indicador de carga
+      setIsLoading(true); // Activar el estado de carga
+      
       const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
-  
-      setPedidoIdGuardado(pedidoGuardado.id);
-  
-      // Actualiza la tabla de pedidos
-      dispatch(tablaPedidos());
-  
+      setPedidoIdGuardado(pedidoGuardado.id); // Guardar el ID del nuevo pedido
+    
+      // Actualiza la lista de pedidos después de crear el nuevo pedido
+      dispatch(tablaPedidos()); // Actualiza el listado de pedidos
+    
       toast({
         title: "Pedido creado",
         description: "El pedido ha sido guardado correctamente",
@@ -149,11 +152,9 @@ const usePedidosLogic = () => {
         duration: 3000,
         isClosable: true,
       });
-  
-      // Asegúrate de que la página se recargue después de que la promesa termine
-      window.location.reload(); 
-  
-      resetForm();
+    
+      onClose(); // Cierra el modal
+      resetForm(); // Resetea el formulario
     } catch (error) {
       console.error("Error al guardar el pedido:", error);
       toast({
@@ -164,8 +165,9 @@ const usePedidosLogic = () => {
         isClosable: true,
       });
     } finally {
-      setIsLoading(false); // Desactiva el indicador de carga
+      setIsLoading(false); // Desactiva el estado de carga
     }
+    
   };
  
 

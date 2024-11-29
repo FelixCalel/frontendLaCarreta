@@ -107,7 +107,6 @@ const PedidoModal = ({
           {isPedidoFinalizado ? "Agregar Productos" : "Agregar Pedido"}
         </ModalHeader>
         <ModalCloseButton />
-
         <ModalBody>
           {!isPedidoFinalizado ? (
             <VStack spacing={4}>
