@@ -104,11 +104,13 @@ const PageFormPedidos = () => {
 
   const copiarUltimoPedido = async (tiendaId) => {
     console.log("ID de tienda seleccionada:", tiendaId);
-  
+
     try {
-      const pedidosTienda = pedidos.filter((pedido) => pedido.tiendaId === tiendaId);
+      const pedidosTienda = pedidos.filter(
+        (pedido) => pedido.tiendaId === tiendaId
+      );
       console.log("Pedidos encontrados para esta tienda:", pedidosTienda);
-  
+
       if (pedidosTienda.length === 0) {
         toast({
           title: "Sin pedidos previos",
@@ -119,11 +121,13 @@ const PageFormPedidos = () => {
         });
         return;
       }
-  
+
       // Obtener el último pedido (ordenado por fecha)
-      const ultimoPedido = pedidosTienda.sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden))[0];
+      const ultimoPedido = pedidosTienda.sort(
+        (a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden)
+      )[0];
       console.log("Último pedido encontrado:", ultimoPedido);
-  
+
       // Verificar si el pedido tiene productos
       if (!ultimoPedido || !ultimoPedido.id) {
         toast({
@@ -135,26 +139,29 @@ const PageFormPedidos = () => {
         });
         return;
       }
-  
+
       // Obtener los detalles del pedido desde el backend
-      const detalles = await dispatch(getDetalleOrdenByPedidoId(ultimoPedido.id)).unwrap();
+      const detalles = await dispatch(
+        getDetalleOrdenByPedidoId(ultimoPedido.id)
+      ).unwrap();
       console.log("Detalles del último pedido:", detalles);
-  
+
       if (!detalles || detalles.length === 0) {
         // Si no hay productos en el pedido, informar al usuario
         toast({
           title: "Pedido vacío",
-          description: "El último pedido de esta tienda no tiene productos para copiar.",
+          description:
+            "El último pedido de esta tienda no tiene productos para copiar.",
           status: "warning",
           duration: 3000,
           isClosable: true,
         });
         return;
       }
-  
+
       // Actualizar el estado con los productos copiados
       setProductosCopiados(detalles);
-  
+
       toast({
         title: "Productos copiados",
         description: "Se han copiado los productos del último pedido.",
@@ -173,12 +180,13 @@ const PageFormPedidos = () => {
       });
     }
   };
-  
-  
 
   // Manejar envío del formulario
   const handleSubmit = async () => {
-    const formErrors = validateFields();
+    // Validar los campos antes de proceder
+    const formErrors = validateFields(); // Esta es tu función de validación
+
+    // Si hay errores en los campos, mostrar mensaje y detener el envío
     if (Object.keys(formErrors).length > 0) {
       toast({
         title: "Error",
@@ -187,7 +195,7 @@ const PageFormPedidos = () => {
         duration: 3000,
         isClosable: true,
       });
-      return;
+      return; // Detener la ejecución si hay errores
     }
 
     const today = new Date();
@@ -201,36 +209,18 @@ const PageFormPedidos = () => {
       todayFormatted,
     });
 
-    const pedidoData = {
-      ...currentPedido,
-      deudorId: currentPedido.deudorId, // Aquí pasas el deudorId
-      // Otros datos del pedido como tiendaId, ciudadId, etc.
-    };
-  
-    // Proceder con la creación o actualización del pedido
-    dispatch(addNewPedido(pedidoData)).then(() => {
-      onClose();
-      dispatch(tablaPedidos());
-    });
-
-    // Validar si ya existe un pedido para la misma tienda en el mismo día
+    // Verifica si ya existe un pedido para la misma tienda en el mismo día
     const pedidosHoy = pedidos.filter((pedido) => {
       let fechaPedido = pedido.fechaOrden;
-
-      // Convertir fechaOrden a Date si es necesario
       if (typeof fechaPedido === "string") {
         fechaPedido = new Date(fechaPedido);
       }
-
-      // Validar formato de fecha
       return (
         pedido.usuarioId === usuarioId &&
         pedido.tiendaId === tiendaSeleccionada &&
         fechaPedido.toISOString().split("T")[0] === todayFormatted
       );
     });
-
-    console.log("Pedidos encontrados hoy:", pedidosHoy);
 
     if (pedidosHoy.length > 0) {
       toast({
@@ -240,22 +230,26 @@ const PageFormPedidos = () => {
         duration: 3000,
         isClosable: true,
       });
-      return; // Bloquear la creación del pedido
+      return; // Detener si ya hay un pedido hecho para esa tienda hoy
     }
 
-    setIsLoading(true);
+    // Crear el objeto del nuevo pedido
+    const newPedido = {
+      ...currentPedido,
+      tiendaId: tiendaSeleccionada,
+      fechaOrden: today,
+      productos: productosCopiados,
+    };
 
+    // Enviar el pedido al backend usando el thunk
     try {
-      const newPedido = {
-        ...currentPedido,
-        tiendaId: tiendaSeleccionada,
-        fechaOrden: today,
-        productos: productosCopiados,
-      };
+      setIsLoading(true); // Activar el estado de carga
 
       const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
-      setPedidoIdGuardado(pedidoGuardado.id);
-      dispatch(tablaPedidos());
+      setPedidoIdGuardado(pedidoGuardado.id); // Guardar el ID del nuevo pedido
+
+      // Actualizar la lista de pedidos en el estado local
+      dispatch(tablaPedidos()); // Actualizar el listado de pedidos
 
       toast({
         title: "Pedido creado",
@@ -265,8 +259,8 @@ const PageFormPedidos = () => {
         isClosable: true,
       });
 
-      onClose();
-      resetForm();
+      onClose(); // Cerrar el modal
+      resetForm(); // Resetear el formulario
     } catch (error) {
       console.error("Error al guardar el pedido:", error);
       toast({
@@ -277,18 +271,16 @@ const PageFormPedidos = () => {
         isClosable: true,
       });
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Detener el estado de carga
     }
   };
 
   const resetForm = () => {
     setCurrentPedido({
-      ciudadId: 0,
-      deudorId: 0,
+      ciudadId: null,
+      deudorId: null,
       tiendaId: null,
       tiendaId2: null,
-      usuarioId: usuarioId,
-      estadoId: 1,
     });
     setIsTienda1Disabled(false);
     setIsTienda2Disabled(false);

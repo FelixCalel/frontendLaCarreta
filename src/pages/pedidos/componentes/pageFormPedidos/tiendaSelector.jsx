@@ -28,17 +28,8 @@ const TiendaSelector = ({
     const fetchTiendas = async () => {
       setLoading(true);
       let tiendasFiltradas = [];
-
-      // Verifica si el usuario tiene rutas asignadas
-      if (isRutaFilter && rutaIds.length === 0) {
-        // Si no tiene rutas asignadas, no mostramos ninguna tienda
-        setTiendas([]);
-        setLoading(false);
-        return;
-      }
-
+  
       if (!isRutaFilter) {
-        // Si no hay filtro por ruta, mostramos todas las tiendas disponibles
         if (paisId) {
           const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
           if (response && response.data) {
@@ -46,7 +37,6 @@ const TiendaSelector = ({
           }
         }
       } else {
-        // Filtramos las tiendas según las rutas asignadas al usuario, ciudad y deudor
         if (ciudadId && deudorId) {
           tiendasFiltradas = tiendasRedux.filter(
             (tienda) =>
@@ -56,13 +46,21 @@ const TiendaSelector = ({
           );
         }
       }
-
-      setTiendas(tiendasFiltradas);
+  
+      // Solo actualiza si hay un cambio en las tiendas
+      setTiendas((prevTiendas) => {
+        if (JSON.stringify(prevTiendas) !== JSON.stringify(tiendasFiltradas)) {
+          return tiendasFiltradas;
+        }
+        return prevTiendas;
+      });
+  
       setLoading(false);
     };
-
+  
     fetchTiendas();
   }, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter, tiendasRedux]);
+  
 
   if (loading) {
     return <select disabled>Cargando tiendas...</select>;

@@ -15,15 +15,24 @@ export const tablaPedidos = createAsyncThunk(
 );
 
 
-
 // Add new Pedido
 export const addNewPedido = createAsyncThunk(
   'pedidos/addNewPedido',
-  async (newPedido) => {
-    const response = await axios.post(`${BASE_URL}/form/pedidos/create`, newPedido);
-    return response.data;
+  async (newPedido, { rejectWithValue }) => {
+    // Validación básica de los campos
+    if (!newPedido.deudorId || !newPedido.tiendaId || !newPedido.ciudadId) {
+      return rejectWithValue("Faltan datos necesarios para crear el pedido");
+    }
+
+    try {
+      const response = await axios.post(`${BASE_URL}/form/pedidos/create`, newPedido);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Error en la creación del pedido");
+    }
   }
 );
+
 
 // Delete Pedido
 export const deletePedido = createAsyncThunk(

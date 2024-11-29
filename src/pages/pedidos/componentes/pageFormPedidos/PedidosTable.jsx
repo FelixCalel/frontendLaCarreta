@@ -189,7 +189,7 @@ PedidosTable.propTypes = {
     })
   ).isRequired,
   isMobile: PropTypes.bool.isRequired,
-  isDetailsOpen: PropTypes.number,
+  isDetailsOpen: PropTypes.number,  // Asegúrate de que sea un número o undefined
   handleToggleDetails: PropTypes.func.isRequired,
   handleDeletePedido: PropTypes.func.isRequired,
   showRealizarPedidoConfirmation: PropTypes.func.isRequired,

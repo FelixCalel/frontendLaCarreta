@@ -187,10 +187,10 @@ const PedidoModal = ({
             <Button
               colorScheme="blue"
               onClick={() => {
-                if (currentPedido.tiendaId || currentPedido.tiendaId2) {
-                  copiarUltimoPedido(
-                    currentPedido.tiendaId || currentPedido.tiendaId2
-                  );
+                const tiendaSeleccionada =
+                  currentPedido.tiendaId || currentPedido.tiendaId2;
+                if (tiendaSeleccionada) {
+                  copiarUltimoPedido(tiendaSeleccionada);
                 } else {
                   toast({
                     title: "Error",
@@ -201,11 +201,11 @@ const PedidoModal = ({
                   });
                 }
               }}
-              size="sm" // Botón más pequeño
-              px={3} // Padding reducido
+              size="sm"
+              px={3}
               py={2}
               fontSize="sm"
-              width="auto" // Ajuste automático al texto
+              width="auto"
               variant="outline"
             >
               Copiar Último Pedido

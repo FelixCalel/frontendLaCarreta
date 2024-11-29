@@ -89,6 +89,7 @@ const usePedidosLogic = () => {
 
   const handleSubmit = async () => {
     const formErrors = validateFields();
+  
     if (Object.keys(formErrors).length > 0) {
       toast({
         title: "Error",
@@ -99,60 +100,74 @@ const usePedidosLogic = () => {
       });
       return;
     }
-
-    const today = new Date().toISOString().split("T")[0];
-
-    const pedidosHoy = pedidos.filter(
-      (pedido) =>
-        pedido.usuarioId === parseInt(usuarioId) &&
-        pedido.tiendaId === currentPedido.tiendaId &&
-        pedido.fecha?.split("T")[0] === today
-    );
-
+  
+    const today = new Date();
+    const todayFormatted = today.toISOString().split("T")[0];
+    const tiendaSeleccionada =
+      currentPedido.tiendaId || currentPedido.tiendaId2;
+  
+    const pedidosHoy = pedidos.filter((pedido) => {
+      let fechaPedido = new Date(pedido.fechaOrden);
+      return (
+        pedido.usuarioId === usuarioId &&
+        pedido.tiendaId === tiendaSeleccionada &&
+        fechaPedido.toISOString().split("T")[0] === todayFormatted
+      );
+    });
+  
     if (pedidosHoy.length > 0) {
       toast({
         title: "Pedido duplicado",
-        description:
-          "Ya has hecho un pedido en esta tienda hoy. No puedes realizar otro pedido en el mismo día.",
+        description: "Ya has realizado un pedido en esta tienda hoy.",
         status: "error",
-        duration: 4000,
+        duration: 3000,
         isClosable: true,
       });
       return;
     }
-
-    setIsLoading(true);
-
-    if (!isPedidoFinalizado) {
-      const newPedido = { ...currentPedido, fecha: new Date().toISOString() };
-      try {
-        const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
-        setPedidoIdGuardado(pedidoGuardado.id);
-        setIsPedidoFinalizado(true);
-        dispatch(tablaPedidos());
-        toast({
-          title: "Pedido creado",
-          description: "El pedido ha sido guardado correctamente",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (error) {
-        console.error("Error al guardar el pedido:", error);
-        toast({
-          title: "Error",
-          description:
-            "Hubo un error al guardar el pedido. Inténtalo de nuevo.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      } finally {
-        setIsLoading(false);
-      }
+  
+    const newPedido = {
+      ...currentPedido,
+      tiendaId: tiendaSeleccionada,
+      fechaOrden: today,
+      productos: currentPedido.productos, // Aquí usa el estado correcto
+    };
+  
+    try {
+      setIsLoading(true); // Activa el indicador de carga
+      const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
+  
+      setPedidoIdGuardado(pedidoGuardado.id);
+  
+      // Actualiza la tabla de pedidos
+      dispatch(tablaPedidos());
+  
+      toast({
+        title: "Pedido creado",
+        description: "El pedido ha sido guardado correctamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+  
+      // Asegúrate de que la página se recargue después de que la promesa termine
+      window.location.reload(); 
+  
+      resetForm();
+    } catch (error) {
+      console.error("Error al guardar el pedido:", error);
+      toast({
+        title: "Error",
+        description: "Hubo un problema al crear el pedido.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false); // Desactiva el indicador de carga
     }
-    resetForm();
   };
+ 
 
   const validateFields = () => {
     let formErrors = {};
