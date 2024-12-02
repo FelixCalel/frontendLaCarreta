@@ -53,8 +53,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   useEffect(() => {
     const cargarDetallesPedido = async () => {
       try {
-        // Validación de los IDs antes de realizar la solicitud
-        if (isNaN(deudorId) || isNaN(pedidoId) || isNaN(tiendaId)) {
+        if (![deudorId, pedidoId, tiendaId].every(id => id && !isNaN(id))) {
           toast({
             title: "Error",
             description: "Uno de los IDs no es válido.",
@@ -62,16 +61,12 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             duration: 3000,
             isClosable: true,
           });
-          return; // Termina la ejecución si alguno de los parámetros no es válido
+          return; // Salir si alguno de los IDs es inválido
         }
   
         setIsLoading(true);
   
-        // Verificar si los detalles del pedido están en sessionStorage
-        const detallesGuardados = sessionStorage.getItem(
-          `productos_${pedidoId}`
-        );
-  
+        const detallesGuardados = sessionStorage.getItem(`productos_${pedidoId}`);
         if (detallesGuardados) {
           const detallesGuardadosParsed = JSON.parse(detallesGuardados);
           setProductos(detallesGuardadosParsed);
@@ -80,20 +75,11 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           return;
         }
   
-        // Cargar solo los detalles del pedido desde la API
-        const detalles = await dispatch(
-          getDetalleOrdenByPedidoId(pedidoId)
-        ).unwrap();
-  
+        const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
         setProductos(detalles);
         setProductosCargados(true);
+        sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(detalles));
   
-        // Guardar en sessionStorage
-        sessionStorage.setItem(
-          `productos_${pedidoId}`,
-          JSON.stringify(detalles)
-        );
-        console.log(`productos_${pedidoId}`, JSON.stringify(detalles));
       } catch (error) {
         console.error("Error al cargar los detalles del pedido:", error);
       } finally {
@@ -101,18 +87,30 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
       }
     };
   
-    if (deudorId && pedidoId && !productosCargados) {
+    if (deudorId && pedidoId && tiendaId && !productosCargados) {
       cargarDetallesPedido();
     }
-  }, [dispatch, deudorId, pedidoId, productosCargados, toast, tiendaId]); // Añadido toast y tiendaId como dependencias
+  }, [dispatch, deudorId, pedidoId, productosCargados, toast, tiendaId]);
   
   
-
   useEffect(() => {
+
+    if (!deudorId || !tiendaId) {
+      console.error("deudorId o tiendaId no definidos:", { deudorId, tiendaId, pedidoId });
+      return;
+    }
+
     const cargarProductosComunes = async () => {
       try {
-        // Validación de los IDs antes de realizar la solicitud
-        if (isNaN(deudorId) || isNaN(pedidoId) || isNaN(tiendaId)) {
+        // Verifica los IDs antes de hacer la llamada a la API
+        console.log("Valores antes de hacer la llamada:", { deudorId, pedidoId, tiendaId });
+  
+        const validDeudorId = Number(deudorId);
+        const validPedidoId = Number(pedidoId);
+        const validTiendaId = Number(tiendaId);
+  
+        // Verifica que los IDs sean válidos antes de hacer la llamada
+        if (isNaN(validDeudorId) || isNaN(validPedidoId) || isNaN(validTiendaId)) {
           toast({
             title: "Error",
             description: "Uno de los IDs no es válido.",
@@ -120,59 +118,54 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             duration: 3000,
             isClosable: true,
           });
-          return; // Termina la ejecución si alguno de los parámetros no es válido
+          return;
         }
   
         setIsLoading(true);
   
-        // Verificar si los productos comunes ya están en sessionStorage
-        const productosGuardados = sessionStorage.getItem(
-          `productos_comunes_${pedidoId}`
-        );
-        if (productosGuardados) {
-          const productosGuardadosParsed = JSON.parse(productosGuardados);
-          setProductos(productosGuardadosParsed);
-          setProductosCargados(true);
-          setIsLoading(false);
-          return;
-        }
+        // Llamada al backend
+        console.log("Llamando a la API con los siguientes parámetros:", {
+          deudorId: validDeudorId,
+          pedidoId: validPedidoId,
+          tiendaId: validTiendaId
+        });
   
-        // Asegurarse de que deudorId, pedidoId y tiendaId están definidos
-        if (!deudorId || !pedidoId || !tiendaId) {
-          throw new Error("Faltan parámetros requeridos.");
-        }
-  
-        // Cargar los productos comunes desde la API usando deudorId, pedidoId y tiendaId
         const productosComunes = await dispatch(
           getPedidosComunesByUsuarioId({
-            deudorId: Number(deudorId),
-            pedidoId: Number(pedidoId),
-            tiendaId: Number(tiendaId), // Asegúrate de pasar tiendaId aquí
+            deudorId: validDeudorId,   
+            pedidoId: validPedidoId,  
+            tiendaId: validTiendaId,  
           })
         ).unwrap();
-  
+        
         setProductos(productosComunes);
         setProductosCargados(true);
-  
-        // Guardar en sessionStorage
         sessionStorage.setItem(
           `productos_comunes_${pedidoId}`,
           JSON.stringify(productosComunes)
         );
+  
       } catch (error) {
         console.error("Error al cargar los productos comunes:", error);
+        toast({
+          title: "Error",
+          description: "Hubo un problema al obtener los productos comunes.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       } finally {
         setIsLoading(false);
       }
     };
   
-    if (!productosCargados && deudorId && pedidoId && tiendaId) {
+    if (deudorId && pedidoId && tiendaId && !productosCargados) {
+      console.log("Cargando productos comunes con:", deudorId, pedidoId, tiendaId);  // Debugging
       cargarProductosComunes();
     }
-  }, [deudorId, pedidoId, tiendaId, productosCargados, dispatch, toast]); // Añadido toast y tiendaId como dependencias  
-  console.log("deudorId:", deudorId, "pedidoId:", pedidoId, "tiendaId:", tiendaId);
-
+  }, [deudorId, pedidoId, tiendaId, productosCargados, dispatch, toast]);
   
+  console.log("Cargando productos comunes con:", deudorId, pedidoId, tiendaId); 
   
 
   useEffect(() => {
@@ -198,7 +191,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
 
   const handleAddProducto = async () => {
     if (newProducto.productoId && newProducto.cantidad >= 0) {
-      // Validar que la cantidad no exceda la cantidad disponible
       if (newProducto.cantidad > newProducto.cantidadDisponible) {
         toast({
           title: "Cantidad excedida",
@@ -215,10 +207,9 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           pedidoId,
           productoId: newProducto.productoId,
           cantidad: newProducto.cantidad,
-          precio: 0, // Si hay un precio que manejar, este se debe actualizar
+          precio: 0, 
         };
   
-        // Enviar el detalle del producto al backend
         const result = await dispatch(
           addNewDetalleOrden(newDetalleOrden)
         ).unwrap();
@@ -228,20 +219,17 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   
         const detalleConId = {
           ...result,
-          detallePedidoId: result.id, // Mapear id a detallePedidoId
+          detallePedidoId: result.id, 
         };
   
-        // Actualizar los productos en el estado local
         const nuevosProductos = [...productos, detalleConId];
         setProductos(nuevosProductos);
   
-        // Guardar los datos actualizados en el sessionStorage
         sessionStorage.setItem(
           `productos_${pedidoId}`,
           JSON.stringify(nuevosProductos)
         );
   
-        // Reiniciar el formulario para agregar un nuevo producto
         setNewProducto({
           productoId: "",
           nombreProducto: "",
@@ -249,7 +237,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           cantidadDisponible: 0,
           codigo: "",
         });
-        setResetFields(true); // Reiniciar campos del formulario
+        setResetFields(true); 
   
         toast({
           title: "Producto agregado",
@@ -287,22 +275,18 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     }
 
     try {
-      // Eliminar producto de la base de datos
       await dispatch(deleteDetalleOrden(detallePedidoId)).unwrap();
 
-      // Actualizar la lista local de productos
       const productosActualizados = productos.filter(
         (prod) => prod.detallePedidoId !== detallePedidoId
       );
       setProductos(productosActualizados);
 
-      // Actualizar sessionStorage con la lista actualizada
       sessionStorage.setItem(
         `productos_${pedidoId}`,
         JSON.stringify(productosActualizados)
       );
 
-      // Mostrar mensaje de éxito
       toast({
         title: "Producto eliminado.",
         description: "El producto ha sido eliminado exitosamente.",
@@ -375,7 +359,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     }
   };
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Detección de vista móvil
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   return (
     <Box p={1} borderRadius="md" boxShadow="sm" bg="white">
@@ -485,7 +469,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                       key={producto.detallePedidoId}
                       style={{ padding: "0px", height: "10px" }}
                     >
-                      {/* Altura de la fila ajustada */}
                       <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
                         {producto.codigo || "Sin código"}
                       </Td>
@@ -541,7 +524,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                               handleRemoveProducto(producto.detallePedidoId)
                             }
                             size="xs"
-                            style={{ margin: "0", padding: "0" }} // Eliminar margen y padding adicional
+                            style={{ margin: "0", padding: "0" }} 
                           />
                         </Tooltip>
                       </Td>
@@ -556,7 +539,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             </Text>
           )}
 
-          {/* Siempre mostrar ProductoSelector, CantidadInput y botón de agregar */}
           <Box mt={4}>
             <MotionBox
               p={2}

@@ -35,7 +35,6 @@ const PageFormPedidos = () => {
   const [productosCopiados, setProductosCopiados] = useState([]);
   const [currentPedido, setCurrentPedido] = useState({
     ciudadId: 0,
-    deudorId: 0,
     tiendaId: 0,
     usuarioId: usuarioId,
     estadoId: 1,
@@ -271,8 +270,8 @@ const PageFormPedidos = () => {
 
   const resetForm = () => {
     setCurrentPedido({
-      ciudadId: null,
       deudorId: null,
+      ciudadId: null,
       tiendaId: null,
       tiendaId2: null,
     });

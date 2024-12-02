@@ -93,7 +93,7 @@ export const getPedidosComunesByUsuarioId = createAsyncThunk(
   'detalleOrden/fetchPedidosComunesByUsuarioId',
   async ({ deudorId, pedidoId, tiendaId }, { rejectWithValue }) => {
     // Log antes de la conversión para verificar los valores iniciales
-    console.log("Parámetros antes de la conversión:", { deudorId, pedidoId, tiendaId });
+    console.log("Valores enviados al thunk:", { deudorId, pedidoId, tiendaId });
 
     // Asegurarnos de que los IDs son números válidos
     deudorId = Number(deudorId);
@@ -117,6 +117,8 @@ export const getPedidosComunesByUsuarioId = createAsyncThunk(
       const response = await axios.get(url);
 
       const data = response.data;
+      console.log("Datos recibidos del backend:", data);
+
 
       // Si los datos son un array, ordenarlos
       if (Array.isArray(data)) {

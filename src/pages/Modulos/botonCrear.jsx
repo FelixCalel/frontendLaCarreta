@@ -120,7 +120,7 @@ export const BotonCrear = ({ nombreBoton, metadata }) => {
     // Función para manejar el botón de aceptar en la ventana de éxito
     const onAlertClose = () => {
         setIsAlertOpen(false); // Cerrar el AlertDialog
-        window.location.reload(); // Recargar la página
+        // window.location.reload(); // Recargar la página
     };
 
     return (
