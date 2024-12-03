@@ -1,3 +1,5 @@
+// PedidosTable.jsx
+
 import React from 'react';
 import PropTypes from "prop-types"; // Importa PropTypes
 import {
@@ -27,10 +29,7 @@ const PedidosTable = ({
   handleToggleDetails,
   handleDeletePedido,
   showRealizarPedidoConfirmation,
-  deudorId,
-  tiendaId,
 }) => {
-  // Definimos el contenido dependiendo de si es mobile o no
   const pedidosTableContent = isMobile ? ( 
     <VStack spacing={4} align="stretch">
       {pedidosUsuario.map((pedido) => (
@@ -72,7 +71,7 @@ const PedidosTable = ({
                     <ChevronDownIcon />
                   )
                 }
-                onClick={() => handleToggleDetails(pedido.id)}
+                onClick={() => handleToggleDetails(pedido.id, pedido.deudorId, pedido.tiendaId)}
                 colorScheme="blue"
                 size="sm"
               />
@@ -96,7 +95,11 @@ const PedidosTable = ({
           </HStack>
           {isDetailsOpen === pedido.id && (
             <Box mt={2}>
-              <ProductosTable pedidoId={pedido.id} deudorId={deudorId} tiendaId={tiendaId} />
+              <ProductosTable 
+                pedidoId={pedido.id} 
+                deudorId={pedido.deudorId} 
+                tiendaId={pedido.tiendaId} 
+              />
             </Box>
           )}
         </Box>
@@ -132,7 +135,7 @@ const PedidosTable = ({
                       ) : (
                         <ChevronDownIcon />
                       )}
-                      onClick={() => handleToggleDetails(pedido.id)}
+                      onClick={() => handleToggleDetails(pedido.id, pedido.deudorId, pedido.tiendaId)}
                       colorScheme="blue"
                       size="sm"
                     />
@@ -161,8 +164,8 @@ const PedidosTable = ({
                 <Td colSpan={5}>
                   <ProductosTable
                     pedidoId={pedido.id}
-                    deudorId={deudorId}
-                    tiendaId={tiendaId}
+                    deudorId={pedido.deudorId}
+                    tiendaId={pedido.tiendaId}
                   />
                 </Td>
               </Tr>
@@ -186,6 +189,8 @@ PedidosTable.propTypes = {
       nombreDeu: PropTypes.string,
       nombreTienda: PropTypes.string,
       estadoId: PropTypes.number.isRequired,
+      deudorId: PropTypes.number.isRequired, // Asegurado que está presente
+      tiendaId: PropTypes.number.isRequired,
     })
   ).isRequired,
   isMobile: PropTypes.bool.isRequired,
@@ -193,8 +198,6 @@ PedidosTable.propTypes = {
   handleToggleDetails: PropTypes.func.isRequired,
   handleDeletePedido: PropTypes.func.isRequired,
   showRealizarPedidoConfirmation: PropTypes.func.isRequired,
-  deudorId: PropTypes.number.isRequired,
-  tiendaId: PropTypes.number.isRequired,
 };
 
 export default PedidosTable;

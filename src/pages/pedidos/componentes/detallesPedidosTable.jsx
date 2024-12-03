@@ -64,9 +64,9 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           });
           return; // Salir si alguno de los IDs es inválido
         }
-  
+
         setIsLoading(true);
-  
+
         const detallesGuardados = sessionStorage.getItem(
           `productos_${pedidoId}`
         );
@@ -77,12 +77,12 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           setIsLoading(false);
           return;
         }
-  
-        // **Corrección aquí: pasar solo pedidoId**
+
+        // Usar el thunk correcto: getDetalleOrdenByPedidoId solo necesita pedidoId
         const detalles = await dispatch(
-          getDetalleOrdenByPedidoId(pedidoId) // Cambiado de objeto a solo pedidoId
+          getDetalleOrdenByPedidoId(pedidoId)
         ).unwrap();
-  
+
         setProductos(detalles);
         setProductosCargados(true);
         sessionStorage.setItem(
@@ -91,16 +91,22 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         );
       } catch (error) {
         console.error("Error al cargar los detalles del pedido:", error);
+        toast({
+          title: "Error",
+          description: "Hubo un problema al cargar los detalles del pedido.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       } finally {
         setIsLoading(false);
       }
     };
-  
+
     if (deudorId && pedidoId && tiendaId && !productosCargados) {
       cargarDetallesPedido();
     }
   }, [dispatch, deudorId, pedidoId, productosCargados, toast, tiendaId]);
-  
 
   useEffect(() => {
     if (!deudorId || !tiendaId) {
@@ -142,7 +148,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             tiendaId: validTiendaId,
           })
         ).unwrap();
-        
 
         setProductos(productosComunes);
         setProductosCargados(true);
@@ -176,12 +181,16 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   }, [deudorId, pedidoId, tiendaId, productosCargados, dispatch, toast]);
 
   console.log("Cargando productos comunes con:", deudorId, pedidoId, tiendaId);
-
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+  console.log("Props recibidos en ProductosTable:", { deudorId, pedidoId, tiendaId });
+}, [deudorId, pedidoId, tiendaId]);
+
 
   const handleProductoChange = (
     productoId,

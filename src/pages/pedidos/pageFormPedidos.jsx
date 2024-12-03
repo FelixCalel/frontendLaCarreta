@@ -35,6 +35,7 @@ const PageFormPedidos = () => {
   const [productosCopiados, setProductosCopiados] = useState([]);
   const [currentPedido, setCurrentPedido] = useState({
     ciudadId: 0,
+    tiendaId: 0,
     usuarioId: usuarioId,
     estadoId: 1,
   });
@@ -236,7 +237,6 @@ const PageFormPedidos = () => {
 
     try {
       setIsLoading(true);
-
       const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
       setPedidoIdGuardado(pedidoGuardado.id);
       window.location.reload(true);
