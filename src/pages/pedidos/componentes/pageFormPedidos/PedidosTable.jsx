@@ -44,7 +44,7 @@ const PedidosTable = ({
             boxShadow: "md",
             transition: "0.2s",
           }}
-        >
+        >    
           <Stack direction="row" justifyContent="space-between">
             <Text fontWeight="bold">Pedido ID: {pedido.id}</Text>
             <Badge colorScheme={pedido.estadoId === 1 ? "green" : "gray"}>

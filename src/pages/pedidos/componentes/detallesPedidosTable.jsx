@@ -32,8 +32,9 @@ import PropTypes from "prop-types";
 
 const MotionBox = motion(Box);
 
+
+
 const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
-  
   const dispatch = useDispatch();
   const toast = useToast();
 
@@ -51,6 +52,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [resetFields, setResetFields] = useState(false);
 
+
   useEffect(() => {
     const cargarDetallesPedido = async () => {
       try {
@@ -62,33 +64,32 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             duration: 3000,
             isClosable: true,
           });
-          return; // Salir si alguno de los IDs es inválido
-        }
-
-        setIsLoading(true);
-
-        const detallesGuardados = sessionStorage.getItem(
-          `productos_${pedidoId}`
-        );
-        if (detallesGuardados) {
-          const detallesGuardadosParsed = JSON.parse(detallesGuardados);
-          setProductos(detallesGuardadosParsed);
-          setProductosCargados(true);
-          setIsLoading(false);
           return;
         }
-
-        // Usar el thunk correcto: getDetalleOrdenByPedidoId solo necesita pedidoId
-        const detalles = await dispatch(
-          getDetalleOrdenByPedidoId(pedidoId)
-        ).unwrap();
-
+  
+        setIsLoading(true);
+  
+        // Verificar si los detalles ya están en sessionStorage
+        const detallesGuardados = sessionStorage.getItem(`productos_${pedidoId}`);
+        if (detallesGuardados) {
+          // Si los detalles ya existen en sessionStorage, no hacer la carga
+          const detallesGuardadosParsed = JSON.parse(detallesGuardados);
+  
+          // Filtrar los productos eliminados (con el flag `eliminado: true`)
+          const productosFiltrados = detallesGuardadosParsed.filter(
+            (prod) => !prod.eliminado
+          );
+          setProductos(productosFiltrados);
+          setProductosCargados(true);
+          return; // No hacer la llamada al backend si ya tenemos los detalles
+        }
+  
+        // Si no hay detalles en sessionStorage, cargar desde el backend
+        const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+  
         setProductos(detalles);
         setProductosCargados(true);
-        sessionStorage.setItem(
-          `productos_${pedidoId}`,
-          JSON.stringify(detalles)
-        );
+        sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(detalles));
       } catch (error) {
         console.error("Error al cargar los detalles del pedido:", error);
         toast({
@@ -102,11 +103,13 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         setIsLoading(false);
       }
     };
-
+  
     if (deudorId && pedidoId && tiendaId && !productosCargados) {
       cargarDetallesPedido();
     }
-  }, [dispatch, deudorId, pedidoId, productosCargados, toast, tiendaId]);
+  }, [deudorId, pedidoId, tiendaId, productosCargados, toast, dispatch]);
+  
+  
 
   useEffect(() => {
     if (!deudorId || !tiendaId) {
@@ -188,9 +191,13 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   }, []);
 
   useEffect(() => {
-  console.log("Props recibidos en ProductosTable:", { deudorId, pedidoId, tiendaId });
-}, [deudorId, pedidoId, tiendaId]);
-
+    console.log("Props recibidos en ProductosTable:", {
+      deudorId,
+      pedidoId,
+      tiendaId,
+    });
+  }, [deudorId, pedidoId, tiendaId]);
+  
 
   const handleProductoChange = (
     productoId,
@@ -294,17 +301,23 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     }
 
     try {
+      // Primero eliminamos el producto desde el backend
       await dispatch(deleteDetalleOrden(detallePedidoId)).unwrap();
 
+      // Eliminar de sessionStorage
       const productosActualizados = productos.filter(
         (prod) => prod.detallePedidoId !== detallePedidoId
       );
-      setProductos(productosActualizados);
-
       sessionStorage.setItem(
         `productos_${pedidoId}`,
         JSON.stringify(productosActualizados)
       );
+
+      // Actualizar el estado de productos
+      setProductos(productosActualizados);
+
+      // Actualizar el flag productosCargados para evitar recargas innecesarias
+      setProductosCargados(true);
 
       toast({
         title: "Producto eliminado.",
