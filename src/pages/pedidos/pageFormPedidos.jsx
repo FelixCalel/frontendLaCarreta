@@ -35,7 +35,6 @@ const PageFormPedidos = () => {
   const [productosCopiados, setProductosCopiados] = useState([]);
   const [currentPedido, setCurrentPedido] = useState({
     ciudadId: 0,
-    tiendaId: 0,
     usuarioId: usuarioId,
     estadoId: 1,
   });
@@ -224,13 +223,13 @@ const PageFormPedidos = () => {
         duration: 3000,
         isClosable: true,
       });
-      console.log("Pedido duplicado detectado:", pedidosHoy); 
+      console.log("Pedido duplicado detectado:", pedidosHoy);
     }
-    
 
     const newPedido = {
       ...currentPedido,
       tiendaId: tiendaSeleccionada,
+      deudorId: currentPedido.deudorId,
       fechaOrden: today,
       productos: productosCopiados,
     };
@@ -264,13 +263,14 @@ const PageFormPedidos = () => {
         isClosable: true,
       });
     } finally {
-      setIsLoading(false); 
+      setIsLoading(false);
     }
   };
 
   const resetForm = () => {
     setCurrentPedido({
       deudorId: null,
+      pedidoId: null,
       ciudadId: null,
       tiendaId: null,
       tiendaId2: null,
@@ -325,14 +325,22 @@ const PageFormPedidos = () => {
         pedidosUsuario={pedidosUsuario}
         isMobile={isMobile}
         isDetailsOpen={isDetailsOpen}
-        handleToggleDetails={(pedidoId) =>
-          setIsDetailsOpen(isDetailsOpen === pedidoId ? null : pedidoId)
-        }
+        handleToggleDetails={(pedidoId, deudorId, tiendaId) => {
+          setIsDetailsOpen(isDetailsOpen === pedidoId ? null : pedidoId);
+
+          // Aquí puedes hacer la llamada para cargar los detalles de los productos comunes
+          if (isDetailsOpen !== pedidoId) {
+            // Llamada para cargar productos más comunes
+            dispatch(getDetalleOrdenByPedidoId(pedidoId, deudorId, tiendaId));
+          }
+        }}
         handleDeletePedido={(pedidoId) => dispatch(deletePedido(pedidoId))}
         showRealizarPedidoConfirmation={(pedidoId) => {
           setSelectedPedidoId(pedidoId);
           onDialogOpen();
         }}
+        deudorId={currentPedido.deudorId}
+        tiendaId={currentPedido.tiendaId}
         usuarioId={usuarioId}
       />
 

@@ -33,6 +33,7 @@ import PropTypes from "prop-types";
 const MotionBox = motion(Box);
 
 const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
+  
   const dispatch = useDispatch();
   const toast = useToast();
 
@@ -53,7 +54,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   useEffect(() => {
     const cargarDetallesPedido = async () => {
       try {
-        if (![deudorId, pedidoId, tiendaId].every(id => id && !isNaN(id))) {
+        if (![deudorId, pedidoId, tiendaId].every((id) => id && !isNaN(id))) {
           toast({
             title: "Error",
             description: "Uno de los IDs no es válido.",
@@ -66,7 +67,9 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   
         setIsLoading(true);
   
-        const detallesGuardados = sessionStorage.getItem(`productos_${pedidoId}`);
+        const detallesGuardados = sessionStorage.getItem(
+          `productos_${pedidoId}`
+        );
         if (detallesGuardados) {
           const detallesGuardadosParsed = JSON.parse(detallesGuardados);
           setProductos(detallesGuardadosParsed);
@@ -75,11 +78,17 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           return;
         }
   
-        const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+        // **Corrección aquí: pasar solo pedidoId**
+        const detalles = await dispatch(
+          getDetalleOrdenByPedidoId(pedidoId) // Cambiado de objeto a solo pedidoId
+        ).unwrap();
+  
         setProductos(detalles);
         setProductosCargados(true);
-        sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(detalles));
-  
+        sessionStorage.setItem(
+          `productos_${pedidoId}`,
+          JSON.stringify(detalles)
+        );
       } catch (error) {
         console.error("Error al cargar los detalles del pedido:", error);
       } finally {
@@ -92,25 +101,29 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     }
   }, [dispatch, deudorId, pedidoId, productosCargados, toast, tiendaId]);
   
-  
-  useEffect(() => {
 
+  useEffect(() => {
     if (!deudorId || !tiendaId) {
-      console.error("deudorId o tiendaId no definidos:", { deudorId, tiendaId, pedidoId });
+      console.error("deudorId o tiendaId no definidos:", {
+        deudorId,
+        tiendaId,
+        pedidoId,
+      });
       return;
     }
 
     const cargarProductosComunes = async () => {
       try {
-        // Verifica los IDs antes de hacer la llamada a la API
-        console.log("Valores antes de hacer la llamada:", { deudorId, pedidoId, tiendaId });
-  
         const validDeudorId = Number(deudorId);
         const validPedidoId = Number(pedidoId);
         const validTiendaId = Number(tiendaId);
-  
+
         // Verifica que los IDs sean válidos antes de hacer la llamada
-        if (isNaN(validDeudorId) || isNaN(validPedidoId) || isNaN(validTiendaId)) {
+        if (
+          isNaN(validDeudorId) ||
+          isNaN(validPedidoId) ||
+          isNaN(validTiendaId)
+        ) {
           toast({
             title: "Error",
             description: "Uno de los IDs no es válido.",
@@ -118,33 +131,25 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             duration: 3000,
             isClosable: true,
           });
+          console.error("IDs no válidos", { deudorId, pedidoId, tiendaId });
           return;
         }
-  
-        setIsLoading(true);
-  
-        // Llamada al backend
-        console.log("Llamando a la API con los siguientes parámetros:", {
-          deudorId: validDeudorId,
-          pedidoId: validPedidoId,
-          tiendaId: validTiendaId
-        });
-  
+
         const productosComunes = await dispatch(
           getPedidosComunesByUsuarioId({
-            deudorId: validDeudorId,   
-            pedidoId: validPedidoId,  
-            tiendaId: validTiendaId,  
+            deudorId: validDeudorId,
+            pedidoId: validPedidoId,
+            tiendaId: validTiendaId,
           })
         ).unwrap();
         
+
         setProductos(productosComunes);
         setProductosCargados(true);
         sessionStorage.setItem(
           `productos_comunes_${pedidoId}`,
           JSON.stringify(productosComunes)
         );
-  
       } catch (error) {
         console.error("Error al cargar los productos comunes:", error);
         toast({
@@ -158,15 +163,19 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         setIsLoading(false);
       }
     };
-  
+
     if (deudorId && pedidoId && tiendaId && !productosCargados) {
-      console.log("Cargando productos comunes con:", deudorId, pedidoId, tiendaId);  // Debugging
+      console.log(
+        "Cargando productos comunes con:",
+        deudorId,
+        pedidoId,
+        tiendaId
+      ); // Debugging
       cargarProductosComunes();
     }
   }, [deudorId, pedidoId, tiendaId, productosCargados, dispatch, toast]);
-  
-  console.log("Cargando productos comunes con:", deudorId, pedidoId, tiendaId); 
-  
+
+  console.log("Cargando productos comunes con:", deudorId, pedidoId, tiendaId);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -176,6 +185,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
 
   const handleProductoChange = (
     productoId,
+    deudorId,
     nombreProducto,
     cantidadDisponible,
     codigo
@@ -183,6 +193,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     setNewProducto((prev) => ({
       ...prev,
       productoId,
+      deudorId,
       nombreProducto,
       cantidadDisponible,
       codigo,
@@ -201,35 +212,35 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         });
         return;
       }
-  
+
       try {
         const newDetalleOrden = {
           pedidoId,
           productoId: newProducto.productoId,
           cantidad: newProducto.cantidad,
-          precio: 0, 
+          precio: 0,
         };
-  
+
         const result = await dispatch(
           addNewDetalleOrden(newDetalleOrden)
         ).unwrap();
         if (!result || !result.id) {
           throw new Error("El backend no devolvió un detallePedidoId válido.");
         }
-  
+
         const detalleConId = {
           ...result,
-          detallePedidoId: result.id, 
+          detallePedidoId: result.id,
         };
-  
+
         const nuevosProductos = [...productos, detalleConId];
         setProductos(nuevosProductos);
-  
+
         sessionStorage.setItem(
           `productos_${pedidoId}`,
           JSON.stringify(nuevosProductos)
         );
-  
+
         setNewProducto({
           productoId: "",
           nombreProducto: "",
@@ -237,8 +248,8 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           cantidadDisponible: 0,
           codigo: "",
         });
-        setResetFields(true); 
-  
+        setResetFields(true);
+
         toast({
           title: "Producto agregado",
           description: "El producto ha sido agregado exitosamente.",
@@ -266,7 +277,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
       });
     }
   };
-  
 
   const handleRemoveProducto = async (detallePedidoId) => {
     if (!detallePedidoId) {
@@ -524,7 +534,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                               handleRemoveProducto(producto.detallePedidoId)
                             }
                             size="xs"
-                            style={{ margin: "0", padding: "0" }} 
+                            style={{ margin: "0", padding: "0" }}
                           />
                         </Tooltip>
                       </Td>
