@@ -103,16 +103,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           if (error.response && error.response.status === 404) {
             // Pedido sin detalles, proceder a cargar productos comunes
             console.warn("No se encontraron detalles para el pedido (404).");
-          } else {
-            // Otro error
-            console.error("Error al cargar los detalles del pedido:", error);
-            toast({
-              title: "Error",
-              description: "Hubo un problema al cargar los detalles del pedido.",
-              status: "error",
-              duration: 3000,
-              isClosable: true,
-            });
           }
         } finally {
           setDetallesCargados(true);

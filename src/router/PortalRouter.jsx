@@ -14,9 +14,6 @@ import { PageasignacionMO } from "../pages/asignacionMO/asignacionMO";
 import PageFormDeus from "../pages/deus/pageFormDeus.jsx";
 
 
-
-
- 
 export const PortalRouter = () => {
   return (
     <Routes>
