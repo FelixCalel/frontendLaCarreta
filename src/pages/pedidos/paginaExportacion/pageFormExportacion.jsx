@@ -1,5 +1,3 @@
-// src/pages/AprobadosPage.jsx
-
 import { useEffect, useState } from "react";
 import { Box, useDisclosure, Button, Flex } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,7 +17,10 @@ const AprobadosPage = () => {
   const usuarioId = Number(localStorage.getItem("usuarioId")) || 0; // Valor predeterminado
 
   useEffect(() => {
-    dispatch(tablaPedidos());
+    const fetchPedidos = async () => {
+      await dispatch(tablaPedidos());
+    };
+    fetchPedidos();
   }, [dispatch]);
 
   // Filtrar solo los pedidos aprobados (estadoId === 4)
@@ -43,11 +44,7 @@ const AprobadosPage = () => {
     if (pedidosAprobados.length === 0) return;
 
     setIsExporting(true);
-    // Lógica para exportar todos los pedidos aprobados en un solo Excel
-    // Puedes reutilizar la lógica de exportación individual adaptándola para múltiples pedidos
-
     try {
-      // Crear una instancia de ExcelJS
       const ExcelJS = (await import("exceljs")).default;
       const workbook = new ExcelJS.Workbook();
 
@@ -80,8 +77,6 @@ const AprobadosPage = () => {
 
       // Generar el buffer
       const buffer = await workbook.xlsx.writeBuffer();
-
-      // Descargar el archivo
       const blob = new Blob([buffer], {
         type:
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

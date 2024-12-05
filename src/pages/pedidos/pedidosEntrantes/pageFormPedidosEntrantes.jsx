@@ -80,6 +80,7 @@ const EntrantesPage = () => {
   const handleVerDetalles = async (pedidoId) => {
     try {
       const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+      console.log(detalles);
       setDetallesPedido(detalles);
       setSelectedPedido(pedidoId);
       setIsModalOpen(true);

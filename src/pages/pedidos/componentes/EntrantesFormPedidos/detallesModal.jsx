@@ -29,6 +29,7 @@ const DetallesModal = ({ isOpen, onClose, detalles, pedidoId }) => {
             <Table variant="simple">
               <Thead>
                 <Tr>
+                  <Th>Código</Th>
                   <Th>Producto</Th>
                   <Th>Cantidad</Th>
                 </Tr>
@@ -36,13 +37,10 @@ const DetallesModal = ({ isOpen, onClose, detalles, pedidoId }) => {
               <Tbody>
                 {detalles.map((detalle) => (
                   <Tr key={detalle.id}>
-                    <Td>
-                      {`${detalle.codigo || "Sin código"} - ${
-                        detalle.nombreProducto
-                      }`}
-                    </Td>
-                    <Td>{detalle.cantidad}</Td>
-                  </Tr>
+                  <Td>{detalle.codigo || "Sin código"}</Td>
+                  <Td>{detalle.nombreProducto || "Sin nombre"}</Td>
+                  <Td>{detalle.cantidad}</Td>
+                </Tr>
                 ))}
               </Tbody>
             </Table>
