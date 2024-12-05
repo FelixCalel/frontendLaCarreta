@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { Box, useDisclosure, Button, Flex } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import AprobadosTable from "../componentes/exportacionFormPedidos/tableAprobados";
-import DetallesModal from "../componentes/";
-import { tablaPedidos, getDetalleOrdenByPedidoId } from "../../../store/Pedidos/thunks";
+import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
+import { tablaPedidos } from "../../../store/Pedidos/thunks";
+import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks"
 
 const AprobadosPage = () => {
   const dispatch = useDispatch();

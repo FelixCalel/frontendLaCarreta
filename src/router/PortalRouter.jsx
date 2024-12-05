@@ -12,6 +12,7 @@ import { PagePermiso } from "../pages/Permisos/PagePermiso";
 import { PagePermisosRoles } from "../pages/asignarPermisosAroles/PagePermisosRoles"; 
 import { PageasignacionMO } from "../pages/asignacionMO/asignacionMO";
 import PageFormDeus from "../pages/deus/pageFormDeus.jsx";
+import AprobadosPage from "../pages/pedidos/paginaExportacion/pageFormExportacion"
 
 
 export const PortalRouter = () => {
@@ -39,6 +40,8 @@ export const PortalRouter = () => {
         <Route path="listarPermisosRoles" element={<PagePermisosRoles />} ></Route>
         <Route path="listarasignacionMO" element={<PageasignacionMO />} > </Route>
         <Route path="listarDeus" element={<PageFormDeus />} > </Route>
+        <Route path="exportarPedidos" element={< AprobadosPage/>} > </Route>
+    
 
         {/* Más rutas anidadas si es necesario */}
       </Route>
