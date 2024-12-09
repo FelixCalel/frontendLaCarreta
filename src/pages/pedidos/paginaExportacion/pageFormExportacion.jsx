@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react"; 
-import { Box, Button, Flex, useDisclosure } from "@chakra-ui/react"; 
-import { useDispatch, useSelector } from "react-redux"; 
-import AprobadosTable from "../componentes/exportacionFormPedidos/tableAprobados"; 
-import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal"; 
-import { tablaPedidos } from "../../../store/Pedidos/thunks"; 
+import { useEffect, useState } from "react";
+import { Box, Button, Flex, useDisclosure } from "@chakra-ui/react";
+import { useDispatch, useSelector } from "react-redux";
+import AprobadosTable from "../componentes/exportacionFormPedidos/tableAprobados";
+import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
+import { tablaPedidos } from "../../../store/Pedidos/thunks";
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
-
 
 const AprobadosPage = () => {
   const dispatch = useDispatch();
@@ -23,30 +22,76 @@ const AprobadosPage = () => {
     fetchPedidos();
   }, [dispatch]);
 
-  const pedidosAprobados = pedidos.filter(
-    (pedido) => pedido.estadoId === 3
-  );
+  const pedidosAprobados = pedidos.filter((pedido) => pedido.estadoId === 3);
+  console.log("Pedidos:", pedidosAprobados);
+
+
+  const addPedidoDetailsToWorksheet = (worksheet, pedido) => {
+    const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : []; // Asegura que sea un array
+    detalles.forEach((detalle) => {
+      worksheet.addRow({
+        deudor: pedido.nombreDeu,
+        pedidoId: `P-${pedido.id}`,
+        item: `${detalle.codigo || "Sin código"} - ${detalle.nombreProducto}`,
+        cantidad: detalle.cantidad,
+        fecha: pedido.fechaOrden,
+      });
+    });
+  };
+  
+  
 
   const handleVerDetalles = async (pedidoId) => {
     try {
-      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+      const detalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedidoId)
+      ).unwrap();
       setDetallesPedido(detalles);
       setSelectedPedido(pedidoId);
       onOpen();
     } catch (error) {
-      console.error(`Error al obtener los detalles del pedido ${pedidoId}:`, error);
+      console.error(
+        `Error al obtener los detalles del pedido ${pedidoId}:`,
+        error
+      );
     }
   };
+  console.log("Pedidos aprobados:", pedidosAprobados);
+
+  // Ejemplo de agregar detalles
+  const cargarDetallesPedidos = async (pedidos) => {
+    const pedidosConDetalles = await Promise.all(
+      pedidos.map(async (pedido) => {
+        const detalles = await getDetalleOrdenByPedidoId(pedido.id);
+        return {
+          ...pedido,
+          detalles: Array.isArray(detalles) ? detalles : [], // Asegura que siempre sea un array
+        };
+      })
+    );
+    return pedidosConDetalles;
+  };
+
+  
+
 
   const handleExportConsolidado = async () => {
-    if (pedidosAprobados.length === 0) return;
-
+    if (pedidosAprobados.length === 0) {
+      console.log("No hay pedidos aprobados para exportar.");
+      return;
+    }
+  
     setIsExporting(true);
+  
     try {
+      // Cargar los detalles de los pedidos antes de exportar
+      const pedidosConDetalles = await cargarDetallesPedidos(pedidosAprobados);
+      console.log("Pedidos con detalles:", pedidosConDetalles);
+  
       const ExcelJS = (await import("exceljs")).default;
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Pedidos Consolidados");
-
+  
       // Definir las columnas
       worksheet.columns = [
         { header: "Deudor", key: "deudor", width: 30 },
@@ -55,32 +100,24 @@ const AprobadosPage = () => {
         { header: "Cantidad", key: "cantidad", width: 15 },
         { header: "Fecha", key: "fecha", width: 25 },
       ];
-
+  
       // Agrupar los pedidos por deudor
-      const pedidosPorDeudor = pedidosAprobados.reduce((acc, pedido) => {
+      const pedidosPorDeudor = pedidosConDetalles.reduce((acc, pedido) => {
         const deudor = pedido.nombreDeu || "Sin deudor";
         if (!acc[deudor]) acc[deudor] = [];
         acc[deudor].push(pedido);
         return acc;
       }, {});
-      
-
+  
+      console.log("Pedidos agrupados por deudor:", pedidosPorDeudor);
+  
       // Agregar los datos agrupados al archivo Excel
-      Object.entries(pedidosPorDeudor).forEach(([deudor, pedidos]) => {
+      Object.entries(pedidosPorDeudor).forEach(([, pedidos]) => {
         pedidos.forEach((pedido) => {
-          const detalles = pedido.detalles || [];
-          detalles.forEach((detalle) => {
-            worksheet.addRow({
-              deudor,
-              pedidoId: `P-${pedido.id}`,
-              item: `${detalle.codigo || "Sin código"} - ${detalle.nombreProducto}`,
-              cantidad: detalle.cantidad,
-              fecha: pedido.fechaOrden,
-            });
-          });
+          addPedidoDetailsToWorksheet(worksheet, pedido);
         });
       });
-
+  
       // Generar el archivo y descargarlo
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
@@ -98,6 +135,9 @@ const AprobadosPage = () => {
       setIsExporting(false);
     }
   };
+  
+  
+  
 
   return (
     <Box p={6} boxShadow="xl" bg="white" rounded="lg">
