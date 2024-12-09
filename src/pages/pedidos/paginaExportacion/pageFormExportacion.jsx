@@ -73,68 +73,92 @@ const AprobadosPage = () => {
   };
   
 
-const handleExportConsolidado = async () => {
-  if (pedidosAprobados.length === 0) {
-    console.log("No hay pedidos aprobados para exportar.");
-    return;
-  }
-
-  setIsExporting(true);
-
-  try {
-    // Cargar los detalles de los pedidos antes de exportar
-    const pedidosConDetalles = await cargarDetallesPedidos(pedidosAprobados);
-    console.log("Pedidos con detalles:", pedidosConDetalles);
-
-    const ExcelJS = (await import("exceljs")).default;
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Pedidos Consolidados");
-
-    // Definir las columnas
-    worksheet.columns = [
-      { header: "Deudor", key: "deudor", width: 30 },
-      { header: "Pedido ID", key: "pedidoId", width: 15 },
-      { header: "Item", key: "item", width: 40 },
-      { header: "Cantidad", key: "cantidad", width: 15 },
-      { header: "Fecha", key: "fecha", width: 25 },
-    ];
-
-    // Agrupar los pedidos por deudor
-    const pedidosPorDeudor = pedidosConDetalles.reduce((acc, pedido) => {
-      const deudor = pedido.nombreDeu || "Sin deudor";
-      if (!acc[deudor]) acc[deudor] = [];
-      acc[deudor].push(pedido);
-      return acc;
-    }, {});
-
-    console.log("Pedidos agrupados por deudor:", pedidosPorDeudor);
-
-    // Agregar los datos agrupados al archivo Excel
-    Object.keys(pedidosPorDeudor).forEach((deudor) => {
-      const pedidos = pedidosPorDeudor[deudor];
-      pedidos.forEach((pedido) => {
-        addPedidoDetailsToWorksheet(worksheet, pedido);
+  const handleExportConsolidado = async () => {
+    if (pedidosAprobados.length === 0) {
+      console.log("No hay pedidos aprobados para exportar.");
+      return;
+    }
+  
+    setIsExporting(true);
+  
+    try {
+      // Cargar los detalles de los pedidos antes de exportar
+      const pedidosConDetalles = await cargarDetallesPedidos(pedidosAprobados);
+      console.log("Pedidos con detalles:", pedidosConDetalles);
+  
+      const ExcelJS = (await import("exceljs")).default;
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Pedidos Consolidados");
+  
+      // Definir las columnas
+      worksheet.columns = [
+        { header: "Deudor", key: "deudor", width: 30 },
+        { header: "Pedido ID", key: "pedidoId", width: 15 },
+        { header: "Item", key: "item", width: 40 },
+        { header: "Cantidad", key: "cantidad", width: 15 },
+        { header: "Fecha", key: "fecha", width: 25 },
+      ];
+  
+      // Agrupar los pedidos por deudor
+      const pedidosPorDeudor = pedidosConDetalles.reduce((acc, pedido) => {
+        const deudor = pedido.nombreDeu || "Sin deudor";
+        if (!acc[deudor]) acc[deudor] = [];
+        acc[deudor].push(pedido);
+        return acc;
+      }, {});
+  
+      console.log("Pedidos agrupados por deudor:", pedidosPorDeudor);
+  
+      // Agregar los datos agrupados al archivo Excel
+      Object.keys(pedidosPorDeudor).forEach((deudor) => {
+        // Agregar una fila con el nombre del deudor
+        worksheet.addRow({ deudor }).font = { bold: true };
+  
+        const pedidos = pedidosPorDeudor[deudor];
+        let totalCantidad = 0;
+  
+        pedidos.forEach((pedido) => {
+          const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
+          detalles.forEach((detalle) => {
+            worksheet.addRow({
+              deudor: "",
+              pedidoId: `P-${pedido.id}`,
+              item: `${detalle.codigo || "Sin código"} - ${detalle.nombreProducto}`,
+              cantidad: detalle.cantidad,
+              fecha: pedido.fechaOrden,
+            });
+            totalCantidad += detalle.cantidad;
+          });
+        });
+  
+        // Agregar una fila con los totales por deudor
+        worksheet.addRow({
+          deudor: "Total",
+          cantidad: totalCantidad,
+        }).font = { bold: true };
+  
+        // Agregar una línea en blanco entre deudores
+        worksheet.addRow({});
       });
-    });
-    
-
-    // Generar el archivo y descargarlo
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "pedidos_consolidados.xlsx";
-    a.click();
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("Error al exportar pedidos consolidados:", error);
-  } finally {
-    setIsExporting(false);
-  }
-};
+  
+      // Generar el archivo y descargarlo
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "pedidos_consolidados.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al exportar pedidos consolidados:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+  
 
   
 
