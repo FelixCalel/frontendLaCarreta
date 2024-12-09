@@ -26,18 +26,19 @@ const AprobadosPage = () => {
   console.log("Pedidos:", pedidosAprobados);
 
 
-  const addPedidoDetailsToWorksheet = (worksheet, pedido) => {
-    const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : []; // Asegura que sea un array
-    detalles.forEach((detalle) => {
-      worksheet.addRow({
-        deudor: pedido.nombreDeu,
-        pedidoId: `P-${pedido.id}`,
-        item: `${detalle.codigo || "Sin código"} - ${detalle.nombreProducto}`,
-        cantidad: detalle.cantidad,
-        fecha: pedido.fechaOrden,
-      });
-    });
-  };
+  // const addPedidoDetailsToWorksheet = (worksheet, pedido) => {
+  //   const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : []; // Asegura que sea un array
+  //   detalles.forEach((detalle) => {
+  //     worksheet.addRow({
+  //       deudor: pedido.nombreDeu,
+  //       pedidoId: `P-${pedido.id}`,
+  //       item: `${detalle.codigo || "Sin código"} - ${detalle.nombreProducto}`,
+  //       cantidad: detalle.cantidad,
+  //       fecha: pedido.fechaOrden,
+  //     });
+  //   });
+  // };
+  
   
   
 
@@ -94,7 +95,8 @@ const AprobadosPage = () => {
       worksheet.columns = [
         { header: "Deudor", key: "deudor", width: 30 },
         { header: "Pedido ID", key: "pedidoId", width: 15 },
-        { header: "Item", key: "item", width: 40 },
+        { header: "Código", key: "codigo", width: 15 },
+        { header: "Producto", key: "producto", width: 25 },
         { header: "Cantidad", key: "cantidad", width: 15 },
         { header: "Fecha", key: "fecha", width: 25 },
       ];
@@ -115,7 +117,7 @@ const AprobadosPage = () => {
         worksheet.addRow({ deudor }).font = { bold: true };
   
         const pedidos = pedidosPorDeudor[deudor];
-        let totalCantidad = 0;
+        // let totalCantidad = 0;
   
         pedidos.forEach((pedido) => {
           const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
@@ -123,19 +125,20 @@ const AprobadosPage = () => {
             worksheet.addRow({
               deudor: "",
               pedidoId: `P-${pedido.id}`,
-              item: `${detalle.codigo || "Sin código"} - ${detalle.nombreProducto}`,
+              codigo: detalle.codigo || "Sin código",
+              producto: detalle.nombreProducto,
               cantidad: detalle.cantidad,
               fecha: pedido.fechaOrden,
             });
-            totalCantidad += detalle.cantidad;
+            // totalCantidad += detalle.cantidad;
           });
         });
   
         // Agregar una fila con los totales por deudor
-        worksheet.addRow({
-          deudor: "Total",
-          cantidad: totalCantidad,
-        }).font = { bold: true };
+        // worksheet.addRow({
+        //   deudor: "Total",
+        //   cantidad: totalCantidad,
+        // }).font = { bold: true };
   
         // Agregar una línea en blanco entre deudores
         worksheet.addRow({});
@@ -159,9 +162,7 @@ const AprobadosPage = () => {
     }
   };
   
-
   
-
   return (
     <Box p={6} boxShadow="xl" bg="white" rounded="lg">
       <Flex justify="space-between" mb={6}>
