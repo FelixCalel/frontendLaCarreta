@@ -52,15 +52,19 @@ const PedidosTable = ({
         });
         return;
       }
-  
+
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet(`Pedido_${pedido.id}`);
-  
+
       // Formatear la fecha para Excel
-      const fechaFormateada = format(new Date(pedido.fechaOrden), "dd MMMM yyyy HH:mm", {
-        locale: es,
-      });
-  
+      const fechaFormateada = format(
+        new Date(pedido.fechaOrden),
+        "dd MMMM yyyy HH:mm",
+        {
+          locale: es,
+        }
+      );
+
       worksheet.columns = [
         { header: "ID Pedido", key: "id", width: 15 },
         { header: "Deudor", key: "deudor", width: 30 },
@@ -68,7 +72,7 @@ const PedidosTable = ({
         { header: "Cantidad", key: "cantidad", width: 15 },
         { header: "Fecha", key: "fecha", width: 25 },
       ];
-  
+
       detalles.forEach((detalle) => {
         worksheet.addRow({
           id: `P-${pedido.id}`,
@@ -78,11 +82,11 @@ const PedidosTable = ({
           fecha: fechaFormateada, // Usar la fecha formateada
         });
       });
-  
+
       // Opcional: Dar formato a la columna de fecha
-      const fechaColumn = worksheet.getColumn('fecha');
+      const fechaColumn = worksheet.getColumn("fecha");
       fechaColumn.width = 25;
-  
+
       const buffer = await workbook.xlsx.writeBuffer();
       saveAs(
         new Blob([buffer], {
@@ -101,7 +105,6 @@ const PedidosTable = ({
       });
     }
   };
-  
 
   return (
     <Table variant="striped" colorScheme="gray">
@@ -109,6 +112,8 @@ const PedidosTable = ({
         <Tr>
           <Th>Seleccionar</Th>
           <Th>ID</Th>
+          <Th>Deudor</Th>
+          <Th>Tienda</Th>
           <Th>Usuario</Th>
           <Th>Fecha</Th>
           <Th>Acciones</Th>
@@ -118,13 +123,16 @@ const PedidosTable = ({
         {pedidosEntrantes.length > 0 ? (
           pedidosEntrantes.map((pedido) => (
             <Tr key={pedido.id}>
-              <Td>
+              <Td style={{ width: "50px" }}>
                 <Checkbox
                   isChecked={selectedPedidos.includes(pedido.id)}
                   onChange={() => handleSelectPedido(pedido.id)}
                 />
               </Td>
+
               <Td>{pedido.id}</Td>
+              <Td>{pedido.nombreDeu}</Td>
+              <Td>{pedido.nombreTienda}</Td>
               <Td>{pedido.nombreUsuario}</Td>
               <Td>
                 {format(new Date(pedido.fechaOrden), "dd MMMM yyyy HH:mm", {
@@ -171,6 +179,8 @@ PedidosTable.propTypes = {
   pedidosEntrantes: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.number.isRequired,
+      nombreDeu: PropTypes.string,
+      nombreTienda: PropTypes.string,
       nombreUsuario: PropTypes.string.isRequired,
       fechaOrden: PropTypes.string.isRequired,
       detalles: PropTypes.arrayOf(

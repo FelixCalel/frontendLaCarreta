@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
-import { Box, useDisclosure, Button, Flex } from "@chakra-ui/react";
-import { useDispatch, useSelector } from "react-redux";
-import AprobadosTable from "../componentes/exportacionFormPedidos/tableAprobados";
-import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
-import { tablaPedidos } from "../../../store/Pedidos/thunks";
-import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks"
+import { useEffect, useState } from "react"; 
+import { Box, Button, Flex, useDisclosure } from "@chakra-ui/react"; 
+import { useDispatch, useSelector } from "react-redux"; 
+import AprobadosTable from "../componentes/exportacionFormPedidos/tableAprobados"; 
+import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal"; 
+import { tablaPedidos } from "../../../store/Pedidos/thunks"; 
+import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
+
 
 const AprobadosPage = () => {
   const dispatch = useDispatch();
@@ -14,7 +15,6 @@ const AprobadosPage = () => {
   const [isExporting, setIsExporting] = useState(false);
 
   const pedidos = useSelector((state) => state.pedidos.data);
-  const usuarioId = Number(localStorage.getItem("usuarioId")) || 0; // Valor predeterminado
 
   useEffect(() => {
     const fetchPedidos = async () => {
@@ -23,9 +23,8 @@ const AprobadosPage = () => {
     fetchPedidos();
   }, [dispatch]);
 
-  // Filtrar solo los pedidos aprobados (estadoId === 4)
   const pedidosAprobados = pedidos.filter(
-    (pedido) => pedido.estadoId === 4 && pedido.usuarioId === usuarioId
+    (pedido) => pedido.estadoId === 3
   );
 
   const handleVerDetalles = async (pedidoId) => {
@@ -36,60 +35,65 @@ const AprobadosPage = () => {
       onOpen();
     } catch (error) {
       console.error(`Error al obtener los detalles del pedido ${pedidoId}:`, error);
-      // Aquí podrías agregar un toast o algún tipo de notificación de error
     }
   };
 
-  const handleExportAll = async () => {
+  const handleExportConsolidado = async () => {
     if (pedidosAprobados.length === 0) return;
 
     setIsExporting(true);
     try {
       const ExcelJS = (await import("exceljs")).default;
       const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Pedidos Consolidados");
 
-      pedidosAprobados.forEach((pedido) => {
-        const worksheet = workbook.addWorksheet(`Pedido_${pedido.id}`);
+      // Definir las columnas
+      worksheet.columns = [
+        { header: "Deudor", key: "deudor", width: 30 },
+        { header: "Pedido ID", key: "pedidoId", width: 15 },
+        { header: "Item", key: "item", width: 40 },
+        { header: "Cantidad", key: "cantidad", width: 15 },
+        { header: "Fecha", key: "fecha", width: 25 },
+      ];
 
-        // Definir las columnas
-        worksheet.columns = [
-          { header: "ID Pedido", key: "id", width: 15 },
-          { header: "Deudor", key: "deudor", width: 30 },
-          { header: "Item", key: "item", width: 40 },
-          { header: "Cantidad", key: "cantidad", width: 15 },
-          { header: "Fecha", key: "fecha", width: 25 },
-        ];
+      // Agrupar los pedidos por deudor
+      const pedidosPorDeudor = pedidosAprobados.reduce((acc, pedido) => {
+        const deudor = pedido.nombreDeu || "Sin deudor";
+        if (!acc[deudor]) acc[deudor] = [];
+        acc[deudor].push(pedido);
+        return acc;
+      }, {});
+      
 
-        // Suponiendo que cada pedido tiene un campo 'detalles' con los productos
-        // Si no, necesitarás ajustar esta parte para obtener los detalles
-        const detalles = pedido.detalles || [];
-
-        detalles.forEach((detalle) => {
-          worksheet.addRow({
-            id: `P-${pedido.id}`,
-            deudor: pedido.nombreDeu || "N/A",
-            item: `${detalle.codigo || "Sin código"} - ${detalle.nombreProducto}`,
-            cantidad: detalle.cantidad,
-            fecha: pedido.fechaOrden,
+      // Agregar los datos agrupados al archivo Excel
+      Object.entries(pedidosPorDeudor).forEach(([deudor, pedidos]) => {
+        pedidos.forEach((pedido) => {
+          const detalles = pedido.detalles || [];
+          detalles.forEach((detalle) => {
+            worksheet.addRow({
+              deudor,
+              pedidoId: `P-${pedido.id}`,
+              item: `${detalle.codigo || "Sin código"} - ${detalle.nombreProducto}`,
+              cantidad: detalle.cantidad,
+              fecha: pedido.fechaOrden,
+            });
           });
         });
       });
 
-      // Generar el buffer
+      // Generar el archivo y descargarlo
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
-        type:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "pedidos_aprobados.xlsx";
+      a.download = "pedidos_consolidados.xlsx";
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error al exportar pedidos aprobados:", error);
-      // Aquí podrías agregar un toast o notificación de error
+      console.error("Error al exportar pedidos consolidados:", error);
     } finally {
       setIsExporting(false);
     }
@@ -100,12 +104,12 @@ const AprobadosPage = () => {
       <Flex justify="space-between" mb={6}>
         <Button
           colorScheme="teal"
-          onClick={handleExportAll}
+          onClick={handleExportConsolidado}
           isLoading={isExporting}
           loadingText="Exportando..."
           disabled={pedidosAprobados.length === 0}
         >
-          Exportar Todos a Excel
+          Exportar Consolidado por Deudor
         </Button>
       </Flex>
 

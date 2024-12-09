@@ -104,7 +104,7 @@ const EntrantesPage = () => {
 
   return (
     <Box p={6} boxShadow="xl" bg="white" rounded="lg">
-      <Flex justify="space-between" mb={6}>
+      <Flex justify="space-between" mb={3}>
         <Heading as="h2" size="lg">
           Listado de Pedidos Entrantes
         </Heading>

@@ -12,13 +12,14 @@ import {
   } from "@chakra-ui/react";
   import PropTypes from "prop-types";
   
-  const AprobadosTable = ({ pedidosAprobados, handleVerDetalles }) => {
+  const AprobadosTable = ({ pedidosAprobados, handleVerDetalles,  }) => {
     return (
       <Table variant="striped" colorScheme="gray">
         <Thead>
           <Tr>
             <Th>ID</Th>
-            <Th>Usuario</Th>
+            <Th>Deudor</Th>
+            <Th>Tienda</Th>
             <Th>Fecha</Th>
             <Th>Acciones</Th>
           </Tr>
@@ -28,7 +29,8 @@ import {
             pedidosAprobados.map((pedido) => (
               <Tr key={pedido.id}>
                 <Td>{pedido.id}</Td>
-                <Td>{pedido.nombreUsuario}</Td>
+                <Td>{pedido.nombreDeu}</Td>
+                <Td>{pedido.nombreTienda}</Td>
                 <Td>{pedido.fechaOrden}</Td>
                 <Td>
                   <Tooltip label="Ver Detalles" hasArrow>
@@ -45,7 +47,7 @@ import {
             ))
           ) : (
             <Tr>
-              <Td colSpan="4" align="center">
+              <Td colSpan="5" align="center">
                 No hay pedidos aprobados.
               </Td>
             </Tr>
@@ -59,20 +61,16 @@ import {
     pedidosAprobados: PropTypes.arrayOf(
       PropTypes.shape({
         id: PropTypes.number.isRequired,
-        nombreUsuario: PropTypes.string.isRequired,
+        nombreDeu: PropTypes.string.isRequired,
+        nombreTienda: PropTypes.string.isRequired,
         fechaOrden: PropTypes.string.isRequired,
-        detalles: PropTypes.arrayOf(
-          PropTypes.shape({
-            id: PropTypes.number.isRequired,
-            codigo: PropTypes.string,
-            nombreProducto: PropTypes.string.isRequired,
-            cantidad: PropTypes.number.isRequired,
-          })
-        ),
       })
     ).isRequired,
     handleVerDetalles: PropTypes.func.isRequired,
+    currentPage: PropTypes.number.isRequired,
+    totalPages: PropTypes.number.isRequired,
   };
+  
   
   export default AprobadosTable;
   
