@@ -8,7 +8,7 @@ import {
   Tooltip,
   CloseButton,
   HStack,
-  useOutsideClick
+  useOutsideClick,
 } from "@chakra-ui/react";
 import { FiBell } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
@@ -32,13 +32,17 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   // Estados locales
   const [notificaciones, setNotificaciones] = useState([]);
   const [deletedNotifications, setDeletedNotifications] = useState(() => {
-    const storedDeleted = localStorage.getItem(`deletedNotifications_${usuarioId}`);
+    const storedDeleted = localStorage.getItem(
+      `deletedNotifications_${usuarioId}`
+    );
     return storedDeleted ? JSON.parse(storedDeleted) : [];
   });
 
   // Sincronizar `deletedNotifications` con `localStorage` al actualizar usuario
   useEffect(() => {
-    const storedDeleted = localStorage.getItem(`deletedNotifications_${usuarioId}`);
+    const storedDeleted = localStorage.getItem(
+      `deletedNotifications_${usuarioId}`
+    );
     setDeletedNotifications(storedDeleted ? JSON.parse(storedDeleted) : []);
   }, [usuarioId]);
 
@@ -51,6 +55,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   }, [deletedNotifications, usuarioId]);
 
   // Filtrar notificaciones según rol y estado, excluyendo eliminadas
+  // Filtrar notificaciones según rol y estado, excluyendo eliminadas
   useEffect(() => {
     const usuarioPedidos = pedidos
       .filter(
@@ -58,10 +63,11 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
           (pedido.usuarioId === usuarioId || roleId === "3") && // Notificaciones propias o pendientes para rol 3
           !deletedNotifications.includes(pedido.id) // Excluir eliminadas
       )
-      .filter((pedido) =>
-        roleId === "3"
-          ? pedido.estadoId === 2 // Pendientes para rol 3
-          : pedido.estadoId === 3 || pedido.estadoId === 4 // Aprobados o cancelados para rol 2
+      .filter(
+        (pedido) =>
+          roleId === "3"
+            ? pedido.estadoId === 2 || pedido.estadoId === 5 // Pendientes o Exportados para rol 3
+            : pedido.estadoId === 3 || pedido.estadoId === 4 // Aprobados o Cancelados para rol 2
       )
       .sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden)); // Orden descendente
 
@@ -102,15 +108,18 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   };
 
   // Conteo de estados para el resumen (solo para rol 3)
-  const countAprobados = pedidos.filter(
-    (pedido) => pedido.estadoId === 3 && pedido.usuarioId === usuarioId
-  ).length;
-  const countEnProceso = pedidos.filter(
-    (pedido) => pedido.estadoId === 1 && pedido.usuarioId === usuarioId
-  ).length;
-  const countCancelados = pedidos.filter(
-    (pedido) => pedido.estadoId === 4 && pedido.usuarioId === usuarioId
-  ).length;
+  // const countAprobados = pedidos.filter(
+  //   (pedido) => pedido.estadoId === 3 && pedido.usuarioId === usuarioId
+  // ).length;
+  // const countEnProceso = pedidos.filter(
+  //   (pedido) => pedido.estadoId === 1 && pedido.usuarioId === usuarioId
+  // ).length;
+  // const countCancelados = pedidos.filter(
+  //   (pedido) => pedido.estadoId === 4 && pedido.usuarioId === usuarioId
+  // ).length;
+  // const countExportados = pedidos.filter(
+  //   (pedido) => pedido.estadoId === 5 && pedido.usuarioId === usuarioId
+  // ).length;
 
   return (
     <Box position="relative">
@@ -180,7 +189,8 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
                       Tu pedido <strong>ID: {pedido.id}</strong> ha sido{" "}
                       <strong>
                         {pedido.estadoId === 3 ? "aprobado" : "cancelado"}
-                      </strong>.
+                      </strong>
+                      .
                     </Text>
                   )}
                 </Box>
@@ -199,7 +209,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
           {roleId === "3" && (
             <>
               <Divider my={3} />
-              <Box>
+              {/* <Box>
                 <Text fontSize="md" fontWeight="bold">
                   Estado de tus pedidos:
                 </Text>
@@ -213,8 +223,11 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
                   <Text fontSize="sm" color="red.600">
                     Cancelados: {countCancelados}
                   </Text>
+                  <Text fontSize="sm" color="blue.600">
+                    Exportados: {countExportados}
+                  </Text>
                 </Box>
-              </Box>
+              </Box> */}
             </>
           )}
         </Box>

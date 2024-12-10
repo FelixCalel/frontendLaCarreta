@@ -17,7 +17,6 @@ import axios from "axios";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const PageFormPedidos = () => {
-  // Estados y hooks principales
   const dispatch = useDispatch();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -28,7 +27,7 @@ const PageFormPedidos = () => {
   } = useDisclosure();
 
   const pedidos = useSelector((state) => state.pedidos.data);
-  const usuarioId = Number(localStorage.getItem("usuarioId")) || 0; // Valor predeterminado
+  const usuarioId = Number(localStorage.getItem("usuarioId")) || 0;
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [paisId, setPaisId] = useState(null);
   const [usuarioRutas, setUsuarioRutas] = useState([]);
@@ -47,25 +46,22 @@ const PageFormPedidos = () => {
   const [isTienda2Disabled, setIsTienda2Disabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Efecto para manejar el tamaño de pantalla
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Efecto para cargar el ID del país
   useEffect(() => {
     const paisIdFromStorage = localStorage.getItem("paisId");
     if (paisIdFromStorage) {
       setPaisId(parseInt(paisIdFromStorage, 10));
     } else {
       console.error("No se encontró el paisId en el localStorage");
-      setPaisId(0); // Valor predeterminado
+      setPaisId(0);
     }
   }, []);
 
-  // Efecto para cargar rutas de usuario
   useEffect(() => {
     const fetchUsuarioRutas = async () => {
       try {
@@ -84,12 +80,10 @@ const PageFormPedidos = () => {
     if (usuarioId) fetchUsuarioRutas();
   }, [usuarioId]);
 
-  // Efecto para cargar pedidos
   useEffect(() => {
     dispatch(tablaPedidos());
   }, [dispatch]);
 
-  // Validar campos del formulario
   const validateFields = () => {
     const formErrors = {};
     if (!currentPedido.ciudadId)
@@ -121,7 +115,6 @@ const PageFormPedidos = () => {
         return;
       }
 
-      // Obtener el último pedido (ordenado por fecha)
       const ultimoPedido = pedidosTienda.sort(
         (a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden)
       )[0];
@@ -139,14 +132,12 @@ const PageFormPedidos = () => {
         return;
       }
 
-      // Obtener los detalles del pedido desde el backend
       const detalles = await dispatch(
         getDetalleOrdenByPedidoId(ultimoPedido.id)
       ).unwrap();
       console.log("Detalles del último pedido:", detalles);
 
       if (!detalles || detalles.length === 0) {
-        // Si no hay productos en el pedido, informar al usuario
         toast({
           title: "Pedido vacío",
           description:
@@ -251,8 +242,8 @@ const PageFormPedidos = () => {
         isClosable: true,
       });
 
-      onClose(); // Cerrar el modal
-      resetForm(); // Resetear el formulario
+      onClose(); 
+      resetForm(); 
     } catch (error) {
       console.error("Error al guardar el pedido:", error);
       toast({
@@ -328,9 +319,7 @@ const PageFormPedidos = () => {
         handleToggleDetails={(pedidoId, deudorId, tiendaId) => {
           setIsDetailsOpen(isDetailsOpen === pedidoId ? null : pedidoId);
 
-          // Aquí puedes hacer la llamada para cargar los detalles de los productos comunes
           if (isDetailsOpen !== pedidoId) {
-            // Llamada para cargar productos más comunes
             dispatch(getDetalleOrdenByPedidoId(pedidoId, deudorId, tiendaId));
           }
         }}
