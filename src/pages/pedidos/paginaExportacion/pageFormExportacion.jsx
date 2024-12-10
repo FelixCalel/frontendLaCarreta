@@ -40,8 +40,6 @@ const AprobadosPage = () => {
   // };
   
   
-  
-
   const handleVerDetalles = async (pedidoId) => {
     try {
       const detalles = await dispatch(
@@ -94,55 +92,28 @@ const AprobadosPage = () => {
       // Definir las columnas
       worksheet.columns = [
         { header: "Deudor", key: "deudor", width: 30 },
+        { header: "Fecha", key: "fecha", width: 25 },
         { header: "Pedido ID", key: "pedidoId", width: 15 },
         { header: "Código", key: "codigo", width: 15 },
         { header: "Producto", key: "producto", width: 25 },
         { header: "Cantidad", key: "cantidad", width: 15 },
-        { header: "Fecha", key: "fecha", width: 25 },
       ];
   
       // Agrupar los pedidos por deudor
       const pedidosPorDeudor = pedidosConDetalles.reduce((acc, pedido) => {
         const deudor = pedido.nombreDeu || "Sin deudor";
-        if (!acc[deudor]) acc[deudor] = [];
-        acc[deudor].push(pedido);
+        if (!acc[deudor]) acc[deudor] = { pedidos: [], fechaOrden: null };
+        acc[deudor].pedidos.push(pedido);
+        if (!acc[deudor].fechaOrden || pedido.fechaOrden > acc[deudor].fechaOrden) {
+          acc[deudor].fechaOrden = pedido.fechaOrden;
+        }
         return acc;
       }, {});
   
       console.log("Pedidos agrupados por deudor:", pedidosPorDeudor);
   
       // Agregar los datos agrupados al archivo Excel
-      Object.keys(pedidosPorDeudor).forEach((deudor) => {
-        // Agregar una fila con el nombre del deudor
-        worksheet.addRow({ deudor }).font = { bold: true };
-  
-        const pedidos = pedidosPorDeudor[deudor];
-        // let totalCantidad = 0;
-  
-        pedidos.forEach((pedido) => {
-          const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
-          detalles.forEach((detalle) => {
-            worksheet.addRow({
-              deudor: "",
-              pedidoId: `P-${pedido.id}`,
-              codigo: detalle.codigo || "Sin código",
-              producto: detalle.nombreProducto,
-              cantidad: detalle.cantidad,
-              fecha: pedido.fechaOrden,
-            });
-            // totalCantidad += detalle.cantidad;
-          });
-        });
-  
-        // Agregar una fila con los totales por deudor
-        // worksheet.addRow({
-        //   deudor: "Total",
-        //   cantidad: totalCantidad,
-        // }).font = { bold: true };
-  
-        // Agregar una línea en blanco entre deudores
-        worksheet.addRow({});
-      });
+      await addPedidosToWorksheet(worksheet, pedidosPorDeudor);
   
       // Generar el archivo y descargarlo
       const buffer = await workbook.xlsx.writeBuffer();
@@ -161,6 +132,33 @@ const AprobadosPage = () => {
       setIsExporting(false);
     }
   };
+  
+  async function addPedidosToWorksheet(worksheet, pedidosPorDeudor) {
+    for (const deudor of Object.keys(pedidosPorDeudor)) {
+      const { pedidos, fechaOrden } = pedidosPorDeudor[deudor];
+  
+      // Agregar una fila con el nombre del deudor y la fecha de orden
+      worksheet.addRow({ deudor, fecha: fechaOrden }).font = { bold: true };
+  
+      for (const pedido of pedidos) {
+        const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
+        for (const detalle of detalles) {
+          worksheet.addRow({
+            deudor: "",
+            fecha: "",
+            pedidoId: `P-${pedido.id}`,
+            codigo: detalle.codigo || "Sin código",
+            producto: detalle.nombreProducto,
+            cantidad: detalle.cantidad,
+          });
+        }
+      }
+  
+      // Agregar una línea en blanco entre deudores
+      worksheet.addRow({});
+    }
+  }
+  
   
   
   return (

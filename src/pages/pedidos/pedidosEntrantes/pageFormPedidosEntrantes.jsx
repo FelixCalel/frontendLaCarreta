@@ -33,6 +33,7 @@ const EntrantesPage = () => {
     dispatch(tablaPedidos());
   }, [dispatch]);
 
+  
   // Funciones para manejar la aprobación y cancelación de pedidos
   const handleAprobarPedidos = async () => {
     setIsLoading(true);
@@ -55,6 +56,7 @@ const EntrantesPage = () => {
     }
   };
 
+
   const handleCancelarPedidos = async () => {
     setIsLoading(true);
     try {
@@ -76,11 +78,13 @@ const EntrantesPage = () => {
     }
   };
 
+
   // Funciones para manejar el modal de detalles
   const handleVerDetalles = async (pedidoId) => {
     try {
       const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
-      console.log(detalles);
+      // Ordenar los detalles por fecha de creación
+      detalles.sort((a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion));
       setDetallesPedido(detalles);
       setSelectedPedido(pedidoId);
       setIsModalOpen(true);
@@ -95,6 +99,7 @@ const EntrantesPage = () => {
       });
     }
   };
+  
 
   const handleCloseModal = () => {
     setIsModalOpen(false);

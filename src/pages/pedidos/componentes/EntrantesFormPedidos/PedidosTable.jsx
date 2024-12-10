@@ -8,17 +8,10 @@ import {
   Checkbox,
   Button,
   Tooltip,
-  IconButton,
-  useToast,
 } from "@chakra-ui/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { SiMicrosoftexcel } from "react-icons/si";
-import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
 import PropTypes from "prop-types";
-import { useDispatch } from "react-redux";
-import { getDetalleOrdenByPedidoId } from "../../../../store/Pedidos/DetallePedidos/thunks";
 
 const PedidosTable = ({
   pedidosEntrantes,
@@ -26,8 +19,6 @@ const PedidosTable = ({
   setSelectedPedidos,
   handleVerDetalles,
 }) => {
-  const dispatch = useDispatch();
-  const toast = useToast();
 
   const handleSelectPedido = (pedidoId) => {
     if (selectedPedidos.includes(pedidoId)) {
@@ -37,74 +28,7 @@ const PedidosTable = ({
     }
   };
 
-  const handleExportarExcel = async (pedido) => {
-    try {
-      const detalles = await dispatch(
-        getDetalleOrdenByPedidoId(pedido.id)
-      ).unwrap();
-      if (!detalles || detalles.length === 0) {
-        toast({
-          title: "Error",
-          description: `No hay detalles disponibles para el pedido ${pedido.id}.`,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
 
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet(`Pedido_${pedido.id}`);
-
-      // Formatear la fecha para Excel
-      const fechaFormateada = format(
-        new Date(pedido.fechaOrden),
-        "dd MMMM yyyy HH:mm",
-        {
-          locale: es,
-        }
-      );
-
-      worksheet.columns = [
-        { header: "ID Pedido", key: "id", width: 15 },
-        { header: "Deudor", key: "deudor", width: 30 },
-        { header: "Item", key: "item", width: 40 },
-        { header: "Cantidad", key: "cantidad", width: 15 },
-        { header: "Fecha", key: "fecha", width: 25 },
-      ];
-
-      detalles.forEach((detalle) => {
-        worksheet.addRow({
-          id: `P-${pedido.id}`,
-          deudor: pedido.nombreDeu || "N/A",
-          item: `${detalle.codigo || "Sin código"} - ${detalle.nombreProducto}`,
-          cantidad: detalle.cantidad,
-          fecha: fechaFormateada, // Usar la fecha formateada
-        });
-      });
-
-      // Opcional: Dar formato a la columna de fecha
-      const fechaColumn = worksheet.getColumn("fecha");
-      fechaColumn.width = 25;
-
-      const buffer = await workbook.xlsx.writeBuffer();
-      saveAs(
-        new Blob([buffer], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        }),
-        `pedido_${pedido.id}.xlsx`
-      );
-    } catch (error) {
-      console.error("Error al exportar pedido:", error);
-      toast({
-        title: "Error",
-        description: "Hubo un problema al exportar el pedido.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
 
   return (
     <Table variant="striped" colorScheme="gray">
@@ -151,7 +75,7 @@ const PedidosTable = ({
                     Ver Detalles
                   </Button>
                 </Tooltip>
-                <Tooltip label="Exportar a Excel" hasArrow>
+                {/* <Tooltip label="Exportar a Excel" hasArrow>
                   <IconButton
                     ml={2}
                     colorScheme="teal"
@@ -159,7 +83,7 @@ const PedidosTable = ({
                     icon={<SiMicrosoftexcel />}
                     onClick={() => handleExportarExcel(pedido)}
                   />
-                </Tooltip>
+                </Tooltip> */}
               </Td>
             </Tr>
           ))
