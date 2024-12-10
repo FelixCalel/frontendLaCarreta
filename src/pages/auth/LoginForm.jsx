@@ -62,9 +62,7 @@ export const LoginForm = () => {
         localStorage.setItem("usuarioId", usuarioId);
         localStorage.setItem("roleId", roleId);
         localStorage.setItem("paisId", paisId);
-        // console.log("roleId guardado en localStorage:", localStorage.getItem("roleId"));
   
-        // Actualizar el estado global con Redux y luego el efecto se encargará de la redirección
         window.location.reload();
         dispatch(loginAuth({ token, nombre, correo: correoUsuario, roleId }));
       } else {

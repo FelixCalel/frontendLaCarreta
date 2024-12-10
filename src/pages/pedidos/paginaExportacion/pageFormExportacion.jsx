@@ -5,8 +5,7 @@ import AprobadosTable from "../componentes/exportacionFormPedidos/tableAprobados
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
 import { tablaPedidos } from "../../../store/Pedidos/thunks";
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
-import { togglePedidoStatus } from "../../../store/Pedidos/thunks"; // Asegúrate de importar el thunk
-
+import { togglePedidoStatus } from "../../../store/Pedidos/thunks"; 
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
