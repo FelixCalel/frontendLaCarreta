@@ -28,20 +28,20 @@ const HistorialPedidosPage = () => {
   const pedidosHistorial = pedidos
   .filter((pedido) => {
     const esAprobadoOCancelado = pedido.estadoId === 3 || pedido.estadoId === 4;
-    const esPendiente = pedido.estadoId === 2; // Nuevo filtro para pendientes
+    const esPendiente = pedido.estadoId === 2;
+    const esExportado = pedido.estadoId === 5;
 
     if (roleId === 1 || roleId === 3) {
-      // Roles 1 (admin) o 3 (gestor) ven aprobados, cancelados y pendientes
-      return esAprobadoOCancelado || esPendiente;
+      return esAprobadoOCancelado || esPendiente || esExportado;
     } else {
-      // Otros roles (ej: 2) ven solo sus pedidos
       return (
-        (esAprobadoOCancelado || esPendiente) &&
+        (esAprobadoOCancelado || esPendiente || esExportado) &&
         pedido.usuarioId === usuarioId
       );
     }
   })
-  .sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden)); // Orden descendente por fecha
+  .sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden));
+
 
 
   const indexOfLastItem = currentPage * itemsPerPage;

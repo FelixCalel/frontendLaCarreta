@@ -37,15 +37,19 @@ const PedidosTable = ({ pedidos, roleId, onVerDetalles }) => (
           <Td>
             <Box
               color={
-                pedido.estadoId === 3
-                  ? "green.600"
+                pedido.estadoId === 5 // 5 sería el ID para "Exportado"
+                  ? "blue.600" // Color azul para "Exportado"
+                  : pedido.estadoId === 3
+                  ? "green.600" // Color verde para "Aprobado"
                   : pedido.estadoId === 2
-                  ? "yellow.600"
-                  : "red.600"
+                  ? "yellow.600" // Color amarillo para "Pendiente"
+                  : "red.600" // Color rojo para "Cancelado"
               }
               fontWeight="bold"
             >
-              {pedido.estadoId === 3
+              {pedido.estadoId === 5
+                ? "Exportado"
+                : pedido.estadoId === 3
                 ? "Aprobado"
                 : pedido.estadoId === 2
                 ? "Pendiente"
