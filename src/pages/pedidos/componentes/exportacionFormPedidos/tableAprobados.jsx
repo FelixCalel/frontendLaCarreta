@@ -9,6 +9,8 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 const AprobadosTable = ({ pedidosAprobados, handleVerDetalles }) => {
 
@@ -31,7 +33,11 @@ const AprobadosTable = ({ pedidosAprobados, handleVerDetalles }) => {
               <Td>{pedido.id}</Td>
               <Td>{pedido.nombreDeu}</Td>
               <Td>{pedido.nombreTienda}</Td>
-              <Td>{pedido.fechaOrden}</Td>
+              <Td>
+                {format(new Date(pedido.fechaOrden), "dd 'de' MMMM 'de' yyyy", {
+                  locale: es,
+                })}
+              </Td>
               <Td>
                 <Tooltip label="Ver Detalles" hasArrow>
                   <Button

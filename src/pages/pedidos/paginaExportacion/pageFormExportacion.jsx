@@ -5,6 +5,8 @@ import AprobadosTable from "../componentes/exportacionFormPedidos/tableAprobados
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
 import { tablaPedidos } from "../../../store/Pedidos/thunks";
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 const AprobadosPage = () => {
   const dispatch = useDispatch();
@@ -24,21 +26,6 @@ const AprobadosPage = () => {
 
   const pedidosAprobados = pedidos.filter((pedido) => pedido.estadoId === 3);
   console.log("Pedidos:", pedidosAprobados);
-
-
-  // const addPedidoDetailsToWorksheet = (worksheet, pedido) => {
-  //   const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : []; // Asegura que sea un array
-  //   detalles.forEach((detalle) => {
-  //     worksheet.addRow({
-  //       deudor: pedido.nombreDeu,
-  //       pedidoId: `P-${pedido.id}`,
-  //       item: `${detalle.codigo || "Sin código"} - ${detalle.nombreProducto}`,
-  //       cantidad: detalle.cantidad,
-  //       fecha: pedido.fechaOrden,
-  //     });
-  //   });
-  // };
-  
   
   const handleVerDetalles = async (pedidoId) => {
     try {
@@ -138,8 +125,11 @@ const AprobadosPage = () => {
       const { pedidos, fechaOrden } = pedidosPorDeudor[deudor];
   
       // Agregar una fila con el nombre del deudor y la fecha de orden
-      worksheet.addRow({ deudor, fecha: fechaOrden }).font = { bold: true };
-  
+    worksheet.addRow({
+      deudor,
+      fecha: format(new Date(fechaOrden), "dd 'de' MMMM 'de' yyyy", { locale: es }),
+    }).font = { bold: true };
+
       for (const pedido of pedidos) {
         const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
         for (const detalle of detalles) {
@@ -154,7 +144,6 @@ const AprobadosPage = () => {
         }
       }
   
-      // Agregar una línea en blanco entre deudores
       worksheet.addRow({});
     }
   }
