@@ -21,7 +21,7 @@ const PedidosTable = ({ pedidos, roleId, onVerDetalles }) => (
         <Th>Deudor</Th>
         <Th>Tienda</Th>
         <Th>Estado</Th>
-        <Th>Fecha</Th>
+        <Th>Fecha realización de pedido</Th>
         {roleId === 1 || roleId === 3 ? <Th>Usuario</Th> : null}
         <Th>Acciones</Th>
       </Tr>

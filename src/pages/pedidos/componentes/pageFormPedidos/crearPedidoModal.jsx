@@ -137,37 +137,57 @@ const PedidoModal = ({
                   onSelect={handleDeudorSelect}
                 />
               </FormControl>
-              <HStack spacing={3} w="full" alignItems="flex-start">
-                <FormControl flex="1" isDisabled={isTienda2Disabled}>
-                  <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
+              <HStack spacing={1} w="full" alignItems="flex-start">
+                {" "}
+                {/* Cambiar spacing={3} a spacing={1} */}
+                <FormControl flex="1" isDisabled={isTienda2Disabled} mr={1}>
+                  {" "}
+                  {/* Añadir mr={1} */}
+                  <FormLabel
+                    fontSize="sm"
+                    fontWeight="bold"
+                    color="gray.600"
+                    mb={1}
+                  >
+                    {" "}
+                    {/* Añadir mb={1} */}
                     <HStack>
                       <Icon as={FaStoreAlt} color="teal.500" />
                       <Text>Tiendas asignadas</Text>
                     </HStack>
                   </FormLabel>
                   <TiendaSelector
-                    rutaIds={usuarioRutas || []} // Pasando las rutas asignadas al usuario
-                    paisId={Number(paisId)} // ID del país
-                    value={currentPedido.tiendaId} // Tienda seleccionada
-                    onChange={handleTiendaChange} // Función que maneja el cambio de tienda
-                    deudorId={currentPedido.deudorId} // ID del deudor
-                    ciudadId={currentPedido.ciudadId} // ID de la ciudad
-                    isRutaFilter={true} // Habilitar filtro por rutas
+                    rutaIds={usuarioRutas || []}
+                    paisId={Number(paisId)}
+                    value={currentPedido.tiendaId}
+                    onChange={handleTiendaChange}
+                    deudorId={currentPedido.deudorId}
+                    ciudadId={currentPedido.ciudadId}
+                    isRutaFilter={true}
                   />
                 </FormControl>
-                <FormControl flex="1" isDisabled={isTienda1Disabled}>
-                  <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
+                <FormControl flex="1" isDisabled={isTienda1Disabled} ml={1}>
+                  {" "}
+                  {/* Añadir ml={1} */}
+                  <FormLabel
+                    fontSize="sm"
+                    fontWeight="bold"
+                    color="gray.600"
+                    mb={1}
+                  >
+                    {" "}
+                    {/* Añadir mb={1} */}
                     <HStack>
                       <Icon as={FaStoreAlt} color="teal.500" />
                       <Text>Todas las tiendas</Text>
                     </HStack>
                   </FormLabel>
                   <TiendaSelector
-                    rutaIds={[]} // No se pasan rutas para el segundo selector
-                    paisId={Number(paisId)} // ID del país
-                    value={currentPedido.tiendaId2} // Tienda seleccionada
-                    onChange={handleTiendaChange2} // Función que maneja el cambio de tienda
-                    isRutaFilter={false} // Deshabilitar filtro por rutas
+                    rutaIds={[]}
+                    paisId={Number(paisId)}
+                    value={currentPedido.tiendaId2}
+                    onChange={handleTiendaChange2}
+                    isRutaFilter={false}
                   />
                 </FormControl>
               </HStack>

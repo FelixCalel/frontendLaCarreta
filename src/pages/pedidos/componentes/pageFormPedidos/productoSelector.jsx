@@ -39,7 +39,7 @@ const ProductoSelector = ({ onSelect, reset }) => {
     // Callback para enviar el item seleccionado al componente padre
     onSelect(
       item.id,
-      `${item.codigo} - ${item.nombre}`,
+      item.nombre,
       item.cantidadDisponible,
       item.codigo
     );

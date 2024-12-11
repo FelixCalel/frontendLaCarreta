@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { tablaTienda } from "../../../../store/Tienda/thunks";
+import { Combobox, ComboboxInput, ComboboxPopover, ComboboxList, ComboboxOption } from "@chakra-ui/react";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -19,6 +20,8 @@ const TiendaSelector = ({
   const [tiendas, setTiendas] = useState([]);
   const [loading, setLoading] = useState(true);
   const tiendasRedux = useSelector((state) => state.tiendas.data);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredTiendas, setFilteredTiendas] = useState([]);
 
   useEffect(() => {
     dispatch(tablaTienda());
@@ -50,6 +53,7 @@ const TiendaSelector = ({
       // Solo actualiza si hay un cambio en las tiendas
       setTiendas((prevTiendas) => {
         if (JSON.stringify(prevTiendas) !== JSON.stringify(tiendasFiltradas)) {
+          setFilteredTiendas(tiendasFiltradas);
           return tiendasFiltradas;
         }
         return prevTiendas;
@@ -60,25 +64,45 @@ const TiendaSelector = ({
   
     fetchTiendas();
   }, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter, tiendasRedux]);
-  
+
+  const handleSearch = (event) => {
+    const term = event.target.value.toLowerCase();
+    setSearchTerm(term);
+    setFilteredTiendas(
+      tiendas.filter((tienda) =>
+        tienda.nombre.toLowerCase().includes(term)
+      )
+    );
+  };
 
   if (loading) {
-    return <select disabled>Cargando tiendas...</select>;
+    return <Combobox disabled><ComboboxInput placeholder="Cargando tiendas..." /></Combobox>;
   }
 
   return (
-    <select value={value ? String(value) : ""} onChange={(e) => onChange(parseInt(e.target.value))}>
-      <option value="">Seleccionar tienda</option>
-      {tiendas.length > 0 ? (
-        tiendas.map((tienda) => (
-          <option key={tienda.id} value={tienda.id}>
-            {tienda.nombre}
-          </option>
-        ))
-      ) : (
-        <option value="">No hay tiendas disponibles</option>
-      )}
-    </select>
+    <Combobox value={value ? String(value) : ""} onChange={(val) => onChange(parseInt(val))}>
+      <ComboboxInput
+        placeholder="Seleccionar tienda"
+        value={searchTerm}
+        onChange={handleSearch}
+      />
+      <ComboboxPopover>
+        <ComboboxList>
+          {filteredTiendas.length > 0 ? (
+            filteredTiendas.map((tienda) => (
+              <ComboboxOption
+                key={tienda.id}
+                value={String(tienda.id)}
+              >
+                {tienda.nombre}
+              </ComboboxOption>
+            ))
+          ) : (
+            <ComboboxOption value="">No hay tiendas disponibles</ComboboxOption>
+          )}
+        </ComboboxList>
+      </ComboboxPopover>
+    </Combobox>
   );
 };
 

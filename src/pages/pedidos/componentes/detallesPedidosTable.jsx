@@ -40,7 +40,8 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
 
   const [productos, setProductos] = useState([]);
   const [detallesCargados, setDetallesCargados] = useState(false);
-  const [productosComunesCargados, setProductosComunesCargados] = useState(false); // Nueva bandera
+  const [productosComunesCargados, setProductosComunesCargados] =
+    useState(false); // Nueva bandera
   const [isLoading, setIsLoading] = useState(false);
   const [resetFields, setResetFields] = useState(false);
 
@@ -81,22 +82,32 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         console.log("Intentando cargar detalles del pedido...");
 
         // Verificar si los detalles ya están en sessionStorage
-        const detallesGuardados = sessionStorage.getItem(`productos_${pedidoId}`);
+        const detallesGuardados = sessionStorage.getItem(
+          `productos_${pedidoId}`
+        );
         if (detallesGuardados) {
           const detallesParsed = JSON.parse(detallesGuardados);
           setProductos(detallesParsed);
           setDetallesCargados(true);
-          console.log("Detalles cargados desde sessionStorage:", detallesParsed);
+          console.log(
+            "Detalles cargados desde sessionStorage:",
+            detallesParsed
+          );
           setIsLoading(false);
           return; // No hacer más acciones si ya tenemos los detalles
         }
 
         // Intentar cargar los detalles del pedido desde el backend
         try {
-          const detalles = await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+          const detalles = await dispatch(
+            getDetalleOrdenByPedidoId(pedidoId)
+          ).unwrap();
           if (detalles.length > 0) {
             setProductos(detalles);
-            sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(detalles));
+            sessionStorage.setItem(
+              `productos_${pedidoId}`,
+              JSON.stringify(detalles)
+            );
             console.log("Detalles cargados desde backend:", detalles);
           }
         } catch (error) {
@@ -164,9 +175,13 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
               cantidad: producto.cantidad || 1,
               precio: producto.precio || 0,
             };
-            const result = await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
+            const result = await dispatch(
+              addNewDetalleOrden(newDetalleOrden)
+            ).unwrap();
             if (!result || !result.id) {
-              throw new Error("El backend no devolvió un detallePedidoId válido.");
+              throw new Error(
+                "El backend no devolvió un detallePedidoId válido."
+              );
             }
             const nuevoProducto = {
               detallePedidoId: result.id,
@@ -185,7 +200,10 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           console.log("Productos después de agregar comunes:", nuevosProductos);
 
           // Actualizar sessionStorage con los nuevos productos
-          sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(nuevosProductos));
+          sessionStorage.setItem(
+            `productos_${pedidoId}`,
+            JSON.stringify(nuevosProductos)
+          );
 
           toast({
             title: "Productos comunes agregados",
@@ -198,7 +216,8 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           // Si no hay productos comunes, mostrar mensaje
           toast({
             title: "Sin productos comunes",
-            description: "No se encontraron productos comunes para este pedido.",
+            description:
+              "No se encontraron productos comunes para este pedido.",
             status: "info",
             duration: 3000,
             isClosable: true,
@@ -221,10 +240,23 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     };
 
     // Cargar productos comunes solo si los detalles ya fueron cargados y están vacíos
-    if (detallesCargados && productos.length === 0 && !productosComunesCargados) {
+    if (
+      detallesCargados &&
+      productos.length === 0 &&
+      !productosComunesCargados
+    ) {
       cargarProductosComunes();
     }
-  }, [detallesCargados, productos.length, productosComunesCargados, deudorId, pedidoId, tiendaId, dispatch, toast]);
+  }, [
+    detallesCargados,
+    productos.length,
+    productosComunesCargados,
+    deudorId,
+    pedidoId,
+    tiendaId,
+    dispatch,
+    toast,
+  ]);
 
   // Manejo de cambio de producto seleccionado
   const handleProductoChange = (
@@ -242,86 +274,107 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     });
   };
 
-  // Manejo de agregar producto
-  const handleAddProducto = async () => {
-    if (newProducto.productoId && newProducto.cantidad > 0) {
-      if (newProducto.cantidad > newProducto.cantidadDisponible) {
-        toast({
-          title: "Cantidad excedida",
-          description: `No puedes agregar más de ${newProducto.cantidadDisponible} unidades para este producto.`,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
+// Manejo de agregar producto
+const handleAddProducto = async () => {
+  // Verificación de producto duplicado
+  const productoExistente = productos.find(
+    (prod) => prod.productoId === newProducto.productoId
+  );
+
+  if (productoExistente) {
+    toast({
+      title: "Producto duplicado",
+      description: "Este producto ya ha sido agregado al pedido.",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
+
+  if (newProducto.productoId && newProducto.cantidad > 0) {
+    if (newProducto.cantidad > newProducto.cantidadDisponible) {
+      toast({
+        title: "Cantidad excedida",
+        description: `No puedes agregar más de ${newProducto.cantidadDisponible} unidades para este producto.`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const newDetalleOrden = {
+        pedidoId,
+        productoId: newProducto.productoId,
+        cantidad: newProducto.cantidad,
+        precio: newProducto.precio || 0,
+      };
+
+      const result = await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
+      if (!result || !result.id) {
+        throw new Error("El backend no devolvió un detallePedidoId válido.");
       }
 
-      try {
-        const newDetalleOrden = {
-          pedidoId,
-          productoId: newProducto.productoId,
-          cantidad: newProducto.cantidad,
-          precio: newProducto.precio || 0, // Ajusta según corresponda
-        };
+      const nuevoProducto = {
+        detallePedidoId: result.id,
+        productoId: newProducto.productoId,
+        nombreProducto: newProducto.nombreProducto,
+        cantidadDisponible: newProducto.cantidadDisponible,
+        codigo: newProducto.codigo,
+        cantidad: newProducto.cantidad,
+      };
 
-        const result = await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
-        if (!result || !result.id) {
-          throw new Error("El backend no devolvió un detallePedidoId válido.");
-        }
+      const nuevosProductos = [...productos, nuevoProducto];
+      setProductos(nuevosProductos);
+      
+      // Actualizar sessionStorage
+      sessionStorage.setItem(
+        `productos_${pedidoId}`,
+        JSON.stringify(nuevosProductos)
+      );
 
-        const nuevoProducto = {
-          detallePedidoId: result.id,
-          productoId: newProducto.productoId,
-          nombreProducto: newProducto.nombreProducto,
-          cantidadDisponible: newProducto.cantidadDisponible,
-          codigo: newProducto.codigo,
-          cantidad: newProducto.cantidad,
-        };
+      // Resetear el estado de newProducto
+      setNewProducto({
+        productoId: "",
+        nombreProducto: "",
+        cantidad: 0,
+        cantidadDisponible: 0,
+        codigo: "",
+        precio: 0,
+      });
 
-        const nuevosProductos = [...productos, nuevoProducto];
-        setProductos(nuevosProductos);
-        console.log("Producto agregado manualmente:", nuevoProducto);
+      // Activar el reset del selector de productos
+      setResetFields((prev) => !prev);
 
-        // Actualizar sessionStorage con los nuevos productos
-        sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(nuevosProductos));
-
-        setNewProducto({
-          productoId: "",
-          nombreProducto: "",
-          cantidad: 0,
-          cantidadDisponible: 0,
-          codigo: "",
-          precio: 0, // Asegúrate de resetear el precio si lo usas
-        });
-        setResetFields(true);
-
-        toast({
-          title: "Producto agregado",
-          description: "El producto ha sido agregado exitosamente.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (error) {
-        console.error("Error al guardar el detalle del pedido:", error);
-        toast({
-          title: "Error",
-          description: "Hubo un problema al agregar el producto.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } else {
+      toast({
+        title: "Producto agregado",
+        description: "El producto ha sido agregado exitosamente.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error al guardar el detalle del pedido:", error);
       toast({
         title: "Error",
-        description: "Selecciona un producto y una cantidad válida.",
+        description: "Hubo un problema al agregar el producto.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
     }
-  };
+  } else {
+    toast({
+      title: "Error",
+      description: "Selecciona un producto y una cantidad válida.",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+};
 
   // Manejo de eliminar producto
   const handleRemoveProducto = async (detallePedidoId) => {
@@ -391,7 +444,9 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         `productos_${pedidoId}`,
         JSON.stringify(productosActualizados)
       );
-      console.log(`Cantidad actualizada para detalle ${detalleId}: ${cantidad}`);
+      console.log(
+        `Cantidad actualizada para detalle ${detalleId}: ${cantidad}`
+      );
 
       toast({
         title: "Cantidad actualizada.",
@@ -452,26 +507,33 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                     <HStack justifyContent="space-between" spacing={2}>
                       <Box flex="1">
                         <Text fontWeight="bold" fontSize="sm">
-                          {`${producto.codigo || "Sin código"} - ${
-                            producto.nombreProducto
-                          }`}
+                         Nombre Prodcuto:{" "}
+                          {producto.nombreProducto || "N/A" }
                         </Text>
                         <Text fontSize="xs" color="gray.500">
-                          Cantidad Máxima: {producto.cantidadDisponible || "N/A"}
+                          Cantidad Máxima:{" "}
+                          {producto.cantidadDisponible || "N/A"}
                         </Text>
                         <CantidadInput
                           value={producto.cantidad}
                           onChange={(e) =>
                             setProductos((prevProductos) =>
                               prevProductos.map((prod) =>
-                                prod.detallePedidoId === producto.detallePedidoId
-                                  ? { ...prod, cantidad: parseFloat(e.target.value) || 0 }
+                                prod.detallePedidoId ===
+                                producto.detallePedidoId
+                                  ? {
+                                      ...prod,
+                                      cantidad: parseFloat(e.target.value) || 0,
+                                    }
                                   : prod
                               )
                             )
                           }
                           onBlur={() => {
-                            handleCantidadChange(producto.detallePedidoId, producto.cantidad);
+                            handleCantidadChange(
+                              producto.detallePedidoId,
+                              producto.cantidad
+                            );
                           }}
                           placeholder="Cantidad"
                           size="sm"
@@ -483,7 +545,9 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                         <IconButton
                           icon={<DeleteIcon />}
                           colorScheme="red"
-                          onClick={() => handleRemoveProducto(producto.detallePedidoId)}
+                          onClick={() =>
+                            handleRemoveProducto(producto.detallePedidoId)
+                          }
                           size="xs"
                         />
                       </Tooltip>
@@ -523,7 +587,8 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                           onChange={(e) =>
                             setProductos((prevProductos) =>
                               prevProductos.map((prod) =>
-                                prod.detallePedidoId === producto.detallePedidoId
+                                prod.detallePedidoId ===
+                                producto.detallePedidoId
                                   ? {
                                       ...prod,
                                       cantidad: Math.min(
@@ -536,7 +601,10 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                             )
                           }
                           onBlur={() => {
-                            handleCantidadChange(producto.detallePedidoId, producto.cantidad);
+                            handleCantidadChange(
+                              producto.detallePedidoId,
+                              producto.cantidad
+                            );
                           }}
                           placeholder="Cantidad"
                           size="sm"
@@ -555,7 +623,9 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                           <IconButton
                             icon={<DeleteIcon />}
                             colorScheme="red"
-                            onClick={() => handleRemoveProducto(producto.detallePedidoId)}
+                            onClick={() =>
+                              handleRemoveProducto(producto.detallePedidoId)
+                            }
                             size="xs"
                             style={{ margin: "0", padding: "0" }}
                           />
