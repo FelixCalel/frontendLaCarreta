@@ -96,68 +96,31 @@ const PageFormPedidos = () => {
   };
 
   const copiarUltimoPedido = async (tiendaId) => {
-    console.log("ID de tienda seleccionada:", tiendaId);
-
     try {
-      const pedidosTienda = pedidos.filter(
-        (pedido) => pedido.tiendaId === tiendaId
-      );
-      console.log("Pedidos encontrados para esta tienda:", pedidosTienda);
-
-      if (pedidosTienda.length === 0) {
+      const pedidosTiendaYDeudor = pedidos.filter((pedido) => pedido.tiendaId === tiendaId);
+      if (pedidosTiendaYDeudor.length > 0) {
+        const ultimoPedido = pedidosTiendaYDeudor.sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden))[0];
+        const detalles = await dispatch(getDetalleOrdenByPedidoId(ultimoPedido.id)).unwrap();
+        setProductosCopiados(detalles);
+  
+        const newPedido = {
+          ...currentPedido,
+          tiendaId: tiendaId,
+          fechaOrden: new Date(),
+          productos: detalles,
+        };
+  
+        await handleSubmit(newPedido);
+        onClose(); // Cerrar el modal después de guardar el nuevo pedido
+      } else {
         toast({
           title: "Sin pedidos previos",
-          description: "No se encontraron pedidos anteriores para esta tienda.",
+          description: "No se encontraron pedidos anteriores para esta tienda y deudor.",
           status: "info",
           duration: 3000,
           isClosable: true,
         });
-        return;
       }
-
-      const ultimoPedido = pedidosTienda.sort(
-        (a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden)
-      )[0];
-      console.log("Último pedido encontrado:", ultimoPedido);
-
-      // Verificar si el pedido tiene productos
-      if (!ultimoPedido || !ultimoPedido.id) {
-        toast({
-          title: "Error",
-          description: "No se encontró un ID válido para el pedido.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      const detalles = await dispatch(
-        getDetalleOrdenByPedidoId(ultimoPedido.id)
-      ).unwrap();
-      console.log("Detalles del último pedido:", detalles);
-
-      if (!detalles || detalles.length === 0) {
-        toast({
-          title: "Pedido vacío",
-          description:
-            "El último pedido de esta tienda no tiene productos para copiar.",
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      setProductosCopiados(detalles);
-
-      toast({
-        title: "Productos copiados",
-        description: "Se han copiado los productos del último pedido.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
     } catch (error) {
       console.error("Error al copiar productos del último pedido:", error);
       toast({
@@ -172,7 +135,7 @@ const PageFormPedidos = () => {
 
   const handleSubmit = async () => {
     const formErrors = validateFields();
-
+  
     if (Object.keys(formErrors).length > 0) {
       toast({
         title: "Error",
@@ -183,18 +146,12 @@ const PageFormPedidos = () => {
       });
       return;
     }
-
+  
     const today = new Date();
     const todayFormatted = today.toISOString().split("T")[0];
     const tiendaSeleccionada =
       currentPedido.tiendaId || currentPedido.tiendaId2;
-
-    console.log("Datos para validación:", {
-      usuarioId,
-      tiendaSeleccionada,
-      todayFormatted,
-    });
-
+  
     const pedidosHoy = pedidos.filter((pedido) => {
       let fechaPedido = pedido.fechaOrden;
       if (typeof fechaPedido === "string") {
@@ -206,7 +163,7 @@ const PageFormPedidos = () => {
         fechaPedido.toISOString().split("T")[0] === todayFormatted
       );
     });
-
+  
     if (pedidosHoy.length > 0) {
       toast({
         title: "Pedido duplicado",
@@ -217,23 +174,23 @@ const PageFormPedidos = () => {
       });
       console.log("Pedido duplicado detectado:", pedidosHoy);
     }
-
+  
     const newPedido = {
       ...currentPedido,
       tiendaId: tiendaSeleccionada,
       deudorId: currentPedido.deudorId,
       fechaOrden: today,
-      productos: productosCopiados,
+      productos: productosCopiados.length > 0 ? productosCopiados : currentPedido.productos,
     };
-
+  
     try {
       setIsLoading(true);
       const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
       setPedidoIdGuardado(pedidoGuardado.id);
       window.location.reload(true);
-
+  
       dispatch(tablaPedidos());
-
+  
       toast({
         title: "Pedido creado",
         description: "El pedido ha sido guardado correctamente",
@@ -241,7 +198,6 @@ const PageFormPedidos = () => {
         duration: 3000,
         isClosable: true,
       });
-
       onClose(); 
       resetForm(); 
     } catch (error) {
