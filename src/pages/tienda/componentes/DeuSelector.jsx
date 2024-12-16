@@ -1,6 +1,7 @@
-import { useEffect } from "react";
-import PropTypes from "prop-types"; // Importar PropTypes para la validación de props
-import { Flex, FormHelperText } from "@chakra-ui/react";
+import { useEffect, useState, useRef } from "react";
+import PropTypes from "prop-types";
+import { Flex, FormHelperText, InputGroup, InputRightElement, IconButton } from "@chakra-ui/react";
+import { CloseIcon } from "@chakra-ui/icons";
 import { useSelector, useDispatch } from "react-redux";
 import {
   AutoComplete,
@@ -8,42 +9,101 @@ import {
   AutoCompleteItem,
   AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
-
 import { tablaDeudores } from "../../../store/Deus/thunks";
 
-const DeuSelector = ({ ciudadId, onSelect }) => {
+const DeuSelector = ({ onSelect, selectedDeudorId }) => {
   const dispatch = useDispatch();
   const { deudores } = useSelector((state) => state.deudores);
+  const [inputValue, setInputValue] = useState("");
+  const [showOptions, setShowOptions] = useState(false);
+  const autoCompleteRef = useRef(null);
 
+  // Cargar deudores al montar el componente
   useEffect(() => {
-    // Cargar todos los deudores al iniciar
     dispatch(tablaDeudores());
   }, [dispatch]);
 
+  // Establecer el valor inicial cuando hay un deudor seleccionado
+  useEffect(() => {
+    if (selectedDeudorId && deudores.length > 0) {
+      const selectedDeudor = deudores.find(d => d.id === selectedDeudorId);
+      if (selectedDeudor) {
+        setInputValue(`${selectedDeudor.correlativo} - ${selectedDeudor.nombre}`);
+      }
+    }
+  }, [selectedDeudorId, deudores]);
+
   const handleSelectDeudor = (deudor) => {
+    setInputValue(`${deudor.correlativo} - ${deudor.nombre}`);
+    setShowOptions(false);
     onSelect({
       id: deudor.id,
-      correlativo: deudor.correlativo, // Pasar correlativo
-      nombre: deudor.nombre, // Pasar nombre
+      correlativo: deudor.correlativo,
+      nombre: deudor.nombre,
     });
   };
 
-  // Filtrar los deudores si hay ciudadId
-  const deudoresFiltrados = ciudadId
-    ? deudores.filter((deu) => deu.ciudadId === parseInt(ciudadId, 10))
-    : deudores;
+  const handleClearDeudor = (e) => {
+    e.stopPropagation();
+    setInputValue("");
+    setShowOptions(true);
+    onSelect({
+      id: null,
+      correlativo: null,
+      nombre: null,
+    });
+    if (autoCompleteRef.current) {
+      autoCompleteRef.current.focus();
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setInputValue(value);
+    setShowOptions(true);
+  };
+
+  // Filtrar deudores solo por texto de búsqueda
+  const filteredDeudores = deudores.filter(deu => {
+    const searchText = `${deu.correlativo} - ${deu.nombre}`.toLowerCase();
+    const inputSearch = inputValue.toLowerCase();
+    return !inputValue || searchText.includes(inputSearch);
+  });
 
   return (
     <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
-      <AutoComplete openOnFocus>
-        <AutoCompleteInput variant="outline" placeholder="Seleccione un deudor" />
+      <AutoComplete
+        openOnFocus
+        isOpen={showOptions}
+        onClose={() => setShowOptions(false)}
+      >
+        <InputGroup>
+          <AutoCompleteInput
+            ref={autoCompleteRef}
+            variant="outline"
+            placeholder="Seleccione un deudor"
+            value={inputValue}
+            onChange={handleInputChange}
+            onClick={() => setShowOptions(true)}
+            onFocus={() => setShowOptions(true)}
+          />
+          {inputValue && (
+            <InputRightElement>
+              <IconButton
+                size="sm"
+                icon={<CloseIcon />}
+                onClick={handleClearDeudor}
+                aria-label="Limpiar selección"
+              />
+            </InputRightElement>
+          )}
+        </InputGroup>
         <AutoCompleteList>
-          {deudoresFiltrados.length > 0 ? (
-            deudoresFiltrados.map((deu) => (
+          {filteredDeudores.length > 0 ? (
+            filteredDeudores.map((deu) => (
               <AutoCompleteItem
                 key={`option-${deu.id}`}
                 value={`${deu.correlativo} - ${deu.nombre}`}
-                textTransform="capitalize"
                 onClick={() => handleSelectDeudor(deu)}
               >
                 {`${deu.correlativo} - ${deu.nombre}`}
@@ -51,28 +111,28 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
             ))
           ) : (
             <AutoCompleteItem
-              key="no-deudores"
-              value="No hay deudores disponibles"
+              key="no-results"
+              value=""
               isDisabled
             >
-              No hay deudores disponibles
+              {inputValue ? "No se encontraron deudores" : "No hay deudores disponibles"}
             </AutoCompleteItem>
           )}
         </AutoCompleteList>
       </AutoComplete>
       <FormHelperText mt="2">
-        {deudoresFiltrados.length > 0
+        {deudores.length > 0
           ? "Seleccione el deudor para esta tienda"
-          : "No hay deudores disponibles"}
+          : "Cargando deudores..."}
       </FormHelperText>
     </Flex>
   );
 };
 
-// Validación de PropTypes
 DeuSelector.propTypes = {
-  ciudadId: PropTypes.string, // Opcional para que no dependa siempre de `ciudadId`
-  onSelect: PropTypes.func.isRequired, // La función onSelect es requerida
+  ciudadId: PropTypes.string,
+  onSelect: PropTypes.func.isRequired,
+  selectedDeudorId: PropTypes.string,
 };
 
 export default DeuSelector;

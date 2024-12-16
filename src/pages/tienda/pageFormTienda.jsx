@@ -143,21 +143,20 @@ const PageFormTienda = () => {
       zona: tienda.zona,
       ciudadId: tienda.ciudadId.toString(),
       rutaId: tienda.rutaId.toString(),
+      deudorId: tienda.deudorId,
       deudorCorrelativo: tienda.nombreCorrelativo,
       nombreDeu: tienda.nombreDeu,
     });
     setIsEditMode(true);
     onOpen();
   };
-  
-  
 
   const handleDeudorSelect = (deudor) => {
     setCurrentTienda((prevState) => ({
       ...prevState,
-      deudorId: deudor.id,
-      deudorCorrelativo: deudor.correlativo,
-      nombreDeu: deudor.nombre,
+      deudorId: deudor?.id || null,
+      deudorCorrelativo: deudor?.correlativo || null,
+      nombreDeu: deudor?.nombre || null,
     }));
   };
 
@@ -407,7 +406,7 @@ const PageFormTienda = () => {
               <DeuSelector
                 ciudadId={currentTienda.ciudadId}
                 onSelect={handleDeudorSelect}
-                selectedDeudorId={currentTienda.deudorId} // Establecer el deudor seleccionado
+                selectedDeudorId={currentTienda.deudorId}
               />
               {errors.deudorId && (
                 <FormErrorMessage>{errors.deudorId}</FormErrorMessage>
