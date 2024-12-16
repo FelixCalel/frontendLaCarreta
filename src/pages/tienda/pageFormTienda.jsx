@@ -63,6 +63,7 @@ const PageFormTienda = () => {
   const [filtroCiudad, setFiltroCiudad] = useState("");
   const [filtroRuta, setFiltroRuta] = useState("");
   const [filtroZona, setFiltroZona] = useState("");
+  const [filtroNombre, setFiltroNombre] = useState("");
 
   useEffect(() => {
     if (status === "idle") {
@@ -140,21 +141,23 @@ const PageFormTienda = () => {
     setCurrentTienda({
       ...tienda,
       zona: tienda.zona,
-      ciudadId: tienda.ciudadId.toString(), // Convertir a string si es necesario para el selector
-      rutaId: tienda.rutaId.toString(), // Convertir a string
-      deudorCorrelativo: tienda.deudorCorrelativo,
+      ciudadId: tienda.ciudadId.toString(),
+      rutaId: tienda.rutaId.toString(),
+      deudorCorrelativo: tienda.nombreCorrelativo,
       nombreDeu: tienda.nombreDeu,
     });
     setIsEditMode(true);
     onOpen();
   };
+  
+  
 
   const handleDeudorSelect = (deudor) => {
     setCurrentTienda((prevState) => ({
       ...prevState,
       deudorId: deudor.id,
-      deudorCorrelativo: deudor.correlativo, // Aquí se asegura de guardar el correlativo
-      nombreDeu: deudor.nombre, // Aquí el nombre
+      deudorCorrelativo: deudor.correlativo,
+      nombreDeu: deudor.nombre,
     }));
   };
 
@@ -176,6 +179,9 @@ const PageFormTienda = () => {
       (filtroRuta ? tienda.nombreRuta === filtroRuta : true) &&
       (filtroZona
         ? tienda.zona.toLowerCase().includes(filtroZona.toLowerCase())
+        : true) &&
+      (filtroNombre
+        ? tienda.nombre.toLowerCase().includes(filtroNombre.toLowerCase())
         : true)
     );
   });
@@ -273,7 +279,14 @@ const PageFormTienda = () => {
             )}
           </Select>
         </FormControl>
-
+        <FormControl>
+          <FormLabel>Nombre</FormLabel>
+          <Input
+            value={filtroNombre}
+            onChange={(e) => setFiltroNombre(e.target.value)}
+            placeholder="Buscar por nombre"
+          />
+        </FormControl>
         <FormControl>
           <FormLabel>Zona</FormLabel>
           <Input
@@ -388,13 +401,13 @@ const PageFormTienda = () => {
                 }
               />
             </FormControl>
-
             {/* Campo de Deudor */}
             <FormControl mb={3} isInvalid={errors.deudorId} isRequired>
               <FormLabel>Deudor</FormLabel>
               <DeuSelector
-                ciudadId={currentTienda.ciudadId} // Asegúrate de pasar el ID de la ciudad seleccionada
-                onSelect={handleDeudorSelect} // Maneja la selección del deudor
+                ciudadId={currentTienda.ciudadId}
+                onSelect={handleDeudorSelect}
+                selectedDeudorId={currentTienda.deudorId} // Establecer el deudor seleccionado
               />
               {errors.deudorId && (
                 <FormErrorMessage>{errors.deudorId}</FormErrorMessage>
