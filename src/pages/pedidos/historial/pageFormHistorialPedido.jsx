@@ -40,7 +40,7 @@ const HistorialPedidosPage = () => {
       );
     }
   })
-  .sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden));
+  .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl));
 
 
 

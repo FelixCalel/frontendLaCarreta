@@ -99,14 +99,14 @@ const PageFormPedidos = () => {
     try {
       const pedidosTiendaYDeudor = pedidos.filter((pedido) => pedido.tiendaId === tiendaId);
       if (pedidosTiendaYDeudor.length > 0) {
-        const ultimoPedido = pedidosTiendaYDeudor.sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden))[0];
+        const ultimoPedido = pedidosTiendaYDeudor.sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl))[0];
         const detalles = await dispatch(getDetalleOrdenByPedidoId(ultimoPedido.id)).unwrap();
         setProductosCopiados(detalles);
   
         const newPedido = {
           ...currentPedido,
           tiendaId: tiendaId,
-          fechaOrden: new Date(),
+          creadoEl: new Date(),
           productos: detalles,
         };
   
@@ -153,7 +153,7 @@ const PageFormPedidos = () => {
       currentPedido.tiendaId || currentPedido.tiendaId2;
   
     const pedidosHoy = pedidos.filter((pedido) => {
-      let fechaPedido = pedido.fechaOrden;
+      let fechaPedido = pedido.creadoEl;
       if (typeof fechaPedido === "string") {
         fechaPedido = new Date(fechaPedido);
       }
@@ -179,7 +179,7 @@ const PageFormPedidos = () => {
       ...currentPedido,
       tiendaId: tiendaSeleccionada,
       deudorId: currentPedido.deudorId,
-      fechaOrden: today,
+      creadoEl: today,
       productos: productosCopiados.length > 0 ? productosCopiados : currentPedido.productos,
     };
   

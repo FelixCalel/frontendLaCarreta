@@ -69,7 +69,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
             ? pedido.estadoId === 2 || pedido.estadoId === 5 // Pendientes o Exportados para rol 3
             : pedido.estadoId === 3 || pedido.estadoId === 4 // Aprobados o Cancelados para rol 2
       )
-      .sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden)); // Orden descendente
+      .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl)); // Orden descendente
 
     setNotificaciones(usuarioPedidos);
   }, [pedidos, roleId, usuarioId, deletedNotifications]);

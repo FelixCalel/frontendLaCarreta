@@ -26,6 +26,7 @@ import {
         return;
       }
       onConfirm(orderDate);
+      onClose();
     };
   
     return (
@@ -47,7 +48,7 @@ import {
               />
             </AlertDialogBody>
             <AlertDialogFooter>
-              <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={() => onClose()}>
                 Cancelar
               </Button>
               <Button colorScheme="green" onClick={handleConfirm} ml={3}>

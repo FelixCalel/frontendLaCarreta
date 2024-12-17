@@ -108,7 +108,7 @@ const usePedidosLogic = ({
     const tiendaSeleccionada = currentPedido.tiendaId || currentPedido.tiendaId2;
     
     const pedidosHoy = pedidos.filter((pedido) => {
-      let fechaPedido = new Date(pedido.fechaOrden);
+      let fechaPedido = new Date(pedido.creadoEl);
       return (
         pedido.usuarioId === usuarioId &&
         pedido.tiendaId === tiendaSeleccionada &&
@@ -132,7 +132,7 @@ const usePedidosLogic = ({
     const newPedido = {
       ...currentPedido,
       tiendaId: tiendaSeleccionada,
-      fechaOrden: today,
+      creadoEl: today,
       productos: currentPedido.productos, // Aquí usa el estado correcto
     };
   

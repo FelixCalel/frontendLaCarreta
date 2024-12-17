@@ -34,7 +34,7 @@ const AprobadosTable = ({ pedidosAprobados, handleVerDetalles }) => {
               <Td>{pedido.nombreDeu}</Td>
               <Td>{pedido.nombreTienda}</Td>
               <Td>
-                {format(new Date(pedido.fechaOrden), "dd 'de' MMMM 'de' yyyy", {
+                {format(new Date(pedido.creadoEl), "dd 'de' MMMM 'de' yyyy", {
                   locale: es,
                 })}
               </Td>
@@ -69,7 +69,7 @@ AprobadosTable.propTypes = {
       id: PropTypes.number.isRequired,
       nombreDeu: PropTypes.string.isRequired,
       nombreTienda: PropTypes.string.isRequired,
-      fechaOrden: PropTypes.string.isRequired,
+      creadoEl: PropTypes.string.isRequired,
     })
   ).isRequired,
   handleVerDetalles: PropTypes.func.isRequired,

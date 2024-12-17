@@ -55,7 +55,7 @@ const PedidosCardList = ({ pedidos, roleId, onVerDetalles }) => (
         ) : null}
         <Text color="gray.600" fontSize="sm">
           <strong>Fecha:</strong>{" "}
-          {format(new Date(pedido.fechaOrden), "dd MMM yyyy, HH:mm", {
+          {format(new Date(pedido.creadoEl), "dd MMM yyyy, HH:mm", {
             locale: es,
           })}
         </Text>
@@ -83,7 +83,7 @@ PedidosCardList.propTypes = {
       nombreDeu: PropTypes.string,
       nombreTienda: PropTypes.string,
       estadoId: PropTypes.number.isRequired,
-      fechaOrden: PropTypes.string.isRequired,
+      creadoEl: PropTypes.string.isRequired,
       nombreUsuario: PropTypes.string,
     })
   ).isRequired,

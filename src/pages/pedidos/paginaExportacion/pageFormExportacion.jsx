@@ -77,10 +77,10 @@ const AprobadosPage = () => {
       // Agrupar los pedidos por deudor
       const pedidosPorDeudor = pedidosConDetalles.reduce((acc, pedido) => {
         const deudor = pedido.nombreDeu || "Sin deudor";
-        if (!acc[deudor]) acc[deudor] = { pedidos: [], fechaOrden: null };
+        if (!acc[deudor]) acc[deudor] = { pedidos: [], creadoEl: null };
         acc[deudor].pedidos.push(pedido);
-        if (!acc[deudor].fechaOrden || pedido.fechaOrden > acc[deudor].fechaOrden) {
-          acc[deudor].fechaOrden = pedido.fechaOrden;
+        if (!acc[deudor].creadoEl || pedido.creadoEl > acc[deudor].creadoEl) {
+          acc[deudor].creadoEl = pedido.creadoEl;
         }
         return acc;
       }, {});
@@ -118,14 +118,14 @@ async function addPedidosToWorksheet(worksheet, pedidosPorDeudor) {
 
   // Iterar sobre cada deudor
   for (const deudor of Object.keys(pedidosPorDeudor)) {
-    const { pedidos, fechaOrden } = pedidosPorDeudor[deudor];
+    const { pedidos, creadoEl } = pedidosPorDeudor[deudor];
 
     // Agregar encabezado del deudor
     const deudorRow = worksheet.addRow([deudor]);
     deudorRow.font = { bold: true };
       
     // Agregar fecha
-    const fechaFormateada = format(new Date(fechaOrden), "dd 'de' MMMM 'de' yyyy", { locale: es });
+    const fechaFormateada = format(new Date(creadoEl), "dd 'de' MMMM 'de' yyyy", { locale: es });
     worksheet.addRow([`Fecha: ${fechaFormateada}`]);
       
     // Agregar encabezados de columnas

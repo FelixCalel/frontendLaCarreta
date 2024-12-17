@@ -58,7 +58,7 @@ const PedidosTable = ({ pedidos, roleId, onVerDetalles }) => (
           </Td>
 
           <Td>
-            {format(new Date(pedido.fechaOrden), "dd MMM yyyy, HH:mm", {
+            {format(new Date(pedido.creadoEl), "dd MMM yyyy, HH:mm", {
               locale: es,
             })}
           </Td>
@@ -91,7 +91,7 @@ PedidosTable.propTypes = {
       nombreDeu: PropTypes.string,
       nombreTienda: PropTypes.string,
       estadoId: PropTypes.number.isRequired,
-      fechaOrden: PropTypes.string.isRequired,
+      creadoEl: PropTypes.string.isRequired,
       nombreUsuario: PropTypes.string,
     })
   ).isRequired,

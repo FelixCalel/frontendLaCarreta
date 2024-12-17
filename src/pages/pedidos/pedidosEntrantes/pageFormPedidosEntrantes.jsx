@@ -22,7 +22,7 @@ import {
 import PedidosTable from "../componentes/EntrantesFormPedidos/PedidosTable";
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
-import  ApproveOrderDialog  from "../componentes/EntrantesFormPedidos/ApproveOrderDialog"
+import ApproveOrderDialog from "../componentes/EntrantesFormPedidos/ApproveOrderDialog";
 const EntrantesPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
@@ -35,12 +35,12 @@ const EntrantesPage = () => {
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const pedidosEntrantes = pedidos.filter((pedido) => pedido.estadoId === 2);
-  const [isApproving, setIsApproving, setIsApproveOpen] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const {
     isOpen: isApproveOpen,
     onOpen: onApproveOpen,
-    // onClose: onApproveClose,
+    onClose: onApproveClose,
   } = useDisclosure();
   const {
     isOpen: isCancelOpen,
@@ -57,11 +57,11 @@ const EntrantesPage = () => {
     setIsApproving(true);
     try {
       await handleAprobarPedidos(orderDate);
+      onApproveClose(); 
     } catch (error) {
       console.error("Error al aprobar pedidos:", error);
     } finally {
       setIsApproving(false);
-      setIsApproveOpen(false);
     }
   };
 
@@ -150,6 +150,10 @@ const EntrantesPage = () => {
     }
   };
 
+  const handleCloseApproveDialog = () => {
+    onApproveClose();
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedPedido(null);
@@ -184,10 +188,11 @@ const EntrantesPage = () => {
           </Button>
           <ApproveOrderDialog
             isOpen={isApproveOpen}
-            onClose={() => setIsApproveOpen(false)}
+            onClose={handleCloseApproveDialog}
             onConfirm={handleConfirmApprove}
             selectedPedidos={selectedPedidos}
           />
+
           {/* <AlertDialog
             isOpen={isApproveOpen}
             onClose={onApproveClose}
