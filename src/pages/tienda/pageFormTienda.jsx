@@ -25,6 +25,7 @@ import {
   FormErrorMessage,
   Switch,
   IconButton,
+  useToast,
 } from "@chakra-ui/react";
 import { EditIcon } from "@chakra-ui/icons";
 import { format } from "date-fns";
@@ -34,6 +35,7 @@ import {
   addNewTienda,
   deleteTienda,
   updateTienda,
+  toggleTiendaStatus,
 } from "../../store/Tienda/thunks";
 import CiudadSelector from "./componentes/CiudadSelector";
 import RutaSelector from "./componentes/RutaSelector";
@@ -56,14 +58,14 @@ const PageFormTienda = () => {
     rutaId: "",
     usuarioCreadoPorId: "",
   });
+  const toast = useToast();
   const [errors, setErrors] = useState({});
   const [, setSelectedDeu] = useState(currentTienda.deudorId);
-
-  // Estados para los filtros
   const [filtroCiudad, setFiltroCiudad] = useState("");
   const [filtroRuta, setFiltroRuta] = useState("");
   const [filtroZona, setFiltroZona] = useState("");
   const [filtroNombre, setFiltroNombre] = useState("");
+  const [isToggling, setIsToggling] = useState(false);
 
   useEffect(() => {
     if (status === "idle") {
@@ -83,6 +85,27 @@ const PageFormTienda = () => {
       ...prevState,
       [name]: newValue,
     }));
+  };
+
+  const handleToggleStatus = async (tienda) => {
+    try {
+      setIsToggling(true);
+      await dispatch(
+        toggleTiendaStatus({ id: tienda.id, estaActivo: !tienda.estaActivo })
+      );
+      dispatch(tablaTienda());
+    } catch (error) {
+      console.error("Error al actualizar el estado de la tienda:", error);
+      toast({
+        title: "Error",
+        description: "Hubo un error al actualizar el estado de la tienda.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsToggling(false);
+    }
   };
 
   const validateFields = () => {
@@ -321,11 +344,14 @@ const PageFormTienda = () => {
               <Td>{formatDate(tienda.creadoEl)}</Td>
               <Td>{formatDate(tienda.actualizadoEl)}</Td>
               <Td>
-                <Switch
-                  name="estaActivo"
-                  isChecked={Boolean(tienda.estaActivo)}
-                  onChange={(e) => handleInputChange(e)}
-                />
+                <Td>
+                  <Switch
+                    name="estaActivo"
+                    isChecked={Boolean(tienda.estaActivo)}
+                    onChange={() => handleToggleStatus(tienda)}
+                    isLoading={isToggling}
+                  />
+                </Td>
               </Td>
               <Td>{`${tienda.nombreCorrelativo || ""} - ${
                 tienda.nombreDeu || ""
