@@ -67,11 +67,21 @@ export const updateDetalleOrden = createAsyncThunk(
 
 
 // Toggle DetalleOrden Status
-export const toggleDetalleOrdenStatus = createAsyncThunk(
-  'detalleOrden/toggleDetalleOrdenStatus',
-  async ({ id, estaActivo }) => {
-    const response = await axios.patch(`${BASE_URL}/pedido/actualizar-estado/${id}`, { estaActivo });
-    return response.data;
+export const togglePedidoStatus = createAsyncThunk(
+  'pedidos/toggleStatus',
+  async ({ id, estadoId }) => {
+    try {
+      console.log('Actualizando estado del pedido:', { id, estadoId });
+      const response = await axios.patch(
+        `${BASE_URL}/form/pedidos/actualizar-estado/${id}`,
+        { estadoId }
+      );
+      console.log('Respuesta de actualización de estado:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error al actualizar el estado:', error);
+      throw error;
+    }
   }
 );
 
@@ -136,4 +146,22 @@ export const getPedidosComunesByUsuarioId = createAsyncThunk(
   }
 );
 
-
+export const actualizarFechaOrden = createAsyncThunk(
+  'detalleOrden/actualizarFechaOrden',
+  async ({ pedidoId, fechaOrden }) => {
+    try {
+      console.log("Fecha antes de enviar al backend:", fechaOrden);
+      
+      const response = await axios.patch(
+        `${BASE_URL}/form/pedidos/actualizar-fecha-orden/${pedidoId}`,
+        { fechaOrden }
+      );
+      
+      console.log("Respuesta del servidor:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error al actualizar la fecha de orden:", error);
+      throw error;
+    }
+  }
+);

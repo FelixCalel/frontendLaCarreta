@@ -21,7 +21,7 @@ import {
 } from "../../../store/Pedidos/thunks";
 import PedidosTable from "../componentes/EntrantesFormPedidos/PedidosTable";
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
-import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
+import { getDetalleOrdenByPedidoId, actualizarFechaOrden } from "../../../store/Pedidos/DetallePedidos/thunks";
 import ApproveOrderDialog from "../componentes/EntrantesFormPedidos/ApproveOrderDialog";
 const EntrantesPage = () => {
   const dispatch = useDispatch();
@@ -51,7 +51,7 @@ const EntrantesPage = () => {
   // Carga inicial de datos
   useEffect(() => {
     dispatch(tablaPedidos());
-  }, [dispatch]);
+  }, [selectedPedidos.length, dispatch]);
 
   const handleConfirmApprove = async (orderDate) => {
     setIsApproving(true);
@@ -77,29 +77,50 @@ const EntrantesPage = () => {
     }
   };
 
-  // Funciones para manejar la aprobación y cancelación de pedidos
   const handleAprobarPedidos = async (orderDate) => {
     setIsLoading(true);
     try {
       for (const pedidoId of selectedPedidos) {
+        console.log('Actualizando pedido:', pedidoId, 'con fecha:', orderDate);
+        
+        // La fecha ya viene en formato dd/MM/yyyy desde el ApproveOrderDialog
         await dispatch(
-          togglePedidoStatus({ id: pedidoId, estadoId: 3, orderDate })
+          actualizarFechaOrden({
+            pedidoId: pedidoId,
+            fechaOrden: orderDate // Ya está en formato dd/MM/yyyy
+          })
+        ).unwrap();
+  
+        await dispatch(
+          togglePedidoStatus({
+            id: pedidoId,
+            estadoId: 3
+          })
         );
       }
+  
       setSelectedPedidos([]);
       toast({
         title: "Pedidos aprobados",
-        description: "Los pedidos seleccionados han sido aprobados.",
+        description: "Los pedidos seleccionados han sido aprobados y la fecha de orden ha sido actualizada.",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
       console.error("Error al aprobar pedidos:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Hubo un error al procesar los pedidos.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   const handleCancelarPedidos = async () => {
     setIsLoading(true);
