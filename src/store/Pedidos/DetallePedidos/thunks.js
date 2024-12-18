@@ -153,7 +153,7 @@ export const actualizarFechaOrden = createAsyncThunk(
       console.log("Fecha antes de enviar al backend:", fechaOrden);
       
       const response = await axios.patch(
-        `${BASE_URL}/form/pedidos/actualizar-fecha-orden/${pedidoId}`,
+        `${BASE_URL}/form/pedidos/actualizar-fecha/${pedidoId}`,
         { fechaOrden }
       );
       
