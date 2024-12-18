@@ -81,24 +81,32 @@ const EntrantesPage = () => {
     setIsLoading(true);
     try {
       for (const pedidoId of selectedPedidos) {
-        console.log('Actualizando pedido:', pedidoId, 'con fecha:', orderDate);
+        console.log('Procesando pedido:', pedidoId);
         
-        // La fecha ya viene en formato dd/MM/yyyy desde el ApproveOrderDialog
+        // Primero actualizar la fecha
         await dispatch(
           actualizarFechaOrden({
-            pedidoId: pedidoId,
-            fechaOrden: orderDate // Ya está en formato dd/MM/yyyy
+            pedidoId,
+            fechaOrden: orderDate
           })
         ).unwrap();
-  
-        await dispatch(
+        
+        console.log('Fecha actualizada, actualizando estado...');
+        
+        // Luego actualizar el estado
+        const result = await dispatch(
           togglePedidoStatus({
             id: pedidoId,
             estadoId: 3
           })
-        );
+        ).unwrap();
+        
+        console.log('Estado actualizado:', result);
       }
   
+      // Actualizar la lista de pedidos
+      await dispatch(tablaPedidos());
+      
       setSelectedPedidos([]);
       toast({
         title: "Pedidos aprobados",

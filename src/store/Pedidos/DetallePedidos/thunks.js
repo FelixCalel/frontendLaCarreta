@@ -67,7 +67,7 @@ export const updateDetalleOrden = createAsyncThunk(
 
 
 // Toggle DetalleOrden Status
-export const togglePedidoStatus = createAsyncThunk(
+export const toggleDetalleOrdenStatus = createAsyncThunk(
   'pedidos/toggleStatus',
   async ({ id, estadoId }) => {
     try {
