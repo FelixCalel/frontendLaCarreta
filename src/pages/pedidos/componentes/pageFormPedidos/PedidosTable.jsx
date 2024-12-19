@@ -54,13 +54,13 @@ const PedidosTable = ({
           <Text>
             <strong>Ciudad:</strong> {pedido.nombreCiudad || "N/A"}
           </Text>
-          <Text>
-            <strong>Deudor:</strong> {pedido.nombreCorrelativo} -{" "}
+          {/* <Text> */}
+            {/* <strong>Deudor:</strong> {pedido.nombreCorrelativo} -{" "}
             {pedido.nombreDeu || "N/A"}
           </Text>
           <Text>
             <strong>Tienda:</strong> {pedido.nombreTienda || "N/A"}
-          </Text>
+          </Text> */}
           <HStack spacing={3} mt={2}>
             <Tooltip label="Ver Detalles" hasArrow>
               <IconButton
