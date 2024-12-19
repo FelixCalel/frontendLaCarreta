@@ -17,7 +17,7 @@ const HeaderButtons = ({ onOpen }) => {
       _active={{ transform: "scale(0.95)", transition: "0.1s" }}
       shadow="md"
     >
-      Create order
+      Crear Pedido
     </Button>
   );
 };
