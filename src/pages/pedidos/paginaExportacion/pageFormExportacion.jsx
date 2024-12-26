@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Button, Flex, useDisclosure } from "@chakra-ui/react";
+import { Box, Button, Flex, useDisclosure, useToast  } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import AprobadosTable from "../componentes/exportacionFormPedidos/tableAprobados";
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
@@ -15,6 +15,8 @@ const AprobadosPage = () => {
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [detallesPedido, setDetallesPedido] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
+  const toast = useToast();
+
 
   const pedidos = useSelector((state) => state.pedidos.data);
 
@@ -33,16 +35,45 @@ const AprobadosPage = () => {
       const detalles = await dispatch(
         getDetalleOrdenByPedidoId(pedidoId)
       ).unwrap();
+
+      // Ordenar los detalles por fecha de creación
+      detalles.sort(
+        (a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion)
+      );
       setDetallesPedido(detalles);
-      setSelectedPedido(pedidoId);
-      onOpen();
+
+      // Obtener el objeto pedido de la lista de pedidos
+      const pedido = pedidos.find((p) => p.id === pedidoId);
+
+      if (pedido) {
+        setSelectedPedido(pedido);
+        // Utiliza onOpen() para abrir el modal
+        onOpen();
+      } else {
+        toast({
+          title: "Error",
+          description: "No se encontró el pedido seleccionado.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } catch (error) {
       console.error(
         `Error al obtener los detalles del pedido ${pedidoId}:`,
         error
       );
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los detalles del pedido.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
+  
+  
   console.log("Pedidos aprobados:", pedidosAprobados);
 
   // Ejemplo de agregar detalles
@@ -197,7 +228,7 @@ async function addPedidosToWorksheet(worksheet, pedidosPorDeudor) {
         isOpen={isOpen}
         onClose={onClose}
         detalles={detallesPedido}
-        pedidoId={selectedPedido}
+        pedido={selectedPedido}
       />
     </Box>
   );

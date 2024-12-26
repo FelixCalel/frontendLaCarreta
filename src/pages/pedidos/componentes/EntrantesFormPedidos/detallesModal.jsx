@@ -15,36 +15,49 @@ import {
   Td,
   Button,
   Box,
+  Heading,
+  Text
 } from "@chakra-ui/react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
-const DetallesModal = ({ isOpen, onClose, detalles, pedidoId }) => {
+const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
+  if(!pedido){
+    return null; 
+  }
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Detalles del Pedido {pedidoId}</ModalHeader>
+        <ModalHeader>Detalles del Pedido {pedido.id}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {detalles && detalles.length > 0 ? (
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Código</Th>
-                  <Th>Producto</Th>
-                  <Th>Cantidad</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {detalles.map((detalle) => (
-                  <Tr key={detalle.id}>
-                  <Td>{detalle.codigo || "Sin código"}</Td>
-                  <Td>{detalle.nombreProducto || "Sin nombre"}</Td>
-                  <Td>{detalle.cantidad}</Td>
-                </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          ) : (
+        <>
+        <Table variant="simple">
+          <Thead>
+            <Tr>
+              <Th>Código</Th>
+              <Th>Producto</Th>
+              <Th>Cantidad</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {detalles.map((detalle) => (
+              <Tr key={detalle.id}>
+                <Td>{detalle.codigo || "Sin código"}</Td>
+                <Td>{detalle.nombreProducto || "Sin nombre"}</Td>
+                <Td>{detalle.cantidad}</Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+        <Box mt={4}>
+          <Heading size="md">Fecha de Entrega</Heading>
+          <Text>{format(new Date(pedido.fechaOrden), "dd 'de' MMMM 'de' yyyy", { locale: es })}</Text>
+        </Box>
+      </>
+    ) : (
             <Box>No hay detalles disponibles</Box>
           )}
         </ModalBody>
@@ -69,11 +82,16 @@ DetallesModal.propTypes = {
       cantidad: PropTypes.number.isRequired,
     })
   ),
-  pedidoId: PropTypes.number,
+  pedido: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    fechaOrden: PropTypes.string.isRequired,
+    // Añade otras propiedades si es necesario
+  }),
 };
 
+
 DetallesModal.defaultProps = {
-  pedidoId: null,
+  pedido: null,
 };
 
 export default DetallesModal;
