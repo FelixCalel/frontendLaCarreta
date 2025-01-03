@@ -19,7 +19,7 @@ import { PaginaDeu } from "../router/DeuRoute";
 import { PaginaItem } from "../router/ItemRouter";
 import { PaginaHistorialPedido } from "../router/HistorialPedidoRouter";
 import { PaginaExportacionPedido } from "../router/exportarPedidosRouter"
-import { PedidosEntrantesPageCompras } from "../pages/Compras/pedidosEntrantesCompras/PedidosEntrantesCompras"
+import { PaginaPedidoCompras } from "../router/ComprasRouter"
 
 
 
@@ -27,7 +27,7 @@ export const AppRouter = () => {
   const dispatch = useDispatch();
   // const status = useSelector((state) => state.auth.status);
   const [accesosPermitidos, setAccesosPermitidos] = useState({});
-  const [loading, setLoading] = useState(true); // Bandera de carga
+  const [loading, setLoading] = useState(true); 
   const [roleId, setRoleId] = useState(localStorage.getItem("roleId"));
   const usuarioId = localStorage.getItem("usuarioId");
 
@@ -43,8 +43,7 @@ export const AppRouter = () => {
     { path: "/items/*", rutaId: 10, component: PaginaItem},
     { path: "/historialPedido/*", rutaId: 11, component: PaginaHistorialPedido},
     { path: "/exportarPedido/*", rutaId: 12, component: PaginaExportacionPedido},
-    { path: "/listarCompras/*", rutaId: 13, component: PedidosEntrantesPageCompras},
-
+    { path: "/comprasPedidos/*", rutaId: 13, component: PaginaPedidoCompras},
 
   ];
 

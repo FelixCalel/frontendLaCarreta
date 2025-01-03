@@ -9,6 +9,7 @@ import {
   useDisclosure,
   useToast,
   Stack,
+  Spinner 
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { tablaPedidos } from "../../../store/Pedidos/thunks";
@@ -17,19 +18,19 @@ import PedidosTable from "./componentes/PedidosTable";
 import DetallesModal from "./componentes/DetallesModal";
 import * as ExcelJS from 'exceljs';
 
+
 const PedidosEntrantesPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
-
   const [filtros, setFiltros] = useState({
     fechaEntrega: "",
     palabrasClave: "",
   });
 
-  const pedidosEntrantes = useSelector((state) => state.pedidos.entrantes);
-
+  const pedidosEntrantes = useSelector((state) => state.pedidos.data) || [];
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedPedido, setSelectedPedido] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const obtenerPedidos = async () => {
@@ -43,10 +44,16 @@ const PedidosEntrantesPage = () => {
           duration: 3000,
           isClosable: true,
         });
+      } finally {
+        setIsLoading(false);
       }
     };
     obtenerPedidos();
   }, [dispatch, toast]);
+
+  if (isLoading) {
+    return <Spinner size="xl" />;
+  }
 
   const handleAplicarFiltros = (nuevosFiltros) => {
     setFiltros(nuevosFiltros);

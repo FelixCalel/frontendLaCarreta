@@ -4,7 +4,7 @@ import { Dashboard } from "../pages";
 import PedidosEntrantesPageCompras from "../pages/Compras/pedidosEntrantesCompras/PedidosEntrantesCompras";
 
  
-export const PaginaHistorialPedido = () => {
+export const PaginaPedidoCompras = () => {
   return (
     <Routes>
       {/* <Route path="/*" element={<Dashboard />} > */}
