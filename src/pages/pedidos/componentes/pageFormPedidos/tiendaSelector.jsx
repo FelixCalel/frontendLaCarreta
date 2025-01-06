@@ -3,8 +3,12 @@ import PropTypes from "prop-types";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { tablaTienda } from "../../../../store/Tienda/thunks";
+import Select from "react-select";
+import { chakra } from "@chakra-ui/react";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
+
+const ChakraReactSelect = chakra(Select);
 
 const TiendaSelector = ({
   ciudadId,
@@ -28,7 +32,7 @@ const TiendaSelector = ({
     const fetchTiendas = async () => {
       setLoading(true);
       let tiendasFiltradas = [];
-  
+
       if (!isRutaFilter) {
         if (paisId) {
           const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
@@ -37,48 +41,57 @@ const TiendaSelector = ({
           }
         }
       } else {
-        if (ciudadId && deudorId) {
-          tiendasFiltradas = tiendasRedux.filter(
-            (tienda) =>
-              tienda.ciudadId === ciudadId &&
-              tienda.deudorId === deudorId &&
-              (rutaIds.length === 0 || rutaIds.includes(tienda.rutaId))
-          );
-        }
+        tiendasFiltradas = tiendasRedux.filter((tienda) => {
+          const ciudadMatch = ciudadId ? tienda.ciudadId === ciudadId : true;
+          const deudorMatch = deudorId ? tienda.deudorId === deudorId : true;
+          const rutaMatch =
+            rutaIds.length === 0 || rutaIds.includes(tienda.rutaId);
+
+          return ciudadMatch && deudorMatch && rutaMatch;
+        });
       }
-  
-      // Solo actualiza si hay un cambio en las tiendas
-      setTiendas((prevTiendas) => {
-        if (JSON.stringify(prevTiendas) !== JSON.stringify(tiendasFiltradas)) {
-          return tiendasFiltradas;
-        }
-        return prevTiendas;
-      });
-  
+
+      setTiendas(tiendasFiltradas);
       setLoading(false);
     };
-  
+
     fetchTiendas();
   }, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter, tiendasRedux]);
-  
+
+  const options = tiendas.map((tienda) => ({
+    value: tienda.id,
+    label: tienda.nombre,
+  }));
+
+  const selectedOption = options.find((option) => option.value === value) || null;
 
   if (loading) {
-    return <select disabled>Cargando tiendas...</select>;
+    return <ChakraReactSelect isLoading placeholder="Cargando tiendas..." />;
   }
 
   return (
-    <select value={value ? String(value) : ""} onChange={(e) => onChange(parseInt(e.target.value))}>
-      <option value="">Seleccionar tienda</option>
-      {tiendas.length > 0 ? (
-        tiendas.map((tienda) => (
-          <option key={tienda.id} value={tienda.id}>
-            {tienda.nombre}
-          </option>
-        ))
-      ) : (
-        <option value="">Tienda no asignada</option>
-      )}
-    </select>
+    <ChakraReactSelect
+      placeholder="Seleccionar tienda"
+      options={options}
+      value={selectedOption}
+      onChange={(selected) => onChange(selected ? selected.value : null)}
+      isClearable
+      menuPlacement="auto"
+      menuPosition="fixed"
+      chakraStyles={{
+        container: (provided) => ({
+          ...provided,
+          width: "100%",
+        }),
+        control: (provided) => ({
+          ...provided,
+          borderColor: "gray.300",
+          _hover: { borderColor: "gray.400" },
+        }),
+      }}
+      noOptionsMessage={() => "No se encontraron tiendas"}
+      loadingMessage={() => "Cargando tiendas..."}
+    />
   );
 };
 
@@ -87,7 +100,7 @@ TiendaSelector.propTypes = {
   deudorId: PropTypes.number,
   rutaIds: PropTypes.arrayOf(PropTypes.number),
   paisId: PropTypes.number.isRequired,
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  value: PropTypes.number,
   onChange: PropTypes.func.isRequired,
   isRutaFilter: PropTypes.bool,
 };
