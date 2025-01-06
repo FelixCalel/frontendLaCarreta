@@ -17,6 +17,8 @@ import {
   Box,
   Text,
   useToast,
+  Grid,
+  GridItem,
 } from "@chakra-ui/react";
 import { FaCity, FaStoreAlt } from "react-icons/fa"; // Iconos
 import { MdOutlinePerson } from "react-icons/md";
@@ -97,6 +99,7 @@ const PedidoModal = ({
         bg="white"
         maxW={{ base: "95%", md: "600px" }}
         p={4}
+        overflow="hidden"
       >
         <ModalHeader
           fontSize={{ base: "lg", md: "2xl" }} // Tamaño del encabezado adaptativo
@@ -137,60 +140,50 @@ const PedidoModal = ({
                   onSelect={handleDeudorSelect}
                 />
               </FormControl>
-              <HStack spacing={1} w="full" alignItems="flex-start">
-                {" "}
-                {/* Cambiar spacing={3} a spacing={1} */}
-                <FormControl flex="1" isDisabled={isTienda2Disabled} mr={1}>
-                  {" "}
-                  {/* Añadir mr={1} */}
-                  <FormLabel
-                    fontSize="sm"
-                    fontWeight="bold"
-                    color="gray.600"
-                    mb={1}
-                  >
-                    {" "}
-                    {/* Añadir mb={1} */}
-                    <HStack>
-                      <Icon as={FaStoreAlt} color="teal.500" />
-                      <Text>Tiendas asignadas</Text>
-                    </HStack>
-                  </FormLabel>
-                  <TiendaSelector
-                    rutaIds={usuarioRutas || []}
-                    paisId={Number(paisId)}
-                    value={currentPedido.tiendaId}
-                    onChange={handleTiendaChange}
-                    deudorId={currentPedido.deudorId}
-                    ciudadId={currentPedido.ciudadId}
-                    isRutaFilter={true}
-                  />
-                </FormControl>
-                <FormControl flex="1" isDisabled={isTienda1Disabled} ml={1}>
-                  {" "}
-                  {/* Añadir ml={1} */}
-                  <FormLabel
-                    fontSize="sm"
-                    fontWeight="bold"
-                    color="gray.600"
-                    mb={1}
-                  >
-                    {" "}
-                    {/* Añadir mb={1} */}
-                    <HStack>
-                      <Icon as={FaStoreAlt} color="teal.500" />
-                      <Text>Todas las tiendas</Text>
-                    </HStack>
-                  </FormLabel>
-                  <TiendaSelector
-                    rutaIds={[]}
-                    paisId={Number(paisId)}
-                    value={currentPedido.tiendaId2}
-                    onChange={handleTiendaChange2}
-                    isRutaFilter={false}
-                  />
-                </FormControl>
-              </HStack>
+
+              {/* Nuevo Grid para los selectores de tiendas */}
+              <Grid
+                templateColumns={{ base: "1fr", md: "1fr 1fr" }}
+                gap={4}
+                w="full"
+              >
+                <GridItem>
+                  <FormControl isDisabled={isTienda2Disabled}>
+                    <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
+                      <HStack>
+                        <Icon as={FaStoreAlt} color="teal.500" />
+                        <Text>Tiendas asignadas</Text>
+                      </HStack>
+                    </FormLabel>
+                    <TiendaSelector
+                      rutaIds={usuarioRutas || []}
+                      paisId={Number(paisId)}
+                      value={currentPedido.tiendaId}
+                      onChange={handleTiendaChange}
+                      deudorId={currentPedido.deudorId}
+                      ciudadId={currentPedido.ciudadId}
+                      isRutaFilter={true}
+                    />
+                  </FormControl>
+                </GridItem>
+                <GridItem>
+                  <FormControl isDisabled={isTienda1Disabled}>
+                    <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
+                      <HStack>
+                        <Icon as={FaStoreAlt} color="teal.500" />
+                        <Text>Todas las tiendas</Text>
+                      </HStack>
+                    </FormLabel>
+                    <TiendaSelector
+                      rutaIds={[]}
+                      paisId={Number(paisId)}
+                      value={currentPedido.tiendaId2}
+                      onChange={handleTiendaChange2}
+                      isRutaFilter={false}
+                    />
+                  </FormControl>
+                </GridItem>
+              </Grid>
             </VStack>
           ) : (
             <Box>
