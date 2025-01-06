@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { RootLayout } from "../pages/layouts/RootLayout";
 import { Dashboard } from "../pages";
-import PedidosEntrantesPageCompras from "../pages/Compras/pedidosEntrantesCompras/PedidosEntrantesCompras";
+import HistorialPedidosPage from "../pages/pedidos/historial/pageHistorialPedido";
 
  
 export const PaginaHistorialPedido = () => {
@@ -11,7 +11,7 @@ export const PaginaHistorialPedido = () => {
       <Route path="/*" element={<RootLayout />}>
         <Route index element={<Dashboard />} />
         
-        <Route path="listar" element={<PedidosEntrantesPageCompras />} /> 
+        <Route path="listar" element={<HistorialPedidosPage />} /> 
         {/* Más rutas anidadas si es necesario */}
       </Route>
       {/* </Route>  */}
