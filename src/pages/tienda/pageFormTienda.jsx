@@ -40,6 +40,7 @@ import {
 import CiudadSelector from "./componentes/CiudadSelector";
 import RutaSelector from "./componentes/RutaSelector";
 import DeuSelector from "./componentes/DeuSelector";
+import Pagination from "../../components/pagination";
 
 const PageFormTienda = () => {
   const dispatch = useDispatch();
@@ -67,6 +68,13 @@ const PageFormTienda = () => {
   const [filtroNombre, setFiltroNombre] = useState("");
   const [isToggling, setIsToggling] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+   const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   useEffect(() => {
     if (status === "idle") {
       dispatch(tablaTienda());
@@ -76,6 +84,10 @@ const PageFormTienda = () => {
   useEffect(() => {
     setSelectedDeu(currentTienda.deudorId);
   }, [currentTienda.deudorId]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filtroCiudad, filtroRuta, filtroZona, filtroNombre]);
 
   const handleInputChange = (e) => {
     const { name, type, checked, value } = e.target;
@@ -208,6 +220,10 @@ const PageFormTienda = () => {
     );
   });
 
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+
   if (
     status === "loading" ||
     ciudadesStatus === "loading" ||
@@ -336,7 +352,7 @@ const PageFormTienda = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {filteredData.map((tienda) => (
+          {currentItems.map((tienda) => (
             <Tr key={tienda.id}>
               <Td>{tienda.id}</Td>
               <Td>{tienda.nombre}</Td>
@@ -376,6 +392,13 @@ const PageFormTienda = () => {
           ))}
         </Tbody>
       </Table>
+
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredData.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={handlePageChange}
+      />
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
