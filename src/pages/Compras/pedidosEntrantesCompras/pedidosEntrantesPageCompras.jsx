@@ -1,5 +1,3 @@
-// src/pages/pedidosEntrantes/PedidosEntrantesPage.jsx
-
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -9,15 +7,15 @@ import {
   useDisclosure,
   useToast,
   Stack,
-  Spinner 
+  Spinner,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { tablaPedidos } from "../../../store/Pedidos/thunks";
+import { tablaPedidosConDetalles  } from "../../../store/Pedidos/thunks";
 import FiltrosPedidos from "./componentes/FiltrosPedidos";
 import PedidosTable from "./componentes/PedidosTable";
 import DetallesModal from "./componentes/DetallesModal";
-import * as ExcelJS from 'exceljs';
-
+import * as ExcelJS from "exceljs";
+import moment from "moment";
 
 const PedidosEntrantesPage = () => {
   const dispatch = useDispatch();
@@ -27,15 +25,16 @@ const PedidosEntrantesPage = () => {
     palabrasClave: "",
   });
 
-  const pedidosEntrantes = useSelector((state) => state.pedidos.data) || [];
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedPedido, setSelectedPedido] = useState(null);
+  // const pedidosEntrantes = useSelector((state) => state.pedidos.data) || [];
+  const pedidosEntrantes = useSelector((state) => state.pedidos.pedidosConDetalles) || [];
+  const { isOpen, onClose } = useDisclosure();
+  const [selectedPedido] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const obtenerPedidos = async () => {
       try {
-        await dispatch(tablaPedidos());
+        await dispatch(tablaPedidosConDetalles());
       } catch (error) {
         toast({
           title: "Error",
@@ -55,95 +54,112 @@ const PedidosEntrantesPage = () => {
     return <Spinner size="xl" />;
   }
 
+  // **Aplicar Filtros a los pedidos**
+  const pedidosFiltrados = pedidosEntrantes.filter((pedido) => {
+    const cumpleFecha =
+      !filtros.fechaEntrega ||
+      moment(pedido.fechaEntrega).isSame(moment(filtros.fechaEntrega), 'day');
+    const cumplePalabras =
+      !filtros.palabrasClave ||
+      pedido.items.some((item) =>
+        (item.nombreProducto || item.nombre || '')
+          .toLowerCase()
+          .includes(filtros.palabrasClave.toLowerCase())
+      );
+    return cumpleFecha && cumplePalabras;
+  });
+
+  // **Agrupar los items de los pedidos filtrados por deudor**
+  const itemsAgrupadosPorDeudor = {};
+
+  pedidosFiltrados.forEach((pedido) => {
+    const deudor = pedido.nombreDeu;
+    if (!itemsAgrupadosPorDeudor[deudor]) {
+      itemsAgrupadosPorDeudor[deudor] = [];
+    }
+    const items = pedido.items || []; // Asegúrate de que 'items' está presente
+    items.forEach((item) => {
+      itemsAgrupadosPorDeudor[deudor].push({
+        ...item,
+        deudor,
+        fechaEntrega: pedido.fechaEntrega, // Añadimos fecha de entrega al item
+      });
+    });
+  });
+
   const handleAplicarFiltros = (nuevosFiltros) => {
     setFiltros(nuevosFiltros);
-    // Aquí puedes filtrar los pedidos según los filtros aplicados
   };
 
-  const handleVerDetalles = (pedidoId) => {
-    const pedido = pedidosEntrantes.find((p) => p.id === pedidoId);
-    if (pedido) {
-      setSelectedPedido(pedido);
-      onOpen();
-    }
-  };
 
- 
-    const handleExportarExcel = async () => {
-      try {
-        const pedidosFiltrados = pedidosEntrantes.filter((pedido) => {
-          const cumpleFecha =
-            !filtros.fechaEntrega ||
-            pedido.fechaEntrega.startsWith(filtros.fechaEntrega);
-          const cumplePalabras =
-            !filtros.palabrasClave ||
-            pedido.items.some((item) =>
-              item.nombre.toLowerCase().includes(filtros.palabrasClave.toLowerCase())
-            );
-          return cumpleFecha && cumplePalabras;
-        });
-  
-        if (pedidosFiltrados.length === 0) {
-          toast({
-            title: "Aviso",
-            description: "No hay datos para exportar.",
-            status: "info",
-            duration: 3000,
-            isClosable: true,
-          });
-          return;
-        }
-  
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("Pedidos Entrantes");
-  
-        worksheet.columns = [
-          { header: "ID", key: "id", width: 10 },
-          { header: "Deudor", key: "nombreDeu", width: 30 },
-          { header: "Tienda", key: "nombreTienda", width: 30 },
-          { header: "Fecha de Entrega", key: "fechaEntrega", width: 20 },
-        ];
-  
-        // Agregar filas
-        pedidosFiltrados.forEach((pedido) => {
-          worksheet.addRow({
-            id: pedido.id,
-            nombreDeu: pedido.nombreDeu,
-            nombreTienda: pedido.nombreTienda,
-            fechaEntrega: pedido.fechaEntrega,
-          });
-        });
-  
-        // Generar el archivo y descargarlo
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], {
-          type:
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "pedidos_entrantes.xlsx";
-        a.click();
-        window.URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error("Error al exportar a Excel:", error);
+  const handleExportarExcel = async () => {
+    try {
+      const pedidosFiltrados = pedidosEntrantes.filter((pedido) => {
+        const cumpleFecha =
+          !filtros.fechaEntrega ||
+          pedido.fechaEntrega.startsWith(filtros.fechaEntrega);
+        const cumplePalabras =
+          !filtros.palabrasClave ||
+          pedido.items.some((item) =>
+            item.nombre
+              .toLowerCase()
+              .includes(filtros.palabrasClave.toLowerCase())
+          );
+        return cumpleFecha && cumplePalabras;
+      });
+
+      if (pedidosFiltrados.length === 0) {
         toast({
-          title: "Error",
-          description: "No se pudo exportar a Excel.",
-          status: "error",
+          title: "Aviso",
+          description: "No hay datos para exportar.",
+          status: "info",
           duration: 3000,
           isClosable: true,
         });
+        return;
       }
-    };
 
-  const handleCerrarFecha = () => {
-    // Implementa la lógica para cerrar fecha
-  };
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Pedidos Entrantes");
 
-  const handleAgruparPorDeudor = () => {
-    // Implementa la lógica para agrupar por DEU
+      worksheet.columns = [
+        { header: "ID", key: "id", width: 10 },
+        { header: "Deudor", key: "nombreDeu", width: 30 },
+        { header: "Tienda", key: "nombreTienda", width: 30 },
+        { header: "Fecha de Entrega", key: "fechaEntrega", width: 20 },
+      ];
+
+      // Agregar filas
+      pedidosFiltrados.forEach((pedido) => {
+        worksheet.addRow({
+          id: pedido.id,
+          nombreDeu: pedido.nombreDeu,
+          nombreTienda: pedido.nombreTienda,
+          fechaEntrega: pedido.fechaEntrega,
+        });
+      });
+
+      // Generar el archivo y descargarlo
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "pedidos_entrantes.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al exportar a Excel:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo exportar a Excel.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -151,14 +167,8 @@ const PedidosEntrantesPage = () => {
       <Heading mb={4}>Pedidos Entrantes Compras</Heading>
       <Flex justify="space-between" alignItems="center" mb={4}>
         <Stack direction="row" spacing={2}>
-          <Button colorScheme="teal" onClick={handleCerrarFecha}>
-            Cerrar Fecha
-          </Button>
           <Button colorScheme="teal" onClick={handleExportarExcel}>
             Exportar a Excel
-          </Button>
-          <Button colorScheme="teal" onClick={handleAgruparPorDeudor}>
-            Agrupar por DEU
           </Button>
         </Stack>
       </Flex>
@@ -168,9 +178,8 @@ const PedidosEntrantesPage = () => {
 
       {/* Tabla de Pedidos */}
       <PedidosTable
-        pedidos={pedidosEntrantes}
+        itemsAgrupadosPorDeudor={itemsAgrupadosPorDeudor}
         filtros={filtros}
-        onVerDetalles={handleVerDetalles}
       />
 
       {/* Modal de Detalles */}

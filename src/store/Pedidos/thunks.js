@@ -60,3 +60,45 @@ export const togglePedidoStatus = createAsyncThunk(
     return response.data;
   }
 );
+
+
+export const tablaPedidosConDetalles = createAsyncThunk(
+  'pedidos/fetchPedidosConDetalles',
+  async () => {
+    try {
+      // Obtener todos los pedidos
+      const responsePedidos = await axios.get(`${BASE_URL}/form/pedidos/todos`);
+      let pedidos = responsePedidos.data;
+
+      // Filtrar solo los pedidos con estadoId === 3 (aprobados)
+      pedidos = pedidos.filter(pedido => pedido.estadoId === 3);
+
+      // Para cada pedido aprobado, obtener sus detalles
+      const pedidosConDetalles = await Promise.all(
+        pedidos.map(async (pedido) => {
+          try {
+            const detallesResponse = await axios.get(`${BASE_URL}/detalle/pedido/listar/${pedido.id}`);
+            pedido.items = detallesResponse.data; // Asignamos los detalles al pedido
+
+            // Si no hay items, asignar un arreglo vacío
+            if (!pedido.items || !Array.isArray(pedido.items)) {
+              pedido.items = [];
+            }
+
+          } catch (error) {
+            console.error(`Error al obtener detalles del pedido ${pedido.id}:`, error);
+            pedido.items = []; // Asignar un arreglo vacío si hay error
+          }
+          return pedido;
+        })
+      );
+
+      pedidosConDetalles.sort((a, b) => a.id - b.id); // Ordenar los pedidos
+
+      return pedidosConDetalles;
+    } catch (error) {
+      console.error("Error al obtener pedidos con detalles:", error);
+      throw error;
+    }
+  }
+);
