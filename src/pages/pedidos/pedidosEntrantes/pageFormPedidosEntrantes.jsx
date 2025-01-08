@@ -21,7 +21,10 @@ import {
 } from "../../../store/Pedidos/thunks";
 import PedidosTable from "../componentes/EntrantesFormPedidos/PedidosTable";
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
-import { getDetalleOrdenByPedidoId, actualizarFechaOrden } from "../../../store/Pedidos/DetallePedidos/thunks";
+import {
+  getDetalleOrdenByPedidoId,
+  actualizarFechaOrden,
+} from "../../../store/Pedidos/DetallePedidos/thunks";
 import ApproveOrderDialog from "../componentes/EntrantesFormPedidos/ApproveOrderDialog";
 const EntrantesPage = () => {
   const dispatch = useDispatch();
@@ -57,7 +60,7 @@ const EntrantesPage = () => {
     setIsApproving(true);
     try {
       await handleAprobarPedidos(orderDate);
-      onApproveClose(); 
+      onApproveClose();
     } catch (error) {
       console.error("Error al aprobar pedidos:", error);
     } finally {
@@ -81,36 +84,37 @@ const EntrantesPage = () => {
     setIsLoading(true);
     try {
       for (const pedidoId of selectedPedidos) {
-        console.log('Procesando pedido:', pedidoId);
-        
+        console.log("Procesando pedido:", pedidoId);
+
         // Primero actualizar la fecha
         await dispatch(
           actualizarFechaOrden({
             pedidoId,
-            fechaOrden: orderDate
+            fechaOrden: orderDate,
           })
         ).unwrap();
-        
-        console.log('Fecha actualizada, actualizando estado...');
-        
+
+        console.log("Fecha actualizada, actualizando estado...");
+
         // Luego actualizar el estado
         const result = await dispatch(
           togglePedidoStatus({
             id: pedidoId,
-            estadoId: 3
+            estadoId: 3,
           })
         ).unwrap();
-        
-        console.log('Estado actualizado:', result);
+
+        console.log("Estado actualizado:", result);
       }
-  
+
       // Actualizar la lista de pedidos
       await dispatch(tablaPedidos());
-      
+
       setSelectedPedidos([]);
       toast({
         title: "Pedidos aprobados",
-        description: "Los pedidos seleccionados han sido aprobados y la fecha de orden ha sido actualizada.",
+        description:
+          "Los pedidos seleccionados han sido aprobados y la fecha de orden ha sido actualizada.",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -128,7 +132,6 @@ const EntrantesPage = () => {
       setIsLoading(false);
     }
   };
-  
 
   const handleCancelarPedidos = async () => {
     setIsLoading(true);
@@ -166,8 +169,20 @@ const EntrantesPage = () => {
   
       // Obtener el objeto completo del pedido usando el pedidoId
       const pedido = pedidos.find((p) => p.id === pedidoId);
-      setSelectedPedido(pedido);
   
+      if (!pedido) {
+        console.error(`No se encontró el pedido con ID ${pedidoId}`);
+        toast({
+          title: "Error",
+          description: `No se encontró el pedido con ID ${pedidoId}.`,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+  
+      setSelectedPedido(pedido);
       setIsModalOpen(true);
     } catch (error) {
       console.error(
@@ -297,7 +312,7 @@ const EntrantesPage = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         detalles={detallesPedido}
-        pedidoId={selectedPedido}
+        pedido={selectedPedido}
       />
     </Box>
   );
