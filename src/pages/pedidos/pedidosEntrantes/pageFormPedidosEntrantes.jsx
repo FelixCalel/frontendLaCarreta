@@ -157,12 +157,17 @@ const EntrantesPage = () => {
       const detalles = await dispatch(
         getDetalleOrdenByPedidoId(pedidoId)
       ).unwrap();
+  
       // Ordenar los detalles por fecha de creación
       detalles.sort(
         (a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion)
       );
       setDetallesPedido(detalles);
-      setSelectedPedido(pedidoId);
+  
+      // Obtener el objeto completo del pedido usando el pedidoId
+      const pedido = pedidos.find((p) => p.id === pedidoId);
+      setSelectedPedido(pedido);
+  
       setIsModalOpen(true);
     } catch (error) {
       console.error(
@@ -178,6 +183,7 @@ const EntrantesPage = () => {
       });
     }
   };
+  
 
   const handleCloseApproveDialog = () => {
     onApproveClose();

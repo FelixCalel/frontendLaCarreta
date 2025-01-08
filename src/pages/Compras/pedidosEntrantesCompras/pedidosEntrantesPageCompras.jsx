@@ -21,7 +21,7 @@ const PedidosEntrantesPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
   const [filtros, setFiltros] = useState({
-    fechaEntrega: "",
+    fechaOrden: "",
     palabrasClave: "",
   });
 
@@ -57,8 +57,8 @@ const PedidosEntrantesPage = () => {
   // **Aplicar Filtros a los pedidos**
   const pedidosFiltrados = pedidosEntrantes.filter((pedido) => {
     const cumpleFecha =
-      !filtros.fechaEntrega ||
-      moment(pedido.fechaEntrega).isSame(moment(filtros.fechaEntrega), 'day');
+      !filtros.fechaOrden ||
+      moment(pedido.fechaOrden).isSame(moment(filtros.fechaOrden), 'day');
     const cumplePalabras =
       !filtros.palabrasClave ||
       pedido.items.some((item) =>
@@ -82,7 +82,7 @@ const PedidosEntrantesPage = () => {
       itemsAgrupadosPorDeudor[deudor].push({
         ...item,
         deudor,
-        fechaEntrega: pedido.fechaEntrega, // Añadimos fecha de entrega al item
+        fechaOrden: pedido.fechaOrden, // Añadimos fecha de entrega al item
       });
     });
   });
@@ -96,8 +96,8 @@ const PedidosEntrantesPage = () => {
     try {
       const pedidosFiltrados = pedidosEntrantes.filter((pedido) => {
         const cumpleFecha =
-          !filtros.fechaEntrega ||
-          pedido.fechaEntrega.startsWith(filtros.fechaEntrega);
+          !filtros.fechaOrden ||
+          pedido.fechaOrden.startsWith(filtros.fechaOrden);
         const cumplePalabras =
           !filtros.palabrasClave ||
           pedido.items.some((item) =>
@@ -126,7 +126,7 @@ const PedidosEntrantesPage = () => {
         { header: "ID", key: "id", width: 10 },
         { header: "Deudor", key: "nombreDeu", width: 30 },
         { header: "Tienda", key: "nombreTienda", width: 30 },
-        { header: "Fecha de Entrega", key: "fechaEntrega", width: 20 },
+        { header: "Fecha de Entrega", key: "fechaOrden", width: 20 },
       ];
 
       // Agregar filas
@@ -135,7 +135,7 @@ const PedidosEntrantesPage = () => {
           id: pedido.id,
           nombreDeu: pedido.nombreDeu,
           nombreTienda: pedido.nombreTienda,
-          fechaEntrega: pedido.fechaEntrega,
+          fechaOrden: pedido.fechaOrden,
         });
       });
 

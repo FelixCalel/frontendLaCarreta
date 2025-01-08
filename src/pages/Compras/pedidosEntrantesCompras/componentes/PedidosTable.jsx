@@ -11,7 +11,6 @@ import {
 import PropTypes from "prop-types";
 
 const PedidosTable = ({ itemsAgrupadosPorDeudor, filtros }) => {
-  // Aplicar filtros si es necesario
   const itemsFiltrados = {};
 
   Object.keys(itemsAgrupadosPorDeudor).forEach((deudor) => {
