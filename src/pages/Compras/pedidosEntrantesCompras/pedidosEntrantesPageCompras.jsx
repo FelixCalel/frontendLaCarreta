@@ -10,7 +10,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { tablaPedidosConDetalles  } from "../../../store/Pedidos/thunks";
+import { tablaPedidosConDetalles } from "../../../store/Pedidos/thunks";
 import FiltrosPedidos from "./componentes/FiltrosPedidos";
 import PedidosTable from "./componentes/PedidosTable";
 import DetallesModal from "./componentes/DetallesModal";
@@ -26,9 +26,10 @@ const PedidosEntrantesPage = () => {
   });
 
   // const pedidosEntrantes = useSelector((state) => state.pedidos.data) || [];
-  const pedidosEntrantes = useSelector((state) => state.pedidos.pedidosConDetalles) || [];
-  const { isOpen, onClose } = useDisclosure();
-  const [selectedPedido] = useState(null);
+  const pedidosEntrantes =
+    useSelector((state) => state.pedidos.pedidosConDetalles) || [];
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedPedido, setSelectedPedido] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -58,11 +59,11 @@ const PedidosEntrantesPage = () => {
   const pedidosFiltrados = pedidosEntrantes.filter((pedido) => {
     const cumpleFecha =
       !filtros.fechaOrden ||
-      moment(pedido.fechaOrden).isSame(moment(filtros.fechaOrden), 'day');
+      moment(pedido.fechaOrden).isSame(moment(filtros.fechaOrden), "day");
     const cumplePalabras =
       !filtros.palabrasClave ||
       pedido.items.some((item) =>
-        (item.nombreProducto || item.nombre || '')
+        (item.nombreProducto || item.nombre || "")
           .toLowerCase()
           .includes(filtros.palabrasClave.toLowerCase())
       );
@@ -91,6 +92,10 @@ const PedidosEntrantesPage = () => {
     setFiltros(nuevosFiltros);
   };
 
+  const handleVerDetalles = (pedido) => {
+    setSelectedPedido(pedido);
+    onOpen();
+  };
 
   const handleExportarExcel = async () => {
     try {
@@ -180,6 +185,7 @@ const PedidosEntrantesPage = () => {
       <PedidosTable
         itemsAgrupadosPorDeudor={itemsAgrupadosPorDeudor}
         filtros={filtros}
+        handleVerDetalles={handleVerDetalles} // Añadido aquí
       />
 
       {/* Modal de Detalles */}
