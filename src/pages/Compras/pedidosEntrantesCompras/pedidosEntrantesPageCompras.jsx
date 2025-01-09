@@ -181,14 +181,12 @@ const PedidosEntrantesPage = () => {
       {/* Formulario de Filtros */}
       <FiltrosPedidos onAplicarFiltros={handleAplicarFiltros} />
 
-      {/* Tabla de Pedidos */}
       <PedidosTable
         itemsAgrupadosPorDeudor={itemsAgrupadosPorDeudor}
         filtros={filtros}
         handleVerDetalles={handleVerDetalles} // Añadido aquí
       />
 
-      {/* Modal de Detalles */}
       <DetallesModal
         isOpen={isOpen}
         onClose={onClose}
