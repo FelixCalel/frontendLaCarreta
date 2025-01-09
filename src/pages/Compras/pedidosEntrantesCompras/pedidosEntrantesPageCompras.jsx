@@ -15,7 +15,7 @@ import FiltrosPedidos from "./componentes/FiltrosPedidos";
 import PedidosTable from "./componentes/PedidosTable";
 import DetallesModal from "./componentes/DetallesModal";
 import * as ExcelJS from "exceljs";
-import moment from "moment";
+// import moment from "moment";
 
 const PedidosEntrantesPage = () => {
   const dispatch = useDispatch();
@@ -56,37 +56,37 @@ const PedidosEntrantesPage = () => {
   }
 
   // **Aplicar Filtros a los pedidos**
-  const pedidosFiltrados = pedidosEntrantes.filter((pedido) => {
-    const cumpleFecha =
-      !filtros.fechaOrden ||
-      moment(pedido.fechaOrden).isSame(moment(filtros.fechaOrden), "day");
-    const cumplePalabras =
-      !filtros.palabrasClave ||
-      pedido.items.some((item) =>
-        (item.nombreProducto || item.nombre || "")
-          .toLowerCase()
-          .includes(filtros.palabrasClave.toLowerCase())
-      );
-    return cumpleFecha && cumplePalabras;
-  });
+  // const pedidosFiltrados = pedidosEntrantes.filter((pedido) => {
+  //   const cumpleFecha =
+  //     !filtros.fechaOrden ||
+  //     moment(pedido.fechaOrden).isSame(moment(filtros.fechaOrden), "day");
+  //   const cumplePalabras =
+  //     !filtros.palabrasClave ||
+  //     pedido.items.some((item) =>
+  //       (item.nombreProducto || item.nombre || "")
+  //         .toLowerCase()
+  //         .includes(filtros.palabrasClave.toLowerCase())
+  //     );
+  //   return cumpleFecha && cumplePalabras;
+  // });
 
   // **Agrupar los items de los pedidos filtrados por deudor**
   const itemsAgrupadosPorDeudor = {};
 
-  pedidosFiltrados.forEach((pedido) => {
-    const deudor = pedido.nombreDeu;
-    if (!itemsAgrupadosPorDeudor[deudor]) {
-      itemsAgrupadosPorDeudor[deudor] = [];
-    }
-    const items = pedido.items || []; // Asegúrate de que 'items' está presente
-    items.forEach((item) => {
-      itemsAgrupadosPorDeudor[deudor].push({
-        ...item,
-        deudor,
-        fechaOrden: pedido.fechaOrden, // Añadimos fecha de entrega al item
-      });
-    });
-  });
+  // pedidosFiltrados.forEach((pedido) => {
+  //   const deudor = pedido.nombreDeu;
+  //   if (!itemsAgrupadosPorDeudor[deudor]) {
+  //     itemsAgrupadosPorDeudor[deudor] = [];
+  //   }
+  //   const items = pedido.items || []; // Asegúrate de que 'items' está presente
+  //   items.forEach((item) => {
+  //     itemsAgrupadosPorDeudor[deudor].push({
+  //       ...item,
+  //       deudor,
+  //       fechaOrden: pedido.fechaOrden, // Añadimos fecha de entrega al item
+  //     });
+  //   });
+  // });
 
   const handleAplicarFiltros = (nuevosFiltros) => {
     setFiltros(nuevosFiltros);
