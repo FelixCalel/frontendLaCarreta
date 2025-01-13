@@ -23,7 +23,7 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-const DetallesModal = ({ isOpen, onClose, pedido }) => {
+const DetallesModal = ({ isOpen, onClose, pedido=null }) => {
   if (!pedido) {
     return null;
   }
@@ -97,10 +97,6 @@ DetallesModal.propTypes = {
       })
     ),
   }),
-};
-
-DetallesModal.defaultProps = {
-  pedido: null,
 };
 
 export default DetallesModal;
