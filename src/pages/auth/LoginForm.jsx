@@ -21,6 +21,8 @@ import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { login as loginAuth } from "../../store/auth/authSlice";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const LoginForm = () => {
@@ -42,38 +44,52 @@ export const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const auth = getAuth();
+
     try {
-      const response = await axios.post(`${BASE_URL}/usuarios/login`, {
-        correo,
-        contrasena,
+      // Autenticación con Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, correo, contrasena);
+      const user = userCredential.user;
+
+      // Obtener token de Firebase
+      const token = await user.getIdToken();
+
+      // Obtener datos adicionales desde PostgreSQL
+      const response = await axios.post(`${BASE_URL}/usuarios/datos`, {
+        uid: user.uid, // UID de Firebase
       });
-      if (response.data && response.data.usuario && response.data.usuario.token) {
-        const { token } = response.data.usuario;
-        const nombre = response.data.usuario.usuario.nombre;
-        const correoUsuario = response.data.usuario.usuario.correo;
-        const usuarioId = response.data.usuario.usuario.id;
-        const paisId = response.data.usuario.usuario.paisId;
-        const roleId = response.data.usuario.usuario.roleId;
-  
-        // Guardar en localStorage.
+
+      if (response.data && response.data.usuario) {
+        const { nombre, correo: correoUsuario, id: usuarioId, paisId, roleId } = response.data.usuario;
+
+        // Guardar en localStorage
         localStorage.setItem("token", token);
         localStorage.setItem("nombreUsuario", nombre);
         localStorage.setItem("correoUsuario", correoUsuario);
         localStorage.setItem("usuarioId", usuarioId);
         localStorage.setItem("roleId", roleId);
         localStorage.setItem("paisId", paisId);
-  
-        window.location.reload();
-        dispatch(loginAuth({ token, nombre, correo: correoUsuario, roleId }));
+
+        // Actualizar el estado global con Redux
+        dispatch(
+          loginAuth({
+            uid: user.uid,
+            email: correoUsuario,
+            displayName: nombre,
+            token,
+            roleId,
+            paisId,
+          })
+        );
+
+        // Redirigir al home
+        navigate("/auth/home", { replace: true });
       } else {
-        setError("Credenciales incorrectas");
+        setError("Error al obtener datos del usuario.");
       }
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.error) {
-        setError(err.response.data.error);
-      } else {
-        setError("Error al iniciar sesión. Intenta de nuevo.");
-      }
+      console.error(err);
+      setError("Error al iniciar sesión. Verifica tus credenciales.");
     }
   };
   
