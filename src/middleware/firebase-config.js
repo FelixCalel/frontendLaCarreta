@@ -1,17 +1,17 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth"; // Para autenticación
+import { getFirestore } from "firebase/firestore"; // Para Firestore
 
 // Valida las variables de entorno
 const validateEnvVariables = () => {
   const requiredVars = [
     "VITE_API_KEY",
     "VITE_AUTH_DOMAIN",
-    "VITE_DATABASE_URL",
     "VITE_PROJECT_ID",
     "VITE_STORAGE_BUCKET",
     "VITE_MESSAGING_SENDER_ID",
     "VITE_APP_ID",
-    "VITE_MEASUREMENT_ID",
   ];
 
   requiredVars.forEach((key) => {
@@ -34,12 +34,18 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_APP_ID,
   measurementId: import.meta.env.VITE_MEASUREMENT_ID,
 };
+console.log("Firebase config used: ", firebaseConfig);
 
 // Inicializa Firebase
 const app = initializeApp(firebaseConfig);
+
+// Inicializa servicios
+const auth = getAuth(app);
+const firestore = getFirestore(app);
+
 let analytics;
 if (typeof window !== "undefined") {
   analytics = getAnalytics(app);
 }
 
-export { app, analytics };
+export { app, auth, firestore, analytics };

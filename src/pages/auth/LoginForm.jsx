@@ -21,21 +21,21 @@ import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { login as loginAuth } from "../../store/auth/authSlice";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth"; 
+import { auth } from "../../middleware/firebase-config";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const LoginForm = () => {
-  const actualUsuario = useSelector((usuario) => usuario.auth);
+  const actualUsuario = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [correo, setEmail] = useState("");
-  const [contrasena, setPassword] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [contrasena, setContrasena] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
-  // Redirigir solo cuando el usuario esté autenticado
   useEffect(() => {
     if (actualUsuario?.status === "authenticated") {
       navigate("/auth/home", { replace: true });
@@ -44,25 +44,22 @@ export const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const auth = getAuth();
+    setError("");
 
     try {
-      // Autenticación con Firebase
       const userCredential = await signInWithEmailAndPassword(auth, correo, contrasena);
       const user = userCredential.user;
 
-      // Obtener token de Firebase
       const token = await user.getIdToken();
 
-      // Obtener datos adicionales desde PostgreSQL
-      const response = await axios.post(`${BASE_URL}/usuarios/datos`, {
-        uid: user.uid, // UID de Firebase
+
+      const resp = await axios.post(`${BASE_URL}/usuarios/datos`, {
+        correo: user.email
       });
-
-      if (response.data && response.data.usuario) {
-        const { nombre, correo: correoUsuario, id: usuarioId, paisId, roleId } = response.data.usuario;
-
-        // Guardar en localStorage
+      if (resp.data && resp.data.usuario) {
+        const { nombre, correo: correoUsuario, id: usuarioId, paisId, roleId } = resp.data.usuario;
+        
+        localStorage.setItem("token", token);
         localStorage.setItem("token", token);
         localStorage.setItem("nombreUsuario", nombre);
         localStorage.setItem("correoUsuario", correoUsuario);
@@ -70,29 +67,29 @@ export const LoginForm = () => {
         localStorage.setItem("roleId", roleId);
         localStorage.setItem("paisId", paisId);
 
-        // Actualizar el estado global con Redux
         dispatch(
+
           loginAuth({
-            uid: user.uid,
-            email: correoUsuario,
-            displayName: nombre,
+            uid: user.uid,         
+            email: correoUsuario,  
+            displayName: nombre,    
             token,
             roleId,
             paisId,
           })
         );
 
-        // Redirigir al home
+        
         navigate("/auth/home", { replace: true });
+        window.location.reload()
       } else {
         setError("Error al obtener datos del usuario.");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error al iniciar sesión:", err);
       setError("Error al iniciar sesión. Verifica tus credenciales.");
     }
   };
-  
 
   return (
     <Flex
@@ -102,64 +99,7 @@ export const LoginForm = () => {
       bg={useColorModeValue("gray.100", "gray.900")}
       position="relative"
     >
-      <Box
-        position="absolute"
-        top="0"
-        left="0"
-        right="0"
-        bottom="0"
-        zIndex="-1"
-        overflow="hidden"
-      >
-        <Box
-          position="absolute"
-          bottom="0"
-          left="0"
-          right="0"
-          height="100px"
-          bg="linear-gradient(to top, #00c6ff, #0072ff)"
-          opacity="0.5"
-          animation="wave 10s infinite linear"
-          transform="translate3d(0, 0, 0)"
-        />
-        <Box
-          position="absolute"
-          bottom="0"
-          left="0"
-          right="0"
-          height="120px"
-          bg="linear-gradient(to top, #00c6ff, #0072ff)"
-          opacity="0.7"
-          animation="wave 15s infinite linear"
-          transform="translate3d(0, 0, 0)"
-          css={{
-            "@keyframes wave": {
-              "0%": { transform: "translateX(0)" },
-              "100%": { transform: "translateX(-100%)" },
-            },
-          }}
-        />
-        <Box
-          as="img"
-          src="/images/plant.png"
-          position="absolute"
-          bottom="20px"
-          left="20px"
-          zIndex="-1"
-          width="150px"
-          height="auto"
-        />
-      </Box>
-
-      <Box
-        w="full"
-        maxW="md"
-        bg={useColorModeValue("white", "gray.800")}
-        boxShadow="2xl"
-        rounded="lg"
-        p={8}
-        mt={-10}
-      >
+      <Box w="full" maxW="md" bg={useColorModeValue("white", "gray.800")} boxShadow="2xl" rounded="lg" p={8}>
         <Stack spacing={4} mb={6} align="center">
           <Heading fontSize="2xl" textAlign="center">
             ¡Bienvenido de nuevo!
@@ -171,15 +111,15 @@ export const LoginForm = () => {
         <form onSubmit={handleSubmit}>
           <Stack spacing={4}>
             <FormControl id="email" isRequired>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Correo electrónico</FormLabel>
               <Input
                 type="email"
-                placeholder="Tu email"
+                placeholder="Tu correo"
                 value={correo}
-                onChange={(e) => setEmail(e.target.value)}
-                focusBorderColor="teal.500"
+                onChange={(e) => setCorreo(e.target.value)}
                 size="lg"
                 rounded="full"
+                focusBorderColor="teal.500"
               />
             </FormControl>
             <FormControl id="password" isRequired>
@@ -189,7 +129,7 @@ export const LoginForm = () => {
                   type={showPassword ? "text" : "password"}
                   placeholder="Tu contraseña"
                   value={contrasena}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => setContrasena(e.target.value)}
                   size="lg"
                   rounded="full"
                   focusBorderColor="teal.500"
@@ -222,7 +162,6 @@ export const LoginForm = () => {
                 size="lg"
                 rounded="full"
                 _hover={{ bg: "teal.600" }}
-                
               >
                 Iniciar sesión
               </Button>
@@ -231,7 +170,6 @@ export const LoginForm = () => {
                 colorScheme="teal"
                 size="lg"
                 rounded="full"
-                _hover={{ bg: "teal.50" }}
                 onClick={() => navigate("/auth/registro")}
               >
                 Crear cuenta
