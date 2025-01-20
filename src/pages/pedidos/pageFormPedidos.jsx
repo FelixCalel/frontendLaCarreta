@@ -97,25 +97,32 @@ const PageFormPedidos = () => {
 
   const copiarUltimoPedido = async (tiendaId) => {
     try {
-      const pedidosTiendaYDeudor = pedidos.filter((pedido) => pedido.tiendaId === tiendaId);
+      const pedidosTiendaYDeudor = pedidos.filter(
+        (pedido) => pedido.tiendaId === tiendaId
+      );
       if (pedidosTiendaYDeudor.length > 0) {
-        const ultimoPedido = pedidosTiendaYDeudor.sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl))[0];
-        const detalles = await dispatch(getDetalleOrdenByPedidoId(ultimoPedido.id)).unwrap();
+        const ultimoPedido = pedidosTiendaYDeudor.sort(
+          (a, b) => new Date(b.creadoEl) - new Date(a.creadoEl)
+        )[0];
+        const detalles = await dispatch(
+          getDetalleOrdenByPedidoId(ultimoPedido.id)
+        ).unwrap();
         setProductosCopiados(detalles);
-  
+
         const newPedido = {
           ...currentPedido,
           tiendaId: tiendaId,
           creadoEl: new Date(),
           productos: detalles,
         };
-  
+
         await handleSubmit(newPedido);
         onClose(); // Cerrar el modal después de guardar el nuevo pedido
       } else {
         toast({
           title: "Sin pedidos previos",
-          description: "No se encontraron pedidos anteriores para esta tienda y deudor.",
+          description:
+            "No se encontraron pedidos anteriores para esta tienda y deudor.",
           status: "info",
           duration: 3000,
           isClosable: true,
@@ -135,7 +142,7 @@ const PageFormPedidos = () => {
 
   const handleSubmit = async () => {
     const formErrors = validateFields();
-  
+
     if (Object.keys(formErrors).length > 0) {
       toast({
         title: "Error",
@@ -146,12 +153,12 @@ const PageFormPedidos = () => {
       });
       return;
     }
-  
+
     const today = new Date();
     const todayFormatted = today.toISOString().split("T")[0];
     const tiendaSeleccionada =
       currentPedido.tiendaId || currentPedido.tiendaId2;
-  
+
     const pedidosHoy = pedidos.filter((pedido) => {
       let fechaPedido = pedido.creadoEl;
       if (typeof fechaPedido === "string") {
@@ -163,7 +170,7 @@ const PageFormPedidos = () => {
         fechaPedido.toISOString().split("T")[0] === todayFormatted
       );
     });
-  
+
     if (pedidosHoy.length > 0) {
       toast({
         title: "Pedido duplicado",
@@ -174,23 +181,26 @@ const PageFormPedidos = () => {
       });
       console.log("Pedido duplicado detectado:", pedidosHoy);
     }
-  
+
     const newPedido = {
       ...currentPedido,
       tiendaId: tiendaSeleccionada,
       deudorId: currentPedido.deudorId,
       creadoEl: today,
-      productos: productosCopiados.length > 0 ? productosCopiados : currentPedido.productos,
+      productos:
+        productosCopiados.length > 0
+          ? productosCopiados
+          : currentPedido.productos,
     };
-  
+
     try {
       setIsLoading(true);
       const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
       setPedidoIdGuardado(pedidoGuardado.id);
-      window.location.reload(true);
-  
+      setIsDetailsOpen(pedidoGuardado.id);
+
       dispatch(tablaPedidos());
-  
+
       toast({
         title: "Pedido creado",
         description: "El pedido ha sido guardado correctamente",
@@ -198,8 +208,8 @@ const PageFormPedidos = () => {
         duration: 3000,
         isClosable: true,
       });
-      onClose(); 
-      resetForm(); 
+      onClose();
+      resetForm();
     } catch (error) {
       console.error("Error al guardar el pedido:", error);
       toast({
@@ -224,6 +234,7 @@ const PageFormPedidos = () => {
     });
     setIsTienda1Disabled(false);
     setIsTienda2Disabled(false);
+    window.location.reload(true);
   };
 
   const handleRealizarPedido = async () => {
@@ -271,10 +282,12 @@ const PageFormPedidos = () => {
       <PedidosTable
         pedidosUsuario={pedidosUsuario}
         isMobile={isMobile}
-        isDetailsOpen={isDetailsOpen}
+        isDetailsOpen={isDetailsOpen} // Estado para controlar los detalles abiertos
         handleToggleDetails={(pedidoId, deudorId, tiendaId) => {
+          // Alternar el estado de los detalles abiertos
           setIsDetailsOpen(isDetailsOpen === pedidoId ? null : pedidoId);
 
+          // Cargar los detalles del pedido si se abren
           if (isDetailsOpen !== pedidoId) {
             dispatch(getDetalleOrdenByPedidoId(pedidoId, deudorId, tiendaId));
           }

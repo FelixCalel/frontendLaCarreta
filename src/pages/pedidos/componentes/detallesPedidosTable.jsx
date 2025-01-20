@@ -56,6 +56,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
 
   // Manejo de responsividad
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -63,121 +64,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // **Mover la función cargarProductosComunes aquí, al nivel del componente**
-  const cargarProductosComunes = async () => {
-    console.log('cargarProductosComunes llamada');
-    try {
-      if (productosComunesCargados) {
-        return; // Ya cargamos los productos comunes
-      }
-      setIsLoading(true);
-      console.log("Intentando cargar productos comunes...");
-  
-      // Verificar nuevamente los IDs por seguridad
-      if (![deudorId, pedidoId, tiendaId].every((id) => id && !isNaN(id))) {
-        toast({
-          title: "Error",
-          description: "Uno de los IDs no es válido.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        setIsLoading(false);
-        return;
-      }
-  
-      // Obtener los productos comunes
-      const productosComunes = await dispatch(
-        getPedidosComunesByUsuarioId({ deudorId, pedidoId, tiendaId })
-      ).unwrap();
-  
-      console.log("Productos comunes recibidos:", productosComunes);
-  
-      if (productosComunes.length > 0) {
-        const nuevosProductos = [];
-  
-        // Agregar cada producto común al pedido
-        for (const producto of productosComunes) {
-          const newDetalleOrden = {
-            pedidoId,
-            productoId: producto.productoId,
-            cantidad: producto.cantidad || 1,
-            precio: producto.precio || 0,
-          };
-          const result = await dispatch(
-            addNewDetalleOrden(newDetalleOrden)
-          ).unwrap();
-          if (!result || !result.id) {
-            throw new Error(
-              "El backend no devolvió un detallePedidoId válido."
-            );
-          }
-          const nuevoProducto = {
-            detallePedidoId: result.id,
-            productoId: producto.productoId,
-            nombreProducto: producto.nombreProducto,
-            cantidadDisponible: producto.cantidadDisponible,
-            codigo: producto.codigo,
-            cantidad: newDetalleOrden.cantidad,
-          };
-          nuevosProductos.push(nuevoProducto);
-          console.log("Producto común agregado:", nuevoProducto);
-        }
-  
-        // Actualizar el estado de productos evitando duplicados
-        setProductos((prevProductos) => {
-          // Filtrar los productos que ya existen
-          const productosFiltrados = nuevosProductos.filter(
-            (nuevoProducto) =>
-              !prevProductos.some(
-                (prod) => prod.productoId === nuevoProducto.productoId
-              )
-          );
-          const productosActualizados = [...prevProductos, ...productosFiltrados];
-  
-          // Actualizar sessionStorage
-          sessionStorage.setItem(
-            `productos_${pedidoId}`,
-            JSON.stringify(productosActualizados)
-          );
-          return productosActualizados;
-        });
-  
-        console.log("Productos después de agregar comunes:");
-        toast({
-          title: "Productos comunes agregados",
-          description: "Los productos comunes han sido agregados al pedido.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        // Si no hay productos comunes, mostrar mensaje
-        toast({
-          title: "Sin productos comunes",
-          description:
-            "No se encontraron productos comunes para este pedido.",
-          status: "info",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-  
-      setProductosComunesCargados(true); // Actualizar la bandera
-    } catch (error) {
-      console.error("Error al cargar los productos comunes:", error);
-      toast({
-        title: "Error",
-        description: "Hubo un problema al obtener los productos comunes.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
 
   // Primer useEffect: Cargar detalles del pedido
   useEffect(() => {
@@ -253,7 +139,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
       cargarDetallesPedido();
     }
   }, [deudorId, pedidoId, tiendaId, detallesCargados, toast, dispatch]);
-
+  
   // Segundo useEffect: Llamar a cargarProductosComunes si es necesario
   useEffect(() => {
     if (detallesCargados && !hasLoadedProductosComunes.current) {
@@ -265,9 +151,121 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detallesCargados]);
   
-
-  // Continuar con el resto de tu código...
-
+  const cargarProductosComunes = async () => {
+    console.log('cargarProductosComunes llamada');
+    try {
+      if (productosComunesCargados) {
+        return; // Ya cargamos los productos comunes
+      }
+      setIsLoading(true);
+      console.log("Intentando cargar productos comunes...");
+  
+      // Verificar nuevamente los IDs por seguridad
+      if (![deudorId, pedidoId, tiendaId].every((id) => id && !isNaN(id))) {
+        toast({
+          title: "Error",
+          description: "Uno de los IDs no es válido.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        setIsLoading(false);
+        return;
+      }
+  
+      // Obtener los productos comunes
+      const productosComunes = await dispatch(
+        getPedidosComunesByUsuarioId({ deudorId, pedidoId, tiendaId })
+      ).unwrap();
+  
+      console.log("Productos comunes recibidos:", productosComunes);
+  
+      if (productosComunes.length > 0) {
+        const nuevosProductos = [];
+  
+        // Agregar cada producto común al pedido
+        for (const producto of productosComunes) {
+          const newDetalleOrden = {
+            pedidoId,
+            productoId: producto.productoId,
+            cantidad: producto.cantidad || 1,
+            precio: producto.precio || 0,
+            cantidadDisponible: producto.cantidadDisponible || 0,
+          };
+          const result = await dispatch(
+            addNewDetalleOrden(newDetalleOrden)
+          ).unwrap();
+          if (!result || !result.id) {
+            throw new Error(
+              "El backend no devolvió un detallePedidoId válido."
+            );
+          }
+          const nuevoProducto = {
+            detallePedidoId: result.id,
+            productoId: producto.productoId,
+            nombreProducto: producto.nombreProducto,
+            cantidadDisponible: producto.cantidadDisponible,
+            codigo: producto.codigo,
+            cantidad: newDetalleOrden.cantidad,
+          };
+          nuevosProductos.push(nuevoProducto);
+          console.log("Producto común agregado:", nuevoProducto);
+        }
+  
+        // Actualizar el estado de productos evitando duplicados
+        setProductos((prevProductos) => {
+          // Filtrar los productos que ya existen
+          const productosFiltrados = nuevosProductos.filter(
+            (nuevoProducto) =>
+              !prevProductos.some(
+                (prod) => prod.productoId === nuevoProducto.productoId
+              )
+          );
+          const productosActualizados = [...prevProductos, ...productosFiltrados];
+  
+          // Actualizar sessionStorage
+          sessionStorage.setItem(
+            `productos_${pedidoId}`,
+            JSON.stringify(productosActualizados)
+          );
+          return productosActualizados;
+        });
+  
+        console.log("Productos después de agregar comunes:");
+        toast({
+          title: "Productos comunes agregados",
+          description: "Los productos comunes han sido agregados al pedido.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        // Si no hay productos comunes, mostrar mensaje
+        toast({
+          title: "Sin productos comunes",
+          description:
+            "No se encontraron productos comunes para este pedido.",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+  
+      setProductosComunesCargados(true); // Actualizar la bandera
+    } catch (error) {
+      console.error("Error al cargar los productos comunes:", error);
+      toast({
+        title: "Error",
+        description: "Hubo un problema al obtener los productos comunes.",
+        error: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+ 
   // Manejo de cambio de producto seleccionado
   const handleProductoChange = (
     productoId,
