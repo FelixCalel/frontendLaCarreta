@@ -48,7 +48,7 @@ const CantidadInput = ({
 
 CantidadInput.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  max: PropTypes.number.isRequired, // Cantidad máxima permitida
+  max: PropTypes.number,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func,
   error: PropTypes.string,

@@ -36,16 +36,13 @@ const MotionBox = motion(Box);
 const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   const dispatch = useDispatch();
   const toast = useToast();
-
   const [productos, setProductos] = useState([]);
   const [detallesCargados, setDetallesCargados] = useState(false);
   const [productosComunesCargados, setProductosComunesCargados] =
-    useState(false); // Nueva bandera
+    useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [resetFields, setResetFields] = useState(false);
-
   const hasLoadedProductosComunes = useRef(false);
-
   const [newProducto, setNewProducto] = useState({
     productoId: "",
     nombreProducto: "",
@@ -54,9 +51,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     codigo: "",
   });
 
-  // Manejo de responsividad
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -64,8 +59,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-
-  // Primer useEffect: Cargar detalles del pedido
   useEffect(() => {
     const cargarDetallesPedido = async () => {
       try {
@@ -84,7 +77,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         setIsLoading(true);
         console.log("Intentando cargar detalles del pedido...");
 
-        // Verificar si los detalles ya están en sessionStorage
         const detallesGuardados = sessionStorage.getItem(
           `productos_${pedidoId}`
         );
@@ -100,7 +92,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           return; // No hacer más acciones si ya tenemos los detalles
         }
 
-        // Intentar cargar los detalles del pedido desde el backend
         try {
           const detalles = await dispatch(
             getDetalleOrdenByPedidoId(pedidoId)
@@ -115,7 +106,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           }
         } catch (error) {
           if (error.response && error.response.status === 404) {
-            // Pedido sin detalles
             console.warn("No se encontraron detalles para el pedido (404).");
           }
         } finally {
@@ -139,7 +129,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
       cargarDetallesPedido();
     }
   }, [deudorId, pedidoId, tiendaId, detallesCargados, toast, dispatch]);
-  
+
   // Segundo useEffect: Llamar a cargarProductosComunes si es necesario
   useEffect(() => {
     if (detallesCargados && !hasLoadedProductosComunes.current) {
@@ -148,116 +138,62 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
       }
       hasLoadedProductosComunes.current = true;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detallesCargados]);
-  
+
   const cargarProductosComunes = async () => {
-    console.log('cargarProductosComunes llamada');
+    console.log("cargarProductosComunes llamada");
     try {
-      if (productosComunesCargados) {
-        return; // Ya cargamos los productos comunes
-      }
+      if (productosComunesCargados) return;
+
       setIsLoading(true);
-      console.log("Intentando cargar productos comunes...");
-  
-      // Verificar nuevamente los IDs por seguridad
-      if (![deudorId, pedidoId, tiendaId].every((id) => id && !isNaN(id))) {
-        toast({
-          title: "Error",
-          description: "Uno de los IDs no es válido.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        setIsLoading(false);
-        return;
-      }
-  
-      // Obtener los productos comunes
+
       const productosComunes = await dispatch(
         getPedidosComunesByUsuarioId({ deudorId, pedidoId, tiendaId })
       ).unwrap();
-  
+
       console.log("Productos comunes recibidos:", productosComunes);
-  
+
       if (productosComunes.length > 0) {
-        const nuevosProductos = [];
-  
-        // Agregar cada producto común al pedido
-        for (const producto of productosComunes) {
-          const newDetalleOrden = {
-            pedidoId,
-            productoId: producto.productoId,
-            cantidad: producto.cantidad || 1,
-            precio: producto.precio || 0,
-            cantidadDisponible: producto.cantidadDisponible || 0,
-          };
-          const result = await dispatch(
-            addNewDetalleOrden(newDetalleOrden)
-          ).unwrap();
-          if (!result || !result.id) {
-            throw new Error(
-              "El backend no devolvió un detallePedidoId válido."
-            );
-          }
-          const nuevoProducto = {
-            detallePedidoId: result.id,
-            productoId: producto.productoId,
-            nombreProducto: producto.nombreProducto,
-            cantidadDisponible: producto.cantidadDisponible,
-            codigo: producto.codigo,
-            cantidad: newDetalleOrden.cantidad,
-          };
-          nuevosProductos.push(nuevoProducto);
-          console.log("Producto común agregado:", nuevoProducto);
-        }
-  
-        // Actualizar el estado de productos evitando duplicados
-        setProductos((prevProductos) => {
-          // Filtrar los productos que ya existen
-          const productosFiltrados = nuevosProductos.filter(
-            (nuevoProducto) =>
-              !prevProductos.some(
-                (prod) => prod.productoId === nuevoProducto.productoId
-              )
+        setProductos((prev) => {
+          const idsPrevios = new Set(prev.map((p) => p.productoId));
+          const sinDuplicados = productosComunes.filter(
+            (p) => !idsPrevios.has(p.productoId)
           );
-          const productosActualizados = [...prevProductos, ...productosFiltrados];
-  
-          // Actualizar sessionStorage
+          const nuevos = [...prev, ...sinDuplicados];
+
           sessionStorage.setItem(
             `productos_${pedidoId}`,
-            JSON.stringify(productosActualizados)
+            JSON.stringify(nuevos)
           );
-          return productosActualizados;
+          return nuevos;
         });
-  
-        console.log("Productos después de agregar comunes:");
+
         toast({
           title: "Productos comunes agregados",
-          description: "Los productos comunes han sido agregados al pedido.",
+          description: "Los productos comunes ya están en el pedido.",
           status: "success",
           duration: 3000,
           isClosable: true,
         });
       } else {
-        // Si no hay productos comunes, mostrar mensaje
         toast({
           title: "Sin productos comunes",
-          description:
-            "No se encontraron productos comunes para este pedido.",
+          description: "No se encontraron productos comunes.",
           status: "info",
           duration: 3000,
           isClosable: true,
         });
       }
-  
-      setProductosComunesCargados(true); // Actualizar la bandera
+
+      await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+
+      setProductosComunesCargados(true);
     } catch (error) {
       console.error("Error al cargar los productos comunes:", error);
       toast({
         title: "Error",
         description: "Hubo un problema al obtener los productos comunes.",
-        error: "error",
+        status: "error",
         duration: 3000,
         isClosable: true,
       });
@@ -265,8 +201,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
       setIsLoading(false);
     }
   };
- 
-  // Manejo de cambio de producto seleccionado
+
   const handleProductoChange = (
     productoId,
     nombreProducto,
@@ -282,29 +217,15 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     });
   };
 
-// Manejo de agregar producto
-const handleAddProducto = async () => {
-  // Verificación de producto duplicado
-  const productoExistente = productos.find(
-    (prod) => prod.productoId === newProducto.productoId
-  );
+  const handleAddProducto = async () => {
+    const productoExistente = productos.find(
+      (prod) => prod.productoId === newProducto.productoId
+    );
 
-  if (productoExistente) {
-    toast({
-      title: "Producto duplicado",
-      description: "Este producto ya ha sido agregado al pedido.",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
-    return;
-  }
-
-  if (newProducto.productoId && newProducto.cantidad > 0) {
-    if (newProducto.cantidad > newProducto.cantidadDisponible) {
+    if (productoExistente) {
       toast({
-        title: "Cantidad excedida",
-        description: `No puedes agregar más de ${newProducto.cantidadDisponible} unidades para este producto.`,
+        title: "Producto duplicado",
+        description: "Este producto ya ha sido agregado al pedido.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -312,79 +233,89 @@ const handleAddProducto = async () => {
       return;
     }
 
-    try {
-      const newDetalleOrden = {
-        pedidoId,
-        productoId: newProducto.productoId,
-        cantidad: newProducto.cantidad,
-        precio: newProducto.precio || 0,
-      };
-
-      const result = await dispatch(addNewDetalleOrden(newDetalleOrden)).unwrap();
-      if (!result || !result.id) {
-        throw new Error("El backend no devolvió un detallePedidoId válido.");
+    if (newProducto.productoId && newProducto.cantidad > 0) {
+      if (newProducto.cantidad > newProducto.cantidadDisponible) {
+        toast({
+          title: "Cantidad excedida",
+          description: `No puedes agregar más de ${newProducto.cantidadDisponible} unidades para este producto.`,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
       }
 
-      const nuevoProducto = {
-        detallePedidoId: result.id,
-        productoId: newProducto.productoId,
-        nombreProducto: newProducto.nombreProducto,
-        cantidadDisponible: newProducto.cantidadDisponible,
-        codigo: newProducto.codigo,
-        cantidad: newProducto.cantidad,
-      };
+      try {
+        const newDetalleOrden = {
+          pedidoId,
+          productoId: newProducto.productoId,
+          cantidad: newProducto.cantidad,
+          precio: newProducto.precio || 0,
+        };
 
-      const nuevosProductos = [...productos, nuevoProducto];
-      setProductos(nuevosProductos);
-      
-      // Actualizar sessionStorage
-      sessionStorage.setItem(
-        `productos_${pedidoId}`,
-        JSON.stringify(nuevosProductos)
-      );
+        const result = await dispatch(
+          addNewDetalleOrden(newDetalleOrden)
+        ).unwrap();
+        if (!result || !result.id) {
+          throw new Error("El backend no devolvió un detallePedidoId válido.");
+        }
 
-      // Resetear el estado de newProducto
-      setNewProducto({
-        productoId: "",
-        nombreProducto: "",
-        cantidad: 0,
-        cantidadDisponible: 0,
-        codigo: "",
-        precio: 0,
-      });
+        const nuevoProducto = {
+          detallePedidoId: result.id,
+          productoId: newProducto.productoId,
+          nombreProducto: newProducto.nombreProducto,
+          cantidadDisponible: newProducto.cantidadDisponible,
+          codigo: newProducto.codigo,
+          cantidad: newProducto.cantidad,
+        };
 
-      // Activar el reset del selector de productos
-      setResetFields((prev) => !prev);
+        const nuevosProductos = [...productos, nuevoProducto];
+        setProductos(nuevosProductos);
 
-      toast({
-        title: "Producto agregado",
-        description: "El producto ha sido agregado exitosamente.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error al guardar el detalle del pedido:", error);
+        sessionStorage.setItem(
+          `productos_${pedidoId}`,
+          JSON.stringify(nuevosProductos)
+        );
+
+        setNewProducto({
+          productoId: "",
+          nombreProducto: "",
+          cantidad: 0,
+          cantidadDisponible: 0,
+          codigo: "",
+          precio: 0,
+        });
+
+        setResetFields((prev) => !prev);
+
+        toast({
+          title: "Producto agregado",
+          description: "El producto ha sido agregado exitosamente.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        console.error("Error al guardar el detalle del pedido:", error);
+        toast({
+          title: "Error",
+          description: "Hubo un problema al agregar el producto.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } else {
       toast({
         title: "Error",
-        description: "Hubo un problema al agregar el producto.",
+        description: "Selecciona un producto y una cantidad válida.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
     }
-  } else {
-    toast({
-      title: "Error",
-      description: "Selecciona un producto y una cantidad válida.",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
-  }
-};
+  };
 
-  // Manejo de eliminar producto
   const handleRemoveProducto = async (detallePedidoId) => {
     if (!detallePedidoId) {
       console.error("DetallePedidoId no válido:", detallePedidoId);
@@ -392,10 +323,8 @@ const handleAddProducto = async () => {
     }
 
     try {
-      // Eliminar el producto desde el backend
       await dispatch(deleteDetalleOrden(detallePedidoId)).unwrap();
 
-      // Eliminar de sessionStorage y actualizar el estado local
       const productosActualizados = productos.filter(
         (prod) => prod.detallePedidoId !== detallePedidoId
       );
@@ -515,8 +444,7 @@ const handleAddProducto = async () => {
                     <HStack justifyContent="space-between" spacing={2}>
                       <Box flex="1">
                         <Text fontWeight="bold" fontSize="sm">
-                         Nombre Prodcuto:{" "}
-                          {producto.nombreProducto || "N/A" }
+                        Producto: {producto.nombreProducto || "N/A"}
                         </Text>
                         <Text fontSize="xs" color="gray.500">
                           Cantidad Máxima:{" "}
@@ -618,7 +546,6 @@ const handleAddProducto = async () => {
                           size="sm"
                           width="50px"
                           maxWidth="50px"
-                          max={producto.cantidadDisponible}
                           style={{
                             margin: "0",
                             padding: "1px",
