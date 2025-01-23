@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { Flex, FormControl, FormHelperText, HStack, IconButton } from "@chakra-ui/react";
+import { Flex, FormControl, HStack, IconButton, FormHelperText } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
 import {
   AutoComplete,
@@ -10,37 +10,32 @@ import {
 } from "@choc-ui/chakra-autocomplete";
 import { useSelector } from "react-redux";
 
-const DeuSelector = ({ ciudadId, onSelect }) => {
+const DeuSelector = ({ deudorId, onSelect }) => {
   const [inputValue, setInputValue] = useState("");
-  const [selectedDeudor, setSelectedDeudor] = useState(null); // Estado para manejar el deudor seleccionado
-  const [filteredDeudores, setFilteredDeudores] = useState([]);
+  const [selectedDeudor, setSelectedDeudor] = useState(null);
 
-  // Obtener tiendas del estado (los deudores están asociados a las tiendas)
   const tiendas = useSelector((state) => state.tiendas?.data || []);
 
-  // Filtrar deudores cuando cambia la ciudad seleccionada
   useEffect(() => {
-    if (ciudadId && tiendas.length > 0) {
-      const deudoresFiltrados = tiendas
-        .filter((tienda) => tienda.ciudadId === ciudadId) // Filtrar tiendas por ciudad
-        .map((tienda) => ({
-          id: tienda.deudorId,
-          nombre: tienda.nombreDeu,
-          correlativo: tienda.nombreCorrelativo,
-        }))
-        .filter(
-          (deudor, index, self) =>
-            deudor.id && self.findIndex((d) => d.id === deudor.id) === index // Evitar duplicados
-        );
-      setFilteredDeudores(deudoresFiltrados);
-    } else {
-      setFilteredDeudores([]);
-    }
-  }, [ciudadId, tiendas]);
+    if (deudorId && tiendas.length > 0) {
+      const tiendaConDeudor = tiendas.find(
+        (t) => t.deudorId === deudorId
+      );
 
-  const handleInputChange = (e) => {
-    setInputValue(e.target.value);
-  };
+      if (tiendaConDeudor) {
+        const deudorObj = {
+          id: tiendaConDeudor.deudorId,
+          nombre: tiendaConDeudor.nombreDeu,
+          correlativo: tiendaConDeudor.nombreCorrelativo,
+        };
+        setSelectedDeudor(deudorObj);
+        setInputValue(`${deudorObj.correlativo} - ${deudorObj.nombre}`);
+      }
+    } else {
+      setSelectedDeudor(null);
+      setInputValue("");
+    }
+  }, [deudorId, tiendas]);
 
   const handleSelectDeudor = (deu) => {
     setInputValue(`${deu.correlativo} - ${deu.nombre}`);
@@ -49,10 +44,17 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
   };
 
   const handleClearInput = () => {
-    setInputValue(""); 
-    setSelectedDeudor(null); 
+    setInputValue("");
+    setSelectedDeudor(null);
     onSelect(null);
   };
+
+  const filteredDeudores = (() => {
+    if (deudorId && selectedDeudor) {
+      return [selectedDeudor];
+    }
+    return [];
+  })();
 
   return (
     <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
@@ -63,18 +65,13 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
               variant="outline"
               placeholder="Seleccione un deudor"
               value={inputValue}
-              onChange={handleInputChange}
+              readOnly
               size="lg"
               w="full"
             />
             <AutoCompleteList>
               {filteredDeudores.length > 0 ? (
                 filteredDeudores
-                  .filter((deu) =>
-                    `${deu.correlativo} - ${deu.nombre}`
-                      .toLowerCase()
-                      .includes(inputValue.toLowerCase())
-                  )
                   .map((deu) => (
                     <AutoCompleteItem
                       key={`deudor-${deu.id}`}
@@ -87,7 +84,7 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
                   ))
               ) : (
                 <AutoCompleteItem value="" disabled>
-                  Selecciona primero una tienda
+                  Sin deudor asignado
                 </AutoCompleteItem>
               )}
             </AutoCompleteList>
@@ -103,14 +100,16 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
             />
           )}
         </HStack>
-        <FormHelperText mt="2">Seleccione el deudor</FormHelperText>
+        <FormHelperText mt="2">
+          Seleccione el deudor
+        </FormHelperText>
       </FormControl>
     </Flex>
   );
 };
 
 DeuSelector.propTypes = {
-  ciudadId: PropTypes.number.isRequired, 
+  deudorId: PropTypes.number,
   onSelect: PropTypes.func.isRequired,
 };
 

@@ -58,23 +58,21 @@ const PedidoModal = ({
   const handleTiendaChange = (tiendaId) => {
     if (tiendaId) {
       const tiendaSeleccionada = obtenerTiendaPorId(tiendaId);
-
+  
       setCurrentPedido((prev) => ({
         ...prev,
         tiendaId,
-        tiendaId2: null, // Limpia la otra tienda
+        tiendaId2: null,         // Limpiamos la otra tienda
         ciudadId: tiendaSeleccionada?.ciudadId || null,
-        // Si quieres también setear deudorId con base en la tienda, puedes hacerlo aquí.
-        // deudorId: tiendaSeleccionada?.deudorId || null,
+        deudorId: tiendaSeleccionada?.deudorId || null,
       }));
-      setIsTienda2Disabled(true);
     } else {
       setCurrentPedido((prev) => ({
         ...prev,
         tiendaId: null,
         ciudadId: null,
+        deudorId: null,
       }));
-      setIsTienda2Disabled(false);
     }
   };
   
@@ -82,22 +80,21 @@ const PedidoModal = ({
   const handleTiendaChange2 = (tiendaId) => {
     if (tiendaId) {
       const tiendaSeleccionada = obtenerTiendaPorId(tiendaId);
-
+  
       setCurrentPedido((prev) => ({
         ...prev,
-        tiendaId: null, // Limpia la primera tienda
         tiendaId2: tiendaId,
+        tiendaId: null,          // Limpiamos la otra tienda
         ciudadId: tiendaSeleccionada?.ciudadId || null,
-        // Igualmente si deseas setear deudorId
+        deudorId: tiendaSeleccionada?.deudorId || null,
       }));
-      setIsTienda1Disabled(true);
     } else {
       setCurrentPedido((prev) => ({
         ...prev,
         tiendaId2: null,
         ciudadId: null,
+        deudorId: null,
       }));
-      setIsTienda1Disabled(false);
     }
   };
 
@@ -142,7 +139,6 @@ const PedidoModal = ({
         <ModalBody>
           {!isPedidoFinalizado ? (
             <VStack spacing={4}>
-              {/* Nuevo Grid para los selectores de tiendas */}
               <Grid
                 templateColumns={{ base: "1fr", md: "1fr 1fr" }}
                 gap={4}
@@ -195,6 +191,7 @@ const PedidoModal = ({
                 </FormLabel>
                 <DeuSelector
                   ciudadId={currentPedido.ciudadId}
+                  deudorId={currentPedido.deudorId}
                   onSelect={handleDeudorSelect}
                 />
               </FormControl>
