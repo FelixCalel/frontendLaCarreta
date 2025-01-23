@@ -41,7 +41,7 @@ export const LoginForm = () => {
       navigate("/auth/home", { replace: true });
     }
   }, [actualUsuario, navigate]);
-
+//comentario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
