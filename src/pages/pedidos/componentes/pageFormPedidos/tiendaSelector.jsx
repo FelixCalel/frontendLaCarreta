@@ -34,16 +34,31 @@ const TiendaSelector = ({
   // Filtrar tiendas según los criterios
   useEffect(() => {
     const fetchTiendas = async () => {
-      // Evitar recargar si ya hay tiendas cargadas y no han cambiado las dependencias
       if (!isRutaFilter && paisId && tiendas.length > 0) {
-        return;
+        return; // No refrescar si las tiendas ya están cargadas y el filtro no aplica
       }
 
-      setLoading(true); // Activar el estado de carga
+      setLoading(true);
       let tiendasFiltradas = [];
 
-      if (!isRutaFilter) {
-        // Cargar tiendas por país desde la API
+      if (isRutaFilter) {
+        // Si no hay rutas asignadas, no mostrar tiendas
+        if (rutaIds.length === 0) {
+          setTiendas([]); // Usuario sin rutas, vaciar lista
+          setLoading(false);
+          return;
+        }
+
+        // Filtrar usando los datos de Redux
+        tiendasFiltradas = tiendasRedux.filter((tienda) => {
+          const ciudadMatch = ciudadId ? tienda.ciudadId === ciudadId : true;
+          const deudorMatch = deudorId ? tienda.deudorId === deudorId : true;
+          const rutaMatch = rutaIds.includes(tienda.rutaId);
+
+          return ciudadMatch && deudorMatch && rutaMatch;
+        });
+      } else {
+        // Cargar tiendas por país desde la API si no se filtra por rutas
         if (paisId) {
           try {
             const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
@@ -54,16 +69,6 @@ const TiendaSelector = ({
             console.error("Error al cargar tiendas por país:", error);
           }
         }
-      } else {
-        // Filtrar usando los datos de Redux
-        tiendasFiltradas = tiendasRedux.filter((tienda) => {
-          const ciudadMatch = ciudadId ? tienda.ciudadId === ciudadId : true;
-          const deudorMatch = deudorId ? tienda.deudorId === deudorId : true;
-          const rutaMatch =
-            rutaIds.length === 0 || rutaIds.includes(tienda.rutaId);
-
-          return ciudadMatch && deudorMatch && rutaMatch;
-        });
       }
 
       setTiendas(tiendasFiltradas);
@@ -71,7 +76,7 @@ const TiendaSelector = ({
     };
 
     fetchTiendas();
-  }, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter]);
+  }, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter, tiendasRedux]);
 
   const options = tiendas.map((tienda) => ({
     value: tienda.id,

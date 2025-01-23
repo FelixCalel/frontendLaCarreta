@@ -117,7 +117,7 @@ const PageFormPedidos = () => {
         };
 
         await handleSubmit(newPedido);
-        onClose(); // Cerrar el modal después de guardar el nuevo pedido
+        onClose(); 
       } else {
         toast({
           title: "Sin pedidos previos",
@@ -284,10 +284,8 @@ const PageFormPedidos = () => {
         isMobile={isMobile}
         isDetailsOpen={isDetailsOpen} // Estado para controlar los detalles abiertos
         handleToggleDetails={(pedidoId, deudorId, tiendaId) => {
-          // Alternar el estado de los detalles abiertos
           setIsDetailsOpen(isDetailsOpen === pedidoId ? null : pedidoId);
 
-          // Cargar los detalles del pedido si se abren
           if (isDetailsOpen !== pedidoId) {
             dispatch(getDetalleOrdenByPedidoId(pedidoId, deudorId, tiendaId));
           }

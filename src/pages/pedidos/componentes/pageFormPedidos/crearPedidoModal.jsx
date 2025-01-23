@@ -60,18 +60,18 @@ const PedidoModal = ({
     setCurrentPedido((prev) => ({
       ...prev,
       tiendaId: value,
-      tiendaId2: null, // Limpia el otro selector
+      tiendaId2: null, 
     }));
-    setIsTienda2Disabled(!!value); // Desactiva el otro selector si hay valor
+    setIsTienda2Disabled(!!value); 
   };
 
   const handleTiendaChange2 = (value) => {
     setCurrentPedido((prev) => ({
       ...prev,
-      tiendaId: null, // Limpia el primer selector
+      tiendaId: null,
       tiendaId2: value,
     }));
-    setIsTienda1Disabled(!!value); // Desactiva el primer selector si hay valor
+    setIsTienda1Disabled(!!value); 
   };
 
   const clearTienda = () => {
@@ -90,7 +90,7 @@ const PedidoModal = ({
       onClose={onClose}
       isCentered
       motionPreset="slideInBottom"
-      size={{ base: "sm", md: "md", lg: "lg" }} // Ajusta tamaños para adaptabilidad
+      size={{ base: "sm", md: "md", lg: "lg" }}
     >
       <ModalOverlay />
       <ModalContent
@@ -102,7 +102,7 @@ const PedidoModal = ({
         overflow="hidden"
       >
         <ModalHeader
-          fontSize={{ base: "lg", md: "2xl" }} // Tamaño del encabezado adaptativo
+          fontSize={{ base: "lg", md: "2xl" }}
           fontWeight="bold"
           textAlign="center"
           color="teal.600"
