@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import { useSelector } from "react-redux";
 import {
   Modal,
   ModalOverlay,
@@ -20,9 +21,8 @@ import {
   Grid,
   GridItem,
 } from "@chakra-ui/react";
-import { FaCity, FaStoreAlt } from "react-icons/fa"; 
+import { FaStoreAlt } from "react-icons/fa"; 
 import { MdOutlinePerson } from "react-icons/md";
-import CiudadSelector from "./CiudadSelector";
 import DeuSelector from "./DeuSelector";
 import TiendaSelector from "./tiendaSelector";
 
@@ -43,12 +43,6 @@ const PedidoModal = ({
   resetForm,
   copiarUltimoPedido,
 }) => {
-  const handleCiudadChange = (e) => {
-    setCurrentPedido((prev) => ({
-      ...prev,
-      ciudadId: parseInt(e.target.value),
-    }));
-  };
 
   const toast = useToast();
 
@@ -56,22 +50,55 @@ const PedidoModal = ({
     setCurrentPedido((prev) => ({ ...prev, deudorId }));
   };
 
-  const handleTiendaChange = (value) => {
-    setCurrentPedido((prev) => ({
-      ...prev,
-      tiendaId: value,
-      tiendaId2: null, 
-    }));
-    setIsTienda2Disabled(!!value); 
+  const allTiendas = useSelector((state) => state.tiendas.data || []);
+  const obtenerTiendaPorId = (tiendaId) => {
+    return allTiendas.find((tienda) => tienda.id === tiendaId) || null;
   };
 
-  const handleTiendaChange2 = (value) => {
-    setCurrentPedido((prev) => ({
-      ...prev,
-      tiendaId: null,
-      tiendaId2: value,
-    }));
-    setIsTienda1Disabled(!!value); 
+  const handleTiendaChange = (tiendaId) => {
+    if (tiendaId) {
+      const tiendaSeleccionada = obtenerTiendaPorId(tiendaId);
+
+      setCurrentPedido((prev) => ({
+        ...prev,
+        tiendaId,
+        tiendaId2: null, // Limpia la otra tienda
+        ciudadId: tiendaSeleccionada?.ciudadId || null,
+        // Si quieres también setear deudorId con base en la tienda, puedes hacerlo aquí.
+        // deudorId: tiendaSeleccionada?.deudorId || null,
+      }));
+      setIsTienda2Disabled(true);
+    } else {
+      setCurrentPedido((prev) => ({
+        ...prev,
+        tiendaId: null,
+        ciudadId: null,
+      }));
+      setIsTienda2Disabled(false);
+    }
+  };
+  
+
+  const handleTiendaChange2 = (tiendaId) => {
+    if (tiendaId) {
+      const tiendaSeleccionada = obtenerTiendaPorId(tiendaId);
+
+      setCurrentPedido((prev) => ({
+        ...prev,
+        tiendaId: null, // Limpia la primera tienda
+        tiendaId2: tiendaId,
+        ciudadId: tiendaSeleccionada?.ciudadId || null,
+        // Igualmente si deseas setear deudorId
+      }));
+      setIsTienda1Disabled(true);
+    } else {
+      setCurrentPedido((prev) => ({
+        ...prev,
+        tiendaId2: null,
+        ciudadId: null,
+      }));
+      setIsTienda1Disabled(false);
+    }
   };
 
   const clearTienda = () => {
@@ -79,6 +106,8 @@ const PedidoModal = ({
       ...prev,
       tiendaId: null,
       tiendaId2: null,
+      ciudadId: null,
+      deudorId: null,
     }));
     setIsTienda1Disabled(false);
     setIsTienda2Disabled(false);
@@ -113,34 +142,6 @@ const PedidoModal = ({
         <ModalBody>
           {!isPedidoFinalizado ? (
             <VStack spacing={4}>
-              <FormControl>
-                <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
-                  <HStack>
-                    <Icon as={FaCity} color="teal.500" />
-                    <Text>Seleccione una ciudad</Text>
-                  </HStack>
-                </FormLabel>
-                <CiudadSelector
-                  value={
-                    currentPedido.ciudadId ? String(currentPedido.ciudadId) : ""
-                  }
-                  onChange={handleCiudadChange}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
-                  <HStack>
-                    <Icon as={MdOutlinePerson} color="teal.500" />
-                    <Text>Seleccione un deudor</Text>
-                  </HStack>
-                </FormLabel>
-                <DeuSelector
-                  ciudadId={currentPedido.ciudadId}
-                  onSelect={handleDeudorSelect}
-                />
-              </FormControl>
-
               {/* Nuevo Grid para los selectores de tiendas */}
               <Grid
                 templateColumns={{ base: "1fr", md: "1fr 1fr" }}
@@ -182,8 +183,21 @@ const PedidoModal = ({
                       isRutaFilter={false}
                     />
                   </FormControl>
+                  
                 </GridItem>
               </Grid>
+              <FormControl>
+                <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
+                  <HStack>
+                    <Icon as={MdOutlinePerson} color="teal.500" />
+                    <Text>Seleccione un deudor</Text>
+                  </HStack>
+                </FormLabel>
+                <DeuSelector
+                  ciudadId={currentPedido.ciudadId}
+                  onSelect={handleDeudorSelect}
+                />
+              </FormControl>
             </VStack>
           ) : (
             <Box>

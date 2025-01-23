@@ -43,21 +43,20 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
   };
 
   const handleSelectDeudor = (deu) => {
-    setInputValue(`${deu.correlativo} - ${deu.nombre}`); // Actualizar el valor del input con el deudor seleccionado
-    setSelectedDeudor(deu); // Actualizar el estado del deudor seleccionado
-    onSelect(deu.id); // Llamar a la función onSelect con el id del deudor seleccionado
+    setInputValue(`${deu.correlativo} - ${deu.nombre}`);
+    setSelectedDeudor(deu);
+    onSelect(deu.id); 
   };
 
   const handleClearInput = () => {
-    setInputValue(""); // Limpiar el input
-    setSelectedDeudor(null); // Limpiar el deudor seleccionado
-    onSelect(null); // Notificar al componente padre que no hay un deudor seleccionado
+    setInputValue(""); 
+    setSelectedDeudor(null); 
+    onSelect(null);
   };
 
   return (
     <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
       <FormControl>
-        {/* Contenedor horizontal para el campo de texto y el botón de limpiar */}
         <HStack spacing={2} w="100%" maxW="600px" align="center">
           <AutoComplete openOnFocus flex="1">
             <AutoCompleteInput
@@ -88,7 +87,7 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
                   ))
               ) : (
                 <AutoCompleteItem value="" disabled>
-                  No hay deudores disponibles
+                  Selecciona primero una tienda
                 </AutoCompleteItem>
               )}
             </AutoCompleteList>
@@ -104,15 +103,15 @@ const DeuSelector = ({ ciudadId, onSelect }) => {
             />
           )}
         </HStack>
-        <FormHelperText mt="2">Seleccione el deudor de la ciudad</FormHelperText>
+        <FormHelperText mt="2">Seleccione el deudor</FormHelperText>
       </FormControl>
     </Flex>
   );
 };
 
 DeuSelector.propTypes = {
-  ciudadId: PropTypes.number.isRequired, // ID de la ciudad
-  onSelect: PropTypes.func.isRequired, // Función que se llama al seleccionar un deudor
+  ciudadId: PropTypes.number.isRequired, 
+  onSelect: PropTypes.func.isRequired,
 };
 
 export default DeuSelector;
