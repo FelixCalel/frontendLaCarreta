@@ -41,9 +41,54 @@ export const RegisterForm = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState({});
   const [message, setMessage] = useState("");
   const toast = useToast();
+
+  const validateForm = () => {
+    const errors = {};
+
+    // Validar nombre y apellido (solo letras, mínimo 2 caracteres)
+    const nameRegex = /^[a-zA-Z\s]{2,}$/;
+    if (!nameRegex.test(formData.nombre)) {
+      errors.nombre =
+        "El nombre solo debe contener letras y ser mayor a 2 caracteres.";
+    }
+    if (!nameRegex.test(formData.apellido)) {
+      errors.apellido =
+        "El apellido solo debe contener letras y ser mayor a 2 caracteres.";
+    }
+
+    // Validar correo
+    if (!formData.correo) {0
+      errors.correo = "El correo electrónico es obligatorio.";
+    } else if (!/\S+@\S+\.\S+/.test(formData.correo)) {
+      errors.correo = "El correo no tiene un formato válido.";
+    }
+
+    // Validar teléfono (solo números, mínimo 8 caracteres)
+    if (!/^\d{8,}$/.test(formData.telefono)) {
+      errors.telefono =
+        "El teléfono solo debe contener números y tener al menos 8 dígitos.";
+    }
+
+    // Validar contraseñas (iguales, mínimo 8 caracteres, al menos un número y una letra)
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+    if (!passwordRegex.test(formData.contrasena)) {
+      errors.contrasena =
+        "La contraseña debe tener al menos 6 caracteres, incluir letras y números.";
+    }
+    if (formData.contrasena !== formData.confirmacionContrasena) {
+      errors.confirmacionContrasena = "Las contraseñas no coinciden.";
+    }
+
+    // Validar país (debe ser seleccionado)
+    if (!formData.paisId) {
+      errors.paisId = "Debe seleccionar un país.";
+    }
+
+    return errors;
+  };
 
   useEffect(() => {
     if (actualUsuario === "authenticated") {
@@ -67,10 +112,15 @@ export const RegisterForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.contrasena !== formData.confirmacionContrasena) {
-      setError("Las contraseñas no coinciden");
+
+    // Validar formulario
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setError(validationErrors);
       return;
     }
+
+    setError("");
     try {
       const response = await registerUser(formData);
       if (response.ok) {
@@ -87,10 +137,10 @@ export const RegisterForm = () => {
           "Usuario creado correctamente. Por favor, verifica tu correo electrónico."
         );
       } else {
-        setError(response.errorMessage);
+        setError({ general: response.errorMessage });
       }
     } catch (err) {
-      setError("Error al registrar el usuario");
+      setError({ general: "Error al registrar el usuario." });
     }
   };
 
@@ -122,7 +172,7 @@ export const RegisterForm = () => {
 
         <form onSubmit={handleSubmit}>
           <VStack spacing={4} mt={6}>
-            <FormControl id="nombre" isRequired>
+            <FormControl id="nombre" isInvalid={!!error.nombre} isRequired>
               <FormLabel>Nombre</FormLabel>
               <Input
                 name="nombre"
@@ -134,9 +184,14 @@ export const RegisterForm = () => {
                 borderRadius="md"
                 size="lg"
               />
+              {error.nombre && (
+                <Text color="red.500" fontSize="sm">
+                  {error.nombre}
+                </Text>
+              )}
             </FormControl>
 
-            <FormControl id="apellido" isRequired>
+            <FormControl id="apellido" isInvalid={!!error.apellido} isRequired>
               <FormLabel>Apellido</FormLabel>
               <Input
                 name="apellido"
@@ -148,6 +203,11 @@ export const RegisterForm = () => {
                 borderRadius="md"
                 size="lg"
               />
+              {error.apellido && (
+                <Text color="red.500" fontSize="sm">
+                  {error.apellido}
+                </Text>
+              )}
             </FormControl>
 
             <FormControl id="pais" isRequired>
@@ -177,7 +237,7 @@ export const RegisterForm = () => {
               />
             </FormControl>
 
-            <FormControl id="telefono" isRequired>
+            <FormControl id="telefono" isInvalid={!!error.telefono} isRequired>
               <FormLabel>Teléfono</FormLabel>
               <Input
                 name="telefono"
@@ -189,6 +249,11 @@ export const RegisterForm = () => {
                 borderRadius="md"
                 size="lg"
               />
+              {error.telefono && (
+                <Text color="red.500" fontSize="sm">
+                  {error.telefono}
+                </Text>
+              )}
             </FormControl>
 
             <Divider my={4} borderColor="gray.300" />
@@ -236,9 +301,7 @@ export const RegisterForm = () => {
                   <Button
                     h="1.75rem"
                     size="sm"
-                    onClick={() =>
-                      setShowConfirmPassword(!showConfirmPassword)
-                    }
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     variant="ghost"
                   >
                     {showConfirmPassword ? <ViewOffIcon /> : <ViewIcon />}
@@ -248,12 +311,30 @@ export const RegisterForm = () => {
             </FormControl>
           </VStack>
 
-          {error && (
-            <Alert status="error" variant="left-accent" borderRadius="md" mt={4}>
+          {error.general && (
+            <Alert
+              status="error"
+              variant="left-accent"
+              borderRadius="md"
+              mt={4}
+            >
               <AlertIcon />
-              {error}
+              {error.general}
             </Alert>
           )}
+
+          {Object.keys(error).map((key) => (
+            <Alert
+              key={key}
+              status="error"
+              variant="left-accent"
+              borderRadius="md"
+              mt={4}
+            >
+              <AlertIcon />
+              {error[key]}
+            </Alert>
+          ))}
 
           {message && (
             <Alert

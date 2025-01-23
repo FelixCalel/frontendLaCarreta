@@ -22,6 +22,7 @@ import {
 import { DeleteIcon, ChevronDownIcon, ChevronUpIcon } from "@chakra-ui/icons";
 import ProductosTable from "../detallesPedidosTable";
 
+
 const PedidosTable = ({
   pedidosUsuario,
   isMobile,
@@ -179,7 +180,6 @@ const PedidosTable = ({
   return pedidosUsuario.length > 0 ? pedidosTableContent : <Text>No hay pedidos disponibles</Text>;
 };
 
-// Validación de las props con PropTypes
 PedidosTable.propTypes = {
   pedidosUsuario: PropTypes.arrayOf(
     PropTypes.shape({
@@ -189,12 +189,12 @@ PedidosTable.propTypes = {
       nombreDeu: PropTypes.string,
       nombreTienda: PropTypes.string,
       estadoId: PropTypes.number.isRequired,
-      deudorId: PropTypes.number.isRequired, // Asegurado que está presente
+      deudorId: PropTypes.number.isRequired, 
       tiendaId: PropTypes.number.isRequired,
     })
   ).isRequired,
   isMobile: PropTypes.bool.isRequired,
-  isDetailsOpen: PropTypes.number,  // Asegúrate de que sea un número o undefined
+  isDetailsOpen: PropTypes.number,  
   handleToggleDetails: PropTypes.func.isRequired,
   handleDeletePedido: PropTypes.func.isRequired,
   showRealizarPedidoConfirmation: PropTypes.func.isRequired,

@@ -24,23 +24,38 @@ const TiendaSelector = ({
   const [loading, setLoading] = useState(true);
   const tiendasRedux = useSelector((state) => state.tiendas.data);
 
+  // Cargar tiendas desde Redux solo una vez al montar
   useEffect(() => {
-    dispatch(tablaTienda());
-  }, [dispatch]);
+    if (tiendasRedux.length === 0) {
+      dispatch(tablaTienda());
+    }
+  }, [dispatch, tiendasRedux.length]);
 
+  // Filtrar tiendas según los criterios
   useEffect(() => {
     const fetchTiendas = async () => {
-      setLoading(true);
+      // Evitar recargar si ya hay tiendas cargadas y no han cambiado las dependencias
+      if (!isRutaFilter && paisId && tiendas.length > 0) {
+        return;
+      }
+
+      setLoading(true); // Activar el estado de carga
       let tiendasFiltradas = [];
 
       if (!isRutaFilter) {
+        // Cargar tiendas por país desde la API
         if (paisId) {
-          const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
-          if (response && response.data) {
-            tiendasFiltradas = response.data;
+          try {
+            const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
+            if (response && response.data) {
+              tiendasFiltradas = response.data;
+            }
+          } catch (error) {
+            console.error("Error al cargar tiendas por país:", error);
           }
         }
       } else {
+        // Filtrar usando los datos de Redux
         tiendasFiltradas = tiendasRedux.filter((tienda) => {
           const ciudadMatch = ciudadId ? tienda.ciudadId === ciudadId : true;
           const deudorMatch = deudorId ? tienda.deudorId === deudorId : true;
@@ -56,7 +71,7 @@ const TiendaSelector = ({
     };
 
     fetchTiendas();
-  }, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter, tiendasRedux]);
+  }, [ciudadId, deudorId, rutaIds, paisId, isRutaFilter]);
 
   const options = tiendas.map((tienda) => ({
     value: tienda.id,
@@ -65,13 +80,10 @@ const TiendaSelector = ({
 
   const selectedOption = options.find((option) => option.value === value) || null;
 
-  if (loading) {
-    return <ChakraReactSelect isLoading placeholder="Cargando tiendas..." />;
-  }
-
   return (
     <ChakraReactSelect
-      placeholder="Seleccionar tienda"
+      placeholder={loading ? "Cargando tiendas..." : "Seleccionar tienda"}
+      isLoading={loading}
       options={options}
       value={selectedOption}
       onChange={(selected) => onChange(selected ? selected.value : null)}

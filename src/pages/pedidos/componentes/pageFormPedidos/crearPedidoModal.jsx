@@ -20,7 +20,7 @@ import {
   Grid,
   GridItem,
 } from "@chakra-ui/react";
-import { FaCity, FaStoreAlt } from "react-icons/fa"; // Iconos
+import { FaCity, FaStoreAlt } from "react-icons/fa"; 
 import { MdOutlinePerson } from "react-icons/md";
 import CiudadSelector from "./CiudadSelector";
 import DeuSelector from "./DeuSelector";

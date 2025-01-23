@@ -50,6 +50,12 @@ export const LoginForm = () => {
       const userCredential = await signInWithEmailAndPassword(auth, correo, contrasena);
       const user = userCredential.user;
 
+          // Verificar si el correo está verificado
+    if (!user.emailVerified) {
+      setError("El correo electrónico no está verificado. Por favor, verifica tu correo antes de iniciar sesión.");
+      return;
+    }
+
       const token = await user.getIdToken();
 
 
