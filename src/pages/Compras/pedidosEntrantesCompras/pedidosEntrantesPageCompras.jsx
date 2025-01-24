@@ -25,7 +25,6 @@ const PedidosEntrantesPage = () => {
     palabrasClave: "",
   });
 
-  // const pedidosEntrantes = useSelector((state) => state.pedidos.data) || [];
   const pedidosEntrantes =
     useSelector((state) => state.pedidos.pedidosConDetalles) || [];
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -189,16 +188,13 @@ const PedidosEntrantesPage = () => {
           </Button>
         </Stack>
       </Flex>
-
       {/* Formulario de Filtros */}
       <FiltrosPedidos onAplicarFiltros={handleAplicarFiltros} />
-
       <PedidosTable
         itemsAgrupadosPorDeudor={itemsAgrupadosPorDeudorArray}
         filtros={filtros} // Agrega esta línea
         handleVerDetalles={handleVerDetalles}
       />
-
       <DetallesModal
         isOpen={isOpen}
         onClose={onClose}

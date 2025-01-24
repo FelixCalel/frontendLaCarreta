@@ -27,9 +27,7 @@ const PedidosTable = ({
       setSelectedPedidos([...selectedPedidos, pedidoId]);
     }
   };
-
-
-
+  
   return (
     <Table variant="striped" colorScheme="gray">
       <Thead>
@@ -53,7 +51,6 @@ const PedidosTable = ({
                   onChange={() => handleSelectPedido(pedido.id)}
                 />
               </Td>
-
               <Td>{pedido.id}</Td>
               <Td>{pedido.nombreDeu}</Td>
               <Td>{pedido.nombreTienda}</Td>
@@ -75,22 +72,13 @@ const PedidosTable = ({
                     Ver Detalles
                   </Button>
                 </Tooltip>
-                {/* <Tooltip label="Exportar a Excel" hasArrow>
-                  <IconButton
-                    ml={2}
-                    colorScheme="teal"
-                    size="sm"
-                    icon={<SiMicrosoftexcel />}
-                    onClick={() => handleExportarExcel(pedido)}
-                  />
-                </Tooltip> */}
               </Td>
             </Tr>
           ))
         ) : (
           <Tr>
             <Td colSpan="8" align="center">
-              No hay pedidos en estado 2
+              No hay pedidos pedidos
             </Td>
           </Tr>
         )}
