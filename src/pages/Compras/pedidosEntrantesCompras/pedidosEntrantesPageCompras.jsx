@@ -10,7 +10,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { tablaPedidosConDetalles } from "../../../store/Pedidos/thunks";
+import { fetchCompras, consolidateCompras } from "../../../store/Compras/thunks";
 import FiltrosPedidos from "./componentes/FiltrosPedidos";
 import PedidosTable from "./componentes/PedidosTable";
 import DetallesModal from "./componentes/DetallesModal";
@@ -25,20 +25,23 @@ const PedidosEntrantesPage = () => {
     palabrasClave: "",
   });
 
-  const pedidosEntrantes =
-    useSelector((state) => state.pedidos.pedidosConDetalles) || [];
+  const { data: comprasData } = useSelector((state) => state.compras);
+  
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedPedido, setSelectedPedido] = useState(null);
+  const [selectedCompra, setSelectedCompra] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const obtenerPedidos = async () => {
+    const hacerConsolidacionYObtener = async () => {
       try {
-        await dispatch(tablaPedidosConDetalles());
-      } catch (error) {
+        // 1) Consolidar (p.ej. estadoId=5)
+        await dispatch(consolidateCompras({ estadoId: 5 }));
+        // 2) Luego fetch de la tabla de compras
+        await dispatch(fetchCompras());
+      } catch (err) {
         toast({
           title: "Error",
-          description: "No se pudieron cargar los pedidos entrantes.",
+          description: "No se pudieron cargar/actualizar las compras.",
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -47,7 +50,7 @@ const PedidosEntrantesPage = () => {
         setIsLoading(false);
       }
     };
-    obtenerPedidos();
+    hacerConsolidacionYObtener();
   }, [dispatch, toast]);
 
   if (isLoading) {
@@ -55,41 +58,28 @@ const PedidosEntrantesPage = () => {
   }
 
   // **Aplicar Filtros a los pedidos**
-  const pedidosFiltrados = pedidosEntrantes.filter((pedido) => {
+  const comprasFiltradas = comprasData.filter((compras) => {
     const cumpleFecha =
       !filtros.fechaOrden ||
-      moment(pedido.fechaOrden).isSame(moment(filtros.fechaOrden), "day");
+      moment(compras.fecha).isSame(moment(filtros.fechaOrden), "day");
     const cumplePalabras =
       !filtros.palabrasClave ||
-      pedido.items.some((item) =>
-        (item.nombreProducto || item.nombre || "")
-          .toLowerCase()
-          .includes(filtros.palabrasClave.toLowerCase())
-      );
+      (compras.nombre || "").toLowerCase().includes(filtros.palabrasClave.toLowerCase());
     return cumpleFecha && cumplePalabras;
   });
 
   // **Agrupar los items de los pedidos filtrados por deudor**
   const itemsAgrupadosPorDeudor = {};
-
-  pedidosFiltrados.forEach((pedido) => {
-    const deudor = pedido.nombreDeu;
+  comprasFiltradas.forEach((compras) => {
+    // Asume que tienes un 'deudorNombre' o algo similar
+    const deudor = compras.deudorNombre || `${compras.nombreDeu} - ${compras.deudorId}`;
     if (!itemsAgrupadosPorDeudor[deudor]) {
-      itemsAgrupadosPorDeudor[deudor] = {};
+      itemsAgrupadosPorDeudor[deudor] = [];
     }
-    const items = pedido.items || [];
-    items.forEach((item) => {
-      const key = `${item.codigo}-${item.nombre}`;
-      if (!itemsAgrupadosPorDeudor[deudor][key]) {
-        itemsAgrupadosPorDeudor[deudor][key] = {
-          ...item,
-          cantidad: item.cantidad,
-          deudor,
-          fechaOrden: pedido.fechaOrden,
-        };
-      } else {
-        itemsAgrupadosPorDeudor[deudor][key].cantidad += item.cantidad;
-      }
+    itemsAgrupadosPorDeudor[deudor].push({
+      codigo: compras.codigo,
+      nombre: compras.nombre,
+      cantidad: compras.cantidad,
     });
   });
 
@@ -104,20 +94,20 @@ const PedidosEntrantesPage = () => {
     setFiltros(nuevosFiltros);
   };
 
-  const handleVerDetalles = (pedido) => {
-    setSelectedPedido(pedido);
+  const handleVerDetalles = (compra) => {
+    setSelectedCompra(compra);
     onOpen();
   };
 
   const handleExportarExcel = async () => {
     try {
-      const pedidosFiltrados = pedidosEntrantes.filter((pedido) => {
+      const comprasFiltrados = comprasFiltradas.filter((compras) => {
         const cumpleFecha =
           !filtros.fechaOrden ||
-          pedido.fechaOrden.startsWith(filtros.fechaOrden);
+          compras.fechaOrden.startsWith(filtros.fechaOrden);
         const cumplePalabras =
           !filtros.palabrasClave ||
-          pedido.items.some((item) =>
+          compras.items.some((item) =>
             item.nombre
               .toLowerCase()
               .includes(filtros.palabrasClave.toLowerCase())
@@ -125,7 +115,7 @@ const PedidosEntrantesPage = () => {
         return cumpleFecha && cumplePalabras;
       });
 
-      if (pedidosFiltrados.length === 0) {
+      if (comprasFiltrados.length === 0) {
         toast({
           title: "Aviso",
           description: "No hay datos para exportar.",
@@ -147,7 +137,7 @@ const PedidosEntrantesPage = () => {
       ];
 
       // Agregar filas
-      pedidosFiltrados.forEach((item) => {
+      comprasFiltrados.forEach((item) => {
         worksheet.addRow({
           codigo: item.codigo,
           nombre: item.nombre,
@@ -188,17 +178,16 @@ const PedidosEntrantesPage = () => {
           </Button>
         </Stack>
       </Flex>
-      {/* Formulario de Filtros */}
       <FiltrosPedidos onAplicarFiltros={handleAplicarFiltros} />
       <PedidosTable
         itemsAgrupadosPorDeudor={itemsAgrupadosPorDeudorArray}
-        filtros={filtros} // Agrega esta línea
+        filtros={filtros}
         handleVerDetalles={handleVerDetalles}
       />
       <DetallesModal
         isOpen={isOpen}
         onClose={onClose}
-        pedido={selectedPedido}
+        pedido={selectedCompra}
       />
     </Box>
   );
