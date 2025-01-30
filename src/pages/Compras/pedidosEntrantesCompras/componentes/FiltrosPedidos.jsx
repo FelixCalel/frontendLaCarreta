@@ -1,16 +1,26 @@
 // src/pages/pedidosEntrantes/componentes/FiltrosPedidos.jsx
 
 import { useState } from "react";
-import { Box, Button, FormControl, FormLabel, Input, Stack } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  FormControl,
+  FormLabel,
+  Input,
+  Stack,
+} from "@chakra-ui/react";
 import PropTypes from "prop-types";
+import moment from "moment";
+
 
 const FiltrosPedidos = ({ onAplicarFiltros }) => {
-  const [fechaEntrega, setFechaEntrega] = useState("");
+  const [fecha, setFecha] = useState("");
   const [palabrasClave, setPalabrasClave] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onAplicarFiltros({ fechaEntrega, palabrasClave });
+    console.log("Filtros aplicados:", { fecha, palabrasClave });
+    onAplicarFiltros({ fecha, palabrasClave });
   };
 
   return (
@@ -20,8 +30,10 @@ const FiltrosPedidos = ({ onAplicarFiltros }) => {
           <FormLabel>Fecha de Entrega</FormLabel>
           <Input
             type="date"
-            value={fechaEntrega}
-            onChange={(e) => setFechaEntrega(e.target.value)}
+            value={fecha}
+            onChange={(e) =>
+              setFecha(moment.utc(e.target.value).format("YYYY-MM-DD"))
+            }
           />
         </FormControl>
         <FormControl>

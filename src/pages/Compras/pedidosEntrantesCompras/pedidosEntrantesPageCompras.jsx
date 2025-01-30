@@ -10,7 +10,10 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCompras, consolidateCompras } from "../../../store/Compras/thunks";
+import {
+  fetchCompras,
+  consolidateCompras,
+} from "../../../store/Compras/thunks";
 import FiltrosPedidos from "./componentes/FiltrosPedidos";
 import PedidosTable from "./componentes/PedidosTable";
 import DetallesModal from "./componentes/DetallesModal";
@@ -26,7 +29,7 @@ const PedidosEntrantesPage = () => {
   });
 
   const { data: comprasData } = useSelector((state) => state.compras);
-  
+
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedCompra, setSelectedCompra] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,9 +37,7 @@ const PedidosEntrantesPage = () => {
   useEffect(() => {
     const hacerConsolidacionYObtener = async () => {
       try {
-        // 1) Consolidar (p.ej. estadoId=5)
         await dispatch(consolidateCompras({ estadoId: 5 }));
-        // 2) Luego fetch de la tabla de compras
         await dispatch(fetchCompras());
       } catch (err) {
         toast({
@@ -59,20 +60,32 @@ const PedidosEntrantesPage = () => {
 
   // **Aplicar Filtros a los pedidos**
   const comprasFiltradas = comprasData.filter((compras) => {
+    console.log("Filtrando con:", filtros); 
+    console.log("Fecha en backend:", compras.fecha); 
+  
+    // Convertimos ambas fechas a solo "YYYY-MM-DD"
+    const fechaCompra = moment.utc(compras.fecha).format("YYYY-MM-DD");
+    const fechaFiltro = moment.utc(filtros.fecha, "YYYY-MM-DD").format("YYYY-MM-DD");
+  
+    console.log(`Comparando: ${fechaCompra} === ${fechaFiltro}`);
+  
     const cumpleFecha =
-      !filtros.fechaOrden ||
-      moment(compras.fecha).isSame(moment(filtros.fechaOrden), "day");
+      !filtros.fecha || fechaCompra === fechaFiltro;
+  
     const cumplePalabras =
       !filtros.palabrasClave ||
       (compras.nombre || "").toLowerCase().includes(filtros.palabrasClave.toLowerCase());
+  
     return cumpleFecha && cumplePalabras;
   });
+  
 
   // **Agrupar los items de los pedidos filtrados por deudor**
   const itemsAgrupadosPorDeudor = {};
   comprasFiltradas.forEach((compras) => {
     // Asume que tienes un 'deudorNombre' o algo similar
-    const deudor = compras.deudorNombre || `${compras.nombreDeu} - ${compras.deudorId}`;
+    const deudor =
+      compras.deudorNombre || `${compras.nombreDeu} - ${compras.nombreCorrelativo}`;
     if (!itemsAgrupadosPorDeudor[deudor]) {
       itemsAgrupadosPorDeudor[deudor] = [];
     }
@@ -136,7 +149,6 @@ const PedidosEntrantesPage = () => {
         { header: "Fecha de Entrega", key: "fechaOrden", width: 20 },
       ];
 
-      // Agregar filas
       comprasFiltrados.forEach((item) => {
         worksheet.addRow({
           codigo: item.codigo,

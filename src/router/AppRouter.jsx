@@ -20,7 +20,7 @@ import { PaginaItem } from "../router/ItemRouter";
 import { PaginaHistorialPedido } from "../router/HistorialPedidoRouter";
 import { PaginaExportacionPedido } from "../router/exportarPedidosRouter"
 import { PaginaPedidoCompras } from "../router/ComprasRouter"
-
+import {PaginaComprador} from "../router/CompradorRouter"
 
 
 export const AppRouter = () => {
@@ -44,6 +44,7 @@ export const AppRouter = () => {
     { path: "/historialPedido/*", rutaId: 11, component: PaginaHistorialPedido},
     { path: "/exportarPedido/*", rutaId: 12, component: PaginaExportacionPedido},
     { path: "/comprasPedidos/*", rutaId: 13, component: PaginaPedidoCompras},
+    { path: "/comprador/*", rutaId: 14, component: PaginaComprador},
 
   ];
 

@@ -1,0 +1,212 @@
+import { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Stack,
+  Spinner,
+  useDisclosure,
+  useToast,
+} from "@chakra-ui/react";
+import { useDispatch, useSelector } from "react-redux";
+import { motion } from "framer-motion";        
+import { CalendarIcon, DownloadIcon } from "@chakra-ui/icons"; 
+import moment from "moment";
+import * as ExcelJS from "exceljs";
+import { fetchCompras, consolidateCompras } from "../../../store/Compras/thunks";
+import FiltrosCompras from "./componentes/FiltroCompras";
+import ComprasTable from "./componentes/ComprasTable";
+import RegistrarProveedorModal from "./componentes/RegistrarProveedorModal";
+
+const MotionBox = motion(Box);
+
+const CompradoresPage = () => {
+  const dispatch = useDispatch();
+  const toast = useToast();
+
+  const [filtros, setFiltros] = useState({
+    fechaOrden: "",
+    palabrasClave: "",
+  });
+
+  const { data: comprasData } = useSelector((state) => state.compras);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const {
+    isOpen: isOpenRegistrar,
+    onOpen: onOpenRegistrar,
+    onClose: onCloseRegistrar,
+  } = useDisclosure();
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        await dispatch(consolidateCompras({ estadoId: 5 }));
+        await dispatch(fetchCompras());
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar/actualizar las compras.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    cargarDatos();
+  }, [dispatch, toast]);
+
+  if (isLoading) {
+    return (
+      <Flex justify="center" align="center" minH="100vh">
+        <Spinner size="xl" />
+      </Flex>
+    );
+  }
+
+  // Manejo de filtros
+  const handleAplicarFiltros = (nuevosFiltros) => {
+    setFiltros(nuevosFiltros);
+  };
+
+  // Filtrar la data de compras
+  const comprasFiltradas = comprasData.filter((compra) => {
+    const fechaCompra = moment.utc(compra.fecha).format("YYYY-MM-DD");
+    const fechaFiltro = filtros.fechaOrden
+      ? moment.utc(filtros.fechaOrden).format("YYYY-MM-DD")
+      : "";
+
+    const cumpleFecha = !filtros.fechaOrden || fechaCompra === fechaFiltro;
+    const cumplePalabras =
+      !filtros.palabrasClave ||
+      (compra.nombre || "")
+        .toLowerCase()
+        .includes(filtros.palabrasClave.toLowerCase());
+
+    return cumpleFecha && cumplePalabras;
+  });
+
+  // Exportar a Excel
+  const handleExportarExcel = async () => {
+    try {
+      if (comprasFiltradas.length === 0) {
+        toast({
+          title: "Aviso",
+          description: "No hay datos para exportar.",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Compras");
+
+      worksheet.columns = [
+        { header: "Código", key: "codigo", width: 15 },
+        { header: "Nombre", key: "nombre", width: 25 },
+        { header: "DEU", key: "deu", width: 20 },
+        { header: "Cantidad Solicitada", key: "cantSolicitada", width: 20 },
+        { header: "Cantidad Asignada", key: "cantAsignada", width: 20 },
+      ];
+
+      comprasFiltradas.forEach((compra) => {
+        worksheet.addRow({
+          codigo: compra.codigo,
+          nombre: compra.nombre,
+          deu: compra.deudorNombre,
+          cantSolicitada: compra.cantidad,
+          cantAsignada: compra.cantidadAsignada ?? 0,
+        });
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "compras.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al exportar a Excel:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo exportar a Excel.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Cuando hagamos clic en “Planificar” o “Asignar Proveedor”
+  const handleRegistrarProveedor = (item) => {
+    setSelectedItem(item);
+    onOpenRegistrar();
+  };
+
+  // Animaciones de framer-motion para el contenedor principal
+  return (
+    <MotionBox
+      bg="white"
+      minH="100vh"
+      p={6}
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      {/* Encabezado */}
+      <Heading mb={4} color="gray.700" fontWeight="extrabold">
+        Panel de Compras
+      </Heading>
+      <Flex justify="space-between" alignItems="center" mb={4}>
+        <Stack direction="row" spacing={3}>
+          <Button
+            colorScheme="teal"
+            onClick={handleExportarExcel}
+            leftIcon={<DownloadIcon />}
+            _hover={{ transform: "scale(1.05)" }}
+            transition="transform 0.2s"
+          >
+            Exportar a Excel
+          </Button>
+          <Button
+            colorScheme="orange"
+            onClick={() => alert("Ver Planificación")}
+            leftIcon={<CalendarIcon />}
+            _hover={{ transform: "scale(1.05)" }}
+            transition="transform 0.2s"
+          >
+            Ver Planificación
+          </Button>
+        </Stack>
+      </Flex>
+
+      {/* Filtros */}
+      <FiltrosCompras onAplicarFiltros={handleAplicarFiltros} />
+
+      {/* Tabla de Compras */}
+      <ComprasTable
+        compras={comprasFiltradas}
+        onRegistrarProveedor={handleRegistrarProveedor}
+      />
+
+      {/* Modal para registrar proveedor */}
+      <RegistrarProveedorModal
+        isOpen={isOpenRegistrar}
+        onClose={onCloseRegistrar}
+        item={selectedItem}
+      />
+    </MotionBox>
+  );
+};
+
+export default CompradoresPage;
