@@ -11,17 +11,19 @@ import {
   Input,
   Button,
   Text,
-  useToast
+  useToast,
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
+import ProveedorSelector from "./proveedorSelector";
 
 const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
   const [cantidadPactada, setCantidadPactada] = useState(0);
   const [fechaIngreso, setFechaIngreso] = useState("");
   const [cantidadFaltante, setCantidadFaltante] = useState(0);
   const [proveedor, setProveedor] = useState("");
-  const toast = useToast();  
+  const [selectedProveedorId, setSelectedProveedorId] = useState(null);
+  const toast = useToast();
 
   useEffect(() => {
     if (item) {
@@ -68,11 +70,9 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
             />
           </FormControl>
           <FormControl mb={3}>
-            <FormLabel>Proveedor</FormLabel>
-            <Input
-              placeholder="Ej: PRO-0102"
-              value={proveedor}
-              onChange={(e) => setProveedor(e.target.value)}
+            <ProveedorSelector
+              value={selectedProveedorId}
+              onChange={(nuevoValor) => setSelectedProveedorId(nuevoValor)}
             />
           </FormControl>
           <FormControl mb={3}>
@@ -97,11 +97,10 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
                   });
                   val = item.cantidad;
                 }
-              
+
                 setCantidadPactada(val);
                 setCantidadFaltante(item.cantidad - val);
               }}
-              
             />
           </FormControl>
 

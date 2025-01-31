@@ -59,7 +59,6 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
             value={selectedProveedorId}
             onChange={(nuevoValor) => setSelectedProveedorId(nuevoValor)}
           />
-
           <Tooltip label="Seleccionar todos los items" fontSize="sm">
             <Button size="sm" onClick={handleSelectAll}>
               {selectedAll ? "Deseleccionar todos" : "Seleccionar todos"}
