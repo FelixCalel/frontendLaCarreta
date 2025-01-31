@@ -32,6 +32,7 @@ const PedidosTable = ({ itemsAgrupadosPorDeudor, filtros }) => {
       <Table variant="striped" colorScheme="gray">
         <Thead>
           <Tr>
+            <Th>ID</Th>
             <Th>Código</Th>
             <Th>Nombre Item</Th>
             <Th>DEU</Th>
@@ -49,7 +50,8 @@ const PedidosTable = ({ itemsAgrupadosPorDeudor, filtros }) => {
                   </Tr>
                   {items.map((item, idx) => (
                     <Tr key={idx}>
-                      <Td>{item.nombreCorrelativo || "Sin código"}</Td>
+                      <Td>{item.id || "null"}</Td>
+                      <Td>{item.codigo || "Sin código"}</Td>
                       <Td>{item.nombreProducto || item.nombre || "Sin nombre"}</Td>
                       <Td>{deudor}</Td>
                       <Td>{item.cantidad}</Td>

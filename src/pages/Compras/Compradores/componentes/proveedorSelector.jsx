@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef  } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import Select from "react-select";
@@ -11,8 +11,11 @@ const ChakraReactSelect = chakra(Select);
 const ProveedorSelector = ({ value, onChange }) => {
   const [proveedores, setProveedores] = useState([]);
   const [loading, setLoading] = useState(false);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
+    if (fetchedRef.current) return; // Si ya se hizo, no volver a hacer la petición
+    fetchedRef.current = true;
     const fetchProveedores = async () => {
       setLoading(true);
       try {

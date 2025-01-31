@@ -11,6 +11,7 @@ import {
   Input,
   Button,
   Text,
+  useToast
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
@@ -20,14 +21,13 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
   const [fechaIngreso, setFechaIngreso] = useState("");
   const [cantidadFaltante, setCantidadFaltante] = useState(0);
   const [proveedor, setProveedor] = useState("");
+  const toast = useToast();  
 
   useEffect(() => {
     if (item) {
-      // Por ejemplo, si viene preasignado
       setCantidadPactada(item.cantidadAsignada || 0);
       setProveedor(item.proveedorNombre || "");
       setCantidadFaltante((item.cantidad || 0) - (item.cantidadAsignada || 0));
-      // Seteamos la fecha de hoy como ejemplo
       setFechaIngreso(new Date().toISOString().substr(0, 10));
     }
   }, [item]);
@@ -46,7 +46,12 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md" motionPreset="slideInBottom">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      motionPreset="slideInBottom"
+    >
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Registrar Proveedor</ModalHeader>
@@ -57,7 +62,10 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
           </Text>
           <Text mb={3}>Cantidad solicitada: {item.cantidad || 0}</Text>
           <FormControl mb={3}>
-            <Input isDisabled value={`${item.nombreCorrelativo} - ${item.nombreDeu} `} />
+            <Input
+              isDisabled
+              value={`${item.nombreCorrelativo} - ${item.nombreDeu} `}
+            />
           </FormControl>
           <FormControl mb={3}>
             <FormLabel>Proveedor</FormLabel>
@@ -71,14 +79,32 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
             <FormLabel>Cantidad pactada</FormLabel>
             <Input
               type="number"
+              min={0}
+              max={item.cantidad} // Evita que el usuario introduzca más que "cantidad"
               value={cantidadPactada}
               onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
+                let val = parseInt(e.target.value, 10);
+                if (isNaN(val) || val < 0) {
+                  val = 0;
+                }
+                if (val > item.cantidad) {
+                  toast({
+                    title: "Cantidad no permitida",
+                    description: `No puedes pactar más de ${item.cantidad} unidades.`,
+                    status: "warning",
+                    duration: 3000,
+                    isClosable: true,
+                  });
+                  val = item.cantidad;
+                }
+              
                 setCantidadPactada(val);
-                setCantidadFaltante((item.cantidad || 0) - val);
+                setCantidadFaltante(item.cantidad - val);
               }}
+              
             />
           </FormControl>
+
           <FormControl mb={3}>
             <FormLabel>Fecha de ingreso a planta</FormLabel>
             <Input

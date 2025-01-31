@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Box,
   Button,
@@ -27,6 +27,7 @@ const MotionBox = motion(Box);
 const CompradoresPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
+  const hasLoadedRef = useRef(false);
 
   const [filtros, setFiltros] = useState({
     fechaOrden: "",
@@ -44,6 +45,8 @@ const CompradoresPage = () => {
   const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
+    if (hasLoadedRef.current) return; // Si ya se cargó una vez, no lo hagas otra vez
+    hasLoadedRef.current = true;
     const cargarDatos = async () => {
       try {
         await dispatch(consolidateCompras({ estadoId: 5 }));
@@ -51,7 +54,7 @@ const CompradoresPage = () => {
       } catch (err) {
         toast({
           title: "Error",
-          description: "No se pudieron cargar/actualizar las compras.",
+          description: "Ocurrió un problema",
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -61,7 +64,7 @@ const CompradoresPage = () => {
       }
     };
     cargarDatos();
-  }, [dispatch, toast]);
+  }, []);
 
   if (isLoading) {
     return (

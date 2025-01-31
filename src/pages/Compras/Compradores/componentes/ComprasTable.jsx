@@ -80,6 +80,7 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
       <Table variant="striped" colorScheme="gray">
         <Thead bg={bgHeader}>
           <Tr>
+            <Th>ID</Th>
             <Th>Item</Th>
             <Th>Nombre Item</Th>
             <Th>DEU</Th>
@@ -100,6 +101,7 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
                 transition: "background 0.2s",
               }}
             >
+              <Td>{compra.id}</Td>
               <Td>{compra.codigo}</Td>
               <Td>{compra.nombre}</Td>
               <Td>{`${compra.nombreDeu} - ${compra.nombreCorrelativo}`}</Td>
