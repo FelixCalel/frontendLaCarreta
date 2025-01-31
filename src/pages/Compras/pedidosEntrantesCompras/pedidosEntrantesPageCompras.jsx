@@ -90,6 +90,7 @@ const PedidosEntrantesPage = () => {
       itemsAgrupadosPorDeudor[deudor] = [];
     }
     itemsAgrupadosPorDeudor[deudor].push({
+      id: compras.id,
       codigo: compras.codigo,
       nombre: compras.nombre,
       cantidad: compras.cantidad,
