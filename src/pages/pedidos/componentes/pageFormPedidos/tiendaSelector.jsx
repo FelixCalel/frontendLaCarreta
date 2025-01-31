@@ -34,20 +34,16 @@ const TiendaSelector = ({
       let tiendasFiltradas = [];
   
       if (isRutaFilter) {
-        // 1) Si es el selector "Tiendas asignadas", filtramos por ruta
         if (!rutaIds || rutaIds.length === 0) {
-          // Si el usuario no tiene rutas asignadas, no hay tiendas
           setTiendas([]);
           setLoading(false);
           return;
         }
   
-        // Filtra SÓLO por ruta, sin usar ciudadId ni deudorId
         tiendasFiltradas = tiendasRedux.filter((tienda) =>
           rutaIds.includes(tienda.rutaId)
         );
       } else {
-        // 2) Si es el selector "Todas las tiendas"
         if (paisId) {
           try {
             const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
@@ -66,12 +62,10 @@ const TiendaSelector = ({
   
     fetchTiendas();
   }, [
-    // Dependencias mínimas:
     paisId,
     rutaIds,
     isRutaFilter,
     tiendasRedux
-    // (Opcional) Remueve ciudadId/deudorId si ya NO filtras por ellos
   ]);
   
   const options = tiendas.map((tienda) => ({
@@ -109,8 +103,6 @@ const TiendaSelector = ({
 };
 
 TiendaSelector.propTypes = {
-  ciudadId: PropTypes.number,
-  deudorId: PropTypes.number,
   rutaIds: PropTypes.arrayOf(PropTypes.number),
   paisId: PropTypes.number.isRequired,
   value: PropTypes.number,

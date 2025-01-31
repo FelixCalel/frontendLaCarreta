@@ -10,23 +10,24 @@ import {
   Button,
   useColorModeValue,
   Tooltip,
+  Stack,
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 import { useState } from "react";
-import { FaUserCheck } from "react-icons/fa"; // Ejemplo de React Icons
+import { FaUserCheck } from "react-icons/fa";
+import ProveedorSelector from "./proveedorSelector";
 
 const ComprasTable = ({ compras, onRegistrarProveedor }) => {
   // Para “Seleccionar todos / Deseleccionar todos”
   const [selectedAll, setSelectedAll] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [selectedProveedorId, setSelectedProveedorId] = useState(null);
 
   const handleSelectAll = () => {
     setSelectedAll(!selectedAll);
     if (!selectedAll) {
-      // Seleccionar todos
       setSelectedItems(compras.map((c) => c.id));
     } else {
-      // Deseleccionar todos
       setSelectedItems([]);
     }
   };
@@ -50,25 +51,32 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
       boxShadow="sm"
       transition="all 0.3s"
     >
-      {/* Acciones de selección */}
       <Box mb={4}>
-        <Tooltip label="Seleccionar todos los items de la tabla" fontSize="sm">
-          <Button size="sm" mr={2} onClick={handleSelectAll}>
-            {selectedAll ? "Deseleccionar todos" : "Seleccionar todos"}
-          </Button>
-        </Tooltip>
+        <Stack direction="row" spacing={4} alignItems="center">
+          {/* Label antes del selector */}
+          <Box fontWeight="bold">Proveedor:</Box>
+          <ProveedorSelector
+            value={selectedProveedorId}
+            onChange={(nuevoValor) => setSelectedProveedorId(nuevoValor)}
+          />
 
-        <Tooltip
-          label="Asigna un proveedor a todos los items seleccionados"
-          fontSize="sm"
-        >
-          <Button size="sm" colorScheme="green" leftIcon={<FaUserCheck />}>
-            Asignar proveedor a seleccionados
-          </Button>
-        </Tooltip>
+          <Tooltip label="Seleccionar todos los items" fontSize="sm">
+            <Button size="sm" onClick={handleSelectAll}>
+              {selectedAll ? "Deseleccionar todos" : "Seleccionar todos"}
+            </Button>
+          </Tooltip>
+
+          <Tooltip
+            label="Asigna un proveedor a los items seleccionados"
+            fontSize="sm"
+          >
+            <Button size="sm" colorScheme="green" leftIcon={<FaUserCheck />}>
+              Asignar proveedor a seleccionados
+            </Button>
+          </Tooltip>
+        </Stack>
       </Box>
 
-      {/* Tabla con hover en filas */}
       <Table variant="striped" colorScheme="gray">
         <Thead bg={bgHeader}>
           <Tr>
@@ -104,7 +112,7 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
                   onChange={() => handleCheckboxChange(compra.id)}
                 />
               </Td>
-              <Td>{compra.proveedorNombre || "—"}</Td>
+              <Td>{compra.nombreProveedor || "—"}</Td>
               <Td>
                 <Button
                   size="sm"

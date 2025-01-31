@@ -10,11 +10,14 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { motion } from "framer-motion";        
-import { CalendarIcon, DownloadIcon } from "@chakra-ui/icons"; 
+import { motion } from "framer-motion";
+import { CalendarIcon, DownloadIcon } from "@chakra-ui/icons";
 import moment from "moment";
 import * as ExcelJS from "exceljs";
-import { fetchCompras, consolidateCompras } from "../../../store/Compras/thunks";
+import {
+  fetchCompras,
+  consolidateCompras,
+} from "../../../store/Compras/thunks";
 import FiltrosCompras from "./componentes/FiltroCompras";
 import ComprasTable from "./componentes/ComprasTable";
 import RegistrarProveedorModal from "./componentes/RegistrarProveedorModal";
@@ -147,13 +150,11 @@ const CompradoresPage = () => {
     }
   };
 
-  // Cuando hagamos clic en “Planificar” o “Asignar Proveedor”
   const handleRegistrarProveedor = (item) => {
     setSelectedItem(item);
     onOpenRegistrar();
   };
 
-  // Animaciones de framer-motion para el contenedor principal
   return (
     <MotionBox
       bg="white"
@@ -189,17 +190,11 @@ const CompradoresPage = () => {
           </Button>
         </Stack>
       </Flex>
-
-      {/* Filtros */}
       <FiltrosCompras onAplicarFiltros={handleAplicarFiltros} />
-
-      {/* Tabla de Compras */}
       <ComprasTable
         compras={comprasFiltradas}
         onRegistrarProveedor={handleRegistrarProveedor}
       />
-
-      {/* Modal para registrar proveedor */}
       <RegistrarProveedorModal
         isOpen={isOpenRegistrar}
         onClose={onCloseRegistrar}

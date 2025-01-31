@@ -6,7 +6,6 @@ import {
   FormLabel,
   Input,
   Stack,
-  Text,
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 import moment from "moment";
@@ -32,9 +31,6 @@ const FiltrosCompras = ({ onAplicarFiltros }) => {
       transition="background-color 0.2s"
       _hover={{ backgroundColor: "gray.100" }}
     >
-      <Text fontSize="lg" fontWeight="semibold" mb={4} color="gray.700">
-        Filtros
-      </Text>
       <Stack direction={{ base: "column", md: "row" }} spacing={4}>
         <FormControl>
           <FormLabel>Fecha</FormLabel>
