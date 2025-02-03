@@ -17,6 +17,7 @@ import asignacionMOSlice from './asignacionMO/asignacionMOSlice.js'
 import detalleOrdenReducer from './Pedidos/DetallePedidos/detalleOrdenSlice'
 import itemReducer from './items/itemSlice'
 import comprasSlice from './Compras/compraSlice.js'
+import proveedorReducer from './Proveedor/proveedorSlice.js'
 
 
 export const store = configureStore({
@@ -38,7 +39,9 @@ export const store = configureStore({
     Permisos: PermisosSlice,
     PermisosRoles: PermisosRolesSlice,
     asignacionMO: asignacionMOSlice,
-    compras: comprasSlice
+    compras: comprasSlice,
+    proveedores: proveedorReducer,
+
 
   },
 })

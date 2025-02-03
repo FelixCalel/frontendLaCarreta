@@ -18,10 +18,10 @@ import { FaUserCheck } from "react-icons/fa";
 import ProveedorSelector from "./proveedorSelector";
 
 const ComprasTable = ({ compras, onRegistrarProveedor }) => {
-  // Para “Seleccionar todos / Deseleccionar todos”
   const [selectedAll, setSelectedAll] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectedProveedorId, setSelectedProveedorId] = useState(null);
+  
 
   const handleSelectAll = () => {
     setSelectedAll(!selectedAll);
@@ -53,7 +53,6 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
     >
       <Box mb={4}>
         <Stack direction="row" spacing={4} alignItems="center">
-          {/* Label antes del selector */}
           <Box fontWeight="bold">Proveedor:</Box>
           <ProveedorSelector
             value={selectedProveedorId}
@@ -105,7 +104,7 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
               <Td>{compra.nombre}</Td>
               <Td>{`${compra.nombreDeu} - ${compra.nombreCorrelativo}`}</Td>
               <Td>{compra.cantidad || 0}</Td>
-              <Td>{compra.cantidadAsignada || 0}</Td>
+              <Td>{compra.pedido_venta || 0}</Td>
               <Td>
                 <Checkbox
                   colorScheme="teal"

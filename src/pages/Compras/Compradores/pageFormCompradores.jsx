@@ -74,12 +74,10 @@ const CompradoresPage = () => {
     );
   }
 
-  // Manejo de filtros
   const handleAplicarFiltros = (nuevosFiltros) => {
     setFiltros(nuevosFiltros);
   };
 
-  // Filtrar la data de compras
   const comprasFiltradas = comprasData.filter((compra) => {
     const fechaCompra = moment.utc(compra.fecha).format("YYYY-MM-DD");
     const fechaFiltro = filtros.fechaOrden
@@ -96,7 +94,6 @@ const CompradoresPage = () => {
     return cumpleFecha && cumplePalabras;
   });
 
-  // Exportar a Excel
   const handleExportarExcel = async () => {
     try {
       if (comprasFiltradas.length === 0) {
@@ -167,7 +164,6 @@ const CompradoresPage = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      {/* Encabezado */}
       <Heading mb={4} color="gray.700" fontWeight="extrabold">
         Panel de Compras
       </Heading>

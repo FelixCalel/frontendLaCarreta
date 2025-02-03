@@ -16,20 +16,21 @@ import {
 import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 import ProveedorSelector from "./proveedorSelector";
+import CompraVentaInput from "./compraVentaInput";
 
 const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
   const [cantidadPactada, setCantidadPactada] = useState(0);
   const [fechaIngreso, setFechaIngreso] = useState("");
   const [cantidadFaltante, setCantidadFaltante] = useState(0);
-  const [proveedor, setProveedor] = useState("");
   const [selectedProveedorId, setSelectedProveedorId] = useState(null);
+  const [proveedores] = useState([]);
   const toast = useToast();
 
   useEffect(() => {
     if (item) {
-      setCantidadPactada(item.cantidadAsignada || 0);
-      setProveedor(item.proveedorNombre || "");
-      setCantidadFaltante((item.cantidad || 0) - (item.cantidadAsignada || 0));
+      setCantidadPactada(item.pedido_venta || 0);
+      setSelectedProveedorId(item.proveedorId || null);
+      setCantidadFaltante((item.cantidad || 0) - (item.pedido_venta || 0));
       setFechaIngreso(new Date().toISOString().substr(0, 10));
     }
   }, [item]);
@@ -37,14 +38,19 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
   if (!item) return null;
 
   const handleGuardar = () => {
+    const proveedorSeleccionado = proveedores.find(
+      (p) => p.id === selectedProveedorId
+    );
+
     alert(
       `Se registró proveedor para ítem: ${item.codigo}\n` +
-        `Proveedor: ${proveedor}\n` +
+        `Proveedor: ${proveedorSeleccionado?.nombre || "No seleccionado"}\n` +
         `Cant. pactada: ${cantidadPactada}\n` +
         `Fecha ingreso: ${fechaIngreso}\n` +
         `Faltante: ${cantidadFaltante}\n`
     );
     onClose();
+    window.location.reload();
   };
 
   return (
@@ -72,22 +78,22 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
           <FormControl mb={3}>
             <ProveedorSelector
               value={selectedProveedorId}
-              onChange={(nuevoValor) => setSelectedProveedorId(nuevoValor)}
+              onChange={setSelectedProveedorId}
             />
           </FormControl>
           <FormControl mb={3}>
             <FormLabel>Cantidad pactada</FormLabel>
-            <Input
-              type="number"
-              min={0}
-              max={item.cantidad} // Evita que el usuario introduzca más que "cantidad"
-              value={cantidadPactada}
-              onChange={(e) => {
-                let val = parseInt(e.target.value, 10);
-                if (isNaN(val) || val < 0) {
-                  val = 0;
-                }
-                if (val > item.cantidad) {
+            <CompraVentaInput
+              compra={{
+                id: item.id,
+                pedido_venta: item.pedido_venta || 0,
+              }}
+              maxCantidad={item.cantidad || 0}
+              onCantidadChange={(nuevoValor) => {
+                setCantidadPactada(nuevoValor);
+                setCantidadFaltante((item.cantidad || 0) - nuevoValor);
+
+                if (nuevoValor > item.cantidad) {
                   toast({
                     title: "Cantidad no permitida",
                     description: `No puedes pactar más de ${item.cantidad} unidades.`,
@@ -95,11 +101,7 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
                     duration: 3000,
                     isClosable: true,
                   });
-                  val = item.cantidad;
                 }
-
-                setCantidadPactada(val);
-                setCantidadFaltante(item.cantidad - val);
               }}
             />
           </FormControl>
@@ -138,10 +140,11 @@ RegistrarProveedorModal.propTypes = {
     codigo: PropTypes.string,
     nombre: PropTypes.string,
     cantidad: PropTypes.number,
-    cantidadAsignada: PropTypes.number,
     nombreDeu: PropTypes.string,
     nombreCorrelativo: PropTypes.string,
     proveedorNombre: PropTypes.string,
+    pedido_venta: PropTypes.number,
+    proveedorId: PropTypes.number,
   }),
 };
 

@@ -94,6 +94,7 @@ const PedidosEntrantesPage = () => {
       codigo: compras.codigo,
       nombre: compras.nombre,
       cantidad: compras.cantidad,
+      pedido_venta: compras.pedido_venta,
     });
   });
 

@@ -32,3 +32,17 @@ export const consolidateCompras = createAsyncThunk(
     }
   }
 );
+
+
+export const updateCompra = createAsyncThunk(
+  'compras/updateCompra',
+  async ({ id, ...rest }, { rejectWithValue }) => {
+    try {
+      const response = await axios.patch(`${BASE_URL}/compras/update/${id}`, rest);
+      return response.data; // Retorna la compra actualizada
+    } catch (error) {
+      console.error('Error al actualizar compra:', error);
+      return rejectWithValue(error.response?.data || 'Error al actualizar compra');
+    }
+  }
+);
