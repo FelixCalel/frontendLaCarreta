@@ -1,40 +1,26 @@
-import { useEffect, useState, useRef  } from "react";
+import { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import axios from "axios";
 import Select from "react-select";
 import { chakra } from "@chakra-ui/react";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProveedores } from "../../../../store/Proveedor/thunks"; // Ajusta la ruta según tu estructura
 
 const ChakraReactSelect = chakra(Select);
 
 const ProveedorSelector = ({ value, onChange }) => {
-  const [proveedores, setProveedores] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
   const fetchedRef = useRef(false);
+  
+  const { data: proveedores, loading } = useSelector((state) => ({
+    data: state.proveedores.data,
+    loading: state.proveedores.loading,
+  }));
 
   useEffect(() => {
-    if (fetchedRef.current) return; // Si ya se hizo, no volver a hacer la petición
+    if (fetchedRef.current || proveedores.length > 0) return;
     fetchedRef.current = true;
-    const fetchProveedores = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(`${BASE_URL}/proveedor/listar`);
-        if (response?.data?.data) {
-          setProveedores(response.data.data);
-        } else {
-          setProveedores([]);
-        }
-      } catch (error) {
-        console.error("Error al obtener proveedores:", error);
-        setProveedores([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProveedores();
-  }, []);
+    dispatch(fetchProveedores());
+  }, [dispatch, proveedores.length]);
 
   const options = proveedores.map((prov) => ({
     value: prov.id,

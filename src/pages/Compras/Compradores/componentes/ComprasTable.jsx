@@ -11,17 +11,23 @@ import {
   useColorModeValue,
   Tooltip,
   Stack,
+  useToast,
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 import { useState } from "react";
 import { FaUserCheck } from "react-icons/fa";
 import ProveedorSelector from "./proveedorSelector";
+import { useDispatch, useSelector } from "react-redux";
+import { updateCompra, fetchCompras } from "../../../../store/Compras/thunks";
 
 const ComprasTable = ({ compras, onRegistrarProveedor }) => {
+  const dispatch = useDispatch();
+  const toast = useToast();
   const [selectedAll, setSelectedAll] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectedProveedorId, setSelectedProveedorId] = useState(null);
-  
+
+  const { loading } = useSelector((state) => state.compras);
 
   const handleSelectAll = () => {
     setSelectedAll(!selectedAll);
@@ -40,7 +46,56 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
     }
   };
 
+  const handleAssignProveedor = async () => {
+    if (!selectedProveedorId || selectedItems.length === 0) {
+      toast({
+        title: "Datos incompletos",
+        description: "Selecciona al menos un ítem y un proveedor",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      await Promise.all(
+        selectedItems.map((id) =>
+          dispatch(
+            updateCompra({
+              id: id,
+              proveedorId: selectedProveedorId,
+            })
+          )
+        )
+      );
+
+      dispatch(fetchCompras());
+      setSelectedItems([]);
+      setSelectedProveedorId(null);
+      setSelectedAll(false);
+
+      toast({
+        title: "Actualización exitosa",
+        description: "Proveedores asignados correctamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error en asignación:", error);
+      toast({
+        title: "Error al actualizar",
+        description: "Ocurrió un error al asignar los proveedores",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   const bgHeader = useColorModeValue("gray.100", "gray.600");
+  const sortedCompras = [...compras].sort((a, b) => a.id - b.id);
 
   return (
     <Box
@@ -68,7 +123,14 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
             label="Asigna un proveedor a los items seleccionados"
             fontSize="sm"
           >
-            <Button size="sm" colorScheme="green" leftIcon={<FaUserCheck />}>
+            <Button
+              size="sm"
+              colorScheme="green"
+              leftIcon={<FaUserCheck />}
+              onClick={handleAssignProveedor}
+              isLoading={loading}
+              disabled={!selectedProveedorId || selectedItems.length === 0}
+            >
               Asignar proveedor a seleccionados
             </Button>
           </Tooltip>
@@ -90,7 +152,7 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
           </Tr>
         </Thead>
         <Tbody>
-          {compras.map((compra) => (
+        {sortedCompras.map((compra) => (
             <Tr
               key={compra.id}
               _hover={{
