@@ -4,7 +4,7 @@ import {
   createProveedor,
   updateProveedor,
   deleteProveedor
-} from './proveedor.thunks';
+} from './thunks';
 
 const initialState = {
   data: [],
