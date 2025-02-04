@@ -52,7 +52,7 @@ const PedidosTable = ({
                 />
               </Td>
               <Td>{pedido.id}</Td>
-              <Td>{pedido.nombreDeu}</Td>
+              <Td>{`${pedido.nombreCorrelativo} - ${pedido.nombreDeu}`}</Td>
               <Td>{pedido.nombreTienda}</Td>
               <Td>{pedido.nombreUsuario}</Td>
               <Td>

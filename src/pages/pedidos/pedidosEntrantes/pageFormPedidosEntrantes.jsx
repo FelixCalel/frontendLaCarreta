@@ -30,7 +30,6 @@ const EntrantesPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
 
-  // Estados globales y locales
   const pedidos = useSelector((state) => state.pedidos.data);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPedidos, setSelectedPedidos] = useState([]);
