@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Flex,
@@ -23,23 +23,30 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  Icon,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchModulosTabla } from "../../store/Modulos/thunks";
 import { fetchPermisos } from "../../store/Permisos/thunks";
-import { fetchPermisosRoles, createasignacionPermisosRoles, deleteasignacionPermisosRoles } from "../../store/AsignarPermisosAroles/thunks";
+import {
+  fetchPermisosRoles,
+  createasignacionPermisosRoles,
+  deleteasignacionPermisosRoles,
+  fetchAsignacionMO,
+} from "../../store/AsignarPermisosAroles/thunks";
 import { fetchrole } from "../../store/PaginaRole/thunks";
 import { fetchOpciones } from "../../store/Opciones/thunks";
+import iconCatalog from "./../Iconos/IconCatalog";
 
 export const Permisos = () => {
   const dispatch = useDispatch();
   const toast = useToast();
 
-  const { modulosTabla = [], loading } = useSelector((state) => state.modulos);
+  const { modulosTabla = [] } = useSelector((state) => state.modulos);
   const { Permisos = [] } = useSelector((state) => state.Permisos);
   const { roles = [] } = useSelector((state) => state.roles);
   const { opciones = [] } = useSelector((state) => state.opciones);
-  
+  const { asignacionMO = [] } = useSelector((state) => state.PermisosRoles);
   // Estado local para almacenar los permisosRoles que obtenemos
   const [permisosRoles, setPermisosRoles] = useState([]);
 
@@ -49,7 +56,7 @@ export const Permisos = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [dialogRef, setDialogRef] = useState(); // Referencia para cerrar el diálogo
+  const [dialogRef] = useState(); // Referencia para cerrar el diálogo
 
   const bgColor = useColorModeValue("#f9f9f9", "#1A202C");
   const tableHeaderBg = useColorModeValue("#e5e5e5", "#1A202C");
@@ -64,6 +71,7 @@ export const Permisos = () => {
     dispatch(fetchPermisos());
     dispatch(fetchrole());
     dispatch(fetchOpciones());
+    dispatch(fetchAsignacionMO());
   }, [dispatch]);
 
   // Manejo de permisos basados en el módulo y la opción seleccionados
@@ -73,7 +81,7 @@ export const Permisos = () => {
         .then((response) => {
           const permisosRolesData = response.payload || [];
           setPermisosRoles(permisosRolesData); // Aquí almacenamos los permisosRoles obtenidos
-          
+
           const matrix = {};
           roles.forEach((role) => {
             matrix[role.id] = { nombre: role.nombre, permisos: {} };
@@ -89,7 +97,8 @@ export const Permisos = () => {
                 isAssigned: isAssigned,
                 id: isAssigned
                   ? permisosRolesData.find(
-                      (pr) => pr.permiso_id === permiso.id && pr.role_id === role.id
+                      (pr) =>
+                        pr.permiso_id === permiso.id && pr.role_id === role.id
                     )?.id
                   : null,
               };
@@ -97,13 +106,16 @@ export const Permisos = () => {
           });
           setAccessMatrix(matrix);
         })
-        .catch((error) => console.error("Error al obtener permisosRoles:", error));
+        .catch((error) =>
+          console.error("Error al obtener permisosRoles:", error)
+        );
     }
   }, [selectedModulo, selectedOpcion, dispatch, Permisos, roles]);
 
   const handleAccessChange = (permisoNombre, roleId) => {
     setAccessMatrix((prevMatrix) => {
-      const currentAssignedState = prevMatrix[roleId]?.permisos?.[permisoNombre]?.isAssigned || false;
+      const currentAssignedState =
+        prevMatrix[roleId]?.permisos?.[permisoNombre]?.isAssigned || false;
       const updatedMatrix = {
         ...prevMatrix,
         [roleId]: {
@@ -126,21 +138,23 @@ export const Permisos = () => {
     setIsSaving(true);
     try {
       console.log("Iniciando la operación de guardado...");
-  
+
       const createPayload = [];
       const deletePayload = [];
       const permisosCreados = [];
       const permisosEliminados = [];
-  
+
       // Recorrer la matriz de acceso para verificar cambios
       Object.keys(accessMatrix).forEach((roleId) => {
         const role = accessMatrix[roleId];
         Permisos.forEach((permiso) => {
           const permisoState = role.permisos[permiso.nombre];
-  
-          console.log(`Revisando permiso: ${permiso.nombre} para el rol: ${roleId}`);
+
+          console.log(
+            `Revisando permiso: ${permiso.nombre} para el rol: ${roleId}`
+          );
           console.log("Estado del permiso:", permisoState.isAssigned);
-  
+
           if (permisoState.isAssigned && !permisoState.id) {
             // Crear asignaciones nuevas si el permiso está activado y no existe en la DB
             createPayload.push({
@@ -173,41 +187,46 @@ export const Permisos = () => {
           }
         });
       });
-  
+
       // Mostrar logs en la consola para ver qué se ha hecho
       console.log("Permisos a crear:", createPayload);
       console.log("Permisos a eliminar:", permisosEliminados);
-  
+
       // Validación extra para asegurar que hay cambios para guardar
       if (createPayload.length === 0 && deletePayload.length === 0) {
         throw new Error("No hay cambios para guardar.");
       }
-  
+
       // Ejecutar eliminaciones primero
       if (deletePayload.length > 0) {
         await Promise.all(
-          deletePayload.map((id) => dispatch(deleteasignacionPermisosRoles(id)).unwrap())
+          deletePayload.map((id) =>
+            dispatch(deleteasignacionPermisosRoles(id)).unwrap()
+          )
         );
         console.log("Permisos eliminados exitosamente:", permisosEliminados);
       }
-  
+
       // Si hay asignaciones nuevas, hacer la petición de creación
       if (createPayload.length > 0) {
-        await dispatch(createasignacionPermisosRoles({
-          accessMatrix: createPayload,
-          selectedModulo,
-          selectedOpcion,
-          Permisos,
-        })).unwrap();
+        await dispatch(
+          createasignacionPermisosRoles({
+            accessMatrix: createPayload,
+            selectedModulo,
+            selectedOpcion,
+            Permisos,
+          })
+        ).unwrap();
         console.log("Permisos creados exitosamente:", permisosCreados);
       }
-  
+
       // Abre el diálogo después de guardar exitosamente
       setIsDialogOpen(true);
     } catch (error) {
       toast({
         title: "Error al guardar permisos.",
-        description: error.message || "Hubo un problema al guardar los permisos.",
+        description:
+          error.message || "Hubo un problema al guardar los permisos.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -219,70 +238,108 @@ export const Permisos = () => {
   };
 
   return (
-    <VStack spacing={8} align="stretch" p={8} bg={bgColor} borderRadius="lg" boxShadow="lg">
-      <Heading size="lg" color={textColor} textAlign="center" mb={6} fontWeight="bold" letterSpacing="wide">
+    <VStack
+      spacing={2}
+      align="stretch"
+      p={0}
+      bg={bgColor}
+      borderRadius="lg"
+      boxShadow="lg"
+    >
+      <Heading
+        size="lg"
+        color={textColor}
+        textAlign="center"
+        mb={6}
+        fontWeight="bold"
+        letterSpacing="wide"
+      >
         Gestión de Permisos
       </Heading>
 
-      <HStack spacing={4} align="center" justify="flex-start" mb={6}>
-        <Flex align="center" w="50%">
+      <HStack spacing={8} align="center" justify="center" w="100%" mb={6}>
+        <Flex align="center" justify="center" w="50%">
           <Text fontWeight="bold" color={textColor} mr={2}>
             Módulo:
           </Text>
           <Select
             placeholder="Selecciona un módulo"
             onChange={(e) => setSelectedModulo(e.target.value)}
-            bg={bgColor}
+            bg="white"
             borderColor="#673ab7"
             color={textColor}
             borderRadius="md"
-            w="100%"
+            w="450px"
           >
             {modulosTabla
-              .slice() // Copiar el array para prevenir mutaciones
-              .sort((a, b) => a.nombre.localeCompare(b.nombre)) // Orden superficial de los módulos
-              .map((modulo) => (
-                <option key={modulo.id} value={modulo.id}>
-                  {modulo.nombre}
-                </option>
-              ))}
+              .slice()
+              .sort((a, b) => a.nombre.localeCompare(b.nombre))
+              .map((modulo) => {
+                const IconComponent = iconCatalog[modulo.icono]; // Obtiene el icono del módulo
+
+                return (
+                  <option key={modulo.id} value={modulo.id}>
+                    {IconComponent && <Icon as={IconComponent} mr={2} />}
+                    {modulo.nombre}
+                  </option>
+                );
+              })}
           </Select>
         </Flex>
 
-        <Flex align="center" w="50%">
-          <Text fontWeight="bold" color={textColor} mr={2}>
-            Opción:
-          </Text>
+        <Flex align="center" justify="center" w="50%">
           <Select
             placeholder="Selecciona una opción"
+            value={selectedOpcion || ""}
             onChange={(e) => setSelectedOpcion(e.target.value)}
-            bg={bgColor}
+            bg="white"
+            border="1px solid"
             borderColor="#673ab7"
             color={textColor}
             borderRadius="md"
-            w="100%"
+            w="450px"
+            fontWeight="bold"
+            transition="all 0.2s ease-in-out"
+            _hover={{ borderColor: "#512da8" }}
+            _focus={{ borderColor: "#311b92", boxShadow: "0 0 5px #673ab7" }}
             isDisabled={!selectedModulo}
           >
             {opciones
-              .slice() // Copiar el array para prevenir mutaciones
-              .sort((a, b) => a.nombre.localeCompare(b.nombre)) // Orden superficial de las opciones
-              .map((opcion) => (
-                <option key={opcion.id} value={opcion.id}>
-                  {opcion.nombre}
-                </option>
-              ))}
+              .filter((opcion) =>
+                asignacionMO.some(
+                  (a) =>
+                    Number(a.modulo_id) === Number(selectedModulo) &&
+                    Number(a.opcion_id) === Number(opcion.id)
+                )
+              )
+              .sort((a, b) => a.nombre.localeCompare(b.nombre))
+              .map((opcion) => {
+                const IconComponent = iconCatalog[opcion.icono]; // Obtiene el icono de la opción
+
+                return (
+                  <option key={opcion.id} value={opcion.id}>
+                    {IconComponent && <Icon as={IconComponent} mr={2} />}
+                    {opcion.nombre}
+                  </option>
+                );
+              })}
           </Select>
         </Flex>
       </HStack>
 
       {selectedOpcion && (
-        <Box overflowX="auto" borderRadius="lg" boxShadow="lg" border="0.5px solid" borderColor="#673ab7">
+        <Box
+          overflowX="auto"
+          borderRadius="lg"
+          boxShadow="lg"
+          border="0.5px solid"
+          borderColor="#673ab7"
+        >
           <Table variant="simple" borderRadius="md" bg={tableBgColor}>
             <Thead bg={tableHeaderBg}>
               <Tr>
                 <Th color={textColor}>Roles</Th>
-                {Permisos
-                  .slice() // Copiar el array para prevenir mutaciones
+                {Permisos.slice() // Copiar el array para prevenir mutaciones
                   .sort((a, b) => a.nombre.localeCompare(b.nombre)) // Orden superficial de los permisos
                   .map((permiso) => (
                     <Th key={permiso.id} color={textColor}>
@@ -296,13 +353,21 @@ export const Permisos = () => {
                 .slice() // Copiar el array para prevenir mutaciones
                 .sort((a, b) => a.nombre.localeCompare(b.nombre)) // Orden superficial de los roles
                 .map((role, index) => (
-                  <Tr key={role.id} bg={index % 2 === 0 ? tableRowBg : tableRowBgAlt}>
+                  <Tr
+                    key={role.id}
+                    bg={index % 2 === 0 ? tableRowBg : tableRowBgAlt}
+                  >
                     <Td color={textColor}>{role.nombre}</Td>
                     {Permisos.map((permiso) => (
                       <Td key={permiso.id}>
                         <Switch
-                          isChecked={accessMatrix[role.id]?.permisos?.[permiso.nombre]?.isAssigned || false}
-                          onChange={() => handleAccessChange(permiso.nombre, role.id)}
+                          isChecked={
+                            accessMatrix[role.id]?.permisos?.[permiso.nombre]
+                              ?.isAssigned || false
+                          }
+                          onChange={() =>
+                            handleAccessChange(permiso.nombre, role.id)
+                          }
                           colorScheme="green"
                         />
                       </Td>

@@ -86,3 +86,19 @@ export const deleteasignacionPermisosRoles = createAsyncThunk(
   }
 );
 
+
+// En tu archivo de thunks
+export const fetchAsignacionMO = createAsyncThunk(
+  'asignacionMO/fetchAsignacionMO',
+  async (_, thunkAPI) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/asignacionMO/`);
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
