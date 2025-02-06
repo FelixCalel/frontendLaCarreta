@@ -28,45 +28,41 @@ const TiendaSelector = ({
     }
   }, [dispatch, tiendasRedux.length]);
 
-  useEffect(() => {
-    const fetchTiendas = async () => {
-      setLoading(true);
-      let tiendasFiltradas = [];
-  
-      if (isRutaFilter) {
-        if (!rutaIds || rutaIds.length === 0) {
-          setTiendas([]);
-          setLoading(false);
-          return;
-        }
-  
-        tiendasFiltradas = tiendasRedux.filter((tienda) =>
-          rutaIds.includes(tienda.rutaId)
-        );
-      } else {
-        if (paisId) {
-          try {
-            const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
-            if (response && response.data) {
-              tiendasFiltradas = response.data;
-            }
-          } catch (error) {
-            console.error("Error al cargar tiendas por país:", error);
+// Dentro del useEffect en TiendaSelector
+useEffect(() => {
+  const fetchTiendas = async () => {
+    setLoading(true);
+    let tiendasFiltradas = [];
+
+    if (isRutaFilter) {
+      if (!rutaIds || rutaIds.length === 0) {
+        setTiendas([]);
+        setLoading(false);
+        return;
+      }
+
+      tiendasFiltradas = tiendasRedux.filter((tienda) => 
+        rutaIds.includes(tienda.rutaId) && tienda.estaActivo // Cambiado a estaActivo
+      );
+    } else {
+      if (paisId) {
+        try {
+          const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
+          if (response && response.data) {
+            tiendasFiltradas = response.data.filter(tienda => tienda.estaActivo); // Cambiado a estaActivo
           }
+        } catch (error) {
+          console.error("Error al cargar tiendas por país:", error);
         }
       }
-  
-      setTiendas(tiendasFiltradas);
-      setLoading(false);
-    };
-  
-    fetchTiendas();
-  }, [
-    paisId,
-    rutaIds,
-    isRutaFilter,
-    tiendasRedux
-  ]);
+    }
+
+    setTiendas(tiendasFiltradas);
+    setLoading(false);
+  };
+
+  fetchTiendas();
+}, [paisId, rutaIds, isRutaFilter, tiendasRedux]);
   
   const options = tiendas.map((tienda) => ({
     value: tienda.id,

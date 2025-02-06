@@ -62,7 +62,7 @@ const PedidoModal = ({
       setCurrentPedido((prev) => ({
         ...prev,
         tiendaId,
-        tiendaId2: null,         // Limpiamos la otra tienda
+        tiendaId2: null,        
         ciudadId: tiendaSeleccionada?.ciudadId || null,
         deudorId: tiendaSeleccionada?.deudorId || null,
       }));
