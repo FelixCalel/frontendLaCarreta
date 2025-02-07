@@ -303,6 +303,7 @@ export const Permisos = () => {
             _hover={{ borderColor: "#512da8" }}
             _focus={{ borderColor: "#311b92", boxShadow: "0 0 5px #673ab7" }}
             isDisabled={!selectedModulo}
+            
           >
             {opciones
               .filter((opcion) =>
