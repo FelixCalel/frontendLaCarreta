@@ -99,13 +99,10 @@ const AprobadosPage = () => {
 
     setIsExporting(true);
     try {
-      // Cargar los detalles de los pedidos antes de exportar
       const pedidosConDetalles = await cargarDetallesPedidos(pedidosAprobados);
 
-      // Crear un nuevo libro de trabajo con ExcelJS
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Pedidos Consolidados");
-      // Agrupar los pedidos por deudor
       const pedidosPorDeudor = pedidosConDetalles.reduce((acc, pedido) => {
         const deudor = pedido.nombreDeu || "Sin deudor";
         if (!acc[deudor]) acc[deudor] = { pedidos: [], creadoEl: null };
@@ -116,10 +113,8 @@ const AprobadosPage = () => {
         return acc;
       }, {});
 
-      // Agregar los datos agrupados al archivo Excel
       await addPedidosToWorksheet(worksheet, pedidosPorDeudor);
 
-      // Generar el archivo y descargarlo
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = window.URL.createObjectURL(blob);
@@ -129,7 +124,6 @@ const AprobadosPage = () => {
       a.click();
       window.URL.revokeObjectURL(url);
 
-      // Cambiar el estado de los pedidos exportados a 5
       await actualizarEstadoPedidosExportados(pedidosAprobados);
     } catch (error) {
       console.error("Error al exportar pedidos consolidados:", error);
@@ -138,63 +132,68 @@ const AprobadosPage = () => {
     }
   };
 
-async function addPedidosToWorksheet(worksheet, pedidosPorDeudor) {
-  // Definir las columnas
-  worksheet.columns = [
-    { header: 'Pedido ID', key: 'pedidoId', width: 15 },
-    { header: 'Código', key: 'codigo', width: 15 },
-    { header: 'Producto', key: 'producto', width: 30 },
-    { header: 'Cantidad', key: 'cantidad', width: 15 }
-  ];
-
-  // Iterar sobre cada deudor
-  for (const deudor of Object.keys(pedidosPorDeudor)) {
-    const { pedidos, creadoEl } = pedidosPorDeudor[deudor];
-
-    // Agregar encabezado del deudor
-    const deudorRow = worksheet.addRow([deudor]);
-    deudorRow.font = { bold: true };
-      
-    // Agregar fecha
-    const fechaFormateada = format(new Date(creadoEl), "dd 'de' MMMM 'de' yyyy", { locale: es });
-    worksheet.addRow([`Fecha: ${fechaFormateada}`]);
-      
-    // Agregar encabezados de columnas
-    const headerRow = worksheet.addRow(['Pedido ID', 'Código', 'Producto', 'Cantidad']);
-    headerRow.font = { bold: true };
-
-    // Agregar detalles de pedidos
-    for (const pedido of pedidos) {
-      const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
-      for (const detalle of detalles) {
-        worksheet.addRow({
-          pedidoId: `P-${pedido.id}`,
-          codigo: detalle.codigo || "Sin código",
-          producto: detalle.nombreProducto,
-          cantidad: detalle.cantidad
-        });
+  async function addPedidosToWorksheet(worksheet, pedidosPorDeudor) {
+    worksheet.columns = [
+      { header: 'Pedido ID', key: 'pedidoId', width: 15 },
+      { header: 'Código', key: 'codigo', width: 15 },
+      { header: 'Producto', key: 'producto', width: 30 },
+      { header: 'Cantidad', key: 'cantidad', width: 15 }
+    ];
+  
+    let firstDeudor = true; // Variable para controlar la primera fila
+  
+    for (const deudor of Object.keys(pedidosPorDeudor)) {
+      const { pedidos, creadoEl } = pedidosPorDeudor[deudor];
+  
+      const nombreTienda = pedidos[0]?.nombreTienda || "Sin tienda";
+      const fechaOrden = format(new Date(pedidos[0]?.fechaOrden), "dd/MM/yyyy", { locale: es });
+  
+      // **Elimina la primera fila vacía asegurando que no haya espacios adicionales antes del primer deudor**
+      if (!firstDeudor) {
+        worksheet.addRow([]); // Espacio vacío entre deudores
       }
+      firstDeudor = false;
+  
+      const deudorRow = worksheet.addRow([deudor]);
+      deudorRow.font = { bold: true };
+  
+      worksheet.addRow([`Fecha: ${format(new Date(creadoEl), "dd 'de' MMMM 'de' yyyy", { locale: es })}`]);
+  
+      const headerRow = worksheet.addRow(['Pedido ID', 'Código', 'Producto', 'Cantidad']);
+      headerRow.font = { bold: true };
+  
+      for (const pedido of pedidos) {
+        const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
+        for (const detalle of detalles) {
+          worksheet.addRow({
+            pedidoId: `P-${pedido.id}`,
+            codigo: detalle.codigo || "Sin código",
+            producto: detalle.nombreProducto,
+            cantidad: detalle.cantidad
+          });
+        }
+      }
+  
+      const commentRow = worksheet.addRow(['Comentario:', `Tienda: ${nombreTienda}`, `Fecha Orden: ${fechaOrden}`]);
+      commentRow.font = { bold: true };
+      worksheet.addRow([]); // Espacio vacío
     }
-
-    // Agregar fila en blanco entre deudores
-    worksheet.addRow([]);
+  
+    worksheet.columns.forEach(column => {
+      column.width = Math.max(
+        column.header?.length || 10,
+        ...worksheet.getColumn(column.key).values
+          .filter(value => value)
+          .map(value => String(value).length)
+      );
+    });
   }
-
-  // Ajustar el ancho de las columnas automáticamente
-  worksheet.columns.forEach(column => {
-    column.width = Math.max(
-      column.header?.length || 10,
-      ...worksheet.getColumn(column.key).values
-        .filter(value => value)
-        .map(value => String(value).length)
-    );
-  });
-}
+  
+  
 
   const actualizarEstadoPedidosExportados = async (pedidos) => {
     try {
       await Promise.all(pedidos.map(async (pedido) => {
-        // Cambiar el estado a 5
         await dispatch(togglePedidoStatus({ id: pedido.id, estadoId: 5 }));
       }));
       console.log("Estados de los pedidos actualizados correctamente a 5.");
@@ -217,13 +216,11 @@ async function addPedidosToWorksheet(worksheet, pedidosPorDeudor) {
         </Button>
       </Flex>
 
-      {/* Tabla de pedidos aprobados */}
       <AprobadosTable
         pedidosAprobados={pedidosAprobados}
         handleVerDetalles={handleVerDetalles}
       />
 
-      {/* Modal de detalles */}
       <DetallesModal
         isOpen={isOpen}
         onClose={onClose}
