@@ -27,7 +27,7 @@ import {
 } from "@chakra-ui/react";
 import { FiUserPlus, FiSearch } from "react-icons/fi";
 import axios from "axios";
-import RutaSelector from "./RutaSelector";
+import RutaSelector from "./componentes/RutaSelector";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 

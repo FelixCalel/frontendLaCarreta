@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef  } from "react";
 import {
   Box,
   Button,
@@ -23,6 +23,7 @@ import moment from "moment";
 const PedidosEntrantesPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
+  const effectRan = useRef(false);
   const [filtros, setFiltros] = useState({
     fechaOrden: "",
     palabrasClave: "",
@@ -35,6 +36,8 @@ const PedidosEntrantesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (effectRan.current) return;
+
     const hacerConsolidacionYObtener = async () => {
       try {
         await dispatch(consolidateCompras({ estadoId: 5 }));
@@ -52,6 +55,7 @@ const PedidosEntrantesPage = () => {
       }
     };
     hacerConsolidacionYObtener();
+    effectRan.current = true;
   }, [dispatch, toast]);
 
   if (isLoading) {
@@ -116,20 +120,24 @@ const PedidosEntrantesPage = () => {
 
   const handleExportarExcel = async () => {
     try {
-      const comprasFiltrados = comprasFiltradas.filter((compras) => {
+      console.log("Aplicando filtros antes de exportar...");
+      console.log("Filtros actuales:", filtros);
+      console.log("Datos antes de filtrar:", comprasFiltradas);
+  
+      const comprasFiltrados = comprasFiltradas.filter((compra) => {
         const cumpleFecha =
           !filtros.fechaOrden ||
-          compras.fechaOrden.startsWith(filtros.fechaOrden);
+          moment.utc(compra.fechaOrden).format("YYYY-MM-DD") === filtros.fechaOrden;
+  
         const cumplePalabras =
           !filtros.palabrasClave ||
-          compras.items.some((item) =>
-            item.nombre
-              .toLowerCase()
-              .includes(filtros.palabrasClave.toLowerCase())
-          );
+          compra.nombre.toLowerCase().includes(filtros.palabrasClave.toLowerCase());
+  
         return cumpleFecha && cumplePalabras;
       });
-
+  
+      console.log("Datos después de filtrar:", comprasFiltrados);
+  
       if (comprasFiltrados.length === 0) {
         toast({
           title: "Aviso",
@@ -140,36 +148,38 @@ const PedidosEntrantesPage = () => {
         });
         return;
       }
-
+  
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Pedidos Entrantes");
-
+  
       worksheet.columns = [
         { header: "ID", key: "id", width: 10 },
         { header: "Deudor", key: "nombreDeu", width: 30 },
         { header: "Tienda", key: "nombreTienda", width: 30 },
         { header: "Fecha de Entrega", key: "fechaOrden", width: 20 },
       ];
-
+  
       comprasFiltrados.forEach((item) => {
         worksheet.addRow({
-          codigo: item.codigo,
-          nombre: item.nombre,
-          cantidad: item.cantidad,
+          id: item.id,
+          nombreDeu: item.nombreDeu,
+          nombreTienda: item.nombreTienda,
+          fechaOrden: moment.utc(item.fechaOrden).format("DD/MM/YYYY"),
         });
       });
-
-      // Generar el archivo y descargarlo
+  
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
+  
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = "pedidos_agrupados.xlsx";
       a.click();
       window.URL.revokeObjectURL(url);
+  
     } catch (error) {
       console.error("Error al exportar a Excel:", error);
       toast({
@@ -181,6 +191,7 @@ const PedidosEntrantesPage = () => {
       });
     }
   };
+  
 
   return (
     <Box p={6} boxShadow="xl" bg="white" rounded="lg">
