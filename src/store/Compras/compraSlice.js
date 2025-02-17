@@ -1,5 +1,11 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { fetchCompras, consolidateCompras, updateCompra } from './thunks';
+import { createSlice } from "@reduxjs/toolkit";
+import {
+  fetchCompras,
+  consolidateCompras,
+  updateCompra,
+  asignarProveedor,
+  desasignarProveedor,
+} from "./thunks";
 
 const initialState = {
   data: [],
@@ -8,7 +14,7 @@ const initialState = {
 };
 
 const comprasSlice = createSlice({
-  name: 'compras',
+  name: "compras",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
@@ -24,7 +30,7 @@ const comprasSlice = createSlice({
       })
       .addCase(fetchCompras.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Error al obtener compras';
+        state.error = action.payload || "Error al obtener compras";
       })
 
       // ========== consolidateCompras ==========
@@ -37,7 +43,7 @@ const comprasSlice = createSlice({
       })
       .addCase(consolidateCompras.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Error al consolidar compras';
+        state.error = action.payload || "Error al consolidar compras";
       })
 
       // ========== updateCompra ==========
@@ -56,7 +62,45 @@ const comprasSlice = createSlice({
       })
       .addCase(updateCompra.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Error al actualizar compra';
+        state.error = action.payload || "Error al actualizar compra";
+      })
+      // ========== asignarProveedor ==========
+      .addCase(asignarProveedor.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(asignarProveedor.fulfilled, (state, action) => {
+        state.loading = false;
+        const updated = action.payload;
+        const index = state.data.findIndex((c) => c.id === updated.id);
+        if (index !== -1) {
+          state.data[index] = { ...state.data[index], ...updated };
+        }
+      })
+      .addCase(asignarProveedor.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Error al asignar proveedor";
+      })
+
+      // ========== desasignarProveedor ==========
+      .addCase(desasignarProveedor.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(desasignarProveedor.fulfilled, (state, action) => {
+        state.loading = false;
+        const updated = action.payload;
+        const index = state.data.findIndex((c) => c.id === updated.id);
+        if (index !== -1) {
+          state.data[index] = {
+            ...state.data[index],
+            proveedoresAsignados: updated.proveedoresAsignados, // Solo actualizar proveedores
+          };
+        }
+      })
+      .addCase(desasignarProveedor.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Error al desasignar proveedor";
       });
   },
 });

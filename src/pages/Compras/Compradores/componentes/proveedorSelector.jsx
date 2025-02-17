@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Select from "react-select";
 import { chakra } from "@chakra-ui/react";
+import { createSelector } from "@reduxjs/toolkit";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProveedores } from "../../../../store/Proveedor/thunks"; // Ajusta la ruta según tu estructura
 
@@ -11,10 +12,15 @@ const ProveedorSelector = ({ value, onChange }) => {
   const dispatch = useDispatch();
   const fetchedRef = useRef(false);
   
-  const { data: proveedores, loading } = useSelector((state) => ({
-    data: state.proveedores.data,
-    loading: state.proveedores.loading,
-  }));
+  const selectProveedores = createSelector(
+    (state) => state.proveedores,
+    (proveedores) => ({
+      data: proveedores.data,
+      loading: proveedores.loading,
+    })
+  );
+  
+  const { data: proveedores, loading } = useSelector(selectProveedores);
 
   useEffect(() => {
     if (fetchedRef.current || proveedores.length > 0) return;

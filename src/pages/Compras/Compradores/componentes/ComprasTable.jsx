@@ -166,7 +166,7 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
               <Td>{compra.nombre}</Td>
               <Td>{`${compra.nombreDeu} - ${compra.nombreCorrelativo}`}</Td>
               <Td>{compra.cantidad || 0}</Td>
-              <Td>{compra.pedido_venta || 0}</Td>
+              <Td>{compra.cantidadAsignada || 0}</Td>
               <Td>
                 <Checkbox
                   colorScheme="teal"

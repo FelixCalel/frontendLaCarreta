@@ -1,5 +1,4 @@
 import { Badge, Table, TableContainer, Tbody, Td, Tfoot, Th, Thead, Tr } from '@chakra-ui/react'
-import React from 'react'
 
 export const TableData = () => {
   return (

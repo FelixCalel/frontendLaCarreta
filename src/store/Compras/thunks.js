@@ -46,3 +46,51 @@ export const updateCompra = createAsyncThunk(
     }
   }
 );
+
+export const asignarProveedor = createAsyncThunk(
+  'compras/asignarProveedor',
+  async ({ compraId, proveedorId, cantidad }, { rejectWithValue }) => {
+    try {
+      console.log("Enviando a la API:", {
+        compraId,
+        proveedorId,
+        cantidad
+      });
+
+      const response = await axios.post(`${BASE_URL}/compras/proveedor/asignar`, {
+        compraId,
+        proveedorId,
+        cantidad,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error al asignar proveedor:', error);
+      return rejectWithValue(error.response?.data || 'Error al asignar proveedor');
+    }
+  }
+);
+
+
+export const desasignarProveedor = createAsyncThunk(
+  'compras/desasignarProveedor',
+  async ({ compraId, proveedorId }, { rejectWithValue }) => {
+    try {
+      console.log("Enviando solicitud para desasignar:", {
+        compraId,
+        proveedorId
+      });
+
+      const response = await axios.post(`${BASE_URL}/compras/proveedor/desasignar`, {
+        compraId, 
+        proveedorId,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error al desasignar proveedor:', error);
+      return rejectWithValue(error.response?.data || 'Error al desasignar proveedor');
+    }
+  }
+);
+
