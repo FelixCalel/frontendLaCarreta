@@ -31,23 +31,26 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
   const [cantidadPactada, setCantidadPactada] = useState(0);
   const [fechaIngreso, setFechaIngreso] = useState("");
   const [cantidadFaltante, setCantidadFaltante] = useState(0);
-  const [selectedProveedorId, setSelectedProveedorId] = useState(null);
   const [proveedoresAsignados, setProveedoresAsignados] = useState([]);
+  const [selectedProveedorId, setSelectedProveedorId] = useState(null);
+  const [selectedProveedorName, setSelectedProveedorName] = useState(""); // Agregamos este estado
 
   useEffect(() => {
     if (item) {
-      // Calculamos cuánta cantidad ya está asignada
-      const totalAsignado = item.proveedoresAsignados?.reduce((acc, prov) => acc + prov.cantidad, 0) || 0;
-      
-      // La cantidad faltante no puede ser menor de 0
+      const totalAsignado =
+        item.proveedoresAsignados?.reduce(
+          (acc, prov) => acc + prov.cantidad,
+          0
+        ) || 0;
+
       const faltante = Math.max(0, (item.cantidad || 0) - totalAsignado);
-  
+
       setCantidadFaltante(faltante);
       setFechaIngreso(new Date().toISOString().substr(0, 10));
       setProveedoresAsignados(item.proveedoresAsignados || []);
     }
   }, [item]);
-  
+
   const showErrorToast = (toast, description) => {
     toast({
       title: "Error",
@@ -57,8 +60,7 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
       isClosable: true,
     });
   };
-  
-  
+
   const showSuccessToast = (toast, description) => {
     toast({
       title: "Éxito",
@@ -68,7 +70,6 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
       isClosable: true,
     });
   };
-  
 
   if (!item) return null;
 
@@ -94,21 +95,32 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
   
       showSuccessToast(toast, "Proveedor asignado correctamente.");
   
-      setCantidadFaltante((prev) => prev - cantidadPactada);
-      setProveedoresAsignados((prev) => [
-        ...prev,
-        { proveedorId: selectedProveedorId, nombre: selectedProveedorName, cantidad: cantidadPactada },
-      ]);
+      setProveedoresAsignados((prev) => {
+        const existingIndex = prev.findIndex((p) => p.proveedorId === selectedProveedorId);
+        if (existingIndex !== -1) {
+          const updatedProveedores = [...prev];
+          updatedProveedores[existingIndex].cantidad += cantidadPactada;
+          return updatedProveedores;
+        }
+        return [
+          ...prev,
+          {
+            proveedorId: selectedProveedorId,
+            nombre: selectedProveedorName,
+            cantidad: cantidadPactada,
+          },
+        ];
+      });
   
+      setCantidadFaltante((prev) => prev - cantidadPactada);
       setCantidadPactada(0);
       setSelectedProveedorId(null);
-  
+      setSelectedProveedorName("");
       dispatch(fetchCompras());
     } catch (error) {
       showErrorToast(toast, "No se pudo asignar el proveedor.");
     }
   };
-  
   
 
   const handleDesasignar = async (proveedorId) => {
@@ -116,22 +128,24 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
       await dispatch(
         desasignarProveedor({ compraId: item.id, proveedorId })
       ).unwrap();
-  
+
       showSuccessToast(toast, "Proveedor desasignado correctamente.");
-  
-      const eliminado = proveedoresAsignados.find((p) => p.proveedorId === proveedorId);
+
+      const eliminado = proveedoresAsignados.find(
+        (p) => p.proveedorId === proveedorId
+      );
       const cantidadEliminada = eliminado?.cantidad || 0;
-  
-      setProveedoresAsignados((prev) => prev.filter((p) => p.proveedorId !== proveedorId));
+
+      setProveedoresAsignados((prev) =>
+        prev.filter((p) => p.proveedorId !== proveedorId)
+      );
       setCantidadFaltante((prev) => prev + cantidadEliminada);
-  
+
       dispatch(fetchCompras());
     } catch (error) {
       showErrorToast(toast, "No se pudo desasignar el proveedor.");
     }
   };
-  
-  
 
   const handleClose = () => {
     setCantidadPactada(0);
@@ -159,10 +173,12 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
           <FormControl mb={3}>
             <ProveedorSelector
               value={selectedProveedorId}
-              onChange={setSelectedProveedorId}
+              onChange={(id, name) => {
+                setSelectedProveedorId(id);
+                setSelectedProveedorName(name);
+              }}
             />
           </FormControl>
-
           <FormControl mb={3}>
             <FormLabel>Cantidad pactada</FormLabel>
             <Input

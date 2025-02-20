@@ -49,18 +49,20 @@ export const updateCompra = createAsyncThunk(
 
 export const asignarProveedor = createAsyncThunk(
   'compras/asignarProveedor',
-  async ({ compraId, proveedorId, cantidad }, { rejectWithValue }) => {
+  async ({ compraId, proveedorId, cantidad, selectedProveedorName }, { rejectWithValue }) => {
     try {
       console.log("Enviando a la API:", {
         compraId,
         proveedorId,
-        cantidad
+        cantidad,
+        selectedProveedorName
       });
 
       const response = await axios.post(`${BASE_URL}/compras/proveedor/asignar`, {
         compraId,
         proveedorId,
         cantidad,
+        selectedProveedorName,
       });
 
       return response.data;

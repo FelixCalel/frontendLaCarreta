@@ -41,7 +41,13 @@ const ProveedorSelector = ({ value, onChange }) => {
       isLoading={loading}
       options={options}
       value={selectedOption}
-      onChange={(selected) => onChange(selected ? selected.value : null)}
+      onChange={(selected) => {
+        if (selected) {
+          onChange(selected.value, selected.label);
+        } else {
+          onChange(null, "");
+        }
+      }}
       isClearable
       menuPlacement="auto"
       menuPosition="fixed"
