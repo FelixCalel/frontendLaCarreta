@@ -32,115 +32,132 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
   const [cantidadFaltante, setCantidadFaltante] = useState(0);
   const [selectedProveedorId, setSelectedProveedorId] = useState(null);
   const [proveedoresAsignados, setProveedoresAsignados] = useState([]);
-  const [cantidadTotalAsignada, setCantidadTotalAsignada] = useState(0);
 
   useEffect(() => {
     if (item) {
-      const totalAsignado = item.proveedoresAsignados?.reduce((sum, p) => sum + p.cantidad, 0) || 0;
-      setCantidadFaltante(item.cantidad - totalAsignado);
-      setCantidadTotalAsignada(totalAsignado);
+      // Calculamos cuánta cantidad ya está asignada
+      const totalAsignado = item.proveedoresAsignados?.reduce((acc, prov) => acc + prov.cantidad, 0) || 0;
+      
+      // La cantidad faltante no puede ser menor de 0
+      const faltante = Math.max(0, (item.cantidad || 0) - totalAsignado);
+  
+      setCantidadFaltante(faltante);
       setFechaIngreso(new Date().toISOString().substr(0, 10));
       setProveedoresAsignados(item.proveedoresAsignados || []);
     }
   }, [item]);
+  
+  const showErrorToast = (toast, description) => {
+    toast({
+      title: "Error",
+      description,
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+  
+  
+  const showSuccessToast = (toast, description) => {
+    toast({
+      title: "Éxito",
+      description,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+  
 
   if (!item) return null;
 
   const handleGuardar = async () => {
-    if (!selectedProveedorId || cantidadPactada <= 0 || cantidadPactada > cantidadFaltante) {
-      toast({
-        title: "Error",
-        description: "Debe seleccionar un proveedor y asignar una cantidad válida.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+    if (!selectedProveedorId || cantidadPactada <= 0) {
+      showErrorToast("Debes seleccionar un proveedor y asignar una cantidad válida.");
       return;
     }
-
+  
+    if (cantidadPactada > cantidadFaltante) {
+      showErrorToast("La cantidad pactada excede la cantidad faltante.");
+      return;
+    }
+  
     try {
-      await dispatch(
-        asignarProveedor({
-          compraId: item.id,
-          proveedorId: selectedProveedorId,
-          cantidad: cantidadPactada,
-        })
-      ).unwrap();
-
-      toast({
-        title: "Éxito",
-        description: "Proveedor asignado correctamente.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-
-      setCantidadFaltante((prev) => prev - cantidadPactada);
-      setCantidadTotalAsignada((prev) => prev + cantidadPactada);
-      setProveedoresAsignados((prev) => [
+      await dispatch(asignarProveedor({
+        compraId: item.id,
+        proveedorId: selectedProveedorId,
+        cantidad: cantidadPactada,
+      })).unwrap();
+  
+      showSuccessToast("Proveedor asignado correctamente.");
+  
+      // Actualiza la cantidad faltante localmente
+      setCantidadFaltante(prev => Math.max(0, prev - cantidadPactada));
+  
+      // Agrega al proveedor asignado en la lista sin recargar
+      setProveedoresAsignados(prev => [
         ...prev,
-        { proveedorId: selectedProveedorId, nombre: "Proveedor", cantidad: cantidadPactada },
+        { proveedorId: selectedProveedorId, cantidad: cantidadPactada },
       ]);
-
+  
+      // Resetea campos
       setCantidadPactada(0);
       setSelectedProveedorId(null);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo asignar el proveedor.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      showErrorToast("No se pudo asignar el proveedor.");
     }
   };
+  
 
   const handleDesasignar = async (proveedorId) => {
     try {
       await dispatch(
-        desasignarProveedor({
-          compraId: item.id,
-          proveedorId,
-        })
+        desasignarProveedor({ compraId: item.id, proveedorId })
       ).unwrap();
-
-      toast({
-        title: "Éxito",
-        description: "Proveedor desasignado correctamente.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-
-      const proveedorEliminado = proveedoresAsignados.find(p => p.proveedorId === proveedorId);
-      setCantidadFaltante((prev) => prev + (proveedorEliminado?.cantidad || 0));
-      setCantidadTotalAsignada((prev) => prev - (proveedorEliminado?.cantidad || 0));
-      setProveedoresAsignados((prev) => prev.filter((p) => p.proveedorId !== proveedorId));
+  
+      showSuccessToast("Proveedor desasignado correctamente.");
+  
+      // Recuperamos la cantidad eliminada
+      const eliminado = proveedoresAsignados.find(p => p.proveedorId === proveedorId);
+      const cantidadEliminada = eliminado?.cantidad || 0;
+  
+      // Actualizamos estado local
+      setProveedoresAsignados(prev => prev.filter(p => p.proveedorId !== proveedorId));
+      setCantidadFaltante(prev => prev + cantidadEliminada);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo desasignar el proveedor.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      showErrorToast("No se pudo desasignar el proveedor.");
     }
+  };
+  
+
+  const handleClose = () => {
+    setCantidadPactada(0);
+    setSelectedProveedorId(null);
+    onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg" motionPreset="slideInBottom">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      motionPreset="slideInBottom"
+    >
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Registrar Proveedor</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Text fontWeight="bold" mb={2}>{item.codigo} - {item.nombre}</Text>
-          <Text mb={2}>Cantidad solicitada: <b>{item.cantidad || 0}</b></Text>
-          <Text mb={2}>Cantidad total asignada: <b>{cantidadTotalAsignada}</b></Text>
-          <Text mb={2}>Cantidad faltante: <b>{cantidadFaltante}</b></Text>
+          <Text fontWeight="bold" mb={1}>
+            Item: {item.codigo} - {item.nombre}
+          </Text>
+          <Text mb={3}>Cantidad solicitada: {item.cantidad || 0}</Text>
 
           <FormControl mb={3}>
-            <ProveedorSelector value={selectedProveedorId} onChange={setSelectedProveedorId} />
+            <ProveedorSelector
+              value={selectedProveedorId}
+              onChange={setSelectedProveedorId}
+            />
           </FormControl>
 
           <FormControl mb={3}>
@@ -154,12 +171,34 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
             />
           </FormControl>
 
-          <Text fontWeight="bold" mt={4}>Proveedores asignados:</Text>
+          <Text fontWeight="semibold">
+            Cantidad faltante: {cantidadFaltante}
+          </Text>
+
+          {/* Lista de proveedores asignados */}
+          <Text fontWeight="bold" mt={4}>
+            Proveedores asignados:
+          </Text>
           {proveedoresAsignados.length > 0 ? (
             proveedoresAsignados.map((prov) => (
-              <Flex key={prov.proveedorId} justify="space-between" p={2} bg="gray.100" borderRadius="md" mt={2}>
-                <Text>{prov.nombre}: {prov.cantidad}</Text>
-                <Button colorScheme="red" size="xs" onClick={() => handleDesasignar(prov.proveedorId)}>Eliminar</Button>
+              <Flex
+                key={prov.proveedorId}
+                justify="space-between"
+                p={2}
+                bg="gray.100"
+                borderRadius="md"
+                mt={2}
+              >
+                <Text>
+                  {prov.nombre}: {prov.cantidad}
+                </Text>
+                <Button
+                  colorScheme="red"
+                  size="xs"
+                  onClick={() => handleDesasignar(prov.proveedorId)}
+                >
+                  Eliminar
+                </Button>
               </Flex>
             ))
           ) : (
@@ -168,14 +207,25 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
         </ModalBody>
 
         <ModalFooter>
-          <Button colorScheme="blue" onClick={handleGuardar} mr={3}>Guardar</Button>
-          <Button variant="ghost" onClick={onClose}>Cerrar</Button>
+          <Button colorScheme="blue" onClick={handleGuardar} mr={3}>
+            Guardar
+          </Button>
+          <Button variant="ghost" onClick={handleClose}>
+            Cerrar
+          </Button>
         </ModalFooter>
+        <FormControl mb={3}>
+          <FormLabel>Fecha de ingreso</FormLabel>
+          <Input
+            type="date"
+            value={fechaIngreso}
+            onChange={(e) => setFechaIngreso(e.target.value)}
+          />
+        </FormControl>
       </ModalContent>
     </Modal>
   );
 };
-
 
 RegistrarProveedorModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

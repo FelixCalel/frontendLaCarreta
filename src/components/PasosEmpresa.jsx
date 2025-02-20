@@ -69,6 +69,7 @@ export const PasosEmpresa = () => {
     actions.setTouched({});
     actions.setSubmitting(false);
   };
+  
 
   const handlePrevStep = () => {
     setActiveStep((currentStep) => currentStep - 1);
