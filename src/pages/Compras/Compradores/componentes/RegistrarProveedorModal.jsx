@@ -21,6 +21,7 @@ import { useDispatch } from "react-redux";
 import {
   asignarProveedor,
   desasignarProveedor,
+  fetchCompras,
 } from "../../../../store/Compras/thunks";
 
 const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
@@ -73,40 +74,41 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
 
   const handleGuardar = async () => {
     if (!selectedProveedorId || cantidadPactada <= 0) {
-      showErrorToast("Debes seleccionar un proveedor y asignar una cantidad válida.");
+      showErrorToast(toast, "Debes seleccionar un proveedor y asignar una cantidad válida.");
       return;
     }
   
     if (cantidadPactada > cantidadFaltante) {
-      showErrorToast("La cantidad pactada excede la cantidad faltante.");
+      showErrorToast(toast, "La cantidad pactada excede la cantidad faltante.");
       return;
     }
   
     try {
-      await dispatch(asignarProveedor({
-        compraId: item.id,
-        proveedorId: selectedProveedorId,
-        cantidad: cantidadPactada,
-      })).unwrap();
+      await dispatch(
+        asignarProveedor({
+          compraId: item.id,
+          proveedorId: selectedProveedorId,
+          cantidad: cantidadPactada,
+        })
+      ).unwrap();
   
-      showSuccessToast("Proveedor asignado correctamente.");
+      showSuccessToast(toast, "Proveedor asignado correctamente.");
   
-      // Actualiza la cantidad faltante localmente
-      setCantidadFaltante(prev => Math.max(0, prev - cantidadPactada));
-  
-      // Agrega al proveedor asignado en la lista sin recargar
-      setProveedoresAsignados(prev => [
+      setCantidadFaltante((prev) => prev - cantidadPactada);
+      setProveedoresAsignados((prev) => [
         ...prev,
-        { proveedorId: selectedProveedorId, cantidad: cantidadPactada },
+        { proveedorId: selectedProveedorId, nombre: selectedProveedorName, cantidad: cantidadPactada },
       ]);
   
-      // Resetea campos
       setCantidadPactada(0);
       setSelectedProveedorId(null);
+  
+      dispatch(fetchCompras());
     } catch (error) {
-      showErrorToast("No se pudo asignar el proveedor.");
+      showErrorToast(toast, "No se pudo asignar el proveedor.");
     }
   };
+  
   
 
   const handleDesasignar = async (proveedorId) => {
@@ -115,19 +117,20 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
         desasignarProveedor({ compraId: item.id, proveedorId })
       ).unwrap();
   
-      showSuccessToast("Proveedor desasignado correctamente.");
+      showSuccessToast(toast, "Proveedor desasignado correctamente.");
   
-      // Recuperamos la cantidad eliminada
-      const eliminado = proveedoresAsignados.find(p => p.proveedorId === proveedorId);
+      const eliminado = proveedoresAsignados.find((p) => p.proveedorId === proveedorId);
       const cantidadEliminada = eliminado?.cantidad || 0;
   
-      // Actualizamos estado local
-      setProveedoresAsignados(prev => prev.filter(p => p.proveedorId !== proveedorId));
-      setCantidadFaltante(prev => prev + cantidadEliminada);
+      setProveedoresAsignados((prev) => prev.filter((p) => p.proveedorId !== proveedorId));
+      setCantidadFaltante((prev) => prev + cantidadEliminada);
+  
+      dispatch(fetchCompras());
     } catch (error) {
-      showErrorToast("No se pudo desasignar el proveedor.");
+      showErrorToast(toast, "No se pudo desasignar el proveedor.");
     }
   };
+  
   
 
   const handleClose = () => {
@@ -175,7 +178,6 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
             Cantidad faltante: {cantidadFaltante}
           </Text>
 
-          {/* Lista de proveedores asignados */}
           <Text fontWeight="bold" mt={4}>
             Proveedores asignados:
           </Text>
