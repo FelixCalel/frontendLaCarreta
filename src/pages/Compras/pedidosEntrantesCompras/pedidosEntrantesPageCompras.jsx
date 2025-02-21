@@ -67,7 +67,6 @@ const PedidosEntrantesPage = () => {
     console.log("Filtrando con:", filtros); 
     console.log("Fecha en backend:", compras.fecha); 
   
-    // Convertimos ambas fechas a solo "YYYY-MM-DD"
     const fechaCompra = moment.utc(compras.fecha).format("YYYY-MM-DD");
     const fechaFiltro = moment.utc(filtros.fecha, "YYYY-MM-DD").format("YYYY-MM-DD");
   
@@ -84,10 +83,8 @@ const PedidosEntrantesPage = () => {
   });
   
 
-  // **Agrupar los items de los pedidos filtrados por deudor**
   const itemsAgrupadosPorDeudor = {};
   comprasFiltradas.forEach((compras) => {
-    // Asume que tienes un 'deudorNombre' o algo similar
     const deudor =
       compras.deudorNombre || `${compras.nombreDeu} - ${compras.nombreCorrelativo}`;
     if (!itemsAgrupadosPorDeudor[deudor]) {
@@ -99,6 +96,7 @@ const PedidosEntrantesPage = () => {
       nombre: compras.nombre,
       cantidad: compras.cantidad,
       pedido_venta: compras.pedido_venta,
+      cantidadAsignada: compras.cantidadAsignada,
     });
   });
 
@@ -192,7 +190,6 @@ const PedidosEntrantesPage = () => {
     }
   };
   
-
   return (
     <Box p={6} boxShadow="xl" bg="white" rounded="lg">
       <Heading mb={4}>Pedidos Entrantes Compras</Heading>

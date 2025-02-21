@@ -11,7 +11,7 @@ const ChakraReactSelect = chakra(Select);
 const ProveedorSelector = ({ value, onChange }) => {
   const dispatch = useDispatch();
   const fetchedRef = useRef(false);
-  
+
   const selectProveedores = createSelector(
     (state) => state.proveedores,
     (proveedores) => ({
@@ -19,7 +19,7 @@ const ProveedorSelector = ({ value, onChange }) => {
       loading: proveedores.loading,
     })
   );
-  
+
   const { data: proveedores, loading } = useSelector(selectProveedores);
 
   useEffect(() => {
@@ -37,7 +37,9 @@ const ProveedorSelector = ({ value, onChange }) => {
 
   return (
     <ChakraReactSelect
-      placeholder={loading ? "Cargando proveedores..." : "Seleccionar proveedor"}
+      placeholder={
+        loading ? "Cargando proveedores..." : "Seleccionar proveedor"
+      }
       isLoading={loading}
       options={options}
       value={selectedOption}

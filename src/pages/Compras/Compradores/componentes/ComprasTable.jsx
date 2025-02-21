@@ -30,12 +30,15 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
   const { loading } = useSelector((state) => state.compras);
 
   const handleSelectAll = () => {
-    setSelectedAll(!selectedAll);
     if (!selectedAll) {
-      setSelectedItems(compras.map((c) => c.id));
+      const itemsSinProveedor = compras
+        .filter(c => !c.proveedorId)
+        .map(c => c.id);
+      setSelectedItems(itemsSinProveedor);
     } else {
       setSelectedItems([]);
     }
+    setSelectedAll(!selectedAll);
   };
 
   const handleCheckboxChange = (id) => {
@@ -47,10 +50,10 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
   };
 
   const handleAssignProveedor = async () => {
-    if (!selectedProveedorId || selectedItems.length === 0) {
+    if (selectedItems.length === 0) {
       toast({
         title: "Datos incompletos",
-        description: "Selecciona al menos un ítem y un proveedor",
+        description: "Selecciona al menos un ítem",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -59,6 +62,7 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
     }
 
     try {
+
       await Promise.all(
         selectedItems.map((id) =>
           dispatch(
@@ -76,17 +80,19 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
       setSelectedAll(false);
 
       toast({
-        title: "Actualización exitosa",
-        description: "Proveedores asignados correctamente",
+        title: "Operación exitosa",
+        description: selectedProveedorId
+          ? "Proveedores asignados correctamente"
+          : "Proveedores removidos correctamente",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error en asignación:", error);
+      console.error("Error en operación:", error);
       toast({
         title: "Error al actualizar",
-        description: "Ocurrió un error al asignar los proveedores",
+        description: "Ocurrió un error en la operación",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -118,25 +124,29 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
               {selectedAll ? "Deseleccionar todos" : "Seleccionar todos"}
             </Button>
           </Tooltip>
-
           <Tooltip
-            label="Asigna un proveedor a los items seleccionados"
+            label={
+              selectedProveedorId
+                ? "Asigna un proveedor a los items seleccionados"
+                : "Remueve el proveedor de los items seleccionados"
+            }
             fontSize="sm"
           >
             <Button
               size="sm"
-              colorScheme="green"
+              colorScheme={selectedProveedorId ? "green" : "red"}
               leftIcon={<FaUserCheck />}
               onClick={handleAssignProveedor}
               isLoading={loading}
-              disabled={!selectedProveedorId || selectedItems.length === 0}
+              disabled={selectedItems.length === 0}
             >
-              Asignar proveedor a seleccionados
+              {selectedProveedorId
+                ? "Asignar proveedor a seleccionados"
+                : "Quitar proveedor de seleccionados"}
             </Button>
           </Tooltip>
         </Stack>
       </Box>
-
       <Table variant="striped" colorScheme="gray">
         <Thead bg={bgHeader}>
           <Tr>
@@ -152,7 +162,7 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
           </Tr>
         </Thead>
         <Tbody>
-        {sortedCompras.map((compra) => (
+          {sortedCompras.map((compra) => (
             <Tr
               key={compra.id}
               _hover={{
