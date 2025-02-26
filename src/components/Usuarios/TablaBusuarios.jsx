@@ -24,6 +24,7 @@ import {
   ModalFooter,
   IconButton,
   Switch,
+  useColorModeValue, // Importar este hook
 } from "@chakra-ui/react";
 import { FiUserPlus, FiSearch } from "react-icons/fi";
 import axios from "axios";
@@ -134,11 +135,11 @@ export const TablaBusuarios = () => {
         });
         return;
       }
-  
+
       await axios.post(`${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`, {
         rutaId: selectedRoutes,
       });
-  
+
       // Elimina rutas duplicadas al asignar
       setUsuarios((prevUsuarios) =>
         prevUsuarios.map((usuario) =>
@@ -152,14 +153,14 @@ export const TablaBusuarios = () => {
             : usuario
         )
       );
-  
+
       toast({
         title: "Rutas asignadas correctamente",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-  
+
       onClose();
     } catch (error) {
       console.error("Error al asignar rutas:", error);
@@ -171,7 +172,6 @@ export const TablaBusuarios = () => {
       });
     }
   };
-  
 
   const fetchCiudadesYPaises = async () => {
     try {
@@ -229,10 +229,21 @@ export const TablaBusuarios = () => {
     onOpen();
   };
 
+  // Definimos colores adaptables
+  const headingColor = useColorModeValue("green.600", "green.200");
+  const containerBg = useColorModeValue("white", "gray.800");
+  const tableHeaderBg = useColorModeValue("green.100", "green.700");
+  const tableHeaderColor = useColorModeValue("green.700", "white");
+  const rowHoverBg = useColorModeValue("green.50", "green.900");
+  const inputBg = useColorModeValue("white", "gray.900");
+  const inputPlaceholderColor = useColorModeValue("gray.400", "gray.500");
+  const modalHeaderColor = useColorModeValue("green.600", "green.200");
+
   return (
     <>
-      <Flex justify="space-between" align="center" mb={4}>
-        <Heading size="lg" color="green.600">
+      {/* Encabezado + Buscador */}
+      <Flex justify="space-between" align="center" mb={0} p={8}>
+        <Heading size="lg" color={headingColor}>
           Lista de Usuarios
         </Heading>
         <Flex maxWidth="300px">
@@ -241,9 +252,9 @@ export const TablaBusuarios = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             borderRadius="full"
-            bg="white"
+            bg={inputBg}
             boxShadow="sm"
-            _placeholder={{ color: "gray.400" }}
+            _placeholder={{ color: inputPlaceholderColor }}
           />
           <IconButton
             aria-label="Buscar"
@@ -254,37 +265,40 @@ export const TablaBusuarios = () => {
         </Flex>
       </Flex>
 
-      <Box borderRadius="md" boxShadow="lg" p={4} bg="white">
+      {/* Contenedor de la tabla */}
+      <Box borderRadius="md" boxShadow="lg" p={8} bg={containerBg} mt={-8}>
         <Table variant="simple">
-          <Thead bg="green.100">
+          <Thead bg={tableHeaderBg}>
             <Tr>
-              <Th color="green.700">Nombre</Th>
-              <Th color="green.700">Correo</Th>
-              <Th color="green.700">Estado</Th>
-              <Th color="green.700">Teléfono</Th>
-              <Th color="green.700">Acciones</Th>
+              <Th color={tableHeaderColor}>Nombre</Th>
+              <Th color={tableHeaderColor}>Correo</Th>
+              <Th color={tableHeaderColor}>Estado</Th>
+              <Th color={tableHeaderColor}>Teléfono</Th>
+              <Th color={tableHeaderColor}>Acciones</Th>
             </Tr>
           </Thead>
           <Tbody>
             {usuarios
               .filter((usuario) =>
-                usuario.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+                usuario.nombre
+                  .toLowerCase()
+                  .includes(searchTerm.toLowerCase())
               )
               .map((usuario) => (
-                <Tr key={usuario.id} _hover={{ bg: "green.50" }}>
+                <Tr key={usuario.id} _hover={{ bg: rowHoverBg }}>
                   <Td>
                     {usuario.nombre} {usuario.apellido}
                   </Td>
                   <Td>{usuario.correo}</Td>
                   <Td>
-                      <Switch
-                        isChecked={usuario.estaActivo}
-                        onChange={() =>
-                          toggleUsuarioEstado(usuario.id, usuario.estaActivo)
-                        }
-                        colorScheme="green"
-                      />
-                    </Td>
+                    <Switch
+                      isChecked={usuario.estaActivo}
+                      onChange={() =>
+                        toggleUsuarioEstado(usuario.id, usuario.estaActivo)
+                      }
+                      colorScheme="green"
+                    />
+                  </Td>
                   <Td>{usuario.telefono}</Td>
                   <Td>
                     <Stack align="center" direction="row">
@@ -306,10 +320,11 @@ export const TablaBusuarios = () => {
         </Table>
       </Box>
 
+      {/* Modal para asignar rutas */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader color="green.600">Asignar Rutas</ModalHeader>
+          <ModalHeader color={modalHeaderColor}>Asignar Rutas</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Text mb={4}>Asignar rutas al usuario ID: {selectedUser}</Text>
@@ -321,10 +336,7 @@ export const TablaBusuarios = () => {
             />
           </ModalBody>
           <ModalFooter>
-            <Button
-              colorScheme="green"
-              onClick={() => asignarRutas(selectedUser)}
-            >
+            <Button colorScheme="green" onClick={() => asignarRutas(selectedUser)}>
               Asignar
             </Button>
             <Button variant="ghost" onClick={onClose}>

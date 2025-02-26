@@ -276,7 +276,7 @@ const PageFormPedidos = () => {
   );
 
   return (
-    <Box mt={-8} p={-4}>
+    <Box mt={0} p={8}>
       <HeaderButtons onOpen={onOpen} />
 
       <PedidosTable

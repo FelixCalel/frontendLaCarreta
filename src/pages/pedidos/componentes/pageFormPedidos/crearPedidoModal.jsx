@@ -168,7 +168,7 @@ const PedidoModal = ({
                     <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
                       <HStack>
                         <Icon as={FaStoreAlt} color="teal.500" />
-                        <Text>Todas las tiendas</Text>
+                        <Text>Tiendas NO asignadas</Text>
                       </HStack>
                     </FormLabel>
                     <TiendaSelector

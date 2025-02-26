@@ -7,6 +7,7 @@ import {
   Text,
   IconButton,
   HStack,
+  useColorModeValue
 } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
 import { useSelector, useDispatch } from "react-redux";
@@ -23,8 +24,12 @@ const ProductoSelector = ({ onSelect, reset }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [error, setError] = useState("");
-
   const items = useSelector((state) => state.items.items);
+
+  // Colores para modo claro/oscuro
+  const listBg = useColorModeValue("white", "gray.800");
+  const listBorderColor = useColorModeValue("gray.200", "gray.600");
+  const itemHoverBg = useColorModeValue("gray.100", "gray.600");
 
   // Carga inicial de los items
   useEffect(() => {
@@ -35,14 +40,7 @@ const ProductoSelector = ({ onSelect, reset }) => {
   const handleSelectItem = (item) => {
     setInputValue(`${item.codigo} - ${item.nombre}`);
     setSelectedItem(item);
-
-    // Callback para enviar el item seleccionado al componente padre
-    onSelect(
-      item.id,
-      item.nombre,
-      item.cantidadDisponible,
-      item.codigo
-    );
+    onSelect(item.id, item.nombre, item.cantidadDisponible, item.codigo);
 
     // Muestra error si la cantidad disponible es cero
     if (item.cantidadDisponible === 0) {
@@ -74,9 +72,17 @@ const ProductoSelector = ({ onSelect, reset }) => {
   return (
     <Flex pt="2" justify="start" align="center" w="full" flexDir="column">
       <FormControl>
-        {/* Contenedor horizontal para el campo de texto y el botón de limpiar */}
-        <HStack spacing={2} w="100%" maxW="300px" align="center">
-          <Box flex="1">
+        {/*
+          1) Quitar maxW="300px" en móvil.
+          2) position="relative" en un contenedor lo suficientemente grande
+        */}
+        <HStack
+          spacing={2}
+          w="full"
+          align="center"
+          position="relative"
+        >
+          <Box flex="1" position="relative">
             <AutoComplete openOnFocus>
               <AutoCompleteInput
                 variant="outline"
@@ -84,18 +90,42 @@ const ProductoSelector = ({ onSelect, reset }) => {
                 value={inputValue}
                 onChange={handleInputChange}
                 size="sm"
-                zIndex="1000"
-                w="100%" // Ajusta el ancho del input aquí
+                w="full"
               />
-              <AutoCompleteList zIndex="1000">
+              <AutoCompleteList
+                // 2) Ajustar posición absoluta con top y ancho total
+                position="absolute"
+                top="100%"
+                left="0"
+                right="0"
+                zIndex="popover"
+                bg={listBg}
+                borderColor={listBorderColor}
+                borderWidth="1px"
+                borderRadius="md"
+                boxShadow="md"
+                // 3) Dar un maxHeight grande y scroll
+                maxHeight="60vh"
+                overflowY="auto"
+                // Si el modal no es muy alto, podrías usar:
+                // maxHeight="calc(100vh - 100px)"
+              >
                 {items.map((item) => (
                   <AutoCompleteItem
                     key={`option-${item.id}`}
                     value={`${item.codigo} - ${item.nombre}`}
                     textTransform="capitalize"
                     onClick={() => handleSelectItem(item)}
+                    _hover={{ bg: itemHoverBg }}
+                    // Permitir salto de línea
+                    sx={{
+                      whiteSpace: "normal",
+                      overflowWrap: "break-word",
+                    }}
                   >
-                    {`${item.codigo} - ${item.nombre}`}
+                    <Text noOfLines={2} fontSize="sm">
+                      {`${item.codigo} - ${item.nombre}`}
+                    </Text>
                   </AutoCompleteItem>
                 ))}
               </AutoCompleteList>
@@ -112,7 +142,6 @@ const ProductoSelector = ({ onSelect, reset }) => {
         </HStack>
       </FormControl>
 
-      {/* Mensaje de error y detalles del producto seleccionado */}
       {selectedItem && (
         <FormControl mt="4">
           {error && <Text color="red.500">{error}</Text>}

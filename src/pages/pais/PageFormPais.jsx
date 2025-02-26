@@ -122,7 +122,7 @@ const PageFormPais = () => {
   }
 
   return (
-    <Box padding="0px" marginTop="-25">
+    <Box padding="0px" marginTop="0">
       <Flex justify="space-between" mb="20px" alignItems="center">
         <Text fontSize="2xl" fontWeight="bold" color="green.600">
           Gestión de Países

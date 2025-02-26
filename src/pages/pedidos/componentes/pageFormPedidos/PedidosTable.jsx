@@ -1,6 +1,6 @@
 // PedidosTable.jsx
 
-import React from 'react';
+import React from "react";
 import PropTypes from "prop-types"; // Importa PropTypes
 import {
   VStack,
@@ -18,10 +18,10 @@ import {
   Th,
   Td,
   Button,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { DeleteIcon, ChevronDownIcon, ChevronUpIcon } from "@chakra-ui/icons";
 import ProductosTable from "../detallesPedidosTable";
-
 
 const PedidosTable = ({
   pedidosUsuario,
@@ -31,21 +31,27 @@ const PedidosTable = ({
   handleDeletePedido,
   showRealizarPedidoConfirmation,
 }) => {
-  const pedidosTableContent = isMobile ? ( 
+  const containerBg = useColorModeValue("white", "gray.800");
+  // Colores para el contenedor (cajas en móvil) y la tabla
+  const boxBg = useColorModeValue("white", "gray.800"); // fondo en modo claro/oscuro
+  const boxBorderColor = useColorModeValue("gray.200", "gray.600");
+  const tableBg = useColorModeValue("white", "gray.800"); // fondo de la tabla en desktop
+  const theadBg = useColorModeValue("gray.100", "gray.700"); // encabezado de la tabla
+  const pedidosTableContent = isMobile ? (
     <VStack spacing={4} align="stretch">
       {pedidosUsuario.map((pedido) => (
         <Box
           key={pedido.id}
-          p={3}
+          p={4}
           borderWidth="1px"
-          borderColor="gray.200"
+          borderColor={boxBorderColor}
           rounded="md"
-          bg="white"
+          bg={boxBg}
           _hover={{
             boxShadow: "md",
             transition: "0.2s",
           }}
-        >    
+        >
           <Stack direction="row" justifyContent="space-between">
             <Text fontWeight="bold">Pedido ID: {pedido.id}</Text>
             <Badge colorScheme={pedido.estadoId === 1 ? "green" : "gray"}>
@@ -56,7 +62,7 @@ const PedidosTable = ({
             <strong>Ciudad:</strong> {pedido.nombreCiudad || "N/A"}
           </Text>
           {/* <Text> */}
-            {/* <strong>Deudor:</strong> {pedido.nombreCorrelativo} -{" "}
+          {/* <strong>Deudor:</strong> {pedido.nombreCorrelativo} -{" "}
             {pedido.nombreDeu || "N/A"}
           </Text>
           <Text>
@@ -72,7 +78,13 @@ const PedidosTable = ({
                     <ChevronDownIcon />
                   )
                 }
-                onClick={() => handleToggleDetails(pedido.id, pedido.deudorId, pedido.tiendaId)}
+                onClick={() =>
+                  handleToggleDetails(
+                    pedido.id,
+                    pedido.deudorId,
+                    pedido.tiendaId
+                  )
+                }
                 colorScheme="blue"
                 size="sm"
               />
@@ -96,10 +108,10 @@ const PedidosTable = ({
           </HStack>
           {isDetailsOpen === pedido.id && (
             <Box mt={2}>
-              <ProductosTable 
-                pedidoId={pedido.id} 
-                deudorId={pedido.deudorId} 
-                tiendaId={pedido.tiendaId} 
+              <ProductosTable
+                pedidoId={pedido.id}
+                deudorId={pedido.deudorId}
+                tiendaId={pedido.tiendaId}
               />
             </Box>
           )}
@@ -107,8 +119,8 @@ const PedidosTable = ({
       ))}
     </VStack>
   ) : (
-    <Table variant="simple">
-      <Thead>
+    <Table variant="simple" bg={tableBg}>
+      <Thead bg={tableBg}>
         <Tr>
           <Th>ID</Th>
           <Th>Ciudad</Th>
@@ -131,12 +143,20 @@ const PedidosTable = ({
                 <HStack spacing={3}>
                   <Tooltip label="Ver Detalles" hasArrow>
                     <IconButton
-                      icon={isDetailsOpen === pedido.id ? (
-                        <ChevronUpIcon />
-                      ) : (
-                        <ChevronDownIcon />
-                      )}
-                      onClick={() => handleToggleDetails(pedido.id, pedido.deudorId, pedido.tiendaId)}
+                      icon={
+                        isDetailsOpen === pedido.id ? (
+                          <ChevronUpIcon />
+                        ) : (
+                          <ChevronDownIcon />
+                        )
+                      }
+                      onClick={() =>
+                        handleToggleDetails(
+                          pedido.id,
+                          pedido.deudorId,
+                          pedido.tiendaId
+                        )
+                      }
                       colorScheme="blue"
                       size="sm"
                     />
@@ -177,7 +197,13 @@ const PedidosTable = ({
     </Table>
   );
 
-  return pedidosUsuario.length > 0 ? pedidosTableContent : <Text>No hay pedidos disponibles</Text>;
+  return pedidosUsuario.length > 0 ? (
+    pedidosTableContent
+  ) : (
+    <Text color={useColorModeValue("gray.600", "gray.300")}>
+      No hay pedidos disponibles
+    </Text>
+  );
 };
 
 PedidosTable.propTypes = {
@@ -189,12 +215,12 @@ PedidosTable.propTypes = {
       nombreDeu: PropTypes.string,
       nombreTienda: PropTypes.string,
       estadoId: PropTypes.number.isRequired,
-      deudorId: PropTypes.number.isRequired, 
+      deudorId: PropTypes.number.isRequired,
       tiendaId: PropTypes.number.isRequired,
     })
   ).isRequired,
   isMobile: PropTypes.bool.isRequired,
-  isDetailsOpen: PropTypes.number,  
+  isDetailsOpen: PropTypes.number,
   handleToggleDetails: PropTypes.func.isRequired,
   handleDeletePedido: PropTypes.func.isRequired,
   showRealizarPedidoConfirmation: PropTypes.func.isRequired,
