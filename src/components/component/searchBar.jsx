@@ -8,6 +8,7 @@ import {
   Box,
   List,
   ListItem,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { FiSearch } from "react-icons/fi";
 import PropTypes from "prop-types";
@@ -21,12 +22,20 @@ const SearchBar = ({ placeholder, onSearch, suggestions, onSuggestionClick }) =>
     }
   };
 
+  // Colores dinámicos según modo claro/oscuro
+  const inputBg = useColorModeValue("white", "gray.800");
+  const inputColor = useColorModeValue("gray.800", "white");
+  const iconColor = useColorModeValue("gray.500", "gray.400");
+  const suggestionsBg = useColorModeValue("white", "gray.700");
+  const suggestionsHoverBg = useColorModeValue("blue.50", "blue.800");
+  const focusBorderColor = useColorModeValue("blue.500", "blue.200");
+
   return (
     <Box position="relative" width="100%">
       <Flex>
         <InputGroup>
           <InputLeftElement pointerEvents="none">
-            <FiSearch color="gray.500" />
+            <FiSearch color={iconColor} />
           </InputLeftElement>
           <Input
             type="text"
@@ -34,12 +43,14 @@ const SearchBar = ({ placeholder, onSearch, suggestions, onSuggestionClick }) =>
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyPress}
-            focusBorderColor="blue.500"
-            bg="white"
+            focusBorderColor={focusBorderColor}
+            bg={inputBg}
+            color={inputColor}
             borderRadius="full"
             boxShadow="sm"
           />
         </InputGroup>
+
         <IconButton
           aria-label="Buscar"
           icon={<FiSearch />}
@@ -49,13 +60,14 @@ const SearchBar = ({ placeholder, onSearch, suggestions, onSuggestionClick }) =>
           onClick={() => onSearch(query.trim())}
         />
       </Flex>
+
       {/* Sugerencias dinámicas */}
       {suggestions && suggestions.length > 0 && (
         <Box
           position="absolute"
           top="100%"
           width="100%"
-          bg="white"
+          bg={suggestionsBg}
           borderRadius="md"
           boxShadow="md"
           zIndex="1000"
@@ -68,7 +80,7 @@ const SearchBar = ({ placeholder, onSearch, suggestions, onSuggestionClick }) =>
                 key={item.id}
                 p={2}
                 cursor="pointer"
-                _hover={{ bg: "blue.50" }}
+                _hover={{ bg: suggestionsHoverBg }}
                 onClick={() => onSuggestionClick(item)}
               >
                 {item.nombre} - {item.correlativo}

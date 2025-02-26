@@ -7,12 +7,15 @@ import {
   HStack,
   Tooltip,
   useDisclosure,
+  useColorMode,
 } from "@chakra-ui/react";
 import { FiSearch } from "react-icons/fi";
+import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 import { Link } from "react-router-dom";
+
 import { MenuPerfil } from "./MenuPerfil";
-import SearchBar from "./component/searchBar";
 import Notifications from "./Notificaciones";
+import SearchBar from "./component/searchBar";
 
 export default function NavBar() {
   const { isOpen, onToggle, onClose } = useDisclosure();
@@ -29,14 +32,17 @@ export default function NavBar() {
     // Implementar lógica para manejar sugerencias aquí
   };
 
+  // Hook para el modo oscuro
+  const { colorMode, toggleColorMode } = useColorMode();
+
   return (
     <Flex
       as="nav"
       p={{ base: "4px 8px", md: "8px 16px" }}
       alignItems="center"
       borderBottom="1px solid"
-      borderColor="gray.100"
-      bg="white"
+      borderColor={colorMode === "light" ? "gray.100" : "gray.700"}
+      bg={colorMode === "light" ? "white" : "gray.900"}
       position="sticky"
       top="0"
       zIndex="1000"
@@ -63,6 +69,7 @@ export default function NavBar() {
         display="flex"
         justifyContent="center"
       >
+        {/* Icono de búsqueda solo en mobile */}
         <Box display={{ base: "block", md: "none" }}>
           <Link to="/buscar">
             <Tooltip label="Buscar" aria-label="Buscar Tooltip">
@@ -75,8 +82,13 @@ export default function NavBar() {
             </Tooltip>
           </Link>
         </Box>
+
+        {/* Barra de búsqueda solo en desktop */}
         <Box display={{ base: "none", md: "block" }} flex={1}>
-          <SearchBar onSearch={handleSearch} onSuggestionClick={handleSuggestionClick} />
+          <SearchBar
+            onSearch={handleSearch}
+            onSuggestionClick={handleSuggestionClick}
+          />
         </Box>
       </Box>
 
@@ -84,6 +96,14 @@ export default function NavBar() {
 
       {/* Iconos del lado derecho */}
       <HStack spacing={{ base: "10px", md: "20px" }}>
+        {/* Botón para cambiar modo oscuro/claro */}
+        <IconButton
+          variant="ghost"
+          aria-label="Toggle Color Mode"
+          icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
+          onClick={toggleColorMode}
+        />
+
         {/* Notificaciones */}
         <Notifications isOpen={isOpen} onToggle={onToggle} onClose={onClose} />
 

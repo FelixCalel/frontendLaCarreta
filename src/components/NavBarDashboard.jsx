@@ -3,7 +3,7 @@ import { Box, Breadcrumb, BreadcrumbItem } from "@chakra-ui/react"
 
 export const NavBarDashboard = () => {
   return (
-    <Box  mb={5}>
+    <Box>
         {/*Acaba habia un 5 antes*/}
     <Breadcrumb>
         {/* <BreadcrumbItem>

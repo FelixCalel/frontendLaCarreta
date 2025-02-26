@@ -17,7 +17,7 @@ import {
   FaKey,
   FaShieldAlt,
   FaSignOutAlt,
-  FaBoxes, // Icono para Módulos
+  FaBoxes,
   FaThList,
 } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
@@ -49,36 +49,43 @@ export const MenuPerfil = () => {
     navigate("/auth/login", { replace: true });
   };
 
-  const bgColor = useColorModeValue("white", "gray.800");
-  const hoverBg = useColorModeValue("green.500", "white");
-  const focusBg = useColorModeValue("green.500", "white");
+  const menuBgColor = useColorModeValue("white", "gray.800");
+  const menuHeaderBg = useColorModeValue("teal.500", "teal.600");
+  const avatarBg = useColorModeValue("gray.300", "gray.600");
+  const menuItemHoverBg = useColorModeValue("green.100", "green.700");
+  const menuItemFocusBg = useColorModeValue("green.200", "green.800");
+  const logoutHoverBg = useColorModeValue("red.500", "red.600");
+  const iconColor = useColorModeValue("gray.600", "white");
 
   return (
-    <Box>
-      <Flex h={16} alignItems={"center"} justifyContent={"flex-end"}>
+    <Box className="TestingBox">
+      <Flex h={16} alignItems="center" justifyContent="flex-end">
         <Menu placement="bottom-end">
           <MenuButton
             as={IconButton}
             aria-label="Perfil"
             icon={<FaUser />}
             variant="ghost"
-            _hover={{ bg: useColorModeValue("green.100", "gray.700") }}
-            _active={{ bg: useColorModeValue("green.200", "gray.600") }}
             size="lg"
-            color={useColorModeValue("gray.600", "white")}
+            color={iconColor}
+            // Hover/active del botón de perfil
+            _hover={{ bg: useColorModeValue("gray.100", "gray.700") }}
+            _active={{ bg: useColorModeValue("gray.200", "gray.600") }}
           />
+          
           <MenuList
-            bg={bgColor}
+            bg={menuBgColor}
             borderRadius="md"
             boxShadow="xl"
             p={0}
             minW="240px"
           >
-            <Flex direction="column" alignItems="center" p={4} bg="teal.500">
+            {/* Encabezado del menú */}
+            <Flex direction="column" alignItems="center" p={4} bg={menuHeaderBg}>
               <Avatar
                 size="lg"
                 name={nombreUsuario}
-                bg={useColorModeValue("gray.300", "gray.600")}
+                bg={avatarBg}
                 mb={2}
               />
               <Text fontWeight="bold" color="white">
@@ -89,38 +96,40 @@ export const MenuPerfil = () => {
               </Text>
             </Flex>
 
-            {/* Opciones del menú de perfil */}
+            {/* Ítems del menú */}
             <MenuItem
               as={Link}
               to="/admin/perfil"
               icon={<FaUser />}
-              _hover={{ bg: hoverBg, color: "white" }}
-              _focus={{ bg: focusBg, color: "white" }}
+              _hover={{ bg: menuItemHoverBg, color: "white" }}
+              _focus={{ bg: menuItemFocusBg, color: "white" }}
               py={2}
             >
               Perfil
             </MenuItem>
 
-            {/* Mostrar la opción de "Usuarios" solo para el rol 1 (Admin) y rol 3 (Ventas) */}
+            {/* Solo para roles 1 y 3 */}
             {["1", "3"].includes(roleId) && (
               <MenuItem
                 as={Link}
                 to="/admin/usuarios"
                 icon={<FaUsers />}
-                _hover={{ bg: hoverBg, color: "white" }}
+                _hover={{ bg: menuItemHoverBg, color: "white" }}
+                _focus={{ bg: menuItemFocusBg, color: "white" }}
               >
                 Usuarios
               </MenuItem>
             )}
 
-            {/* Opciones adicionales solo para el rol 1 (Admin) */}
+            {/* Solo para rol 1 (Admin) */}
             {roleId === "1" && (
               <>
                 <MenuItem
                   as={Link}
                   to="/admin/listarRoles"
                   icon={<FaKey />}
-                  _hover={{ bg: hoverBg, color: "white" }}
+                  _hover={{ bg: menuItemHoverBg, color: "white" }}
+                  _focus={{ bg: menuItemFocusBg, color: "white" }}
                 >
                   Roles
                 </MenuItem>
@@ -128,25 +137,26 @@ export const MenuPerfil = () => {
                   as={Link}
                   to="/admin/permisos"
                   icon={<FaShieldAlt />}
-                  _hover={{ bg: hoverBg, color: "white" }}
+                  _hover={{ bg: menuItemHoverBg, color: "white" }}
+                  _focus={{ bg: menuItemFocusBg, color: "white" }}
                 >
                   Permisos
                 </MenuItem>
-                {/* Nueva opción para Módulos */}
                 <MenuItem
                   as={Link}
                   to="/admin/Modulos/listarModulos"
                   icon={<FaBoxes />}
-                  _hover={{ bg: hoverBg, color: "white" }}
+                  _hover={{ bg: menuItemHoverBg, color: "white" }}
+                  _focus={{ bg: menuItemFocusBg, color: "white" }}
                 >
                   Módulos
                 </MenuItem>
-                {/* Nueva opción para Opciones */}
                 <MenuItem
                   as={Link}
                   to="/admin/listarOpciones"
                   icon={<FaThList />}
-                  _hover={{ bg: hoverBg, color: "white" }}
+                  _hover={{ bg: menuItemHoverBg, color: "white" }}
+                  _focus={{ bg: menuItemFocusBg, color: "white" }}
                 >
                   Opciones
                 </MenuItem>
@@ -157,7 +167,7 @@ export const MenuPerfil = () => {
 
             <MenuItem
               icon={<FaSignOutAlt />}
-              _hover={{ bg: "red.500", color: "white" }}
+              _hover={{ bg: logoutHoverBg, color: "white" }}
               onClick={onLogout}
             >
               Cerrar sesión
