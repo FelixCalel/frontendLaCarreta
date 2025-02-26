@@ -12,7 +12,8 @@ import { PagePermisosRoles } from "../pages/asignarPermisosAroles/PagePermisosRo
 import { PageasignacionMO } from "../pages/asignacionMO/asignacionMO";
 import PageFormDeus from "../pages/deus/pageFormDeus.jsx";
 import AprobadosPage from "../pages/pedidos/paginaExportacion/pageFormExportacion"
-import PedidosEntrantesPage from "../pages/Compras/pedidosEntrantesCompras/pedidosEntrantesPageCompras.jsx"
+import PedidosEntrantesPage from "../pages/Compras/pedidosEntrantesCompras/pedidosEntrantesPageCompras"
+import ControlCalidadPage from "../pages/ControlCalidad/pageFormControlCalidad"
 
 
 export const PortalRouter = () => {
@@ -40,6 +41,7 @@ export const PortalRouter = () => {
         <Route path="listarDeus" element={<PageFormDeus />} > </Route>
         <Route path="exportarPedidos" element={< AprobadosPage/>} > </Route>
         <Route path="listarCompras" element={< PedidosEntrantesPage/>} > </Route>
+        <Route path="ControlCalidad" element={< ControlCalidadPage/>} > </Route>
 
       </Route>
     </Routes>

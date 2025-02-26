@@ -13,8 +13,8 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchCompras,
   consolidateCompras,
-} from "../../../store/Compras/thunks";
-import FiltrosPedidos from "./componentes/FiltrosPedidos";
+} from "../../store/Compras/thunks";
+//import FiltrosPedidos from "./componentes/FiltrosPedidos";
 import ControlCalidadTable from "./componentes/ControlCalidadTable";
 import DetallesModal from "./componentes/DetallesModal";
 import * as ExcelJS from "exceljs";
@@ -24,26 +24,20 @@ const ControlCalidadPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
   
-  // Para evitar doble ejecución de useEffect en StrictMode
   const effectRan = useRef(false);
 
-  // Filtros locales
   const [filtros, setFiltros] = useState({
     fechaOrden: "",       // puede ser "YYYY-MM-DD"
     palabrasClave: "",    // texto a buscar
   });
 
-  // Obtenemos los datos de Redux
   const { data: comprasData } = useSelector((state) => state.compras);
 
-  // Modal de detalles
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedCompra, setSelectedCompra] = useState(null);
 
-  // Estado de carga
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1) Efecto inicial: consolida + fetch
   useEffect(() => {
     if (effectRan.current) return;
 
@@ -67,21 +61,17 @@ const ControlCalidadPage = () => {
     effectRan.current = true;
   }, [dispatch, toast]);
 
-  // Mientras carga, Spinner
   if (isLoading) {
     return <Spinner size="xl" />;
   }
 
-  // 2) Filtro en memoria
   const comprasFiltradas = comprasData.filter((compras) => {
-    // Compara fecha si existe en los filtros
     const fechaCompra = moment.utc(compras.fecha).format("YYYY-MM-DD");
-    const fechaFiltro = filtros.fechaOrden; // asumo que ya viene "YYYY-MM-DD"
+    const fechaFiltro = filtros.fechaOrden;
     
     const cumpleFecha =
       !fechaFiltro || fechaCompra === fechaFiltro;
 
-    // Compara palabras clave en el nombre
     const cumplePalabras =
       !filtros.palabrasClave ||
       (compras.nombre || "").toLowerCase().includes(
@@ -91,7 +81,6 @@ const ControlCalidadPage = () => {
     return cumpleFecha && cumplePalabras;
   });
 
-  // 3) Agrupar por "deudor"
   const itemsAgrupadosPorDeudor = {};
   comprasFiltradas.forEach((compras) => {
     const deudor = compras.deudorNombre || `${compras.nombreDeu} - ${compras.nombreCorrelativo}`;
@@ -105,11 +94,9 @@ const ControlCalidadPage = () => {
       cantidad: compras.cantidad,
       pedido_venta: compras.pedido_venta,
       cantidadAsignada: compras.cantidadAsignada,
-      // etc...
     });
   });
 
-  // Convertimos a arrays, si lo necesitas
   const itemsAgrupadosPorDeudorArray = {};
   for (const deudor in itemsAgrupadosPorDeudor) {
     itemsAgrupadosPorDeudorArray[deudor] = Object.values(
@@ -117,23 +104,18 @@ const ControlCalidadPage = () => {
     );
   }
 
-  // 4) Manejar filtros (desde FiltrosPedidos)
   const handleAplicarFiltros = (nuevosFiltros) => {
     setFiltros(nuevosFiltros);
   };
 
-  // 5) Ver detalles (abre el modal)
   const handleVerDetalles = (compra) => {
     setSelectedCompra(compra);
     onOpen();
   };
 
-  // 6) Exportar a Excel
   const handleExportarExcel = async () => {
     try {
-      // Filtramos de nuevo para Excel, si es necesario
       const comprasFiltrados = comprasFiltradas.filter((compra) => {
-        // Ajustar si usas "fechaOrden" vs "fecha"
         const cumpleFecha =
           !filtros.fechaOrden ||
           moment.utc(compra.fecha).format("YYYY-MM-DD") === filtros.fechaOrden;
@@ -158,11 +140,9 @@ const ControlCalidadPage = () => {
         return;
       }
 
-      // Creamos workbook
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Pedidos Entrantes");
 
-      // Definimos columnas
       worksheet.columns = [
         { header: "ID", key: "id", width: 10 },
         { header: "Deudor", key: "nombreDeu", width: 30 },
@@ -170,7 +150,6 @@ const ControlCalidadPage = () => {
         { header: "Fecha de Entrega", key: "fechaOrden", width: 20 },
       ];
 
-      // Llenamos filas
       comprasFiltrados.forEach((item) => {
         worksheet.addRow({
           id: item.id,
@@ -180,13 +159,11 @@ const ControlCalidadPage = () => {
         });
       });
 
-      // Convertimos a buffer
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
 
-      // Descargamos
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -205,7 +182,6 @@ const ControlCalidadPage = () => {
     }
   };
 
-  // Render final
   return (
     <Box p={6} boxShadow="xl" bg="white" rounded="lg">
       <Heading mb={4}>Pedidos Entrantes Compras</Heading>
@@ -217,17 +193,14 @@ const ControlCalidadPage = () => {
         </Stack>
       </Flex>
 
-      {/* Componente de filtros */}
       <FiltrosPedidos onAplicarFiltros={handleAplicarFiltros} />
 
-      {/* Tabla de resultados */}
       <ControlCalidadTable
         itemsAgrupadosPorDeudor={itemsAgrupadosPorDeudorArray}
         filtros={filtros}
         handleVerDetalles={handleVerDetalles}
       />
 
-      {/* Modal de detalles */}
       <DetallesModal
         isOpen={isOpen}
         onClose={onClose}

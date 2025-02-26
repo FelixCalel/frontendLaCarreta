@@ -20,7 +20,8 @@ import { PaginaItem } from "../router/ItemRouter";
 import { PaginaHistorialPedido } from "../router/HistorialPedidoRouter";
 import { PaginaExportacionPedido } from "../router/exportarPedidosRouter"
 import { PaginaPedidoCompras } from "../router/ComprasRouter"
-import {PaginaComprador} from "../router/CompradorRouter"
+import { PaginaComprador } from "../router/CompradorRouter"
+import { PaginaControlCalidad } from "../router/ControlCalidadRouter"
 
 
 export const AppRouter = () => {
@@ -45,6 +46,7 @@ export const AppRouter = () => {
     { path: "/exportarPedido/*", rutaId: 12, component: PaginaExportacionPedido},
     { path: "/comprasPedidos/*", rutaId: 13, component: PaginaPedidoCompras},
     { path: "/comprador/*", rutaId: 14, component: PaginaComprador},
+    { path: "/ControlCalidad/*", rutaId: 15, component: PaginaControlCalidad},
 
   ];
 
@@ -67,7 +69,7 @@ export const AppRouter = () => {
   
         setAccesosPermitidos(nuevosAccesosPermitidos);
       }
-      setLoading(false); // Marcar como cargado al terminar de verificar
+      setLoading(false);
     };
 
     verificarAccesos();
@@ -76,7 +78,6 @@ export const AppRouter = () => {
   const rolesPermitidosAdmin = ["1", "2", "3"];
 
   if (loading) {
-    // Mostrar componente de carga hasta que se obtengan los permisos
     return <CheckingAuth />;
   }
 
