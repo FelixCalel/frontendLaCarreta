@@ -19,7 +19,6 @@ const comprasSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // ========== fetchCompras ==========
       .addCase(fetchCompras.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -33,7 +32,6 @@ const comprasSlice = createSlice({
         state.error = action.payload || "Error al obtener compras";
       })
 
-      // ========== consolidateCompras ==========
       .addCase(consolidateCompras.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -46,17 +44,14 @@ const comprasSlice = createSlice({
         state.error = action.payload || "Error al consolidar compras";
       })
 
-      // ========== updateCompra ==========
       .addCase(updateCompra.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(updateCompra.fulfilled, (state, action) => {
-        // action.payload debería ser la compra actualizada
         const updated = action.payload;
         const index = state.data.findIndex((c) => c.id === updated.id);
         if (index !== -1) {
-          // Reemplazamos el objeto viejo con el nuevo
           state.data[index] = updated;
         }
       })
@@ -64,7 +59,6 @@ const comprasSlice = createSlice({
         state.loading = false;
         state.error = action.payload || "Error al actualizar compra";
       })
-      // ========== asignarProveedor ==========
       .addCase(asignarProveedor.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -82,7 +76,6 @@ const comprasSlice = createSlice({
         state.error = action.payload || "Error al asignar proveedor";
       })
 
-      // ========== desasignarProveedor ==========
       .addCase(desasignarProveedor.pending, (state) => {
         state.loading = true;
         state.error = null;

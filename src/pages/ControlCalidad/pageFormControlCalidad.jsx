@@ -26,7 +26,7 @@ const ControlCalidadPage = () => {
   
   const effectRan = useRef(false);
 
-  const [filtros, setFiltros] = useState({
+  const [filtros] = useState({
     fechaOrden: "",       // puede ser "YYYY-MM-DD"
     palabrasClave: "",    // texto a buscar
   });
@@ -80,7 +80,7 @@ const ControlCalidadPage = () => {
 
     return cumpleFecha && cumplePalabras;
   });
-
+//listo
   const itemsAgrupadosPorDeudor = {};
   comprasFiltradas.forEach((compras) => {
     const deudor = compras.deudorNombre || `${compras.nombreDeu} - ${compras.nombreCorrelativo}`;
