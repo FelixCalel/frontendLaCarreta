@@ -10,7 +10,7 @@ import {
   useColorModeValue,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import { Link } from "react-router-dom";
+import { Link, useLocation  } from "react-router-dom";
 import {
   HamburgerIcon,
   ChevronDownIcon,
@@ -19,9 +19,8 @@ import {
 } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchModulos } from "../store/RolPermisoUsuario/thunks";
-import iconCatalog from "../components/Iconos/IconCatalog"; // Importa el catálogo de iconos
+import iconCatalog from "../components/Iconos/IconCatalog"; 
 
-// Componente MenuItem
 const MenuItem = ({
   item,
   isExpanded,
@@ -142,12 +141,9 @@ MenuItem.propTypes = {
   setOpenMenus: PropTypes.func.isRequired,
 };
 
-// Función para agrupar opciones bajo módulos por `modulo_id`
 const agruparModulos = (data) => {
-  // Verificar si `data` es un array
   if (!Array.isArray(data)) {
     console.error("Error: data no es un array. Valor recibido:", data);
-    return []; // Retornar un array vacío para evitar errores
   }
 
   const modulosAgrupados = {};
@@ -178,8 +174,11 @@ const agruparModulos = (data) => {
   return Object.values(modulosAgrupados);
 };
 
-// Componente principal del menú
+const PEDIDO_ROUTES = ["/pedido", "/historialPedido"];
+
 const MenuPrincipalD = () => {
+  const location = useLocation();
+  const isMobile = useBreakpointValue({ base: true, md: false });
   const dispatch = useDispatch();
   const { modulos, loading } = useSelector((state) => state.modulos);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -188,7 +187,6 @@ const MenuPrincipalD = () => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const menuRef = useRef(null);
 
-  // Responsive width
   const menuWidth = useBreakpointValue({
     base: "200px",
     md: "150px",
@@ -203,17 +201,50 @@ const MenuPrincipalD = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsExpanded(false);
-        setOpenMenus({});
-      }
+    const handleClickOutside = () => {
+
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    const enModuloPedido = PEDIDO_ROUTES.some((route) =>
+      location.pathname.startsWith(route)
+    );
+
+    if (isMobile && enModuloPedido) {
+      setIsExpanded(true);
+    } else {
+      setIsExpanded(false); 
+    }
+  }, [isMobile, location.pathname]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        const enModuloPedido = PEDIDO_ROUTES.some((route) =>
+          location.pathname.startsWith(route)
+        );
+  
+        if (isMobile && enModuloPedido) {
+          setOpenMenus({});
+        } else {
+          setIsExpanded(false);
+          setOpenMenus({});
+        }
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMobile, location.pathname]);
+  
+  
 
   const toggleMenu = () => {
     setIsExpanded(!isExpanded);
@@ -222,9 +253,8 @@ const MenuPrincipalD = () => {
     }
   };
 
-  // Renderizar el contenido solo si `modulos` está cargado y `loading` es falso
   if (!modulos || loading) {
-    return null; // No muestra nada mientras carga
+    return null;
   }
 
   const modulosAgrupados = Array.isArray(modulos)
@@ -232,7 +262,7 @@ const MenuPrincipalD = () => {
     : [];
 
     if (loading) {
-      return <div>Cargando módulos...</div>; // Mostrar un mensaje de carga si está en proceso
+      return <div>Cargando módulos...</div>;
     }
   
     if (!modulosAgrupados.length) {
