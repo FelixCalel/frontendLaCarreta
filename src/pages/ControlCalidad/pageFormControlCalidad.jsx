@@ -104,9 +104,6 @@ const ControlCalidadPage = () => {
     );
   }
 
-  const handleAplicarFiltros = (nuevosFiltros) => {
-    setFiltros(nuevosFiltros);
-  };
 
   const handleVerDetalles = (compra) => {
     setSelectedCompra(compra);
@@ -184,7 +181,7 @@ const ControlCalidadPage = () => {
 
   return (
     <Box p={6} boxShadow="xl" bg="white" rounded="lg">
-      <Heading mb={4}>Pedidos Entrantes Compras</Heading>
+      <Heading mb={4}>Control De Calidad</Heading>
       <Flex justify="space-between" alignItems="center" mb={4}>
         <Stack direction="row" spacing={2}>
           <Button colorScheme="teal" onClick={handleExportarExcel}>
@@ -193,7 +190,7 @@ const ControlCalidadPage = () => {
         </Stack>
       </Flex>
 
-      <FiltrosPedidos onAplicarFiltros={handleAplicarFiltros} />
+      {/* <FiltrosPedidos onAplicarFiltros={handleAplicarFiltros} /> */}
 
       <ControlCalidadTable
         itemsAgrupadosPorDeudor={itemsAgrupadosPorDeudorArray}

@@ -16,6 +16,7 @@ import {
   Tr,
   Th,
   Td,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
@@ -62,7 +63,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   useEffect(() => {
     const cargarDetallesPedido = async () => {
       try {
-        // Validar que todos los IDs sean válidos
         if (![deudorId, pedidoId, tiendaId].every((id) => id && !isNaN(id))) {
           toast({
             title: "Error",
@@ -89,7 +89,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             detallesParsed
           );
           setIsLoading(false);
-          return; // No hacer más acciones si ya tenemos los detalles
+          return;
         }
 
         try {
@@ -130,7 +130,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     }
   }, [deudorId, pedidoId, tiendaId, detallesCargados, toast, dispatch]);
 
-  // Segundo useEffect: Llamar a cargarProductosComunes si es necesario
   useEffect(() => {
     if (detallesCargados && !hasLoadedProductosComunes.current) {
       if (productos.length === 0) {
@@ -213,7 +212,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
       nombreProducto,
       cantidadDisponible,
       codigo,
-      cantidad: 0, // Reiniciar cantidad al cambiar el producto
+      cantidad: 0,
     });
   };
 
@@ -354,7 +353,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     }
   };
 
-  // Manejo de cambiar cantidad de producto
   const handleCantidadChange = async (detalleId, cantidad) => {
     if (!detalleId || !pedidoId) {
       console.error("El detalleId o pedidoId son undefined o inválidos", {
@@ -404,13 +402,18 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     }
   };
 
-  // Función para manejar la asignación de claves únicas
   const getUniqueKey = (producto) => {
     return producto.detallePedidoId || producto.id || producto.productoId;
   };
 
+  const containerBg = useColorModeValue("white", "gray.800");
+  const headingColor = useColorModeValue("teal.600", "teal.300");
+  const mobileCardBg = useColorModeValue("gray.50", "gray.700");
+  const subtextColor = useColorModeValue("gray.500", "gray.400");
+  const addBoxBg = useColorModeValue("teal.50", "teal.900");
+
   return (
-    <Box p={1} borderRadius="md" boxShadow="sm" bg="white">
+    <Box p={1} borderRadius="md" boxShadow="sm" bg={containerBg}>
       {isLoading ? (
         <Box
           display="flex"
@@ -422,7 +425,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         </Box>
       ) : (
         <>
-          <Heading as="h3" size="xs" mb={1} textAlign="center" color="teal.600">
+          <Heading as="h3" size="xs" mb={1} textAlign="center" color={headingColor}>
             Detalles del Pedido
           </Heading>
           {productos.length > 0 ? (
@@ -435,7 +438,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                     boxShadow="sm"
                     borderWidth="1px"
                     rounded="md"
-                    bg="gray.50"
+                    bg={mobileCardBg}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
@@ -444,9 +447,9 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                     <HStack justifyContent="space-between" spacing={2}>
                       <Box flex="1">
                         <Text fontWeight="bold" fontSize="sm">
-                        Producto: {producto.nombreProducto || "N/A"}
+                          Producto: {producto.nombreProducto || "N/A"}
                         </Text>
-                        <Text fontSize="xs" color="gray.500">
+                        <Text fontSize="xs" color={subtextColor}>
                           Cantidad Máxima:{" "}
                           {producto.cantidadDisponible || "N/A"}
                         </Text>
@@ -583,7 +586,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
               boxShadow="sm"
               borderWidth="1px"
               rounded="md"
-              bg="teal.50"
+              bg={addBoxBg}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}

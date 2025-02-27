@@ -20,8 +20,9 @@ import {
   useToast,
   Grid,
   GridItem,
+  useColorModeValue, // <-- Importar
 } from "@chakra-ui/react";
-import { FaStoreAlt } from "react-icons/fa"; 
+import { FaStoreAlt, FaBan } from "react-icons/fa";
 import { MdOutlinePerson } from "react-icons/md";
 import DeuSelector from "./DeuSelector";
 import TiendaSelector from "./tiendaSelector";
@@ -43,26 +44,38 @@ const PedidoModal = ({
   resetForm,
   copiarUltimoPedido,
 }) => {
-
   const toast = useToast();
 
+  // 1. Definir colores para modo claro/oscuro
+  const modalBg = useColorModeValue("white", "gray.800");
+  const headingColor = useColorModeValue("teal.600", "teal.200");
+  const labelColor = useColorModeValue("gray.600", "gray.300");
+  const textSubColor = useColorModeValue("gray.700", "gray.200");
+
+  // Iconos
+  const assignedIconColor = useColorModeValue("teal.500", "teal.300");
+  const noAssignedIconColor = useColorModeValue("red.500", "red.300");
+  const personIconColor = useColorModeValue("teal.600", "teal.200");
+
+  // 2. Lógica para deudor
   const handleDeudorSelect = (deudorId) => {
     setCurrentPedido((prev) => ({ ...prev, deudorId }));
   };
 
+  // 3. Obtener tiendas de Redux
   const allTiendas = useSelector((state) => state.tiendas.data || []);
   const obtenerTiendaPorId = (tiendaId) => {
     return allTiendas.find((tienda) => tienda.id === tiendaId) || null;
   };
 
+  // 4. Cambiar tienda principal
   const handleTiendaChange = (tiendaId) => {
     if (tiendaId) {
       const tiendaSeleccionada = obtenerTiendaPorId(tiendaId);
-  
       setCurrentPedido((prev) => ({
         ...prev,
         tiendaId,
-        tiendaId2: null,        
+        tiendaId2: null, // Se limpia la otra
         ciudadId: tiendaSeleccionada?.ciudadId || null,
         deudorId: tiendaSeleccionada?.deudorId || null,
       }));
@@ -75,16 +88,15 @@ const PedidoModal = ({
       }));
     }
   };
-  
 
+  // 5. Cambiar tienda secundaria (no asignada)
   const handleTiendaChange2 = (tiendaId) => {
     if (tiendaId) {
       const tiendaSeleccionada = obtenerTiendaPorId(tiendaId);
-  
       setCurrentPedido((prev) => ({
         ...prev,
         tiendaId2: tiendaId,
-        tiendaId: null,          // Limpiamos la otra tienda
+        tiendaId: null, // Limpiamos la otra
         ciudadId: tiendaSeleccionada?.ciudadId || null,
         deudorId: tiendaSeleccionada?.deudorId || null,
       }));
@@ -98,6 +110,7 @@ const PedidoModal = ({
     }
   };
 
+  // 6. Limpiar ambas tiendas
   const clearTienda = () => {
     setCurrentPedido((prev) => ({
       ...prev,
@@ -122,7 +135,7 @@ const PedidoModal = ({
       <ModalContent
         borderRadius="lg"
         boxShadow="xl"
-        bg="white"
+        bg={modalBg}            // <-- Modo claro/oscuro
         maxW={{ base: "95%", md: "600px" }}
         p={4}
         overflow="hidden"
@@ -131,24 +144,23 @@ const PedidoModal = ({
           fontSize={{ base: "lg", md: "2xl" }}
           fontWeight="bold"
           textAlign="center"
-          color="teal.600"
+          color={headingColor}   // <-- Modo claro/oscuro
         >
           {isPedidoFinalizado ? "Agregar Productos" : "Agregar Pedido"}
         </ModalHeader>
+
         <ModalCloseButton />
+
         <ModalBody>
           {!isPedidoFinalizado ? (
             <VStack spacing={4}>
-              <Grid
-                templateColumns={{ base: "1fr", md: "1fr 1fr" }}
-                gap={4}
-                w="full"
-              >
+              <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={4} w="full">
+                {/* Tiendas asignadas */}
                 <GridItem>
                   <FormControl isDisabled={isTienda2Disabled}>
-                    <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
+                    <FormLabel fontSize="sm" fontWeight="bold" color={labelColor}>
                       <HStack>
-                        <Icon as={FaStoreAlt} color="teal.500" />
+                        <Icon as={FaStoreAlt} color={assignedIconColor} />
                         <Text>Tiendas asignadas</Text>
                       </HStack>
                     </FormLabel>
@@ -157,17 +169,18 @@ const PedidoModal = ({
                       paisId={Number(paisId)}
                       value={currentPedido.tiendaId}
                       onChange={handleTiendaChange}
-                      deudorId={currentPedido.deudorId}
-                      ciudadId={currentPedido.ciudadId}
-                      isRutaFilter={true}
+                      isRutaFilter={true}   // Asignadas
+                      isSecondSelector={false}  
                     />
                   </FormControl>
                 </GridItem>
+
+                {/* Tiendas NO asignadas */}
                 <GridItem>
                   <FormControl isDisabled={isTienda1Disabled}>
-                    <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
+                    <FormLabel fontSize="sm" fontWeight="bold" color={labelColor}>
                       <HStack>
-                        <Icon as={FaStoreAlt} color="teal.500" />
+                        <Icon as={FaBan} color={noAssignedIconColor} />
                         <Text>Tiendas NO asignadas</Text>
                       </HStack>
                     </FormLabel>
@@ -176,17 +189,19 @@ const PedidoModal = ({
                       paisId={Number(paisId)}
                       value={currentPedido.tiendaId2}
                       onChange={handleTiendaChange2}
-                      isRutaFilter={false}
+                      isRutaFilter={false}  // No asignadas
+                      isSecondSelector={true}
                     />
                   </FormControl>
-                  
                 </GridItem>
               </Grid>
+
+              {/* Deudor */}
               <FormControl>
-                <FormLabel fontSize="sm" fontWeight="bold" color="gray.600">
+                <FormLabel fontSize="sm" fontWeight="bold" color={labelColor}>
                   <HStack>
-                    <Icon as={MdOutlinePerson} color="teal.500" />
-                    <Text>Seleccione un deudor</Text>
+                    <Icon as={MdOutlinePerson} color={personIconColor} />
+                    <Text>Deu de la tienda</Text>
                   </HStack>
                 </FormLabel>
                 <DeuSelector
@@ -198,7 +213,7 @@ const PedidoModal = ({
             </VStack>
           ) : (
             <Box>
-              <Text fontSize="md" fontWeight="medium" mb={3} textAlign="center">
+              <Text fontSize="md" fontWeight="medium" mb={3} textAlign="center" color={textSubColor}>
                 Agregue productos al pedido:
               </Text>
             </Box>
@@ -210,8 +225,7 @@ const PedidoModal = ({
             <Button
               colorScheme="blue"
               onClick={() => {
-                const tiendaSeleccionada =
-                  currentPedido.tiendaId || currentPedido.tiendaId2;
+                const tiendaSeleccionada = currentPedido.tiendaId || currentPedido.tiendaId2;
                 if (tiendaSeleccionada) {
                   copiarUltimoPedido(tiendaSeleccionada);
                 } else {

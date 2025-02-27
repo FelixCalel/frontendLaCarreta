@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Heading, useToast } from "@chakra-ui/react";
+import { Box, Heading, useToast, useColorModeValue } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { tablaPedidos } from "../../../store/Pedidos/thunks";
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
@@ -19,30 +19,32 @@ const HistorialPedidosPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = parseInt(localStorage.getItem("roleId"), 10);
-
   const pedidos = useSelector((state) => state.pedidos.data);
 
+  // Colores para modo claro/oscuro:
+  const containerBg = useColorModeValue("white", "gray.800");
+  const headingColor = useColorModeValue("teal.600", "teal.200");
+  const subTextColor = useColorModeValue("gray.500", "gray.400");
+
   const pedidosHistorial = pedidos
-  .filter((pedido) => {
-    const esAprobadoOCancelado = pedido.estadoId === 3 || pedido.estadoId === 4;
-    const esPendiente = pedido.estadoId === 2;
-    const esExportado = pedido.estadoId === 5;
+    .filter((pedido) => {
+      const esAprobadoOCancelado =
+        pedido.estadoId === 3 || pedido.estadoId === 4;
+      const esPendiente = pedido.estadoId === 2;
+      const esExportado = pedido.estadoId === 5;
 
-    if (roleId === 1 || roleId === 3) {
-      return esAprobadoOCancelado || esPendiente || esExportado;
-    } else {
-      return (
-        (esAprobadoOCancelado || esPendiente || esExportado) &&
-        pedido.usuarioId === usuarioId
-      );
-    }
-  })
-  .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl));
-
-
+      if (roleId === 1 || roleId === 3) {
+        return esAprobadoOCancelado || esPendiente || esExportado;
+      } else {
+        return (
+          (esAprobadoOCancelado || esPendiente || esExportado) &&
+          pedido.usuarioId === usuarioId
+        );
+      }
+    })
+    .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl));
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -94,7 +96,7 @@ const HistorialPedidosPage = () => {
   };
 
   return (
-    <Box p={6} boxShadow="xl" bg="white" rounded="lg">
+    <Box p={6} boxShadow="xl" bg={containerBg} rounded="lg">
       <Heading as="h2" size="lg" mb={6}>
         Historial de Pedidos
       </Heading>

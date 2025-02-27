@@ -29,7 +29,7 @@ const ControlCalidadTable = ({ itemsAgrupadosPorDeudor, filtros }) => {
             <Th>Proveedor</Th>
             <Th>Cantidad a recibir</Th>
             <Th>Cantidad Recibida</Th>
-            <Th></Th>
+            <Th> </Th>
           </Tr>
         </Thead>
         <Tbody>

@@ -12,7 +12,6 @@ import {
 import { FiSearch } from "react-icons/fi";
 import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 import { Link } from "react-router-dom";
-
 import { MenuPerfil } from "./MenuPerfil";
 import Notifications from "./Notificaciones";
 import SearchBar from "./component/searchBar";

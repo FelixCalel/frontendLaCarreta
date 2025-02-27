@@ -31,18 +31,19 @@ const ProductoSelector = ({ onSelect, reset }) => {
   const listBorderColor = useColorModeValue("gray.200", "gray.600");
   const itemHoverBg = useColorModeValue("gray.100", "gray.600");
 
-  // Carga inicial de los items
+  // Carga inicial de items
   useEffect(() => {
     dispatch(tablaItems());
   }, [dispatch]);
 
-  // Maneja la selección de un item
+  // Al seleccionar un item
   const handleSelectItem = (item) => {
-    setInputValue(`${item.codigo} - ${item.nombre}`);
+    setInputValue(`${item.nombre}`);
     setSelectedItem(item);
+
     onSelect(item.id, item.nombre, item.cantidadDisponible, item.codigo);
 
-    // Muestra error si la cantidad disponible es cero
+    // Muestra error si no hay stock
     if (item.cantidadDisponible === 0) {
       setError("Cantidad disponible: 0");
     } else {
@@ -50,19 +51,19 @@ const ProductoSelector = ({ onSelect, reset }) => {
     }
   };
 
-  // Maneja cambios en el campo de texto
+  // Cambio en el campo
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
   };
 
-  // Limpia el campo de texto y resetea los datos seleccionados
+  // Limpiar campo
   const handleClearInput = () => {
     setInputValue("");
     setSelectedItem(null);
     setError("");
   };
 
-  // Resetea el selector cuando el prop `reset` cambia
+  // Resetea cuando `reset` cambia
   useEffect(() => {
     if (reset) {
       handleClearInput();
@@ -72,10 +73,6 @@ const ProductoSelector = ({ onSelect, reset }) => {
   return (
     <Flex pt="2" justify="start" align="center" w="full" flexDir="column">
       <FormControl>
-        {/*
-          1) Quitar maxW="300px" en móvil.
-          2) position="relative" en un contenedor lo suficientemente grande
-        */}
         <HStack
           spacing={2}
           w="full"
@@ -93,22 +90,25 @@ const ProductoSelector = ({ onSelect, reset }) => {
                 w="full"
               />
               <AutoCompleteList
-                // 2) Ajustar posición absoluta con top y ancho total
-                position="absolute"
+                // Posición absoluta debajo del input
+                position="relative"
                 top="100%"
                 left="0"
-                right="0"
                 zIndex="popover"
                 bg={listBg}
                 borderColor={listBorderColor}
                 borderWidth="1px"
                 borderRadius="md"
                 boxShadow="md"
-                // 3) Dar un maxHeight grande y scroll
-                maxHeight="60vh"
+
+                // Limita ancho y alto para no desplazar la página
+                minW="300px"
+                maxW="calc(100vw - 20px)"
+                maxHeight="50vh"
+
+                // Evita scroll horizontal y permite vertical
                 overflowY="auto"
-                // Si el modal no es muy alto, podrías usar:
-                // maxHeight="calc(100vh - 100px)"
+                overflowX="hidden"
               >
                 {items.map((item) => (
                   <AutoCompleteItem
@@ -117,14 +117,14 @@ const ProductoSelector = ({ onSelect, reset }) => {
                     textTransform="capitalize"
                     onClick={() => handleSelectItem(item)}
                     _hover={{ bg: itemHoverBg }}
-                    // Permitir salto de línea
+                    // Fuerza quiebre de línea
                     sx={{
                       whiteSpace: "normal",
-                      overflowWrap: "break-word",
+                      wordBreak: "break-word",
                     }}
                   >
-                    <Text noOfLines={2} fontSize="sm">
-                      {`${item.codigo} - ${item.nombre}`}
+                    <Text fontSize="sm">
+                      {`${item.nombre}`}
                     </Text>
                   </AutoCompleteItem>
                 ))}

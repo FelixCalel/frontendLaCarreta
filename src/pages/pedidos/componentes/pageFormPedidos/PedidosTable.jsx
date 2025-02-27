@@ -42,7 +42,7 @@ const PedidosTable = ({
       {pedidosUsuario.map((pedido) => (
         <Box
           key={pedido.id}
-          p={4}
+          p={2.5}
           borderWidth="1px"
           borderColor={boxBorderColor}
           rounded="md"
