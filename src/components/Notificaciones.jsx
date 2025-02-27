@@ -4,11 +4,11 @@ import {
   Badge,
   Collapse,
   Text,
-  Divider,
   Tooltip,
   CloseButton,
   HStack,
   useOutsideClick,
+  useColorModeValue,  // <-- Importar para modo claro/oscuro
 } from "@chakra-ui/react";
 import { FiBell } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
@@ -26,23 +26,19 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = localStorage.getItem("roleId");
 
-  // Pedidos obtenidos desde Redux
+  // Pedidos desde Redux
   const pedidos = useSelector((state) => state.pedidos.data || []);
 
   // Estados locales
   const [notificaciones, setNotificaciones] = useState([]);
   const [deletedNotifications, setDeletedNotifications] = useState(() => {
-    const storedDeleted = localStorage.getItem(
-      `deletedNotifications_${usuarioId}`
-    );
+    const storedDeleted = localStorage.getItem(`deletedNotifications_${usuarioId}`);
     return storedDeleted ? JSON.parse(storedDeleted) : [];
   });
 
-  // Sincronizar `deletedNotifications` con `localStorage` al actualizar usuario
+  // Sincronizar `deletedNotifications` con `localStorage` al cambiar usuario
   useEffect(() => {
-    const storedDeleted = localStorage.getItem(
-      `deletedNotifications_${usuarioId}`
-    );
+    const storedDeleted = localStorage.getItem(`deletedNotifications_${usuarioId}`);
     setDeletedNotifications(storedDeleted ? JSON.parse(storedDeleted) : []);
   }, [usuarioId]);
 
@@ -55,21 +51,22 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   }, [deletedNotifications, usuarioId]);
 
   // Filtrar notificaciones según rol y estado, excluyendo eliminadas
-  // Filtrar notificaciones según rol y estado, excluyendo eliminadas
   useEffect(() => {
     const usuarioPedidos = pedidos
       .filter(
         (pedido) =>
-          (pedido.usuarioId === usuarioId || roleId === "3") && // Notificaciones propias o pendientes para rol 3
-          !deletedNotifications.includes(pedido.id) // Excluir eliminadas
+          (pedido.usuarioId === usuarioId || roleId === "3") && // notificaciones propias o pendientes para rol 3
+          !deletedNotifications.includes(pedido.id)
       )
       .filter(
         (pedido) =>
           roleId === "3"
-            ? pedido.estadoId === 2 || pedido.estadoId === 5 // Pendientes o Exportados para rol 3
-            : pedido.estadoId === 3 || pedido.estadoId === 4 // Aprobados o Cancelados para rol 2
+            ? // rol 3 => estado 2 (pendientes) o 5 (exportados) por ejemplo
+              pedido.estadoId === 2 || pedido.estadoId === 5
+            : // rol 2 => estado 3 (aprobados) o 4 (cancelados)
+              pedido.estadoId === 3 || pedido.estadoId === 4
       )
-      .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl)); // Orden descendente
+      .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl));
 
     setNotificaciones(usuarioPedidos);
   }, [pedidos, roleId, usuarioId, deletedNotifications]);
@@ -100,26 +97,16 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const handleDeleteNotification = (pedidoId) => {
     const updatedNotifications = [...deletedNotifications, pedidoId];
     setDeletedNotifications(updatedNotifications);
-    // Actualizar localStorage inmediatamente al borrar
     localStorage.setItem(
       `deletedNotifications_${usuarioId}`,
       JSON.stringify(updatedNotifications)
     );
   };
 
-  // Conteo de estados para el resumen (solo para rol 3)
-  // const countAprobados = pedidos.filter(
-  //   (pedido) => pedido.estadoId === 3 && pedido.usuarioId === usuarioId
-  // ).length;
-  // const countEnProceso = pedidos.filter(
-  //   (pedido) => pedido.estadoId === 1 && pedido.usuarioId === usuarioId
-  // ).length;
-  // const countCancelados = pedidos.filter(
-  //   (pedido) => pedido.estadoId === 4 && pedido.usuarioId === usuarioId
-  // ).length;
-  // const countExportados = pedidos.filter(
-  //   (pedido) => pedido.estadoId === 5 && pedido.usuarioId === usuarioId
-  // ).length;
+  const containerBg  = useColorModeValue("white", "gray.700");
+  const containerTxt = useColorModeValue("gray.700", "gray.200");
+  const borderColor  = useColorModeValue("gray.200", "gray.600");
+  const hoverBg      = useColorModeValue("gray.50",  "gray.600");
 
   return (
     <Box position="relative">
@@ -158,12 +145,14 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
           top="60px"
           right="0"
           w="320px"
-          bg="white"
+          bg={containerBg}           // <-- Modo claro/oscuro
+          color={containerTxt}       // <-- Texto adaptado a modo
           boxShadow="lg"
           p={4}
           borderRadius="lg"
           zIndex="1000"
-          border="1px solid #E2E8F0"
+          border="1px solid"
+          borderColor={borderColor}  // <-- Borde adaptado
         >
           {notificaciones.length > 0 ? (
             notificaciones.map((pedido) => (
@@ -173,7 +162,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
                 align="center"
                 p={2}
                 borderRadius="md"
-                _hover={{ bg: "gray.50" }}
+                _hover={{ bg: hoverBg }}  // <-- hover adaptado
               >
                 <Box
                   onClick={handleNotificationClick}
@@ -181,11 +170,11 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
                   flex={1}
                 >
                   {roleId === "3" ? (
-                    <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                    <Text fontSize="sm" fontWeight="medium">
                       Nuevo pedido pendiente: <strong>ID: {pedido.id}</strong>.
                     </Text>
                   ) : (
-                    <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                    <Text fontSize="sm" fontWeight="medium">
                       Tu pedido <strong>ID: {pedido.id}</strong> ha sido{" "}
                       <strong>
                         {pedido.estadoId === 3 ? "aprobado" : "cancelado"}
@@ -205,40 +194,14 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
               No tienes notificaciones nuevas.
             </Text>
           )}
-
-          {roleId === "3" && (
-            <>
-              <Divider my={3} />
-              {/* <Box>
-                <Text fontSize="md" fontWeight="bold">
-                  Estado de tus pedidos:
-                </Text>
-                <Box mt={2}>
-                  <Text fontSize="sm" color="green.600">
-                    Aprobados: {countAprobados}
-                  </Text>
-                  <Text fontSize="sm" color="yellow.600">
-                    En Proceso: {countEnProceso}
-                  </Text>
-                  <Text fontSize="sm" color="red.600">
-                    Cancelados: {countCancelados}
-                  </Text>
-                  <Text fontSize="sm" color="blue.600">
-                    Exportados: {countExportados}
-                  </Text>
-                </Box>
-              </Box> */}
-            </>
-          )}
         </Box>
       </Collapse>
     </Box>
   );
 }
 
-// Agregar validación de PropTypes
 Notifications.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
+  isOpen:   PropTypes.bool.isRequired,
   onToggle: PropTypes.func.isRequired,
-  onClose: PropTypes.func.isRequired,
+  onClose:  PropTypes.func.isRequired,
 };
