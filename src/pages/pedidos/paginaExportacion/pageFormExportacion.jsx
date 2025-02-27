@@ -136,18 +136,20 @@ const AprobadosPage = () => {
     worksheet.columns = [
       { header: 'Pedido ID', key: 'pedidoId', width: 15 },
       { header: 'Código', key: 'codigo', width: 15 },
+      { header: 'Tienda',   key: 'tienda',   width: 25 }, 
       { header: 'Producto', key: 'producto', width: 30 },
       { header: 'Cantidad', key: 'cantidad', width: 15 }
     ];
   
-    let firstDeudor = true; // Variable para controlar la primera fila
+    let firstDeudor = true;
   
     for (const deudor of Object.keys(pedidosPorDeudor)) {
-      const { pedidos, creadoEl } = pedidosPorDeudor[deudor];
+      const { pedidos } = pedidosPorDeudor[deudor];
   
       const nombreTienda = pedidos[0]?.nombreTienda || "Sin tienda";
       const fechaOrden = format(new Date(pedidos[0]?.fechaOrden), "dd/MM/yyyy", { locale: es });
-  
+      const fechaOrdenObj = new Date(pedidos[0]?.fechaOrden);
+      //const fechaOrdenFormateada = format(fechaOrdenObj, "dd/MM/yyyy", { locale: es });
       // **Elimina la primera fila vacía asegurando que no haya espacios adicionales antes del primer deudor**
       if (!firstDeudor) {
         worksheet.addRow([]); // Espacio vacío entre deudores
@@ -157,9 +159,9 @@ const AprobadosPage = () => {
       const deudorRow = worksheet.addRow([deudor]);
       deudorRow.font = { bold: true };
   
-      worksheet.addRow([`Fecha: ${format(new Date(creadoEl), "dd 'de' MMMM 'de' yyyy", { locale: es })}`]);
+      worksheet.addRow([`Fecha de entrega: ${format(fechaOrdenObj, "dd 'de' MMMM 'de' yyyy", { locale: es })}`]);
   
-      const headerRow = worksheet.addRow(['Pedido ID', 'Código', 'Producto', 'Cantidad']);
+      const headerRow = worksheet.addRow(['Pedido ID', 'Código', 'Tienda', 'Producto', 'Cantidad']);
       headerRow.font = { bold: true };
   
       for (const pedido of pedidos) {
@@ -168,14 +170,21 @@ const AprobadosPage = () => {
           worksheet.addRow({
             pedidoId: `P-${pedido.id}`,
             codigo: detalle.codigo || "Sin código",
+            tienda: pedido.nombreTienda || "Sin tienda",
             producto: detalle.nombreProducto,
             cantidad: detalle.cantidad
           });
         }
       }
-  
-      const commentRow = worksheet.addRow(['Comentario:', `Tienda: ${nombreTienda}`, `Fecha Orden: ${fechaOrden}`]);
+      
+      const commentRow = worksheet.addRow([
+        'Comentario:',
+        `Tienda: ${nombreTienda}`,
+        `Fecha Orden: ${fechaOrden}`
+      ]);
+      
       commentRow.font = { bold: true };
+      commentRow.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
       worksheet.addRow([]); // Espacio vacío
     }
   

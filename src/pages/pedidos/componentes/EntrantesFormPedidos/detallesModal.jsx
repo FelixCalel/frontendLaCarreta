@@ -53,8 +53,8 @@ const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
           </Tbody>
         </Table>
         <Box mt={4}>
-          <Heading size="md">Fecha de creación</Heading>
-          <Text>{format(new Date(pedido.creadoEl), "dd 'de' MMMM 'de' yyyy", { locale: es })}</Text>
+          <Heading size="md">Fecha de entrega</Heading>
+          <Text>{format(new Date(pedido.fechaOrden), "dd 'de' MMMM 'de' yyyy", { locale: es })}</Text>
         </Box>
       </>
     ) : (
@@ -84,7 +84,7 @@ DetallesModal.propTypes = {
   ),
   pedido: PropTypes.shape({
     id: PropTypes.number.isRequired,
-    creadoEl: PropTypes.string.isRequired,
+    fechaOrden: PropTypes.string.isRequired,
     // Añade otras propiedades si es necesario
   }),
 };

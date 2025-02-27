@@ -22,7 +22,7 @@ const AprobadosTable = ({ pedidosAprobados, handleVerDetalles }) => {
           <Th>ID</Th>
           <Th>Deudor</Th>
           <Th>Tienda</Th>
-          <Th>Fecha</Th>
+          <Th>Fecha de creación</Th>
           <Th>Acciones</Th>
         </Tr>
       </Thead>
