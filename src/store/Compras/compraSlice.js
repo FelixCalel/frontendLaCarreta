@@ -5,6 +5,7 @@ import {
   updateCompra,
   asignarProveedor,
   desasignarProveedor,
+  actualizarFechaIngreso,
 } from "./thunks";
 
 const initialState = {
@@ -87,13 +88,30 @@ const comprasSlice = createSlice({
         if (index !== -1) {
           state.data[index] = {
             ...state.data[index],
-            proveedoresAsignados: updated.proveedoresAsignados, // Solo actualizar proveedores
+            proveedoresAsignados: updated.proveedoresAsignados,
           };
         }
       })
       .addCase(desasignarProveedor.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Error al desasignar proveedor";
+      })
+      .addCase(actualizarFechaIngreso.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      // .addCase(actualizarFechaIngreso.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   const updatedCompra = action.payload;
+      //   const index = state.data.findIndex((c) => c.id === updatedCompra.id);
+      //   if (index !== -1) {
+      //     state.data[index] = { ...state.data[index], ...updatedCompra };
+      //   }
+      // })
+      .addCase(actualizarFechaIngreso.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.error?.message || "Error al actualizar fecha de ingreso";
       });
   },
 });
