@@ -10,10 +10,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchCompras,
-  consolidateCompras,
-} from "../../store/Compras/thunks";
+import { fetchCompras, consolidateCompras } from "../../store/Compras/thunks";
 //import FiltrosPedidos from "./componentes/FiltrosPedidos";
 import ControlCalidadTable from "./componentes/ControlCalidadTable";
 import DetallesModal from "./componentes/DetallesModal";
@@ -23,12 +20,12 @@ import moment from "moment";
 const ControlCalidadPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
-  
+
   const effectRan = useRef(false);
 
   const [filtros] = useState({
-    fechaOrden: "",       // puede ser "YYYY-MM-DD"
-    palabrasClave: "",    // texto a buscar
+    fechaOrden: "", // puede ser "YYYY-MM-DD"
+    palabrasClave: "", // texto a buscar
   });
 
   const { data: comprasData } = useSelector((state) => state.compras);
@@ -68,22 +65,23 @@ const ControlCalidadPage = () => {
   const comprasFiltradas = comprasData.filter((compras) => {
     const fechaCompra = moment.utc(compras.fecha).format("YYYY-MM-DD");
     const fechaFiltro = filtros.fechaOrden;
-    
-    const cumpleFecha =
-      !fechaFiltro || fechaCompra === fechaFiltro;
+
+    const cumpleFecha = !fechaFiltro || fechaCompra === fechaFiltro;
 
     const cumplePalabras =
       !filtros.palabrasClave ||
-      (compras.nombre || "").toLowerCase().includes(
-        filtros.palabrasClave.toLowerCase()
-      );
+      (compras.nombre || "")
+        .toLowerCase()
+        .includes(filtros.palabrasClave.toLowerCase());
 
     return cumpleFecha && cumplePalabras;
   });
-//listo
+  //listo
   const itemsAgrupadosPorDeudor = {};
   comprasFiltradas.forEach((compras) => {
-    const deudor = compras.deudorNombre || `${compras.nombreDeu} - ${compras.nombreCorrelativo}`;
+    const deudor =
+      compras.deudorNombre ||
+      `${compras.nombreDeu} - ${compras.nombreCorrelativo}`;
     if (!itemsAgrupadosPorDeudor[deudor]) {
       itemsAgrupadosPorDeudor[deudor] = [];
     }
@@ -91,8 +89,9 @@ const ControlCalidadPage = () => {
       id: compras.id,
       codigo: compras.codigo,
       nombre: compras.nombre,
+      nombreTienda: compras.nombreTienda,
+      nombreProveedor: compras.nombreProveedor,
       cantidad: compras.cantidad,
-      pedido_venta: compras.pedido_venta,
       cantidadAsignada: compras.cantidadAsignada,
     });
   });
@@ -103,7 +102,6 @@ const ControlCalidadPage = () => {
       itemsAgrupadosPorDeudor[deudor]
     );
   }
-
 
   const handleVerDetalles = (compra) => {
     setSelectedCompra(compra);
@@ -119,9 +117,9 @@ const ControlCalidadPage = () => {
 
         const cumplePalabras =
           !filtros.palabrasClave ||
-          (compra.nombre || "").toLowerCase().includes(
-            filtros.palabrasClave.toLowerCase()
-          );
+          (compra.nombre || "")
+            .toLowerCase()
+            .includes(filtros.palabrasClave.toLowerCase());
 
         return cumpleFecha && cumplePalabras;
       });

@@ -39,10 +39,10 @@ const ControlCalidadTable = ({ itemsAgrupadosPorDeudor, filtros }) => {
                 <Tr key={`${deudor}-${idx}`}>
                   <Td>{item.codigo || "Sin código"}</Td>
                   <Td>{item.nombre || "Sin nombre"}</Td>
-                  <Td>{deudor}</Td>
-                  <Td>{item.cantidad}</Td>
+                  <Td>{item.nombreTienda}</Td>
+                  <Td>{item.nombreProveedor || "null"}</Td>
+                  <Td>{item.cantidad || 0}</Td>
                   <Td>{item.cantidadAsignada || 0}</Td>
-                  <Td>{item.recibido || 0}</Td>
                 </Tr>
               ))
             )
