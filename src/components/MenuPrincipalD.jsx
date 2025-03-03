@@ -119,7 +119,6 @@ const MenuItem = ({
   );
 };
 
-// **PropTypes para MenuItem**
 MenuItem.propTypes = {
   item: PropTypes.shape({
     nombre: PropTypes.string.isRequired,
