@@ -1,4 +1,4 @@
-import PropTypes from "prop-types"; // Importar PropTypes
+import PropTypes from "prop-types";
 import {
   Table,
   Thead,
@@ -37,13 +37,13 @@ const PedidosTable = ({ pedidos, roleId, onVerDetalles }) => (
           <Td>
             <Box
               color={
-                pedido.estadoId === 5 // 5 sería el ID para "Exportado"
-                  ? "blue.600" // Color azul para "Exportado"
+                pedido.estadoId === 5
+                  ? "blue.600"
                   : pedido.estadoId === 3
-                  ? "green.600" // Color verde para "Aprobado"
+                  ? "green.600"
                   : pedido.estadoId === 2
-                  ? "yellow.600" // Color amarillo para "Pendiente"
-                  : "red.600" // Color rojo para "Cancelado"
+                  ? "yellow.600"
+                  : "red.600"
               }
               fontWeight="bold"
             >

@@ -85,7 +85,6 @@ const EntrantesPage = () => {
       for (const pedidoId of selectedPedidos) {
         console.log("Procesando pedido:", pedidoId);
 
-        // Primero actualizar la fecha
         await dispatch(
           actualizarFechaOrden({
             pedidoId,
@@ -95,7 +94,6 @@ const EntrantesPage = () => {
 
         console.log("Fecha actualizada, actualizando estado...");
 
-        // Luego actualizar el estado
         const result = await dispatch(
           togglePedidoStatus({
             id: pedidoId,
@@ -159,16 +157,16 @@ const EntrantesPage = () => {
       const detalles = await dispatch(
         getDetalleOrdenByPedidoId(pedidoId)
       ).unwrap();
-  
+
       // Ordenar los detalles por fecha de creación
       detalles.sort(
         (a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion)
       );
       setDetallesPedido(detalles);
-  
+
       // Obtener el objeto completo del pedido usando el pedidoId
       const pedido = pedidos.find((p) => p.id === pedidoId);
-  
+
       if (!pedido) {
         console.error(`No se encontró el pedido con ID ${pedidoId}`);
         toast({
@@ -180,7 +178,7 @@ const EntrantesPage = () => {
         });
         return;
       }
-  
+
       setSelectedPedido(pedido);
       setIsModalOpen(true);
     } catch (error) {
@@ -197,7 +195,6 @@ const EntrantesPage = () => {
       });
     }
   };
-  
 
   const handleCloseApproveDialog = () => {
     onApproveClose();

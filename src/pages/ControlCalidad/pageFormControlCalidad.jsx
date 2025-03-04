@@ -10,7 +10,11 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCompras, consolidateCompras } from "../../store/Compras/thunks";
+import {
+  fetchCompras,
+  consolidateCompras,
+  actualizarFechaIngreso,
+} from "../../store/Compras/thunks";
 //import FiltrosPedidos from "./componentes/FiltrosPedidos";
 import ControlCalidadTable from "./componentes/ControlCalidadTable";
 import DetallesModal from "./componentes/DetallesModal";
@@ -24,8 +28,8 @@ const ControlCalidadPage = () => {
   const effectRan = useRef(false);
 
   const [filtros] = useState({
-    fechaOrden: "", // puede ser "YYYY-MM-DD"
-    palabrasClave: "", // texto a buscar
+    fechaOrden: "",
+    palabrasClave: "",
   });
 
   const { data: comprasData } = useSelector((state) => state.compras);

@@ -25,8 +25,8 @@ const HistorialPedidosPage = () => {
 
   // Colores para modo claro/oscuro:
   const containerBg = useColorModeValue("white", "gray.800");
-  const headingColor = useColorModeValue("teal.600", "teal.200");
-  const subTextColor = useColorModeValue("gray.500", "gray.400");
+  // const headingColor = useColorModeValue("teal.600", "teal.200");
+  // const subTextColor = useColorModeValue("gray.500", "gray.400");
 
   const pedidosHistorial = pedidos
     .filter((pedido) => {
