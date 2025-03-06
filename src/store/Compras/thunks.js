@@ -8,7 +8,7 @@ export const fetchCompras = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${BASE_URL}/compras/todas`);
-      return response.data; // Array de compras
+      return response.data;
     } catch (error) {
       console.error("Error al obtener compras:", error);
       return rejectWithValue(
@@ -45,7 +45,7 @@ export const updateCompra = createAsyncThunk(
         `${BASE_URL}/compras/update/${id}`,
         rest
       );
-      return response.data; // Retorna la compra actualizada
+      return response.data;
     } catch (error) {
       console.error("Error al actualizar compra:", error);
       return rejectWithValue(

@@ -75,15 +75,18 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
 
   const handleGuardar = async () => {
     if (!selectedProveedorId || cantidadPactada <= 0) {
-      showErrorToast(toast, "Debes seleccionar un proveedor y asignar una cantidad válida.");
+      showErrorToast(
+        toast,
+        "Debes seleccionar un proveedor y asignar una cantidad válida."
+      );
       return;
     }
-  
+
     if (cantidadPactada > cantidadFaltante) {
       showErrorToast(toast, "La cantidad pactada excede la cantidad faltante.");
       return;
     }
-  
+
     try {
       await dispatch(
         asignarProveedor({
@@ -92,11 +95,13 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
           cantidad: cantidadPactada,
         })
       ).unwrap();
-  
+
       showSuccessToast(toast, "Proveedor asignado correctamente.");
-  
+
       setProveedoresAsignados((prev) => {
-        const existingIndex = prev.findIndex((p) => p.proveedorId === selectedProveedorId);
+        const existingIndex = prev.findIndex(
+          (p) => p.proveedorId === selectedProveedorId
+        );
         if (existingIndex !== -1) {
           const updatedProveedores = [...prev];
           updatedProveedores[existingIndex].cantidad += cantidadPactada;
@@ -111,7 +116,7 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
           },
         ];
       });
-  
+
       setCantidadFaltante((prev) => prev - cantidadPactada);
       setCantidadPactada(0);
       setSelectedProveedorId(null);
@@ -121,7 +126,6 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
       showErrorToast(toast, "No se pudo asignar el proveedor.");
     }
   };
-  
 
   const handleDesasignar = async (proveedorId) => {
     try {
