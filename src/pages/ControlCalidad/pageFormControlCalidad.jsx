@@ -80,7 +80,6 @@ const ControlCalidadPage = () => {
 
     return cumpleFecha && cumplePalabras;
   });
-  //listo
   const itemsAgrupadosPorDeudor = {};
   comprasFiltradas.forEach((compras) => {
     const deudor =

@@ -22,6 +22,7 @@ import {
   asignarProveedor,
   desasignarProveedor,
   fetchCompras,
+  actualizarFechaIngreso,
 } from "../../../../store/Compras/thunks";
 
 const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
@@ -157,6 +158,40 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
     onClose();
   };
 
+  const handleFechaIngresoChange = async (e) => {
+    const isoValue = e.target.value;
+
+    setFechaIngreso(isoValue);
+
+    const [yyyy, mm, dd] = isoValue.split("-");
+    const ddMmYyyy = `${dd}/${mm}/${yyyy}`;
+
+    try {
+      await dispatch(
+        actualizarFechaIngreso({
+          pedidoId: item.id,
+          fechaIngreso: ddMmYyyy,
+        })
+      ).unwrap();
+
+      toast({
+        title: "Fecha actualizada",
+        description: "La fecha de ingreso se actualizó correctamente.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "Error al actualizar",
+        description: "No se pudo actualizar la fecha de ingreso.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -236,12 +271,12 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
             Cerrar
           </Button>
         </ModalFooter>
-        <FormControl mb={3}>
+        <FormControl mb={3} p={4}>
           <FormLabel>Fecha de ingreso</FormLabel>
           <Input
             type="date"
             value={fechaIngreso}
-            onChange={(e) => setFechaIngreso(e.target.value)}
+            onChange={handleFechaIngresoChange}
           />
         </FormControl>
       </ModalContent>
