@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { Box, Button, Flex, useDisclosure, useToast } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Flex,
+  useDisclosure,
+  useToast,
+  useColorModeValue,
+} from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import AprobadosTable from "../componentes/exportacionFormPedidos/tableAprobados";
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
@@ -19,8 +26,10 @@ const AprobadosPage = () => {
   const [detallesPedido, setDetallesPedido] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
   const toast = useToast();
-
   const pedidos = useSelector((state) => state.pedidos.data);
+
+  const bgColor = useColorModeValue("white", "gray.800");
+  const textColor = useColorModeValue("gray.800", "white");
 
   useEffect(() => {
     const fetchPedidos = async () => {
@@ -314,7 +323,7 @@ const AprobadosPage = () => {
   };
 
   return (
-    <Box p={6} boxShadow="xl" bg="white" rounded="lg">
+    <Box p={6} boxShadow="xl" bg={bgColor} color={textColor} rounded="lg">
       <Flex justify="flex-start" mb={6} gap={4}>
         <Button
           colorScheme="blue"

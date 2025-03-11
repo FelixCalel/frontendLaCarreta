@@ -8,6 +8,7 @@ import {
   Checkbox,
   Button,
   Tooltip,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -19,6 +20,7 @@ const PedidosTable = ({
   setSelectedPedidos,
   handleVerDetalles,
 }) => {
+  const tableColorScheme = useColorModeValue("gray", "blue");
 
   const handleSelectPedido = (pedidoId) => {
     if (selectedPedidos.includes(pedidoId)) {
@@ -27,9 +29,9 @@ const PedidosTable = ({
       setSelectedPedidos([...selectedPedidos, pedidoId]);
     }
   };
-  
+
   return (
-    <Table variant="striped" colorScheme="gray">
+    <Table variant="striped" colorScheme={tableColorScheme} size="md">
       <Thead>
         <Tr>
           <Th>Seleccionar</Th>

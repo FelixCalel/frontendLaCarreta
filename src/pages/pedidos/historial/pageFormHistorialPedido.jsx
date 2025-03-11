@@ -23,10 +23,9 @@ const HistorialPedidosPage = () => {
   const roleId = parseInt(localStorage.getItem("roleId"), 10);
   const pedidos = useSelector((state) => state.pedidos.data);
 
-  // Colores para modo claro/oscuro:
   const containerBg = useColorModeValue("white", "gray.800");
-  // const headingColor = useColorModeValue("teal.600", "teal.200");
-  // const subTextColor = useColorModeValue("gray.500", "gray.400");
+  const headingColor = useColorModeValue("teal.600", "teal.200");
+  const noDataTextColor = useColorModeValue("gray.500", "gray.400");
 
   const pedidosHistorial = pedidos
     .filter((pedido) => {
@@ -97,7 +96,7 @@ const HistorialPedidosPage = () => {
 
   return (
     <Box p={6} boxShadow="xl" bg={containerBg} rounded="lg">
-      <Heading as="h2" size="lg" mb={6}>
+      <Heading as="h2" size="lg" mb={[4, 6]} mt={[5, 0]} color={headingColor}>
         Historial de Pedidos
       </Heading>
 
@@ -125,7 +124,7 @@ const HistorialPedidosPage = () => {
           />
         </>
       ) : (
-        <Box textAlign="center" color="gray.500" mt={6}>
+        <Box textAlign="center" color={noDataTextColor} mt={6}>
           No hay pedidos aprobados o cancelados para mostrar.
         </Box>
       )}

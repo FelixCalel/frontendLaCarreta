@@ -13,6 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogBody,
   AlertDialogFooter,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -29,6 +30,9 @@ import ApproveOrderDialog from "../componentes/EntrantesFormPedidos/ApproveOrder
 const EntrantesPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
+
+  const bgColor = useColorModeValue("white", "gray.800");
+  const textColor = useColorModeValue("gray.800", "white");
 
   const pedidos = useSelector((state) => state.pedidos.data);
   const [isLoading, setIsLoading] = useState(false);
@@ -207,7 +211,7 @@ const EntrantesPage = () => {
   };
 
   return (
-    <Box p={6} boxShadow="xl" bg="white" rounded="lg">
+    <Box p={6} boxShadow="xl" bg={bgColor} color={textColor} rounded="lg">
       <Flex justify="space-between" mb={3}>
         <Heading as="h2" size="lg">
           Listado de Pedidos Entrantes
