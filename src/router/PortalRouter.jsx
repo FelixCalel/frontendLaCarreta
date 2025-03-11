@@ -3,7 +3,6 @@ import { RootLayout } from "../pages/layouts/RootLayout";
 import {
   PagePerfil,
   Dashboard,
-  PageEmpresa,
   PageUsuarios,
   PageRoles,
   PageOrdenes,
@@ -29,7 +28,6 @@ export const PortalRouter = () => {
       <Route path="/*" element={<RootLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="perfil" element={<PagePerfil />} />
-        <Route path="empresas" element={<PageEmpresa />} />
         <Route path="usuarios" element={<PageUsuarios />} />
         <Route path="roles" element={<PageRoles />} />
         <Route path="permisos" element={<PagePermisos />} />
