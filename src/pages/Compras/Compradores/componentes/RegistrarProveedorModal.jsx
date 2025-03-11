@@ -13,6 +13,9 @@ import {
   Text,
   useToast,
   Flex,
+  Divider,
+  SimpleGrid,
+  Box,
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
@@ -26,15 +29,14 @@ import {
 } from "../../../../store/Compras/thunks";
 
 const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
-  const dispatch = useDispatch();
-  const toast = useToast();
-
-  const [cantidadPactada, setCantidadPactada] = useState(0);
-  const [fechaIngreso, setFechaIngreso] = useState("");
-  const [cantidadFaltante, setCantidadFaltante] = useState(0);
+  const [selectedProveedorName, setSelectedProveedorName] = useState("");
   const [proveedoresAsignados, setProveedoresAsignados] = useState([]);
   const [selectedProveedorId, setSelectedProveedorId] = useState(null);
-  const [selectedProveedorName, setSelectedProveedorName] = useState(""); // Agregamos este estado
+  const [cantidadFaltante, setCantidadFaltante] = useState(0);
+  const [cantidadPactada, setCantidadPactada] = useState(0);
+  const [fechaIngreso, setFechaIngreso] = useState("");
+  const dispatch = useDispatch();
+  const toast = useToast();
 
   useEffect(() => {
     if (item) {
@@ -43,13 +45,11 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
           (acc, prov) => acc + prov.cantidad,
           0
         ) || 0;
-
       const faltante = Math.max(0, (item.cantidad || 0) - totalAsignado);
       setCantidadFaltante(faltante);
 
       if (item.fechaIngreso) {
         const [dd, mm, yyyy] = item.fechaIngreso.split("/");
-
         if (dd && mm && yyyy) {
           const fechaISO = `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(
             2,
@@ -69,7 +69,7 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
     }
   }, [item]);
 
-  const showErrorToast = (toast, description) => {
+  const showErrorToast = (description) => {
     toast({
       title: "Error",
       description,
@@ -79,7 +79,7 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
     });
   };
 
-  const showSuccessToast = (toast, description) => {
+  const showSuccessToast = (description) => {
     toast({
       title: "Éxito",
       description,
@@ -94,14 +94,13 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
   const handleGuardar = async () => {
     if (!selectedProveedorId || cantidadPactada <= 0) {
       showErrorToast(
-        toast,
         "Debes seleccionar un proveedor y asignar una cantidad válida."
       );
       return;
     }
 
     if (cantidadPactada > cantidadFaltante) {
-      showErrorToast(toast, "La cantidad pactada excede la cantidad faltante.");
+      showErrorToast("La cantidad pactada excede la cantidad faltante.");
       return;
     }
 
@@ -114,7 +113,7 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
         })
       ).unwrap();
 
-      showSuccessToast(toast, "Proveedor asignado correctamente.");
+      showSuccessToast("Proveedor asignado correctamente.");
 
       setProveedoresAsignados((prev) => {
         const existingIndex = prev.findIndex(
@@ -141,7 +140,7 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
       setSelectedProveedorName("");
       dispatch(fetchCompras());
     } catch (error) {
-      showErrorToast(toast, "No se pudo asignar el proveedor.");
+      showErrorToast("No se pudo asignar el proveedor.");
     }
   };
 
@@ -151,7 +150,7 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
         desasignarProveedor({ compraId: item.id, proveedorId })
       ).unwrap();
 
-      showSuccessToast(toast, "Proveedor desasignado correctamente.");
+      showSuccessToast("Proveedor desasignado correctamente.");
 
       const eliminado = proveedoresAsignados.find(
         (p) => p.proveedorId === proveedorId
@@ -165,7 +164,7 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
 
       dispatch(fetchCompras());
     } catch (error) {
-      showErrorToast(toast, "No se pudo desasignar el proveedor.");
+      showErrorToast("No se pudo desasignar el proveedor.");
     }
   };
 
@@ -190,51 +189,56 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
         })
       ).unwrap();
 
-      toast({
-        title: "Fecha actualizada",
-        description: "La fecha de ingreso se actualizó correctamente.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+      showSuccessToast("La fecha de ingreso se actualizó correctamente.");
     } catch (error) {
-      toast({
-        title: "Error al actualizar",
-        description: "No se pudo actualizar la fecha de ingreso.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      showErrorToast("No se pudo actualizar la fecha de ingreso.");
     }
   };
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
-      size="md"
+      onClose={handleClose}
+      size="lg"
       motionPreset="slideInBottom"
+      closeOnOverlayClick={false}
     >
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Registrar Proveedor</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Text fontWeight="bold" mb={1}>
-            Item: {item.codigo} - {item.nombre}
-          </Text>
-          <Text mb={3}>Cantidad solicitada: {item.cantidad || 0}</Text>
+          <Box mb={4}>
+            <Text fontWeight="bold" fontSize="lg">
+              {item.codigo} - {item.nombre}
+            </Text>
+            <Text color="gray.600" fontSize="sm">
+              Cantidad solicitada: {item.cantidad || 0}
+            </Text>
+          </Box>
 
-          <FormControl mb={3}>
-            <ProveedorSelector
-              value={selectedProveedorId}
-              onChange={(id, name) => {
-                setSelectedProveedorId(id);
-                setSelectedProveedorName(name);
-              }}
-            />
-          </FormControl>
-          <FormControl mb={3}>
+          <SimpleGrid columns={[1, 2]} spacing={4} mb={4}>
+            <FormControl>
+              <FormLabel>Fecha de ingreso</FormLabel>
+              <Input
+                type="date"
+                value={fechaIngreso}
+                onChange={handleFechaIngresoChange}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Proveedor</FormLabel>
+              <ProveedorSelector
+                value={selectedProveedorId}
+                onChange={(id, name) => {
+                  setSelectedProveedorId(id);
+                  setSelectedProveedorName(name);
+                }}
+              />
+            </FormControl>
+          </SimpleGrid>
+
+          <FormControl mb={2}>
             <FormLabel>Cantidad pactada</FormLabel>
             <Input
               type="number"
@@ -244,12 +248,13 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
               onChange={(e) => setCantidadPactada(Number(e.target.value))}
             />
           </FormControl>
-
-          <Text fontWeight="semibold">
+          <Text fontWeight="semibold" fontSize="sm" mb={4}>
             Cantidad faltante: {cantidadFaltante}
           </Text>
 
-          <Text fontWeight="bold" mt={4}>
+          <Divider mb={4} />
+
+          <Text fontWeight="bold" mb={2}>
             Proveedores asignados:
           </Text>
           {proveedoresAsignados.length > 0 ? (
@@ -258,11 +263,12 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
                 key={prov.proveedorId}
                 justify="space-between"
                 p={2}
-                bg="gray.100"
+                bg="gray.50"
                 borderRadius="md"
                 mt={2}
+                alignItems="center"
               >
-                <Text>
+                <Text fontSize="sm">
                   {prov.nombre}: {prov.cantidad}
                 </Text>
                 <Button
@@ -275,7 +281,9 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
               </Flex>
             ))
           ) : (
-            <Text color="gray.500">Ningún proveedor asignado</Text>
+            <Text color="gray.500" fontSize="sm">
+              Ningún proveedor asignado
+            </Text>
           )}
         </ModalBody>
 
@@ -287,14 +295,6 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
             Cerrar
           </Button>
         </ModalFooter>
-        <FormControl mb={3} p={4}>
-          <FormLabel>Fecha de ingreso</FormLabel>
-          <Input
-            type="date"
-            value={fechaIngreso}
-            onChange={handleFechaIngresoChange}
-          />
-        </FormControl>
       </ModalContent>
     </Modal>
   );
