@@ -45,9 +45,26 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
         ) || 0;
 
       const faltante = Math.max(0, (item.cantidad || 0) - totalAsignado);
-
       setCantidadFaltante(faltante);
-      setFechaIngreso(new Date().toISOString().substr(0, 10));
+
+      if (item.fechaIngreso) {
+        const [dd, mm, yyyy] = item.fechaIngreso.split("/");
+
+        if (dd && mm && yyyy) {
+          const fechaISO = `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(
+            2,
+            "0"
+          )}`;
+          setFechaIngreso(fechaISO);
+        } else {
+          setFechaIngreso(
+            new Date(item.fechaIngreso).toISOString().slice(0, 10)
+          );
+        }
+      } else {
+        setFechaIngreso(new Date().toISOString().slice(0, 10));
+      }
+
       setProveedoresAsignados(item.proveedoresAsignados || []);
     }
   }, [item]);
@@ -160,7 +177,6 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
 
   const handleFechaIngresoChange = async (e) => {
     const isoValue = e.target.value;
-
     setFechaIngreso(isoValue);
 
     const [yyyy, mm, dd] = isoValue.split("-");
@@ -293,6 +309,7 @@ RegistrarProveedorModal.propTypes = {
     nombre: PropTypes.string,
     cantidad: PropTypes.number,
     cantidadAsignada: PropTypes.number,
+    fechaIngreso: PropTypes.string,
     proveedoresAsignados: PropTypes.arrayOf(
       PropTypes.shape({
         proveedorId: PropTypes.number,

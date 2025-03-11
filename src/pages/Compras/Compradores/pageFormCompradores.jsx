@@ -45,7 +45,7 @@ const CompradoresPage = () => {
   const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
-    if (hasLoadedRef.current) return; // Si ya se cargó una vez, no lo hagas otra vez
+    if (hasLoadedRef.current) return;
     hasLoadedRef.current = true;
     const cargarDatos = async () => {
       try {
