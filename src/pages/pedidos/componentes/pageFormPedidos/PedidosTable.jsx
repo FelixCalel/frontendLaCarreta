@@ -1,7 +1,5 @@
-// PedidosTable.jsx
-
 import React from "react";
-import PropTypes from "prop-types"; // Importa PropTypes
+import PropTypes from "prop-types";
 import {
   VStack,
   Box,

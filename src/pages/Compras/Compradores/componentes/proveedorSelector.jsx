@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Select from "react-select";
-import { chakra } from "@chakra-ui/react";
+import { chakra, useColorModeValue } from "@chakra-ui/react";
 import { createSelector } from "@reduxjs/toolkit";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProveedores } from "../../../../store/Proveedor/thunks"; // Ajusta la ruta según tu estructura
+import { fetchProveedores } from "../../../../store/Proveedor/thunks";
 
 const ChakraReactSelect = chakra(Select);
 
@@ -35,6 +35,14 @@ const ProveedorSelector = ({ value, onChange }) => {
 
   const selectedOption = options.find((opt) => opt.value === value) || null;
 
+  // Colores modo claro/oscuro
+  const borderColor = useColorModeValue("gray.300", "gray.600");
+  const hoverBorderColor = useColorModeValue("gray.400", "gray.500");
+  const backgroundColor = useColorModeValue("white", "gray.700");
+  const hoverBackgroundColor = useColorModeValue("gray.100", "gray.600");
+  const textColor = useColorModeValue("gray.800", "white");
+  const placeholderColor = useColorModeValue("gray.400", "gray.500");
+
   return (
     <ChakraReactSelect
       placeholder={
@@ -51,21 +59,56 @@ const ProveedorSelector = ({ value, onChange }) => {
         }
       }}
       isClearable
+      // Si quieres que el menú se dibuje "flotante" y no se corte:
+      menuPortalTarget={document.body} // <--- Renderiza en un portal
+      menuPosition="fixed" // <--- Lo hace "flotante"
       menuPlacement="auto"
-      menuPosition="fixed"
+      // (Si no deseas usar portal, quita estas 3 props para que se posicione "absoluto" dentro del contenedor)
+
+      noOptionsMessage={() => "No se encontraron proveedores"}
+      loadingMessage={() => "Cargando proveedores..."}
       chakraStyles={{
         container: (provided) => ({
           ...provided,
           width: "100%",
         }),
-        control: (provided) => ({
+        control: (provided, state) => ({
           ...provided,
-          borderColor: "gray.300",
-          _hover: { borderColor: "gray.400" },
+          backgroundColor,
+          borderColor,
+          color: textColor,
+          _hover: { borderColor: hoverBorderColor },
+          boxShadow: state.isFocused ? "0 0 0 1px #63b3ed" : provided.boxShadow,
+        }),
+        // Aplica el color al menú
+        menu: (provided) => ({
+          ...provided,
+          backgroundColor,
+          zIndex: 9999, // Asegura que se vea por encima
+        }),
+        // Aplica el color al "ul" donde van las opciones
+        menuList: (provided) => ({
+          ...provided,
+          backgroundColor,
+        }),
+        // Cada opción del menú
+        option: (provided, state) => ({
+          ...provided,
+          backgroundColor: state.isFocused
+            ? hoverBackgroundColor
+            : backgroundColor,
+          color: textColor,
+          cursor: "pointer",
+        }),
+        singleValue: (provided) => ({
+          ...provided,
+          color: textColor,
+        }),
+        placeholder: (provided) => ({
+          ...provided,
+          color: placeholderColor,
         }),
       }}
-      noOptionsMessage={() => "No se encontraron proveedores"}
-      loadingMessage={() => "Cargando proveedores..."}
     />
   );
 };

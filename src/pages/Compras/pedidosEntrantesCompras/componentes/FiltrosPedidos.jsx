@@ -1,5 +1,3 @@
-// src/pages/pedidosEntrantes/componentes/FiltrosPedidos.jsx
-
 import { useState } from "react";
 import {
   Box,
@@ -11,7 +9,6 @@ import {
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 import moment from "moment";
-
 
 const FiltrosPedidos = ({ onAplicarFiltros }) => {
   const [fecha, setFecha] = useState("");

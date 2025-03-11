@@ -1,5 +1,3 @@
-// src/pages/pedidosEntrantes/componentes/DetallesModal.jsx
-
 import PropTypes from "prop-types";
 import {
   Modal,
@@ -23,7 +21,7 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-const DetallesModal = ({ isOpen, onClose, pedido=null }) => {
+const DetallesModal = ({ isOpen, onClose, pedido = null }) => {
   if (!pedido) {
     return null;
   }

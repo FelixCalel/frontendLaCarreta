@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { login as loginAuth } from '../store/auth';  // Ajusta la importación si es necesario
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { login as loginAuth } from "../store/auth"; // Ajusta la importación si es necesario
 
 export const AuthWrapper = ({ children }) => {
   const dispatch = useDispatch();

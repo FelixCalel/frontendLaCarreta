@@ -1,4 +1,3 @@
-// ProductosTable.jsx
 import { useEffect, useState, useRef } from "react";
 import {
   Box,
@@ -425,7 +424,13 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         </Box>
       ) : (
         <>
-          <Heading as="h3" size="xs" mb={1} textAlign="center" color={headingColor}>
+          <Heading
+            as="h3"
+            size="xs"
+            mb={1}
+            textAlign="center"
+            color={headingColor}
+          >
             Detalles del Pedido
           </Heading>
           {productos.length > 0 ? (

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef  } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Box,
   Button,
@@ -8,6 +8,7 @@ import {
   useToast,
   Stack,
   Spinner,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -24,6 +25,7 @@ const PedidosEntrantesPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
   const effectRan = useRef(false);
+
   const [filtros, setFiltros] = useState({
     fechaOrden: "",
     palabrasClave: "",
@@ -34,6 +36,9 @@ const PedidosEntrantesPage = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedCompra, setSelectedCompra] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const containerBg = useColorModeValue("white", "gray.800");
+  const headingColor = useColorModeValue("gray.800", "white");
 
   useEffect(() => {
     if (effectRan.current) return;
@@ -54,6 +59,7 @@ const PedidosEntrantesPage = () => {
         setIsLoading(false);
       }
     };
+
     hacerConsolidacionYObtener();
     effectRan.current = true;
   }, [dispatch, toast]);
@@ -62,31 +68,27 @@ const PedidosEntrantesPage = () => {
     return <Spinner size="xl" />;
   }
 
-  // **Aplicar Filtros a los pedidos**
   const comprasFiltradas = comprasData.filter((compras) => {
-    console.log("Filtrando con:", filtros); 
-    console.log("Fecha en backend:", compras.fecha); 
-  
     const fechaCompra = moment.utc(compras.fecha).format("YYYY-MM-DD");
-    const fechaFiltro = moment.utc(filtros.fecha, "YYYY-MM-DD").format("YYYY-MM-DD");
-  
-    console.log(`Comparando: ${fechaCompra} === ${fechaFiltro}`);
-  
-    const cumpleFecha =
-      !filtros.fecha || fechaCompra === fechaFiltro;
-  
+    const fechaFiltro = moment
+      .utc(filtros.fecha, "YYYY-MM-DD")
+      .format("YYYY-MM-DD");
+
+    const cumpleFecha = !filtros.fecha || fechaCompra === fechaFiltro;
     const cumplePalabras =
       !filtros.palabrasClave ||
-      (compras.nombre || "").toLowerCase().includes(filtros.palabrasClave.toLowerCase());
-  
+      (compras.nombre || "")
+        .toLowerCase()
+        .includes(filtros.palabrasClave.toLowerCase());
+
     return cumpleFecha && cumplePalabras;
   });
-  
 
   const itemsAgrupadosPorDeudor = {};
   comprasFiltradas.forEach((compras) => {
     const deudor =
-      compras.deudorNombre || `${compras.nombreDeu} - ${compras.nombreCorrelativo}`;
+      compras.deudorNombre ||
+      `${compras.nombreDeu} - ${compras.nombreCorrelativo}`;
     if (!itemsAgrupadosPorDeudor[deudor]) {
       itemsAgrupadosPorDeudor[deudor] = [];
     }
@@ -118,24 +120,21 @@ const PedidosEntrantesPage = () => {
 
   const handleExportarExcel = async () => {
     try {
-      console.log("Aplicando filtros antes de exportar...");
-      console.log("Filtros actuales:", filtros);
-      console.log("Datos antes de filtrar:", comprasFiltradas);
-  
       const comprasFiltrados = comprasFiltradas.filter((compra) => {
         const cumpleFecha =
           !filtros.fechaOrden ||
-          moment.utc(compra.fechaOrden).format("YYYY-MM-DD") === filtros.fechaOrden;
-  
+          moment.utc(compra.fechaOrden).format("YYYY-MM-DD") ===
+            filtros.fechaOrden;
+
         const cumplePalabras =
           !filtros.palabrasClave ||
-          compra.nombre.toLowerCase().includes(filtros.palabrasClave.toLowerCase());
-  
+          compra.nombre
+            .toLowerCase()
+            .includes(filtros.palabrasClave.toLowerCase());
+
         return cumpleFecha && cumplePalabras;
       });
-  
-      console.log("Datos después de filtrar:", comprasFiltrados);
-  
+
       if (comprasFiltrados.length === 0) {
         toast({
           title: "Aviso",
@@ -146,17 +145,17 @@ const PedidosEntrantesPage = () => {
         });
         return;
       }
-  
+
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Pedidos Entrantes");
-  
+
       worksheet.columns = [
         { header: "ID", key: "id", width: 10 },
         { header: "Deudor", key: "nombreDeu", width: 30 },
         { header: "Tienda", key: "nombreTienda", width: 30 },
         { header: "Fecha de Entrega", key: "fechaOrden", width: 20 },
       ];
-  
+
       comprasFiltrados.forEach((item) => {
         worksheet.addRow({
           id: item.id,
@@ -165,19 +164,18 @@ const PedidosEntrantesPage = () => {
           fechaOrden: moment.utc(item.fechaOrden).format("DD/MM/YYYY"),
         });
       });
-  
+
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-  
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = "pedidos_agrupados.xlsx";
       a.click();
       window.URL.revokeObjectURL(url);
-  
     } catch (error) {
       console.error("Error al exportar a Excel:", error);
       toast({
@@ -189,10 +187,18 @@ const PedidosEntrantesPage = () => {
       });
     }
   };
-  
+
   return (
-    <Box p={6} boxShadow="xl" bg="white" rounded="lg">
-      <Heading mb={4}>Pedidos Entrantes Compras</Heading>
+    <Box
+      p={6}
+      boxShadow="xl"
+      bg={containerBg}
+      color={headingColor}
+      rounded="lg"
+    >
+      <Heading mb={4} color={headingColor}>
+        Pedidos Entrantes Compras
+      </Heading>
       <Flex justify="space-between" alignItems="center" mb={4}>
         <Stack direction="row" spacing={2}>
           <Button colorScheme="teal" onClick={handleExportarExcel}>
@@ -200,12 +206,15 @@ const PedidosEntrantesPage = () => {
           </Button>
         </Stack>
       </Flex>
+
       <FiltrosPedidos onAplicarFiltros={handleAplicarFiltros} />
+
       <PedidosTable
         itemsAgrupadosPorDeudor={itemsAgrupadosPorDeudorArray}
         filtros={filtros}
         handleVerDetalles={handleVerDetalles}
       />
+
       <DetallesModal
         isOpen={isOpen}
         onClose={onClose}

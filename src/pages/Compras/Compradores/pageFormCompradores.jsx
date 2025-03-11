@@ -8,6 +8,7 @@ import {
   Spinner,
   useDisclosure,
   useToast,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
@@ -43,6 +44,9 @@ const CompradoresPage = () => {
     onClose: onCloseRegistrar,
   } = useDisclosure();
   const [selectedItem, setSelectedItem] = useState(null);
+
+  const containerBg = useColorModeValue("white", "gray.800");
+  const headingColor = useColorModeValue("gray.700", "white");
 
   useEffect(() => {
     if (hasLoadedRef.current) return;
@@ -157,14 +161,14 @@ const CompradoresPage = () => {
 
   return (
     <MotionBox
-      bg="white"
+      bg={containerBg}
       minH="100vh"
       p={6}
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      <Heading mb={4} color="gray.700" fontWeight="extrabold">
+      <Heading mb={4} color={headingColor} fontWeight="extrabold">
         Panel de Compras
       </Heading>
       <Flex justify="space-between" alignItems="center" mb={4}>

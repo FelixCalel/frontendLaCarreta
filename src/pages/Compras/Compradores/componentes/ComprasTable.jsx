@@ -32,8 +32,8 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
   const handleSelectAll = () => {
     if (!selectedAll) {
       const itemsSinProveedor = compras
-        .filter(c => !c.proveedorId)
-        .map(c => c.id);
+        .filter((c) => !c.proveedorId)
+        .map((c) => c.id);
       setSelectedItems(itemsSinProveedor);
     } else {
       setSelectedItems([]);
@@ -62,12 +62,11 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
     }
 
     try {
-
       await Promise.all(
         selectedItems.map((id) =>
           dispatch(
             updateCompra({
-              id: id,
+              id,
               proveedorId: selectedProveedorId,
             })
           )
@@ -100,12 +99,20 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
     }
   };
 
-  const bgHeader = useColorModeValue("gray.100", "gray.600");
+  // Modo claro/oscuro
+  const boxBg = useColorModeValue("white", "gray.700");
+  const textColor = useColorModeValue("gray.800", "white");
+  const tableColorScheme = useColorModeValue("gray", "blue");
+  const headerBg = useColorModeValue("gray.100", "gray.600");
+  // Color de hover dinámico
+  const rowHoverBg = useColorModeValue("green.50", "green.900");
+
   const sortedCompras = [...compras].sort((a, b) => a.id - b.id);
 
   return (
     <Box
-      bg="white"
+      bg={boxBg}
+      color={textColor}
       p={4}
       mb={6}
       rounded="md"
@@ -147,8 +154,9 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
           </Tooltip>
         </Stack>
       </Box>
-      <Table variant="striped" colorScheme="gray">
-        <Thead bg={bgHeader}>
+
+      <Table variant="striped" colorScheme={tableColorScheme}>
+        <Thead bg={headerBg}>
           <Tr>
             <Th>ID</Th>
             <Th>Item</Th>
@@ -166,7 +174,7 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
             <Tr
               key={compra.id}
               _hover={{
-                bg: "blue.50",
+                bg: rowHoverBg,
                 cursor: "pointer",
                 transition: "background 0.2s",
               }}

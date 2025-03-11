@@ -6,6 +6,7 @@ import {
   FormLabel,
   Input,
   Stack,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 import moment from "moment";
@@ -13,6 +14,10 @@ import moment from "moment";
 const FiltrosCompras = ({ onAplicarFiltros }) => {
   const [fechaOrden, setFechaOrden] = useState("");
   const [palabrasClave, setPalabrasClave] = useState("");
+
+  const containerBg = useColorModeValue("gray.50", "gray.700");
+  const containerHoverBg = useColorModeValue("gray.100", "gray.600");
+  const textColor = useColorModeValue("gray.800", "white");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -24,12 +29,13 @@ const FiltrosCompras = ({ onAplicarFiltros }) => {
       as="form"
       mb={6}
       p={4}
-      bg="gray.50"
+      bg={containerBg}
+      color={textColor}
       boxShadow="md"
       rounded="md"
       onSubmit={handleSubmit}
       transition="background-color 0.2s"
-      _hover={{ backgroundColor: "gray.100" }}
+      _hover={{ backgroundColor: containerHoverBg }}
     >
       <Stack direction={{ base: "column", md: "row" }} spacing={4}>
         <FormControl>
@@ -42,6 +48,7 @@ const FiltrosCompras = ({ onAplicarFiltros }) => {
             }
           />
         </FormControl>
+
         <FormControl>
           <FormLabel>Items que contengan las palabras</FormLabel>
           <Input
@@ -51,6 +58,7 @@ const FiltrosCompras = ({ onAplicarFiltros }) => {
             onChange={(e) => setPalabrasClave(e.target.value)}
           />
         </FormControl>
+
         <Button
           type="submit"
           colorScheme="blue"
