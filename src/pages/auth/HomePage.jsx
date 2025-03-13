@@ -21,9 +21,9 @@ const HomePage = () => {
   }, []);
 
   // Define colores que cambiarán según el modo
-  const bg = useColorModeValue("gray.50", "gray.800");    // Fondo general
-  const color = useColorModeValue("gray.800", "white");   // Color de texto general
-  const boxBg = useColorModeValue("white", "gray.900");   // Fondo del contenido principal
+  const bg = useColorModeValue("gray.50", "gray.800");
+  const color = useColorModeValue("gray.800", "white");
+  const boxBg = useColorModeValue("white", "gray.900");
   const textSecondary = useColorModeValue("gray.600", "gray.300");
 
   return (
@@ -42,7 +42,8 @@ const HomePage = () => {
             Bienvenido {nombreUsuario}
           </Heading>
           <Text fontSize="lg" color={textSecondary} mb={6}>
-            ¡Nos alegra tenerte de vuelta! Aquí podrás acceder a los distintos servicios.
+            ¡Nos alegra tenerte de vuelta! Aquí podrás acceder a los distintos
+            servicios.
           </Text>
 
           <Stack direction="column" mt={6} spacing={3} align="flex-start">

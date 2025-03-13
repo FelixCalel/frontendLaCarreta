@@ -420,10 +420,7 @@ const PageFormEmpresa = () => {
                     colorScheme="red"
                   />
                 </Tooltip>
-                <Tooltip
-                  label="Sincronizar Deus"
-                  aria-label="Sincronizar Deus"
-                >
+                <Tooltip label="Sincronizar Deus" aria-label="Sincronizar Deus">
                   <IconButton
                     icon={<FaSyncAlt />}
                     onClick={() =>
