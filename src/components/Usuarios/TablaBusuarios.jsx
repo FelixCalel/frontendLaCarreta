@@ -24,11 +24,12 @@ import {
   ModalFooter,
   IconButton,
   Switch,
-  useColorModeValue, // Importar este hook
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { FiUserPlus, FiSearch } from "react-icons/fi";
 import axios from "axios";
 import RutaSelector from "./componentes/RutaSelector";
+import RolSelector from "./componentes/RolSelector";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -40,7 +41,11 @@ export const TablaBusuarios = () => {
   const [selectedRoutes, setSelectedRoutes] = useState([]);
   const [filteredRutas, setFilteredRutas] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const [allRoles, setAllRoles] = useState([]);
+
   const toast = useToast();
+  const roleIdLogueado = localStorage.getItem("roleId");
 
   useEffect(() => {
     const fetchUsuarios = async () => {
@@ -59,7 +64,17 @@ export const TablaBusuarios = () => {
       }
     };
 
+    const fetchRoles = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/api/roles/listar`);
+        setAllRoles(response.data);
+      } catch (error) {
+        console.error("Error al obtener roles:", error);
+      }
+    };
+
     fetchUsuarios();
+    fetchRoles();
   }, [toast]);
 
   useEffect(() => {
@@ -69,7 +84,6 @@ export const TablaBusuarios = () => {
         const tiendas = Array.isArray(response.data) ? response.data : [];
         console.log("Tiendas obtenidas:", tiendas);
 
-        // Aseguramos que rutas siempre sea un array
         const rutasExtraidas = tiendas.map((tienda) => ({
           id: tienda.rutaId,
           nombre: tienda.nombreRuta,
@@ -140,15 +154,14 @@ export const TablaBusuarios = () => {
         rutaId: selectedRoutes,
       });
 
-      // Elimina rutas duplicadas al asignar
       setUsuarios((prevUsuarios) =>
         prevUsuarios.map((usuario) =>
           usuario.id === usuarioId
             ? {
                 ...usuario,
-                rutas: [
-                  ...new Set([...usuario.rutas, ...selectedRoutes]),
-                ].map((rutaId) => ({ id: rutaId })),
+                rutas: [...new Set([...usuario.rutas, ...selectedRoutes])].map(
+                  (rutaId) => ({ id: rutaId })
+                ),
               }
             : usuario
         )
@@ -229,7 +242,6 @@ export const TablaBusuarios = () => {
     onOpen();
   };
 
-  // Definimos colores adaptables
   const headingColor = useColorModeValue("green.600", "green.200");
   const containerBg = useColorModeValue("white", "gray.800");
   const tableHeaderBg = useColorModeValue("green.100", "green.700");
@@ -241,7 +253,6 @@ export const TablaBusuarios = () => {
 
   return (
     <>
-      {/* Encabezado + Buscador */}
       <Flex justify="space-between" align="center" mb={0} p={8}>
         <Heading size="lg" color={headingColor}>
           Lista de Usuarios
@@ -265,7 +276,6 @@ export const TablaBusuarios = () => {
         </Flex>
       </Flex>
 
-      {/* Contenedor de la tabla */}
       <Box borderRadius="md" boxShadow="lg" p={8} bg={containerBg} mt={-8}>
         <Table variant="simple">
           <Thead bg={tableHeaderBg}>
@@ -275,52 +285,66 @@ export const TablaBusuarios = () => {
               <Th color={tableHeaderColor}>Estado</Th>
               <Th color={tableHeaderColor}>Teléfono</Th>
               <Th color={tableHeaderColor}>Acciones</Th>
+              <Th color={tableHeaderColor}>Roles Asignados</Th>
             </Tr>
           </Thead>
           <Tbody>
             {usuarios
               .filter((usuario) =>
-                usuario.nombre
-                  .toLowerCase()
-                  .includes(searchTerm.toLowerCase())
+                usuario.nombre.toLowerCase().includes(searchTerm.toLowerCase())
               )
-              .map((usuario) => (
-                <Tr key={usuario.id} _hover={{ bg: rowHoverBg }}>
-                  <Td>
-                    {usuario.nombre} {usuario.apellido}
-                  </Td>
-                  <Td>{usuario.correo}</Td>
-                  <Td>
-                    <Switch
-                      isChecked={usuario.estaActivo}
-                      onChange={() =>
-                        toggleUsuarioEstado(usuario.id, usuario.estaActivo)
-                      }
-                      colorScheme="green"
-                    />
-                  </Td>
-                  <Td>{usuario.telefono}</Td>
-                  <Td>
-                    <Stack align="center" direction="row">
-                      <Button
-                        size="sm"
-                        onClick={() => handleOpenAssignRutas(usuario)}
-                        leftIcon={<FiUserPlus />}
+              .map((usuario) => {
+                const rolUsuario = allRoles.find(
+                  (rol) => rol.id === usuario.roleId
+                );
+                const rolNombre = rolUsuario?.nombre || "Sin rol";
+
+                return (
+                  <Tr key={usuario.id} _hover={{ bg: rowHoverBg }}>
+                    <Td>
+                      {usuario.nombre} {usuario.apellido}
+                    </Td>
+                    <Td>{usuario.correo}</Td>
+                    <Td>
+                      <Switch
+                        isChecked={usuario.estaActivo}
+                        onChange={() =>
+                          toggleUsuarioEstado(usuario.id, usuario.estaActivo)
+                        }
                         colorScheme="green"
-                        variant="solid"
-                        _hover={{ bg: "green.300" }}
-                      >
-                        Asignar Rutas
-                      </Button>
-                    </Stack>
-                  </Td>
-                </Tr>
-              ))}
+                      />
+                    </Td>
+                    <Td>{usuario.telefono}</Td>
+                    <Td>
+                      <Stack align="center" direction="row">
+                        <Button
+                          size="sm"
+                          onClick={() => handleOpenAssignRutas(usuario)}
+                          leftIcon={<FiUserPlus />}
+                          colorScheme="green"
+                          variant="solid"
+                          _hover={{ bg: "green.300" }}
+                        >
+                          Asignar Rutas
+                        </Button>
+                      </Stack>
+                    </Td>
+                    <Td>
+                      {roleIdLogueado === "1" ? (
+                        <RolSelector usuario={usuario} allRoles={allRoles} />
+                      ) : (
+                        <Text fontSize="sm" color="gray.500">
+                          {rolNombre}
+                        </Text>
+                      )}
+                    </Td>
+                  </Tr>
+                );
+              })}
           </Tbody>
         </Table>
       </Box>
 
-      {/* Modal para asignar rutas */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -336,7 +360,10 @@ export const TablaBusuarios = () => {
             />
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="green" onClick={() => asignarRutas(selectedUser)}>
+            <Button
+              colorScheme="green"
+              onClick={() => asignarRutas(selectedUser)}
+            >
               Asignar
             </Button>
             <Button variant="ghost" onClick={onClose}>
