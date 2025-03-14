@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchCompras,
   consolidateCompras,
-  actualizarFechaIngreso,
+  //actualizarFechaIngreso,
 } from "../../store/Compras/thunks";
 //import FiltrosPedidos from "./componentes/FiltrosPedidos";
 import ControlCalidadTable from "./componentes/ControlCalidadTable";

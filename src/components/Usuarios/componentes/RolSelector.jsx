@@ -15,6 +15,7 @@ const RolSelector = ({ usuario, allRoles }) => {
     ventas: "🛍️",
     compras: "🛒",
     qa: "🔎",
+    supervisor: "👔",
   };
 
   //const roleColors = {
