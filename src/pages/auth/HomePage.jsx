@@ -8,14 +8,42 @@ import {
   Text,
   useColorModeValue,
   Badge,
+  Icon,
 } from "@chakra-ui/react";
+import {
+  FaUserShield,
+  FaUserAlt,
+  FaShoppingCart,
+  FaBox,
+  FaSearch,
+} from "react-icons/fa";
 
+// Mapeo de ID de rol => nombre legible
 const roleMap = {
   1: "Administrador",
   2: "Usuario",
   3: "Ventas",
   4: "Compras",
   5: "QA",
+};
+
+// Mapeo de nombre de rol => colorScheme
+// Se usan tonos más suaves
+const roleColorMap = {
+  Administrador: "red",
+  Usuario: "blue",
+  Ventas: "green",
+  Compras: "orange",
+  QA: "purple",
+};
+
+// Mapeo de nombre de rol => icono (opcional)
+const roleIconMap = {
+  Administrador: FaUserShield,
+  Usuario: FaUserAlt,
+  Ventas: FaShoppingCart,
+  Compras: FaBox,
+  QA: FaSearch,
 };
 
 const HomePage = () => {
@@ -29,7 +57,6 @@ const HomePage = () => {
     if (nombre) {
       setNombreUsuario(nombre);
     }
-
     if (roleId && roleMap[roleId]) {
       setRolNombre(roleMap[roleId]);
     } else {
@@ -37,29 +64,56 @@ const HomePage = () => {
     }
   }, []);
 
-  const bg = useColorModeValue("gray.50", "gray.800");
-  const color = useColorModeValue("gray.800", "white");
-  const boxBg = useColorModeValue("white", "gray.900");
+  // Colores adaptables
+  const pageBg = useColorModeValue("gray.50", "gray.800");
+  const textColor = useColorModeValue("gray.800", "white");
+  const contentBg = useColorModeValue("white", "gray.900");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+
+  // Determina colorScheme según el nombre del rol
+  const badgeColorScheme = roleColorMap[rolNombre] || "gray";
+  // Determina el icono según el nombre del rol
+  const RoleIcon = roleIconMap[rolNombre];
 
   return (
-    <Flex height="100vh" direction="column" bg={bg} color={color}>
+    <Flex minH="100vh" direction="column" bg={pageBg} color={textColor}>
+      {/* Navbar */}
       <NavBar />
 
-      <Flex flex="1" direction="row" minHeight="100vh">
+      <Flex flex="1" direction="row">
         <MenuPrincipalD />
 
-        <Box flex="1" p={4} m={0} bg={boxBg}>
+        {/* Contenido principal */}
+        <Box flex="1" p={4} bg={contentBg}>
+          {/* Sección de bienvenida transparente */}
           <Box
-            bgGradient="linear(to-r, teal.500, green.500)"
-            color="white"
+            bg="transparent"
+            color={textColor}
             p={8}
             borderRadius="md"
             mb={6}
+            boxShadow="md"
+            border="1px solid"
+            borderColor={borderColor}
           >
             <Heading as="h1" size="xl">
               Bienvenido, {nombreUsuario}
-              {rolNombre && (
-                <Badge ml={4} variant="solid" colorScheme="blackAlpha">
+              {rolNombre && rolNombre !== "Sin rol" && (
+                <Badge
+                  ml={3}
+                  variant="subtle"
+                  colorScheme={badgeColorScheme}
+                  fontSize="xs" // <--- aún más pequeño que 0.75em
+                  lineHeight="1" // <--- reduce el alto de línea
+                  px={2}
+                  py={0.5}
+                  borderRadius="full"
+                  display="inline-flex"
+                  alignItems="center"
+                  gap={1}
+                >
+                  {/* Icono más pequeño */}
+                  {RoleIcon && <Icon as={RoleIcon} boxSize={3} />}
                   {rolNombre}
                 </Badge>
               )}
