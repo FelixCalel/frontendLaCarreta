@@ -21,7 +21,7 @@ import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { login as loginAuth } from "../../store/auth/authSlice";
-import { signInWithEmailAndPassword } from "firebase/auth"; 
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../middleware/firebase-config";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -46,24 +46,52 @@ export const LoginForm = () => {
     setError("");
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, correo, contrasena);
+      // 1. Autenticamos con Firebase
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        correo,
+        contrasena
+      );
       const user = userCredential.user;
 
-    if (!user.emailVerified) {
-      setError("El correo electrónico no está verificado. Por favor, verifica tu correo antes de iniciar sesión.");
-      return;
-    }
+      // 2. Verificamos si el correo está verificado
+      if (!user.emailVerified) {
+        setError(
+          "El correo electrónico no está verificado. Por favor, verifica tu correo antes de iniciar sesión."
+        );
+        return;
+      }
 
+      // 3. Obtenemos el token de Firebase
       const token = await user.getIdToken();
 
-
+      // 4. Llamamos a tu API para obtener datos del usuario
       const resp = await axios.post(`${BASE_URL}/usuarios/datos`, {
-        correo: user.email
+        correo: user.email,
       });
+
       if (resp.data && resp.data.usuario) {
-        const { nombre, correo: correoUsuario, id: usuarioId, paisId, roleId } = resp.data.usuario;
-        
-        localStorage.setItem("token", token);
+        const {
+          nombre,
+          correo: correoUsuario,
+          id: usuarioId,
+          paisId,
+          roleId,
+          estaActivo,
+        } = resp.data.usuario;
+
+        // 5. Verificamos si está activo
+        if (!estaActivo) {
+          // Si NO está activo, mostramos error y cortamos el flujo
+          setError("Tu usuario está inactivo. No tienes acceso al sistema.");
+
+          // (Opcional) puedes cerrar sesión de Firebase para evitar token válido
+          // await signOut(auth);
+
+          return; // Importante: detenemos aquí para no guardar nada ni redirigir
+        }
+
+        // 6. Si está activo, seguimos con la lógica normal de login
         localStorage.setItem("token", token);
         localStorage.setItem("nombreUsuario", nombre);
         localStorage.setItem("correoUsuario", correoUsuario);
@@ -72,20 +100,18 @@ export const LoginForm = () => {
         localStorage.setItem("paisId", paisId);
 
         dispatch(
-
           loginAuth({
-            uid: user.uid,         
-            email: correoUsuario,  
-            displayName: nombre,    
+            uid: user.uid,
+            email: correoUsuario,
+            displayName: nombre,
             token,
             roleId,
             paisId,
           })
         );
 
-        
         navigate("/auth/home", { replace: true });
-        window.location.reload()
+        window.location.reload();
       } else {
         setError("Error al obtener datos del usuario.");
       }
@@ -103,7 +129,14 @@ export const LoginForm = () => {
       bg={useColorModeValue("gray.100", "gray.900")}
       position="relative"
     >
-      <Box w="full" maxW="md" bg={useColorModeValue("white", "gray.800")} boxShadow="2xl" rounded="lg" p={8}>
+      <Box
+        w="full"
+        maxW="md"
+        bg={useColorModeValue("white", "gray.800")}
+        boxShadow="2xl"
+        rounded="lg"
+        p={8}
+      >
         <Stack spacing={4} mb={6} align="center">
           <Heading fontSize="2xl" textAlign="center">
             ¡Bienvenido de nuevo!
