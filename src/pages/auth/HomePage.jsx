@@ -16,20 +16,23 @@ import {
   FaShoppingCart,
   FaBox,
   FaSearch,
+  FaUserTie,
 } from "react-icons/fa";
 
 const roleMap = {
   1: "Administrador",
   2: "Usuario",
   3: "Ventas",
-  4: "Compras",
-  5: "QA",
+  5: "Compras",
+  6: "QA",
+  7: "Supervisor",
 };
 
 const roleColorMap = {
   Administrador: "red",
   Usuario: "blue",
   Ventas: "green",
+  Supervisor: "pink",
   Compras: "orange",
   QA: "purple",
 };
@@ -38,6 +41,7 @@ const roleIconMap = {
   Administrador: FaUserShield,
   Usuario: FaUserAlt,
   Ventas: FaShoppingCart,
+  Supervisor: FaUserTie,
   Compras: FaBox,
   QA: FaSearch,
 };
@@ -53,6 +57,7 @@ const HomePage = () => {
     if (nombre) {
       setNombreUsuario(nombre);
     }
+
     if (roleId && roleMap[roleId]) {
       setRolNombre(roleMap[roleId]);
     } else {

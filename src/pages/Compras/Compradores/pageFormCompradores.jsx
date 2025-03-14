@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import { CalendarIcon, DownloadIcon } from "@chakra-ui/icons";
+import { DownloadIcon } from "@chakra-ui/icons";
 import moment from "moment";
 import * as ExcelJS from "exceljs";
 import {
@@ -181,15 +181,6 @@ const CompradoresPage = () => {
             transition="transform 0.2s"
           >
             Exportar a Excel
-          </Button>
-          <Button
-            colorScheme="orange"
-            onClick={() => alert("Ver Planificación")}
-            leftIcon={<CalendarIcon />}
-            _hover={{ transform: "scale(1.05)" }}
-            transition="transform 0.2s"
-          >
-            Ver Planificación
           </Button>
         </Stack>
       </Flex>
