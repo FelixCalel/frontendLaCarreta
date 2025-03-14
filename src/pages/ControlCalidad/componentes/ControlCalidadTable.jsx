@@ -1,7 +1,12 @@
-import { Table, Thead, Tbody, Tr, Th, Td, Box } from "@chakra-ui/react";
+// ControlCalidadTable.jsx
+import { Table, Thead, Tbody, Tr, Th, Td, Box, Button } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 
-const ControlCalidadTable = ({ itemsAgrupadosPorDeudor, filtros }) => {
+const ControlCalidadTable = ({
+  itemsAgrupadosPorDeudor,
+  filtros,
+  onEditar,
+}) => {
   const itemsFiltrados = {};
 
   Object.keys(itemsAgrupadosPorDeudor).forEach((deudor) => {
@@ -29,7 +34,7 @@ const ControlCalidadTable = ({ itemsAgrupadosPorDeudor, filtros }) => {
             <Th>Proveedor</Th>
             <Th>Cantidad a recibir</Th>
             <Th>Cantidad Recibida</Th>
-            <Th> </Th>
+            <Th>Acciones</Th> {/* Nueva columna */}
           </Tr>
         </Thead>
         <Tbody>
@@ -43,6 +48,16 @@ const ControlCalidadTable = ({ itemsAgrupadosPorDeudor, filtros }) => {
                   <Td>{item.nombreProveedor || "null"}</Td>
                   <Td>{item.cantidad || 0}</Td>
                   <Td>{item.cantidadAsignada || 0}</Td>
+                  <Td>
+                    {/* Botón para abrir modal de edición */}
+                    <Button
+                      colorScheme="blue"
+                      size="sm"
+                      onClick={() => onEditar(item)}
+                    >
+                      Editar
+                    </Button>
+                  </Td>
                 </Tr>
               ))
             )
@@ -64,6 +79,7 @@ ControlCalidadTable.propTypes = {
   filtros: PropTypes.shape({
     palabrasClave: PropTypes.string,
   }).isRequired,
+  onEditar: PropTypes.func.isRequired, // Agregamos la prop
 };
 
 export default ControlCalidadTable;

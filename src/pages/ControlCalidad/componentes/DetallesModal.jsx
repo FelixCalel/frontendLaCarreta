@@ -7,72 +7,79 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Button,
-  Box,
-  Heading,
-  Text,
+  FormControl,
+  FormLabel,
+  Input,
 } from "@chakra-ui/react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { useState } from "react";
 
-const DetallesModal = ({ isOpen, onClose, pedido = null }) => {
+const DetallesModal = ({ isOpen, onClose, pedido }) => {
+  const [cantidadRecibida, setCantidadRecibida] = useState(
+    pedido?.cantidadAsignada || 0
+  );
+
   if (!pedido) {
     return null;
   }
 
+  const handleGuardar = () => {
+    console.log("Guardando nueva cantidad:", cantidadRecibida);
+
+    onClose();
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} size="md">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Detalles del Pedido {pedido.id}</ModalHeader>
+        <ModalHeader>Información de producto Recibido</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          {pedido.items && pedido.items.length > 0 ? (
-            <>
-              <Table variant="simple">
-                <Thead>
-                  <Tr>
-                    <Th>Código</Th>
-                    <Th>Producto</Th>
-                    <Th>Cantidad</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {pedido.items.map((item) => (
-                    <Tr key={item.id}>
-                      <Td>{item.codigo || "Sin código"}</Td>
-                      <Td>{item.nombre}</Td>
-                      <Td>{item.cantidad}</Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-              <Box mt={4}>
-                <Heading size="md">Fecha de Entrega</Heading>
-                <Text>
-                  {pedido.fechaEntrega
-                    ? format(
-                        new Date(pedido.fechaEntrega),
-                        "dd 'de' MMMM 'de' yyyy",
-                        { locale: es }
-                      )
-                    : "Sin fecha"}
-                </Text>
-              </Box>
-            </>
-          ) : (
-            <Box>No hay detalles disponibles</Box>
-          )}
+          <FormControl mb={4}>
+            <FormLabel>Código</FormLabel>
+            <Input
+              isReadOnly
+              value={
+                pedido.codigo && pedido.nombre
+                  ? `${pedido.codigo} - ${pedido.nombre}`
+                  : "Sin datos"
+              }
+            />
+          </FormControl>
+          <FormControl mb={4}>
+            <FormLabel>Subcliente</FormLabel>
+            <Input isReadOnly value={pedido.nombreTienda || "Sin Subcliente"} />
+          </FormControl>
+
+          <FormControl mb={4}>
+            <FormLabel>Proveedor</FormLabel>
+            <Input
+              isReadOnly
+              value={pedido.nombreProveedor || "Sin Proveedor"}
+            />
+          </FormControl>
+
+          <FormControl mb={4}>
+            <FormLabel>Cantidad a recibir</FormLabel>
+            <Input isReadOnly value={pedido.cantidad || 0} />
+          </FormControl>
+
+          <FormControl mb={4}>
+            <FormLabel>Cantidad Recibida</FormLabel>
+            <Input
+              type="number"
+              value={cantidadRecibida}
+              onChange={(e) => setCantidadRecibida(e.target.value)}
+            />
+          </FormControl>
         </ModalBody>
         <ModalFooter>
-          <Button colorScheme="blue" onClick={onClose}>
-            Cerrar
+          <Button colorScheme="blue" mr={3} onClick={handleGuardar}>
+            Guardar
+          </Button>
+          <Button variant="ghost" onClick={onClose}>
+            Cancelar
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -83,18 +90,7 @@ const DetallesModal = ({ isOpen, onClose, pedido = null }) => {
 DetallesModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  pedido: PropTypes.shape({
-    id: PropTypes.number,
-    fechaEntrega: PropTypes.string,
-    items: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.number.isRequired,
-        codigo: PropTypes.string,
-        nombre: PropTypes.string,
-        cantidad: PropTypes.number,
-      })
-    ),
-  }),
+  pedido: PropTypes.object,
 };
 
 export default DetallesModal;

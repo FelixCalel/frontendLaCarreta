@@ -106,8 +106,8 @@ const ControlCalidadPage = () => {
     );
   }
 
-  const handleVerDetalles = (compra) => {
-    setSelectedCompra(compra);
+  const handleEditar = (item) => {
+    setSelectedCompra(item);
     onOpen();
   };
 
@@ -191,14 +191,11 @@ const ControlCalidadPage = () => {
         </Stack>
       </Flex>
 
-      {/* <FiltrosPedidos onAplicarFiltros={handleAplicarFiltros} /> */}
-
       <ControlCalidadTable
         itemsAgrupadosPorDeudor={itemsAgrupadosPorDeudorArray}
         filtros={filtros}
-        handleVerDetalles={handleVerDetalles}
+        onEditar={handleEditar}
       />
-
       <DetallesModal
         isOpen={isOpen}
         onClose={onClose}
