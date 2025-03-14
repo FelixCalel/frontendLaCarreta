@@ -1,3 +1,4 @@
+// ProveedorSelector.jsx
 import { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Select from "react-select";
@@ -23,6 +24,7 @@ const ProveedorSelector = ({ value, onChange }) => {
   const { data: proveedores, loading } = useSelector(selectProveedores);
 
   useEffect(() => {
+    // Evita re-fetch si ya tenemos proveedores o si ya se ha hecho una petición
     if (fetchedRef.current || proveedores.length > 0) return;
     fetchedRef.current = true;
     dispatch(fetchProveedores());
@@ -59,11 +61,10 @@ const ProveedorSelector = ({ value, onChange }) => {
         }
       }}
       isClearable
-      // Si quieres que el menú se dibuje "flotante" y no se corte:
-      menuPortalTarget={document.body} // <--- Renderiza en un portal
-      menuPosition="fixed" // <--- Lo hace "flotante"
-      menuPlacement="auto"
-      // (Si no deseas usar portal, quita estas 3 props para que se posicione "absoluto" dentro del contenedor)
+      // Quitar menuPortalTarget y menuPosition para que se dibuje dentro del modal
+      // menuPortalTarget={document.body}
+      // menuPosition="fixed"
+      // menuPlacement="auto"
 
       noOptionsMessage={() => "No se encontraron proveedores"}
       loadingMessage={() => "Cargando proveedores..."}
@@ -80,18 +81,16 @@ const ProveedorSelector = ({ value, onChange }) => {
           _hover: { borderColor: hoverBorderColor },
           boxShadow: state.isFocused ? "0 0 0 1px #63b3ed" : provided.boxShadow,
         }),
-        // Aplica el color al menú
         menu: (provided) => ({
           ...provided,
+          // Aseguramos que se vea sobre otros elementos en el modal
+          zIndex: 2000,
           backgroundColor,
-          zIndex: 9999, // Asegura que se vea por encima
         }),
-        // Aplica el color al "ul" donde van las opciones
         menuList: (provided) => ({
           ...provided,
           backgroundColor,
         }),
-        // Cada opción del menú
         option: (provided, state) => ({
           ...provided,
           backgroundColor: state.isFocused

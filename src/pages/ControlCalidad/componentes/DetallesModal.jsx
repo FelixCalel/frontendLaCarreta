@@ -11,10 +11,16 @@ import {
   FormControl,
   FormLabel,
   Input,
+  useToast,
 } from "@chakra-ui/react";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { updateCompra } from "../../../store/Compras/thunks";
 
 const DetallesModal = ({ isOpen, onClose, pedido }) => {
+  const dispatch = useDispatch();
+  const toast = useToast();
+
   const [cantidadRecibida, setCantidadRecibida] = useState(
     pedido?.cantidadAsignada || 0
   );
@@ -23,10 +29,34 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
     return null;
   }
 
-  const handleGuardar = () => {
-    console.log("Guardando nueva cantidad:", cantidadRecibida);
+  const handleGuardar = async () => {
+    try {
+      await dispatch(
+        updateCompra({
+          id: pedido.id,
+          cantidadAsignada: Number(cantidadRecibida),
+        })
+      ).unwrap();
 
-    onClose();
+      toast({
+        title: "Actualizado",
+        description: "La cantidad recibida se ha actualizado correctamente.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      onClose();
+    } catch (error) {
+      console.error("Error al actualizar:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la cantidad recibida.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -37,7 +67,7 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
         <ModalCloseButton />
         <ModalBody>
           <FormControl mb={4}>
-            <FormLabel>Código</FormLabel>
+            <FormLabel>Item</FormLabel>
             <Input
               isReadOnly
               value={
@@ -47,6 +77,7 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
               }
             />
           </FormControl>
+
           <FormControl mb={4}>
             <FormLabel>Subcliente</FormLabel>
             <Input isReadOnly value={pedido.nombreTienda || "Sin Subcliente"} />
@@ -66,7 +97,7 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
           </FormControl>
 
           <FormControl mb={4}>
-            <FormLabel>Cantidad Recibida</FormLabel>
+            <FormLabel>Cantidad recibida</FormLabel>
             <Input
               type="number"
               value={cantidadRecibida}
@@ -74,6 +105,7 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
             />
           </FormControl>
         </ModalBody>
+
         <ModalFooter>
           <Button colorScheme="blue" mr={3} onClick={handleGuardar}>
             Guardar
