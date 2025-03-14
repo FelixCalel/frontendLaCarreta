@@ -18,7 +18,6 @@ import {
   FaSearch,
 } from "react-icons/fa";
 
-// Mapeo de ID de rol => nombre legible
 const roleMap = {
   1: "Administrador",
   2: "Usuario",
@@ -27,8 +26,6 @@ const roleMap = {
   5: "QA",
 };
 
-// Mapeo de nombre de rol => colorScheme
-// Se usan tonos más suaves
 const roleColorMap = {
   Administrador: "red",
   Usuario: "blue",
@@ -37,7 +34,6 @@ const roleColorMap = {
   QA: "purple",
 };
 
-// Mapeo de nombre de rol => icono (opcional)
 const roleIconMap = {
   Administrador: FaUserShield,
   Usuario: FaUserAlt,
@@ -64,28 +60,22 @@ const HomePage = () => {
     }
   }, []);
 
-  // Colores adaptables
   const pageBg = useColorModeValue("gray.50", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
   const contentBg = useColorModeValue("white", "gray.900");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
-  // Determina colorScheme según el nombre del rol
   const badgeColorScheme = roleColorMap[rolNombre] || "gray";
-  // Determina el icono según el nombre del rol
   const RoleIcon = roleIconMap[rolNombre];
 
   return (
     <Flex minH="100vh" direction="column" bg={pageBg} color={textColor}>
-      {/* Navbar */}
       <NavBar />
 
       <Flex flex="1" direction="row">
         <MenuPrincipalD />
 
-        {/* Contenido principal */}
         <Box flex="1" p={4} bg={contentBg}>
-          {/* Sección de bienvenida transparente */}
           <Box
             bg="transparent"
             color={textColor}
@@ -103,8 +93,8 @@ const HomePage = () => {
                   ml={3}
                   variant="subtle"
                   colorScheme={badgeColorScheme}
-                  fontSize="xs" // <--- aún más pequeño que 0.75em
-                  lineHeight="1" // <--- reduce el alto de línea
+                  fontSize="xs"
+                  lineHeight="1"
                   px={2}
                   py={0.5}
                   borderRadius="full"
@@ -112,7 +102,6 @@ const HomePage = () => {
                   alignItems="center"
                   gap={1}
                 >
-                  {/* Icono más pequeño */}
                   {RoleIcon && <Icon as={RoleIcon} boxSize={3} />}
                   {rolNombre}
                 </Badge>
