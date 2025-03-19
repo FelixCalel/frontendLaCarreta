@@ -51,24 +51,35 @@ const CompradoresPage = () => {
   useEffect(() => {
     if (hasLoadedRef.current) return;
     hasLoadedRef.current = true;
+  
+    const roleId = parseInt(localStorage.getItem("roleId") || 0); // 👈 Convertir a número y manejar NaN
+  
+    // Validación robusta
+    if (isNaN(roleId)) {
+      console.error("RoleId inválido:", roleId);
+      toast({
+        title: "Error",
+        description: "Rol no identificado",
+        status: "error",
+        duration: 3000,
+      });
+      setIsLoading(false);
+      return;
+    }
+  
     const cargarDatos = async () => {
       try {
         await dispatch(consolidateCompras({ estadoId: 5 }));
-        await dispatch(fetchCompras());
+        await dispatch(fetchCompras(roleId)); // 👈 Asegurar que roleId es número
       } catch (err) {
-        toast({
-          title: "Error",
-          description: "Ocurrió un problema",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        // ... 
       } finally {
         setIsLoading(false);
       }
     };
+    
     cargarDatos();
-  }, []);
+  }, [dispatch, toast, setIsLoading]);
 
   if (isLoading) {
     return (

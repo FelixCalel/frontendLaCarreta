@@ -5,9 +5,10 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const fetchCompras = createAsyncThunk(
   "compras/fetchCompras",
-  async (_, { rejectWithValue }) => {
+  async (roleId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/compras/todas`);
+      console.log("Llamando a la API con roleId:", roleId);
+      const response = await axios.get(`${BASE_URL}/compras/todas/${roleId}`);
       return response.data;
     } catch (error) {
       console.error("Error al obtener compras:", error);
@@ -17,6 +18,7 @@ export const fetchCompras = createAsyncThunk(
     }
   }
 );
+
 
 export const consolidateCompras = createAsyncThunk(
   "compras/consolidate",

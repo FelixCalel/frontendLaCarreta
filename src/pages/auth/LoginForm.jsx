@@ -46,7 +46,6 @@ export const LoginForm = () => {
     setError("");
 
     try {
-      // 1. Autenticamos con Firebase
       const userCredential = await signInWithEmailAndPassword(
         auth,
         correo,
@@ -54,7 +53,6 @@ export const LoginForm = () => {
       );
       const user = userCredential.user;
 
-      // 2. Verificamos si el correo está verificado
       if (!user.emailVerified) {
         setError(
           "El correo electrónico no está verificado. Por favor, verifica tu correo antes de iniciar sesión."
@@ -62,10 +60,8 @@ export const LoginForm = () => {
         return;
       }
 
-      // 3. Obtenemos el token de Firebase
       const token = await user.getIdToken();
 
-      // 4. Llamamos a tu API para obtener datos del usuario
       const resp = await axios.post(`${BASE_URL}/usuarios/datos`, {
         correo: user.email,
       });
@@ -80,18 +76,12 @@ export const LoginForm = () => {
           estaActivo,
         } = resp.data.usuario;
 
-        // 5. Verificamos si está activo
         if (!estaActivo) {
-          // Si NO está activo, mostramos error y cortamos el flujo
           setError("Tu usuario está inactivo. No tienes acceso al sistema.");
 
-          // (Opcional) puedes cerrar sesión de Firebase para evitar token válido
-          // await signOut(auth);
-
-          return; // Importante: detenemos aquí para no guardar nada ni redirigir
+          return;
         }
 
-        // 6. Si está activo, seguimos con la lógica normal de login
         localStorage.setItem("token", token);
         localStorage.setItem("nombreUsuario", nombre);
         localStorage.setItem("correoUsuario", correoUsuario);
