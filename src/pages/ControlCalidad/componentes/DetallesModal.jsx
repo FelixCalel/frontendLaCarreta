@@ -22,7 +22,7 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
   const toast = useToast();
 
   const [cantidadRecibida, setCantidadRecibida] = useState(
-    pedido?.cantidadAsignada || 0
+    pedido?.pedido_compra || 0
   );
 
   if (!pedido) {
@@ -34,7 +34,7 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
       await dispatch(
         updateCompra({
           id: pedido.id,
-          cantidadAsignada: Number(cantidadRecibida),
+          pedido_compra: Number(cantidadRecibida),
         })
       ).unwrap();
 

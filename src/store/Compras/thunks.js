@@ -7,7 +7,6 @@ export const fetchCompras = createAsyncThunk(
   "compras/fetchCompras",
   async (roleId, { rejectWithValue }) => {
     try {
-      console.log("Llamando a la API con roleId:", roleId);
       const response = await axios.get(`${BASE_URL}/compras/todas/${roleId}`);
       return response.data;
     } catch (error) {
@@ -18,7 +17,6 @@ export const fetchCompras = createAsyncThunk(
     }
   }
 );
-
 
 export const consolidateCompras = createAsyncThunk(
   "compras/consolidate",

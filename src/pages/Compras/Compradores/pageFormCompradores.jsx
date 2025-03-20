@@ -51,10 +51,9 @@ const CompradoresPage = () => {
   useEffect(() => {
     if (hasLoadedRef.current) return;
     hasLoadedRef.current = true;
-  
-    const roleId = parseInt(localStorage.getItem("roleId") || 0); // 👈 Convertir a número y manejar NaN
-  
-    // Validación robusta
+
+    const roleId = parseInt(localStorage.getItem("roleId") || 0);
+
     if (isNaN(roleId)) {
       console.error("RoleId inválido:", roleId);
       toast({
@@ -66,18 +65,18 @@ const CompradoresPage = () => {
       setIsLoading(false);
       return;
     }
-  
+
     const cargarDatos = async () => {
       try {
         await dispatch(consolidateCompras({ estadoId: 5 }));
-        await dispatch(fetchCompras(roleId)); // 👈 Asegurar que roleId es número
+        await dispatch(fetchCompras(roleId));
       } catch (err) {
-        // ... 
+        // ...
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     cargarDatos();
   }, [dispatch, toast, setIsLoading]);
 

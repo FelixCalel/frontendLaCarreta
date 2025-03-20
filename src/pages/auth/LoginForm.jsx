@@ -86,7 +86,12 @@ export const LoginForm = () => {
         localStorage.setItem("nombreUsuario", nombre);
         localStorage.setItem("correoUsuario", correoUsuario);
         localStorage.setItem("usuarioId", usuarioId);
+        //console.log("Recibimos roleId del backend:", roleId);
         localStorage.setItem("roleId", roleId);
+        //console.log(
+        // "Ahora localStorage.getItem('roleId') =",
+        // localStorage.getItem("roleId")
+        //);
         localStorage.setItem("paisId", paisId);
 
         dispatch(

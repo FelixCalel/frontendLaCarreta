@@ -41,11 +41,19 @@ const ControlCalidadPage = () => {
 
   useEffect(() => {
     if (effectRan.current) return;
+    effectRan.current = true;
+
+    const roleId = parseInt(localStorage.getItem("roleId") || 0);
+    if (isNaN(roleId) || roleId === 0) {
+      console.error("RoleId inválido:", roleId);
+      setIsLoading(false);
+      return;
+    }
 
     const hacerConsolidacionYObtener = async () => {
       try {
         await dispatch(consolidateCompras({ estadoId: 5 }));
-        await dispatch(fetchCompras());
+        await dispatch(fetchCompras(roleId));
       } catch (err) {
         toast({
           title: "Error",
@@ -59,7 +67,6 @@ const ControlCalidadPage = () => {
       }
     };
     hacerConsolidacionYObtener();
-    effectRan.current = true;
   }, [dispatch, toast]);
 
   if (isLoading) {
@@ -96,6 +103,7 @@ const ControlCalidadPage = () => {
       nombreProveedor: compras.nombreProveedor,
       cantidad: compras.cantidad,
       cantidadAsignada: compras.cantidadAsignada,
+      pedido_compra: compras.pedido_compra,
     });
   });
 

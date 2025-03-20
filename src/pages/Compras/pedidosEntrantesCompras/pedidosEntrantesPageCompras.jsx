@@ -42,11 +42,19 @@ const PedidosEntrantesPage = () => {
 
   useEffect(() => {
     if (effectRan.current) return;
+    effectRan.current = true;
+
+    const roleId = parseInt(localStorage.getItem("roleId") || 0, 10);
+    if (isNaN(roleId) || roleId === 0) {
+      console.warn("No hay roleId. No se cargan las compras.");
+      setIsLoading(false);
+      return;
+    }
 
     const hacerConsolidacionYObtener = async () => {
       try {
         await dispatch(consolidateCompras({ estadoId: 5 }));
-        await dispatch(fetchCompras());
+        await dispatch(fetchCompras(roleId));
       } catch (err) {
         toast({
           title: "Error",
@@ -61,7 +69,6 @@ const PedidosEntrantesPage = () => {
     };
 
     hacerConsolidacionYObtener();
-    effectRan.current = true;
   }, [dispatch, toast]);
 
   if (isLoading) {
