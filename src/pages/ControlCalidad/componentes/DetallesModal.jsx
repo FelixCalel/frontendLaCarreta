@@ -57,7 +57,7 @@ const DetallesModal = ({
         isClosable: true,
       });
 
-      actualizarCantidadRecibida(pedido.id, cantidadRecibida); // Actualizamos el estado en el componente principal
+      actualizarCantidadRecibida(pedido.id, cantidadRecibida);
       onClose();
     } catch (error) {
       console.error("Error al actualizar:", error);
@@ -88,14 +88,17 @@ const DetallesModal = ({
                   ? `${pedido.codigo} - ${pedido.nombre}`
                   : "Sin datos"
               }
+              borderRadius="md"
+              boxShadow="sm"
             />
           </FormControl>
-          {/* Subcliente Info */}
           <FormControl mb={4}>
             <FormLabel>Subcliente</FormLabel>
             <Input
               isReadOnly
               value={pedido?.nombreTienda || "Sin Subcliente"}
+              borderRadius="md"
+              boxShadow="sm"
             />
           </FormControl>
           <FormControl mb={4}>
@@ -103,6 +106,8 @@ const DetallesModal = ({
             <Input
               isReadOnly
               value={pedido?.nombreProveedor || "Sin Proveedor"}
+              borderRadius="md"
+              boxShadow="sm"
             />
           </FormControl>
           <FormControl mb={4}>

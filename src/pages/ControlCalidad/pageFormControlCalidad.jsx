@@ -6,7 +6,6 @@ import {
   Heading,
   useDisclosure,
   useToast,
-  Stack,
   Spinner,
   useColorModeValue,
 } from "@chakra-ui/react";
@@ -16,6 +15,7 @@ import ControlCalidadTable from "./componentes/ControlCalidadTable";
 import DetallesModal from "./componentes/DetallesModal";
 import * as ExcelJS from "exceljs";
 import moment from "moment";
+import { FaFileExport } from "react-icons/fa";
 
 const ControlCalidadPage = () => {
   const dispatch = useDispatch();
@@ -197,15 +197,19 @@ const ControlCalidadPage = () => {
 
   return (
     <Box p={6} boxShadow="xl" bg={pageBg} rounded="lg">
-      <Heading mb={4} color={headingColor}>
-        Control De Calidad
-      </Heading>
       <Flex justify="space-between" alignItems="center" mb={4}>
-        <Stack direction="row" spacing={2}>
-          <Button colorScheme="teal" onClick={handleExportarExcel}>
-            Exportar a Excel
-          </Button>
-        </Stack>
+        <Heading mb={4} color={headingColor}>
+          Control De Calidad
+        </Heading>
+        <Button
+          colorScheme="green"
+          bg="green.500"
+          _hover={{ bg: "green.600" }}
+          leftIcon={<FaFileExport />}
+          onClick={handleExportarExcel}
+        >
+          Exportar a Excel
+        </Button>
       </Flex>
 
       <ControlCalidadTable
