@@ -32,10 +32,9 @@ const ControlCalidadPage = () => {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedCompra, setSelectedCompra] = useState(null);
-
   const [isLoading, setIsLoading] = useState(true);
+  const [comprasState, setComprasState] = useState(comprasData);
 
-  // Adaptación de colores para modo claro/oscuro
   const pageBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("gray.800", "white");
 
@@ -114,6 +113,13 @@ const ControlCalidadPage = () => {
       itemsAgrupadosPorDeudor[deudor]
     );
   }
+
+  const actualizarCantidadRecibida = (id, nuevaCantidad) => {
+    const updatedItems = comprasState.map((item) =>
+      item.id === id ? { ...item, pedido_compra: nuevaCantidad } : item
+    );
+    setComprasState(updatedItems);
+  };
 
   const handleEditar = (item) => {
     setSelectedCompra(item);
@@ -211,6 +217,7 @@ const ControlCalidadPage = () => {
         isOpen={isOpen}
         onClose={onClose}
         pedido={selectedCompra}
+        actualizarCantidadRecibida={actualizarCantidadRecibida}
       />
     </Box>
   );
