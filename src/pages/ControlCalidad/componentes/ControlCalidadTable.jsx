@@ -116,7 +116,7 @@ const ControlCalidadTable = ({
                   <Td>{item.nombre || "Sin nombre"}</Td>
                   <Td>{item.nombreTienda}</Td>
                   <Td>{item.nombreProveedor || "null"}</Td>
-                  <Td>{item.cantidad || 0}</Td>
+                  <Td>{item.cantidadAsignada || 0}</Td>
                   <Td>{item.pedido_compra || 0}</Td>
                   <Td>
                     <Button

@@ -112,7 +112,7 @@ const DetallesModal = ({
           </FormControl>
           <FormControl mb={4}>
             <FormLabel>Cantidad a recibir</FormLabel>
-            <Input isReadOnly value={pedido?.cantidad || 0} />
+            <Input isReadOnly value={pedido?.cantidadAsignada || 0} />
           </FormControl>
           <FormControl mb={4}>
             <FormLabel>Cantidad recibida</FormLabel>

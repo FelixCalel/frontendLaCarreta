@@ -83,8 +83,10 @@ const ControlCalidadPage = () => {
       (compras.nombre || "")
         .toLowerCase()
         .includes(filtros.palabrasClave.toLowerCase());
+    const tieneProveedor =
+      compras.nombreProveedor && compras.nombreProveedor !== "Sin proveedores";
 
-    return cumpleFecha && cumplePalabras;
+    return cumpleFecha && cumplePalabras && tieneProveedor;
   });
 
   const itemsAgrupadosPorDeudor = {};
