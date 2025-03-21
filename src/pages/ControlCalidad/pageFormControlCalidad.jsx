@@ -8,14 +8,10 @@ import {
   useToast,
   Stack,
   Spinner,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchCompras,
-  consolidateCompras,
-  //actualizarFechaIngreso,
-} from "../../store/Compras/thunks";
-//import FiltrosPedidos from "./componentes/FiltrosPedidos";
+import { fetchCompras, consolidateCompras } from "../../store/Compras/thunks";
 import ControlCalidadTable from "./componentes/ControlCalidadTable";
 import DetallesModal from "./componentes/DetallesModal";
 import * as ExcelJS from "exceljs";
@@ -38,6 +34,10 @@ const ControlCalidadPage = () => {
   const [selectedCompra, setSelectedCompra] = useState(null);
 
   const [isLoading, setIsLoading] = useState(true);
+
+  // Adaptación de colores para modo claro/oscuro
+  const pageBg = useColorModeValue("white", "gray.800");
+  const headingColor = useColorModeValue("gray.800", "white");
 
   useEffect(() => {
     if (effectRan.current) return;
@@ -87,6 +87,7 @@ const ControlCalidadPage = () => {
 
     return cumpleFecha && cumplePalabras;
   });
+
   const itemsAgrupadosPorDeudor = {};
   comprasFiltradas.forEach((compras) => {
     const deudor =
@@ -189,8 +190,10 @@ const ControlCalidadPage = () => {
   };
 
   return (
-    <Box p={6} boxShadow="xl" bg="white" rounded="lg">
-      <Heading mb={4}>Control De Calidad</Heading>
+    <Box p={6} boxShadow="xl" bg={pageBg} rounded="lg">
+      <Heading mb={4} color={headingColor}>
+        Control De Calidad
+      </Heading>
       <Flex justify="space-between" alignItems="center" mb={4}>
         <Stack direction="row" spacing={2}>
           <Button colorScheme="teal" onClick={handleExportarExcel}>

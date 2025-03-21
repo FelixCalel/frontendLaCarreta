@@ -13,7 +13,7 @@ import {
   Input,
   useToast,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { updateCompra } from "../../../store/Compras/thunks";
 
@@ -21,16 +21,21 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
   const dispatch = useDispatch();
   const toast = useToast();
 
+  // Estado para la cantidad recibida
   const [cantidadRecibida, setCantidadRecibida] = useState(
     pedido?.pedido_compra || 0
   );
 
-  if (!pedido) {
-    return null;
-  }
+  // Aseguramos que cuando el modal se abra, se actualice el valor de cantidadRecibida
+  useEffect(() => {
+    if (pedido) {
+      setCantidadRecibida(pedido.pedido_compra || 0);
+    }
+  }, [pedido, isOpen]); // Se vuelve a ejecutar cuando 'pedido' o 'isOpen' cambian
 
   const handleGuardar = async () => {
     try {
+      // Actualización de la cantidad recibida en la base de datos
       await dispatch(
         updateCompra({
           id: pedido.id,
@@ -66,6 +71,7 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
         <ModalHeader>Información de producto Recibido</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
+          {/* Item Info */}
           <FormControl mb={4}>
             <FormLabel>Item</FormLabel>
             <Input
@@ -78,11 +84,13 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
             />
           </FormControl>
 
+          {/* Subcliente Info */}
           <FormControl mb={4}>
             <FormLabel>Subcliente</FormLabel>
             <Input isReadOnly value={pedido.nombreTienda || "Sin Subcliente"} />
           </FormControl>
 
+          {/* Proveedor Info */}
           <FormControl mb={4}>
             <FormLabel>Proveedor</FormLabel>
             <Input
@@ -91,17 +99,22 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
             />
           </FormControl>
 
+          {/* Cantidad a recibir */}
           <FormControl mb={4}>
             <FormLabel>Cantidad a recibir</FormLabel>
             <Input isReadOnly value={pedido.cantidad || 0} />
           </FormControl>
 
+          {/* Editable field: Cantidad recibida */}
           <FormControl mb={4}>
             <FormLabel>Cantidad recibida</FormLabel>
             <Input
               type="number"
               value={cantidadRecibida}
               onChange={(e) => setCantidadRecibida(e.target.value)}
+              borderColor="teal.500"
+              _hover={{ borderColor: "teal.600" }}
+              _focus={{ borderColor: "teal.600" }}
             />
           </FormControl>
         </ModalBody>

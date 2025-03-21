@@ -106,6 +106,7 @@ const PedidosEntrantesPage = () => {
       cantidad: compras.cantidad,
       pedido_venta: compras.pedido_venta,
       cantidadAsignada: compras.cantidadAsignada,
+      pedido_compra: compras.pedido_compra,
     });
   });
 

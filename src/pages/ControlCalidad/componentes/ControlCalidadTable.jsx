@@ -1,5 +1,14 @@
-// ControlCalidadTable.jsx
-import { Table, Thead, Tbody, Tr, Th, Td, Box, Button } from "@chakra-ui/react";
+import {
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Box,
+  Button,
+  useColorModeValue,
+} from "@chakra-ui/react";
 import PropTypes from "prop-types";
 
 const ControlCalidadTable = ({
@@ -23,10 +32,14 @@ const ControlCalidadTable = ({
     }
   });
 
+  const tableBg = useColorModeValue("white", "gray.700");
+  const tableHeaderBg = useColorModeValue("gray.100", "gray.600");
+  const rowHoverBg = useColorModeValue("green.50", "green.900");
+
   return (
     <Box overflowX="auto">
-      <Table variant="striped" colorScheme="gray">
-        <Thead>
+      <Table variant="striped" colorScheme="gray" bg={tableBg}>
+        <Thead bg={tableHeaderBg}>
           <Tr>
             <Th>Código</Th>
             <Th>Nombre Item</Th>
@@ -34,14 +47,14 @@ const ControlCalidadTable = ({
             <Th>Proveedor</Th>
             <Th>Cantidad a recibir</Th>
             <Th>Cantidad Recibida</Th>
-            <Th>Acciones</Th> {/* Nueva columna */}
+            <Th>Acciones</Th>
           </Tr>
         </Thead>
         <Tbody>
           {Object.keys(itemsFiltrados).length > 0 ? (
             Object.entries(itemsFiltrados).map(([deudor, items]) =>
               items.map((item, idx) => (
-                <Tr key={`${deudor}-${idx}`}>
+                <Tr key={`${deudor}-${idx}`} _hover={{ bg: rowHoverBg }}>
                   <Td>{item.codigo || "Sin código"}</Td>
                   <Td>{item.nombre || "Sin nombre"}</Td>
                   <Td>{item.nombreTienda}</Td>
@@ -49,7 +62,6 @@ const ControlCalidadTable = ({
                   <Td>{item.cantidad || 0}</Td>
                   <Td>{item.pedido_compra || 0}</Td>
                   <Td>
-                    {/* Botón para abrir modal de edición */}
                     <Button
                       colorScheme="blue"
                       size="sm"
@@ -79,7 +91,7 @@ ControlCalidadTable.propTypes = {
   filtros: PropTypes.shape({
     palabrasClave: PropTypes.string,
   }).isRequired,
-  onEditar: PropTypes.func.isRequired, // Agregamos la prop
+  onEditar: PropTypes.func.isRequired,
 };
 
 export default ControlCalidadTable;

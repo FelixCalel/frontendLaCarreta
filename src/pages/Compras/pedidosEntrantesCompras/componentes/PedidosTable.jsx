@@ -43,7 +43,7 @@ const PedidosTable = ({ itemsAgrupadosPorDeudor, filtros }) => {
                   <Td>{deudor}</Td>
                   <Td>{item.cantidad}</Td>
                   <Td>{item.cantidadAsignada || 0}</Td>
-                  <Td>{item.recibido || 0}</Td>
+                  <Td>{item.pedido_compra || 0}</Td>
                 </Tr>
               ))
             )
