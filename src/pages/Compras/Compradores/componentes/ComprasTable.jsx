@@ -126,6 +126,8 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
       setSelectedItems([]);
       setSelectedProveedorId(null);
       setSelectedAll(false);
+      const roleId = parseInt(localStorage.getItem("roleId") || 0);
+      await dispatch(fetchCompras(roleId));
     } catch (error) {
       console.error("Error en operación:", error);
       toast({

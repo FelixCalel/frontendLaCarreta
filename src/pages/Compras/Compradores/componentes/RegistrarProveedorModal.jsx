@@ -139,6 +139,8 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
       setSelectedProveedorId(null);
       setSelectedProveedorName("");
       dispatch(fetchCompras());
+      const roleId = parseInt(localStorage.getItem("roleId") || "0", 10);
+      await dispatch(fetchCompras(roleId));
     } catch (error) {
       showErrorToast("No se pudo asignar el proveedor.");
     }
@@ -163,6 +165,8 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
       setCantidadFaltante((prev) => prev + cantidadEliminada);
 
       dispatch(fetchCompras());
+      const roleId = parseInt(localStorage.getItem("roleId") || "0", 10);
+      await dispatch(fetchCompras(roleId));
     } catch (error) {
       showErrorToast("No se pudo desasignar el proveedor.");
     }

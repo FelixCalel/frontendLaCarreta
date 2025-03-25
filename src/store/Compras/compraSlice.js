@@ -100,14 +100,6 @@ const comprasSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      // .addCase(actualizarFechaIngreso.fulfilled, (state, action) => {
-      //   state.loading = false;
-      //   const updatedCompra = action.payload;
-      //   const index = state.data.findIndex((c) => c.id === updatedCompra.id);
-      //   if (index !== -1) {
-      //     state.data[index] = { ...state.data[index], ...updatedCompra };
-      //   }
-      // })
       .addCase(actualizarFechaIngreso.rejected, (state, action) => {
         state.loading = false;
         state.error =
