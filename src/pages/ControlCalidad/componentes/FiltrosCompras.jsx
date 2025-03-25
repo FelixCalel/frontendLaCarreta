@@ -12,7 +12,7 @@ import PropTypes from "prop-types";
 import moment from "moment";
 import { SearchIcon } from "@chakra-ui/icons";
 
-const FiltrosPedidos = ({ onAplicarFiltros }) => {
+const FiltrosCompras = ({ onAplicarFiltros }) => {
   const [fecha, setFecha] = useState("");
   const [palabrasClave, setPalabrasClave] = useState("");
 
@@ -36,7 +36,7 @@ const FiltrosPedidos = ({ onAplicarFiltros }) => {
         align="flex-end"
       >
         <FormControl w={{ base: "100%", md: "200px" }}>
-          <FormLabel fontSize="sm">Fecha de Entrega</FormLabel>
+          <FormLabel fontSize="sm">Fecha de Ingreso a planta</FormLabel>
           <Input
             size="sm"
             type="date"
@@ -71,8 +71,8 @@ const FiltrosPedidos = ({ onAplicarFiltros }) => {
   );
 };
 
-FiltrosPedidos.propTypes = {
+FiltrosCompras.propTypes = {
   onAplicarFiltros: PropTypes.func.isRequired,
 };
 
-export default FiltrosPedidos;
+export default FiltrosCompras;

@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { updateCompra } from "../../../store/Compras/thunks";
+import { updateCompra, fetchCompras } from "../../../store/Compras/thunks";
 
 const DetallesModal = ({
   isOpen,
@@ -49,6 +49,9 @@ const DetallesModal = ({
         })
       ).unwrap();
 
+      const roleId = parseInt(localStorage.getItem("roleId") || "0", 10);
+      await dispatch(fetchCompras(roleId));
+
       toast({
         title: "Actualizado",
         description: "La cantidad recibida se ha actualizado correctamente.",
@@ -69,7 +72,6 @@ const DetallesModal = ({
         isClosable: true,
       });
     }
-    window.location.reload();
   };
 
   return (
@@ -118,8 +120,18 @@ const DetallesModal = ({
             <FormLabel>Cantidad recibida</FormLabel>
             <Input
               type="number"
+              min={0}
+              max={pedido?.cantidadAsignada || 0}
               value={cantidadRecibida}
-              onChange={(e) => setCantidadRecibida(e.target.value)}
+              onChange={(e) => {
+                let valor = Number(e.target.value);
+                if (valor < 0) valor = 0;
+                if (valor > pedido.cantidadAsignada) {
+                  valor = pedido.cantidadAsignada;
+                }
+                setCantidadRecibida(valor);
+              }}
+              onWheel={(e) => e.target.blur()}
               borderColor="teal.500"
               _hover={{ borderColor: "teal.600" }}
               _focus={{ borderColor: "teal.600" }}

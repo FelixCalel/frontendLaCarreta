@@ -6,7 +6,6 @@ import {
   Heading,
   useDisclosure,
   useToast,
-  Stack,
   Spinner,
   useColorModeValue,
 } from "@chakra-ui/react";
@@ -39,6 +38,18 @@ const PedidosEntrantesPage = () => {
 
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("gray.800", "white");
+
+  useEffect(() => {
+    const roleId = parseInt(localStorage.getItem("roleId") || "0", 10);
+
+    dispatch(fetchCompras(roleId));
+
+    const intervalId = setInterval(() => {
+      dispatch(fetchCompras(roleId));
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [dispatch]);
 
   useEffect(() => {
     if (effectRan.current) return;
@@ -204,16 +215,15 @@ const PedidosEntrantesPage = () => {
       color={headingColor}
       rounded="lg"
     >
-      <Heading mb={4} color={headingColor}>
-        Pedidos Entrantes Compras
-      </Heading>
+      {/* Flex para el título y el botón en la misma fila */}
       <Flex justify="space-between" alignItems="center" mb={4}>
-        <Stack direction="row" spacing={2}>
-          <Button colorScheme="teal" onClick={handleExportarExcel}>
-            Exportar a Excel
-          </Button>
-        </Stack>
+        <Heading color={headingColor}>Pedidos Entrantes Compras</Heading>
+        <Button colorScheme="teal" onClick={handleExportarExcel}>
+          Exportar a Excel
+        </Button>
       </Flex>
+
+      {/* Aquí ya no necesitas otro Heading separado */}
 
       <FiltrosPedidos onAplicarFiltros={handleAplicarFiltros} />
 

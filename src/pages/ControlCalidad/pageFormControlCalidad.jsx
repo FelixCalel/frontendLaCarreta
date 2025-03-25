@@ -14,6 +14,7 @@ import { fetchCompras, consolidateCompras } from "../../store/Compras/thunks";
 import ControlCalidadTable from "./componentes/ControlCalidadTable";
 import DetallesModal from "./componentes/DetallesModal";
 import * as ExcelJS from "exceljs";
+import FiltrosCompras from "./componentes/FiltrosCompras";
 import moment from "moment";
 import { FaFileExport } from "react-icons/fa";
 
@@ -22,11 +23,6 @@ const ControlCalidadPage = () => {
   const toast = useToast();
 
   const effectRan = useRef(false);
-
-  const [filtros] = useState({
-    fechaOrden: "",
-    palabrasClave: "",
-  });
 
   const { data: comprasData } = useSelector((state) => state.compras);
 
@@ -37,6 +33,10 @@ const ControlCalidadPage = () => {
 
   const pageBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("gray.800", "white");
+  const [filtros, setFiltros] = useState({
+    fechaOrden: "",
+    palabrasClave: "",
+  });
 
   useEffect(() => {
     if (effectRan.current) return;
@@ -197,6 +197,10 @@ const ControlCalidadPage = () => {
     }
   };
 
+  const handleAplicarFiltros = (nuevosFiltros) => {
+    setFiltros(nuevosFiltros);
+  };
+
   return (
     <Box p={6} boxShadow="xl" bg={pageBg} rounded="lg">
       <Flex justify="space-between" alignItems="center" mb={4}>
@@ -213,6 +217,8 @@ const ControlCalidadPage = () => {
           Exportar a Excel
         </Button>
       </Flex>
+
+      <FiltrosCompras onAplicarFiltros={handleAplicarFiltros} />
 
       <ControlCalidadTable
         itemsAgrupadosPorDeudor={itemsAgrupadosPorDeudorArray}

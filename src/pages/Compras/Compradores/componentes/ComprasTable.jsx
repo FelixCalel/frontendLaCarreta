@@ -76,6 +76,25 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
 
     try {
       if (selectedProveedorId) {
+        const tieneProveedor = selectedItems.some((id) => {
+          const compra = compras.find((c) => c.id === id);
+          return (
+            Array.isArray(compra.proveedorId) && compra.proveedorId.length > 0
+          );
+        });
+
+        if (tieneProveedor) {
+          toast({
+            title: "Ya tiene proveedor asignado",
+            description:
+              "No puedes asignar un nuevo proveedor. Usa 'Planificar' para modificar.",
+            status: "warning",
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+
         await Promise.all(
           selectedItems.map((id) => {
             const compra = compras.find((c) => c.id === id);
@@ -106,7 +125,7 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
             return dispatch(
               desasignarProveedor({
                 compraId: id,
-                proveedorId: compra.proveedorId[0],
+                proveedorId: compra.proveedorId?.[0],
               })
             );
           })
@@ -121,13 +140,12 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
         });
       }
 
-      await dispatch(fetchCompras());
+      const roleId = parseInt(localStorage.getItem("roleId") || "0", 10);
+      await dispatch(fetchCompras(roleId));
 
       setSelectedItems([]);
       setSelectedProveedorId(null);
       setSelectedAll(false);
-      const roleId = parseInt(localStorage.getItem("roleId") || 0);
-      await dispatch(fetchCompras(roleId));
     } catch (error) {
       console.error("Error en operación:", error);
       toast({

@@ -4,7 +4,6 @@ import {
   Button,
   Flex,
   Heading,
-  Stack,
   Spinner,
   useDisclosure,
   useToast,
@@ -178,22 +177,21 @@ const CompradoresPage = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      <Heading mb={4} color={headingColor} fontWeight="extrabold">
-        Panel de Compras
-      </Heading>
       <Flex justify="space-between" alignItems="center" mb={4}>
-        <Stack direction="row" spacing={3}>
-          <Button
-            colorScheme="teal"
-            onClick={handleExportarExcel}
-            leftIcon={<DownloadIcon />}
-            _hover={{ transform: "scale(1.05)" }}
-            transition="transform 0.2s"
-          >
-            Exportar a Excel
-          </Button>
-        </Stack>
+        <Heading color={headingColor} fontWeight="extrabold">
+          Panel de Compras
+        </Heading>
+        <Button
+          colorScheme="teal"
+          onClick={handleExportarExcel}
+          leftIcon={<DownloadIcon />}
+          _hover={{ transform: "scale(1.05)" }}
+          transition="transform 0.2s"
+        >
+          Exportar a Excel
+        </Button>
       </Flex>
+
       <FiltrosCompras onAplicarFiltros={handleAplicarFiltros} />
       <ComprasTable
         compras={comprasFiltradas}
