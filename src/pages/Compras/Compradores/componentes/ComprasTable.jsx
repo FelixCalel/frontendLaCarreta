@@ -18,7 +18,12 @@ import { useState } from "react";
 import { FaUserCheck } from "react-icons/fa";
 import ProveedorSelector from "./proveedorSelector";
 import { useDispatch, useSelector } from "react-redux";
-import { updateCompra, fetchCompras } from "../../../../store/Compras/thunks";
+import {
+  //updateCompra,
+  fetchCompras,
+  asignarProveedor,
+  desasignarProveedor,
+} from "../../../../store/Compras/thunks";
 
 const ComprasTable = ({ compras, onRegistrarProveedor }) => {
   const dispatch = useDispatch();
@@ -49,6 +54,14 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
     }
   };
 
+  const boxBg = useColorModeValue("white", "gray.700");
+  const textColor = useColorModeValue("gray.800", "white");
+  const tableColorScheme = useColorModeValue("gray", "blue");
+  const headerBg = useColorModeValue("gray.100", "gray.600");
+  const rowHoverBg = useColorModeValue("green.50", "green.900");
+
+  const sortedCompras = [...compras].sort((a, b) => a.id - b.id);
+
   const handleAssignProveedor = async () => {
     if (selectedItems.length === 0) {
       toast({
@@ -62,31 +75,57 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
     }
 
     try {
-      await Promise.all(
-        selectedItems.map((id) =>
-          dispatch(
-            updateCompra({
-              id,
-              proveedorId: selectedProveedorId,
-            })
-          )
-        )
-      );
+      if (selectedProveedorId) {
+        await Promise.all(
+          selectedItems.map((id) => {
+            const compra = compras.find((c) => c.id === id);
 
-      dispatch(fetchCompras());
+            return dispatch(
+              asignarProveedor({
+                compraId: id,
+                proveedorId: selectedProveedorId,
+                cantidad: compra.cantidad || 1,
+                selectedProveedorName: "Nombre del proveedor (opcional)",
+              })
+            );
+          })
+        );
+
+        toast({
+          title: "Operación exitosa",
+          description: "Proveedores asignados correctamente",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        await Promise.all(
+          selectedItems.map((id) => {
+            const compra = compras.find((c) => c.id === id);
+
+            return dispatch(
+              desasignarProveedor({
+                compraId: id,
+                proveedorId: compra.proveedorId[0],
+              })
+            );
+          })
+        );
+
+        toast({
+          title: "Operación exitosa",
+          description: "Proveedores removidos correctamente",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+
+      await dispatch(fetchCompras());
+
       setSelectedItems([]);
       setSelectedProveedorId(null);
       setSelectedAll(false);
-
-      toast({
-        title: "Operación exitosa",
-        description: selectedProveedorId
-          ? "Proveedores asignados correctamente"
-          : "Proveedores removidos correctamente",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
     } catch (error) {
       console.error("Error en operación:", error);
       toast({
@@ -98,16 +137,6 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
       });
     }
   };
-
-  // Modo claro/oscuro
-  const boxBg = useColorModeValue("white", "gray.700");
-  const textColor = useColorModeValue("gray.800", "white");
-  const tableColorScheme = useColorModeValue("gray", "blue");
-  const headerBg = useColorModeValue("gray.100", "gray.600");
-  // Color de hover dinámico
-  const rowHoverBg = useColorModeValue("green.50", "green.900");
-
-  const sortedCompras = [...compras].sort((a, b) => a.id - b.id);
 
   return (
     <Box
