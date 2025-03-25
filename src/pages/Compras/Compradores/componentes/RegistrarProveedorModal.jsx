@@ -37,6 +37,7 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
   const [fechaIngreso, setFechaIngreso] = useState("");
   const dispatch = useDispatch();
   const toast = useToast();
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     if (item) {
@@ -104,6 +105,8 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
       return;
     }
 
+    setAssigning(true);
+
     try {
       await dispatch(
         asignarProveedor({
@@ -143,6 +146,8 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
       await dispatch(fetchCompras(roleId));
     } catch (error) {
       showErrorToast("No se pudo asignar el proveedor.");
+    } finally {
+      setAssigning(false); // Se quita el loading local
     }
   };
 
@@ -292,7 +297,12 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
         </ModalBody>
 
         <ModalFooter>
-          <Button colorScheme="blue" onClick={handleGuardar} mr={3}>
+          <Button
+            colorScheme="blue"
+            onClick={handleGuardar}
+            mr={3}
+            isLoading={assigning}
+          >
             Guardar
           </Button>
           <Button variant="ghost" onClick={handleClose}>

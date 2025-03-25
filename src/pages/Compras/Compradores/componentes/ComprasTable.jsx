@@ -37,7 +37,9 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
   const handleSelectAll = () => {
     if (!selectedAll) {
       const itemsSinProveedor = compras
-        .filter((c) => !c.proveedorId)
+        .filter(
+          (c) => Array.isArray(c.proveedorId) && c.proveedorId.length === 0
+        )
         .map((c) => c.id);
       setSelectedItems(itemsSinProveedor);
     } else {

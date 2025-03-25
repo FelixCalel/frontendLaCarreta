@@ -34,7 +34,7 @@ const ControlCalidadPage = () => {
   const pageBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("gray.800", "white");
   const [filtros, setFiltros] = useState({
-    fechaOrden: "",
+    fechaIngreso: "",
     palabrasClave: "",
   });
 
@@ -73,8 +73,8 @@ const ControlCalidadPage = () => {
   }
 
   const comprasFiltradas = comprasData.filter((compras) => {
-    const fechaCompra = moment.utc(compras.fecha).format("YYYY-MM-DD");
-    const fechaFiltro = filtros.fechaOrden;
+    const fechaCompra = moment.utc(compras.fechaIngreso).format("YYYY-MM-DD");
+    const fechaFiltro = filtros.fechaIngreso;
 
     const cumpleFecha = !fechaFiltro || fechaCompra === fechaFiltro;
 

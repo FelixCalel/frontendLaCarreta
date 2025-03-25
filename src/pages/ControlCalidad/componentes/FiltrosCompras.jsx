@@ -13,12 +13,12 @@ import moment from "moment";
 import { SearchIcon } from "@chakra-ui/icons";
 
 const FiltrosCompras = ({ onAplicarFiltros }) => {
-  const [fecha, setFecha] = useState("");
+  const [fechaIngreso, setFechaIngreso] = useState("");
   const [palabrasClave, setPalabrasClave] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onAplicarFiltros({ fecha, palabrasClave });
+    onAplicarFiltros({ fechaIngreso, palabrasClave });
   };
 
   return (
@@ -40,9 +40,9 @@ const FiltrosCompras = ({ onAplicarFiltros }) => {
           <Input
             size="sm"
             type="date"
-            value={fecha}
+            value={fechaIngreso}
             onChange={(e) =>
-              setFecha(moment.utc(e.target.value).format("YYYY-MM-DD"))
+              setFechaIngreso(moment.utc(e.target.value).format("YYYY-MM-DD"))
             }
           />
         </FormControl>

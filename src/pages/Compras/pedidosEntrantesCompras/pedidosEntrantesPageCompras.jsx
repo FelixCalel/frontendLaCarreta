@@ -46,7 +46,7 @@ const PedidosEntrantesPage = () => {
 
     const intervalId = setInterval(() => {
       dispatch(fetchCompras(roleId));
-    }, 30000);
+    }, 3000);
 
     return () => clearInterval(intervalId);
   }, [dispatch]);
