@@ -205,7 +205,7 @@ const ControlCalidadPage = () => {
     <Box p={6} boxShadow="xl" bg={pageBg} rounded="lg">
       <Flex justify="space-between" alignItems="center" mb={4}>
         <Heading mb={4} color={headingColor}>
-          Control De Calidad
+          Inventario
         </Heading>
         <Button
           colorScheme="green"
