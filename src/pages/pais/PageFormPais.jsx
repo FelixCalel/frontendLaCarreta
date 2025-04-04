@@ -100,12 +100,17 @@ const PageFormPais = () => {
   const cardBg = useColorModeValue("white", "gray.800");
   const cardShadow = useColorModeValue("md", "dark-lg");
   const hoverShadow = useColorModeValue("lg", "2xl");
-  
+
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   if (status === "loading") {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Spinner size="xl" />
       </Box>
     );
@@ -113,7 +118,12 @@ const PageFormPais = () => {
 
   if (status === "failed") {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Text fontSize="2xl" color="red.500">
           Error al cargar los datos: {error}
         </Text>
@@ -140,10 +150,7 @@ const PageFormPais = () => {
       </Flex>
 
       {/* Grid for responsive layout */}
-      <Grid
-        templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
-        gap={6}
-      >
+      <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={6}>
         {data.map((pais) => (
           <GridItem
             key={pais.id}
@@ -151,13 +158,23 @@ const PageFormPais = () => {
             bg={cardBg}
             boxShadow={cardShadow}
             rounded="xl"
-            _hover={{ backgroundColor: bgHoverColor, boxShadow: hoverShadow, transform: "translateY(-5px)" }}
+            _hover={{
+              backgroundColor: bgHoverColor,
+              boxShadow: hoverShadow,
+              transform: "translateY(-5px)",
+            }}
             transition="all 0.3s ease-in-out"
           >
             <Flex direction="column" gap={3}>
-              <Text fontWeight="bold" fontSize="lg">{pais.nombre}</Text>
-              <Text fontSize="sm" color="gray.500">Creado: {formatDate(pais.creadoEl)}</Text>
-              <Text fontSize="sm" color="gray.500">Actualizado: {formatDate(pais.actualizadoEl)}</Text>
+              <Text fontWeight="bold" fontSize="lg">
+                {pais.nombre}
+              </Text>
+              <Text fontSize="sm" color="gray.500">
+                Creado: {formatDate(pais.creadoEl)}
+              </Text>
+              <Text fontSize="sm" color="gray.500">
+                Actualizado: {formatDate(pais.actualizadoEl)}
+              </Text>
               <Flex justify="space-between" alignItems="center" mt={3}>
                 <Switch
                   isChecked={pais.estaActivo}
@@ -189,7 +206,9 @@ const PageFormPais = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{isEditMode ? "Actualizar País" : "Agregar Nuevo País"}</ModalHeader>
+          <ModalHeader>
+            {isEditMode ? "Actualizar País" : "Agregar Nuevo País"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>

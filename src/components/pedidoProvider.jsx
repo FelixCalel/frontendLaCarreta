@@ -1,31 +1,28 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import PropTypes from "prop-types"; // Importamos PropTypes para la validación de props
-import { tablaPedidos } from "../store/Pedidos/thunks"; // Asegúrate de importar el thunk correcto
+import PropTypes from "prop-types";
+import { tablaPedidos } from "../store/Pedidos/thunks";
 
 export const PedidoProvider = ({ children }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchPedidos = () => {
-      dispatch(tablaPedidos()); // Obtiene todos los pedidos
+      dispatch(tablaPedidos());
     };
 
-    // Carga inicial de pedidos
     fetchPedidos();
 
-    // Actualiza cada cierto tiempo
     const intervalId = setInterval(() => {
       fetchPedidos();
-    }, 10000); // Actualiza cada 10 segundos
+    }, 10000);
 
-    return () => clearInterval(intervalId); // Limpia el intervalo al desmontar el componente
+    return () => clearInterval(intervalId);
   }, [dispatch]);
 
-  return <>{children}</>; // Renderiza los componentes hijos
+  return <>{children}</>;
 };
 
-// Agregamos la validación de props usando PropTypes
 PedidoProvider.propTypes = {
-  children: PropTypes.node.isRequired, // Validamos que children sea requerido y de tipo React node
+  children: PropTypes.node.isRequired,
 };
