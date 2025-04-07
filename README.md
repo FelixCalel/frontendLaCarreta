@@ -64,7 +64,7 @@ Después de la configuración, inicia el frontend con:
 npm run dev
 ```
 
-El servidor de desarrollo estará disponible en **[http://localhost:5173](http://localhost:5179)**.
+El servidor de desarrollo estará disponible en **[http://localhost:5179](http://localhost:5179)**.
 
 Para compilar el código para producción, usa:
 ```sh
