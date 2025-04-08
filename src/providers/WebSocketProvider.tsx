@@ -17,7 +17,6 @@ const createWebSocket = (url: string, onMessage: (event: MessageEvent) => void, 
   ws.onmessage = onMessage;
   ws.onerror = onError;
   ws.onclose = () => {
-    //console.warn("Conexión WebSocket cerrada, intentando reconectar...");
     onClose();
   };
   return ws;

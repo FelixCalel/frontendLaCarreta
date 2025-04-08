@@ -13,11 +13,24 @@ export const PedidoProvider = ({ children }) => {
 
     fetchPedidos();
 
-    const intervalId = setInterval(() => {
-      fetchPedidos();
-    }, 10000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchPedidos();
+      }
+    };
 
-    return () => clearInterval(intervalId);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    const intervalId = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchPedidos();
+      }
+    }, 60000);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [dispatch]);
 
   return <>{children}</>;
