@@ -7,7 +7,7 @@ import {
   Text,
   IconButton,
   HStack,
-  useColorModeValue
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
 import { useSelector, useDispatch } from "react-redux";
@@ -19,31 +19,41 @@ import {
 } from "@choc-ui/chakra-autocomplete";
 import { tablaItems } from "../../../../store/items/thunks";
 
+const CHUNK_SIZE = 20;
+
 const ProductoSelector = ({ onSelect, reset }) => {
   const dispatch = useDispatch();
+
   const [inputValue, setInputValue] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [error, setError] = useState("");
-  const items = useSelector((state) => state.items.items);
 
-  // Colores para modo claro/oscuro
+  const itemsAll = useSelector((state) => state.items.items);
+
+  const [visibleItems, setVisibleItems] = useState([]);
+
   const listBg = useColorModeValue("white", "gray.800");
   const listBorderColor = useColorModeValue("gray.200", "gray.600");
   const itemHoverBg = useColorModeValue("gray.100", "gray.600");
 
-  // Carga inicial de items
   useEffect(() => {
     dispatch(tablaItems());
   }, [dispatch]);
 
-  // Al seleccionar un item
-  const handleSelectItem = (item) => {
-    setInputValue(`${item.nombre}`);
-    setSelectedItem(item);
+  useEffect(() => {
+    if (itemsAll.length > 0) {
+      const firstChunk = itemsAll.slice(0, CHUNK_SIZE);
+      setVisibleItems(firstChunk);
+    } else {
+      setVisibleItems([]);
+    }
+  }, [itemsAll]);
 
+  const handleSelectItem = (item) => {
+    setInputValue(item.nombre);
+    setSelectedItem(item);
     onSelect(item.id, item.nombre, item.cantidadDisponible, item.codigo);
 
-    // Muestra error si no hay stock
     if (item.cantidadDisponible === 0) {
       setError("Cantidad disponible: 0");
     } else {
@@ -51,34 +61,44 @@ const ProductoSelector = ({ onSelect, reset }) => {
     }
   };
 
-  // Cambio en el campo
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
   };
 
-  // Limpiar campo
   const handleClearInput = () => {
     setInputValue("");
     setSelectedItem(null);
     setError("");
   };
 
-  // Resetea cuando `reset` cambia
   useEffect(() => {
     if (reset) {
       handleClearInput();
     }
   }, [reset]);
 
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollTop + clientHeight >= scrollHeight - 10) {
+      loadMoreItems();
+    }
+  };
+
+  const loadMoreItems = () => {
+    if (visibleItems.length < itemsAll.length) {
+      const newLength = Math.min(
+        visibleItems.length + CHUNK_SIZE,
+        itemsAll.length
+      );
+      const moreItems = itemsAll.slice(0, newLength);
+      setVisibleItems(moreItems);
+    }
+  };
+
   return (
     <Flex pt="2" justify="start" align="center" w="full" flexDir="column">
       <FormControl>
-        <HStack
-          spacing={2}
-          w="full"
-          align="center"
-          position="relative"
-        >
+        <HStack spacing={2} w="full" align="center" position="relative">
           <Box flex="1" position="relative">
             <AutoComplete openOnFocus>
               <AutoCompleteInput
@@ -90,7 +110,7 @@ const ProductoSelector = ({ onSelect, reset }) => {
                 w="full"
               />
               <AutoCompleteList
-                // Posición absoluta debajo del input
+                onScroll={handleScroll}
                 position="relative"
                 top="100%"
                 left="0"
@@ -100,32 +120,25 @@ const ProductoSelector = ({ onSelect, reset }) => {
                 borderWidth="1px"
                 borderRadius="md"
                 boxShadow="md"
-
-                // Limita ancho y alto para no desplazar la página
                 minW="300px"
                 maxW="calc(100vw - 20px)"
                 maxHeight="50vh"
-
-                // Evita scroll horizontal y permite vertical
                 overflowY="auto"
                 overflowX="hidden"
               >
-                {items.map((item) => (
+                {visibleItems.map((item) => (
                   <AutoCompleteItem
                     key={`option-${item.id}`}
                     value={`${item.codigo} - ${item.nombre}`}
                     textTransform="capitalize"
                     onClick={() => handleSelectItem(item)}
                     _hover={{ bg: itemHoverBg }}
-                    // Fuerza quiebre de línea
                     sx={{
                       whiteSpace: "normal",
                       wordBreak: "break-word",
                     }}
                   >
-                    <Text fontSize="sm">
-                      {`${item.nombre}`}
-                    </Text>
+                    <Text fontSize="sm">{item.nombre}</Text>
                   </AutoCompleteItem>
                 ))}
               </AutoCompleteList>
