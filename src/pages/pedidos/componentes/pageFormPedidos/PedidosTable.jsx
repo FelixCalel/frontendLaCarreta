@@ -29,12 +29,10 @@ const PedidosTable = ({
   handleDeletePedido,
   showRealizarPedidoConfirmation,
 }) => {
-  const containerBg = useColorModeValue("white", "gray.800");
-  // Colores para el contenedor (cajas en móvil) y la tabla
-  const boxBg = useColorModeValue("white", "gray.800"); // fondo en modo claro/oscuro
+  const boxBg = useColorModeValue("white", "gray.800");
   const boxBorderColor = useColorModeValue("gray.200", "gray.600");
-  const tableBg = useColorModeValue("white", "gray.800"); // fondo de la tabla en desktop
-  const theadBg = useColorModeValue("gray.100", "gray.700"); // encabezado de la tabla
+  const tableBg = useColorModeValue("white", "gray.800");
+
   const pedidosTableContent = isMobile ? (
     <VStack spacing={4} align="stretch">
       {pedidosUsuario.map((pedido) => (
@@ -59,13 +57,6 @@ const PedidosTable = ({
           <Text>
             <strong>Ciudad:</strong> {pedido.nombreCiudad || "N/A"}
           </Text>
-          {/* <Text> */}
-          {/* <strong>Deudor:</strong> {pedido.nombreCorrelativo} -{" "}
-            {pedido.nombreDeu || "N/A"}
-          </Text>
-          <Text>
-            <strong>Tienda:</strong> {pedido.nombreTienda || "N/A"}
-          </Text> */}
           <HStack spacing={3} mt={2}>
             <Tooltip label="Ver Detalles" hasArrow>
               <IconButton

@@ -27,20 +27,20 @@ import {
   actualizarFechaOrden,
 } from "../../../store/Pedidos/DetallePedidos/thunks";
 import ApproveOrderDialog from "../componentes/EntrantesFormPedidos/ApproveOrderDialog";
+import { selectPedidosEntrantesPorRuta } from "./componentes/rutaSelectors";
+import { tablaTienda } from "../../../store/Tienda/thunks";
 const EntrantesPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
-
   const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
-
   const pedidos = useSelector((state) => state.pedidos.data);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPedidos, setSelectedPedidos] = useState([]);
   const [detallesPedido, setDetallesPedido] = useState([]);
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const pedidosEntrantes = pedidos.filter((pedido) => pedido.estadoId === 2);
+  //const pedidosEntrantes = pedidos.filter((pedido) => pedido.estadoId === 2);
   const [isApproving, setIsApproving] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const {
@@ -54,10 +54,42 @@ const EntrantesPage = () => {
     onClose: onCancelClose,
   } = useDisclosure();
 
-  // Carga inicial de datos
+  useEffect(() => {
+    dispatch(tablaTienda());
+    dispatch(tablaPedidos());
+  }, [dispatch]);
+
+  const todosLosPedidos = useSelector((s) => s.pedidos.data);
+  useEffect(() => {
+    const candidatos = todosLosPedidos.filter((p) => p.estadoId === 2);
+    console.log(
+      "Pedidos con estadoId 2:",
+      candidatos.map((p) => ({
+        id: p.id,
+        tiendaId: p.tiendaId,
+      }))
+    );
+  }, [todosLosPedidos]);
+
+  const tiendas = useSelector((s) => s.tiendas.data ?? []);
+  useEffect(() => {
+    console.log("Tiendas en Redux:", tiendas.slice(0, 5));
+  }, [tiendas]);
+
+  useEffect(() => {
+    const tienda1 = tiendas.find((t) => t.id === 1);
+    const tienda12 = tiendas.find((t) => t.id === 12);
+    console.log("Tienda 1:", tienda1);
+    console.log("Tienda 12:", tienda12);
+  }, [tiendas]);
+
   useEffect(() => {
     dispatch(tablaPedidos());
   }, [selectedPedidos.length, dispatch]);
+
+  useEffect(() => {
+    if (pedidos.length) console.log("Ejemplo de pedido:", pedidos[0]);
+  }, [pedidos]);
 
   const handleConfirmApprove = async (orderDate) => {
     setIsApproving(true);
@@ -108,7 +140,6 @@ const EntrantesPage = () => {
         console.log("Estado actualizado:", result);
       }
 
-      // Actualizar la lista de pedidos
       await dispatch(tablaPedidos());
 
       setSelectedPedidos([]);
@@ -155,20 +186,17 @@ const EntrantesPage = () => {
     }
   };
 
-  // Funciones para manejar el modal de detalles
   const handleVerDetalles = async (pedidoId) => {
     try {
       const detalles = await dispatch(
         getDetalleOrdenByPedidoId(pedidoId)
       ).unwrap();
 
-      // Ordenar los detalles por fecha de creación
       detalles.sort(
         (a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion)
       );
       setDetallesPedido(detalles);
 
-      // Obtener el objeto completo del pedido usando el pedidoId
       const pedido = pedidos.find((p) => p.id === pedidoId);
 
       if (!pedido) {
@@ -199,6 +227,8 @@ const EntrantesPage = () => {
       });
     }
   };
+
+  const pedidosFiltrados = useSelector(selectPedidosEntrantesPorRuta);
 
   const handleCloseApproveDialog = () => {
     onApproveClose();
@@ -242,35 +272,6 @@ const EntrantesPage = () => {
             onConfirm={handleConfirmApprove}
             selectedPedidos={selectedPedidos}
           />
-
-          {/* <AlertDialog
-            isOpen={isApproveOpen}
-            onClose={onApproveClose}
-            isCentered
-          >
-            <AlertDialogOverlay>
-              <AlertDialogContent>
-                <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                  Aprobar Pedidos
-                </AlertDialogHeader>
-                <AlertDialogBody>
-                  ¿Estás seguro de que deseas aprobar los pedidos seleccionados?
-                </AlertDialogBody>
-                <AlertDialogFooter>
-                  <Button variant="outline" onClick={onApproveClose}>
-                    Cancelar
-                  </Button>
-                  <Button
-                    colorScheme="green"
-                    onClick={handleConfirmApprove}
-                    ml={3}
-                  >
-                    Aprobar
-                  </Button>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialogOverlay>
-          </AlertDialog> */}
           <AlertDialog isOpen={isCancelOpen} onClose={onCancelClose} isCentered>
             <AlertDialogOverlay>
               <AlertDialogContent>
@@ -298,16 +299,13 @@ const EntrantesPage = () => {
           </AlertDialog>
         </Flex>
       </Flex>
-
-      {/* Tabla de pedidos */}
       <PedidosTable
-        pedidosEntrantes={pedidosEntrantes}
+        pedidosEntrantes={pedidosFiltrados}
+        //pedidosEntrantes={pedidosEntrantes}
         selectedPedidos={selectedPedidos}
         setSelectedPedidos={setSelectedPedidos}
         handleVerDetalles={handleVerDetalles}
       />
-
-      {/* Modal de detalles */}
       <DetallesModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}

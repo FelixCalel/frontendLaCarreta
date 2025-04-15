@@ -52,12 +52,30 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   });
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const normalizarDetalle = (d) => {
+    const idValido =
+      d.detallePedidoId !== undefined && d.detallePedidoId !== null
+        ? d.detallePedidoId
+        : d.id;
+    return {
+      detalleId: idValido,
+      productoId: d.productoId,
+      nombreProducto: d.nombreProducto,
+      codigo: d.codigo,
+      cantidadDisponible: d.cantidadDisponible ?? 0,
+      cantidad: d.cantidad,
+    };
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    setDetallesCargados(false);
+  }, [pedidoId]);
 
   useEffect(() => {
     const cargarDetallesPedido = async () => {
@@ -74,43 +92,34 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         }
 
         setIsLoading(true);
-        console.log("Intentando cargar detalles del pedido...");
 
-        const detallesGuardados = sessionStorage.getItem(
-          `productos_${pedidoId}`
+        const guardadosRaw = sessionStorage.getItem(`productos_${pedidoId}`);
+        const detallesLocales = guardadosRaw ? JSON.parse(guardadosRaw) : [];
+
+        console.log("Solicitando detalles del pedido con ID:", pedidoId);
+        const detallesBackend = await dispatch(
+          getDetalleOrdenByPedidoId(pedidoId)
+        ).unwrap();
+
+        const detallesBackendNormalizados =
+          detallesBackend.map(normalizarDetalle);
+
+        const mapaLocales = new Map(
+          detallesLocales.map((d) => [d.detalleId, d])
         );
-        if (detallesGuardados) {
-          const detallesParsed = JSON.parse(detallesGuardados);
-          setProductos(detallesParsed);
-          setDetallesCargados(true);
-          console.log(
-            "Detalles cargados desde sessionStorage:",
-            detallesParsed
-          );
-          setIsLoading(false);
-          return;
-        }
+        const fusionados = detallesBackendNormalizados.map(
+          (d) => mapaLocales.get(d.detalleId) ?? d
+        );
 
-        try {
-          const detalles = await dispatch(
-            getDetalleOrdenByPedidoId(pedidoId)
-          ).unwrap();
-          if (detalles.length > 0) {
-            setProductos(detalles);
-            sessionStorage.setItem(
-              `productos_${pedidoId}`,
-              JSON.stringify(detalles)
-            );
-            console.log("Detalles cargados desde backend:", detalles);
-          }
-        } catch (error) {
-          if (error.response && error.response.status === 404) {
-            console.warn("No se encontraron detalles para el pedido (404).");
-          }
-        } finally {
-          setDetallesCargados(true);
-          setIsLoading(false);
-        }
+        fusionados.sort((a, b) => a.detalleId - b.detalleId);
+
+        setProductos(fusionados);
+        sessionStorage.setItem(
+          `productos_${pedidoId}`,
+          JSON.stringify(fusionados)
+        );
+
+        setDetallesCargados(true);
       } catch (error) {
         console.error("Error en cargarDetallesPedido:", error);
         toast({
@@ -120,6 +129,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           duration: 3000,
           isClosable: true,
         });
+      } finally {
         setIsLoading(false);
       }
     };
@@ -258,14 +268,10 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           throw new Error("El backend no devolvió un detallePedidoId válido.");
         }
 
-        const nuevoProducto = {
-          detallePedidoId: result.id,
-          productoId: newProducto.productoId,
-          nombreProducto: newProducto.nombreProducto,
-          cantidadDisponible: newProducto.cantidadDisponible,
-          codigo: newProducto.codigo,
-          cantidad: newProducto.cantidad,
-        };
+        const nuevoProducto = normalizarDetalle({
+          ...newProducto,
+          id: result.id,
+        });
 
         const nuevosProductos = [...productos, nuevoProducto];
         setProductos(nuevosProductos);
@@ -314,25 +320,36 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     }
   };
 
-  const handleRemoveProducto = async (detallePedidoId) => {
-    if (!detallePedidoId) {
-      console.error("DetallePedidoId no válido:", detallePedidoId);
+  const handleRemoveProducto = async (detalleId) => {
+    if (!detalleId) {
+      console.error("Identificador de detalle no válido:", detalleId);
       return;
     }
-
     try {
-      await dispatch(deleteDetalleOrden(detallePedidoId)).unwrap();
-
+      const resultAction = await dispatch(deleteDetalleOrden(detalleId));
+      if (deleteDetalleOrden.rejected.match(resultAction)) {
+        console.error(
+          "Error al eliminar:",
+          resultAction.error || resultAction.payload
+        );
+        toast({
+          title: "Error",
+          description: "Hubo un problema al eliminar el producto.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+      // Actualiza el estado
       const productosActualizados = productos.filter(
-        (prod) => prod.detallePedidoId !== detallePedidoId
+        (prod) => prod.detalleId !== detalleId
       );
       setProductos(productosActualizados);
       sessionStorage.setItem(
         `productos_${pedidoId}`,
         JSON.stringify(productosActualizados)
       );
-      console.log("Producto eliminado:", detallePedidoId);
-
       toast({
         title: "Producto eliminado.",
         description: "El producto ha sido eliminado exitosamente.",
@@ -341,7 +358,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error al eliminar el detalle del pedido:", error);
+      console.error("Error inesperado al eliminar el detalle:", error);
       toast({
         title: "Error.",
         description: "Hubo un problema al eliminar el producto.",
@@ -402,7 +419,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   };
 
   const getUniqueKey = (producto) => {
-    return producto.detallePedidoId || producto.id || producto.productoId;
+    return producto.detalleId || producto.id || producto.productoId;
   };
 
   const containerBg = useColorModeValue("white", "gray.800");
@@ -475,7 +492,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                           }
                           onBlur={() => {
                             handleCantidadChange(
-                              producto.detallePedidoId,
+                              producto.detalleId,
                               producto.cantidad
                             );
                           }}
@@ -490,7 +507,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                           icon={<DeleteIcon />}
                           colorScheme="red"
                           onClick={() =>
-                            handleRemoveProducto(producto.detallePedidoId)
+                            handleRemoveProducto(producto.detalleId)
                           }
                           size="xs"
                         />

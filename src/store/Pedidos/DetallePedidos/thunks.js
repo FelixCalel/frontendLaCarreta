@@ -3,7 +3,6 @@ import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-// Fetch all DetalleOrden
 export const tablaDetalleOrden = createAsyncThunk(
   "detalleOrden/fetchDetalleOrden",
   async () => {
@@ -16,9 +15,8 @@ export const tablaDetalleOrden = createAsyncThunk(
       const data = response.data;
       console.log("Datos recibidos del backend (sin procesar):", data);
 
-      // Verifica si los datos son un array antes de intentar ordenarlos
       if (Array.isArray(data)) {
-        data.sort((a, b) => a.id - b.id); // Ordenar los datos por 'id'
+        data.sort((a, b) => a.id - b.id);
         console.log("Datos ordenados por 'id':", data);
       } else {
         console.error("Error: Los datos recibidos no son un array:", data);
@@ -32,7 +30,6 @@ export const tablaDetalleOrden = createAsyncThunk(
   }
 );
 
-// Add new DetalleOrden
 export const addNewDetalleOrden = createAsyncThunk(
   "detalleOrden/addNewDetalleOrden",
   async (newDetalleOrden) => {
@@ -45,17 +42,24 @@ export const addNewDetalleOrden = createAsyncThunk(
   }
 );
 
-// Delete DetalleOrden
 export const deleteDetalleOrden = createAsyncThunk(
   "detalleOrden/deleteDetalleOrden",
-  async (id) => {
-    console.log(`Eliminando detalle con ID: ${id}`); // Agrega un log aquí
-    await axios.delete(`${BASE_URL}/detalle/pedido/eliminar/${id}`);
-    return id;
+  async (id, { rejectWithValue }) => {
+    try {
+      console.log(`Eliminando detalle con ID: ${id}`);
+      const response = await axios.delete(
+        `${BASE_URL}/detalle/pedido/eliminar/${id}`
+      );
+      return response.data;
+    } catch (err) {
+      if (err.response) {
+        return rejectWithValue(err.response.data);
+      }
+      return rejectWithValue(err.message);
+    }
   }
 );
 
-// Update DetalleOrden
 export const updateDetalleOrden = createAsyncThunk(
   "detalleOrden/updateDetalleOrden",
   async ({ id, pedidoId, cantidad }) => {
@@ -67,7 +71,6 @@ export const updateDetalleOrden = createAsyncThunk(
   }
 );
 
-// Toggle DetalleOrden Status
 export const toggleDetalleOrdenStatus = createAsyncThunk(
   "pedidos/toggleStatus",
   async ({ id, estadoId }) => {
@@ -86,7 +89,6 @@ export const toggleDetalleOrdenStatus = createAsyncThunk(
   }
 );
 
-// Get DetalleOrden by PedidoId
 export const getDetalleOrdenByPedidoId = createAsyncThunk(
   "detalleOrden/fetchByPedidoId",
   async (pedidoId) => {
@@ -96,37 +98,31 @@ export const getDetalleOrdenByPedidoId = createAsyncThunk(
     );
     const data = response.data;
     console.log("Detalles recibidos del pedido:", data);
-    data.sort((a, b) => a.id - b.id); // Ordenar los datos
+    data.sort((a, b) => a.id - b.id);
     return data;
   }
 );
 
-// Fetch pedidos comunes por usuarioId
 export const getPedidosComunesByUsuarioId = createAsyncThunk(
   "detalleOrden/fetchPedidosComunesByUsuarioId",
   async ({ deudorId, pedidoId, tiendaId }, { rejectWithValue }) => {
-    // Log antes de la conversión para verificar los valores iniciales
     console.log("Valores enviados al thunk:", { deudorId, pedidoId, tiendaId });
 
-    // Asegurarnos de que los IDs son números válidos
     deudorId = Number(deudorId);
     pedidoId = Number(pedidoId);
     tiendaId = Number(tiendaId);
 
-    // Log después de la conversión para verificar que los valores son números
     console.log("Parámetros después de la conversión:", {
       deudorId,
       pedidoId,
       tiendaId,
     });
 
-    // Validar si los parámetros son números válidos
     if (isNaN(deudorId) || isNaN(pedidoId) || isNaN(tiendaId)) {
       console.error("Error: Uno de los IDs no es un número válido.");
       return rejectWithValue("Uno de los IDs no es un número válido.");
     }
 
-    // Intentar obtener la respuesta de la API
     try {
       const url = `${BASE_URL}/detalle/pedido/pedidosComunes/${deudorId}/${pedidoId}/${tiendaId}`;
       console.log("URL solicitada:", url);
@@ -136,9 +132,8 @@ export const getPedidosComunesByUsuarioId = createAsyncThunk(
       const data = response.data;
       console.log("Datos recibidos del backend:", data);
 
-      // Si los datos son un array, ordenarlos
       if (Array.isArray(data)) {
-        data.sort((a, b) => a.id - b.id); // Ordenar los datos por `id`
+        data.sort((a, b) => a.id - b.id);
       }
 
       console.log("Datos recibidos del backend:", data);
@@ -146,7 +141,6 @@ export const getPedidosComunesByUsuarioId = createAsyncThunk(
     } catch (error) {
       console.error("Error al obtener pedidos comunes:", error);
 
-      // Rechazar el valor con un mensaje de error
       return rejectWithValue(
         error.response?.data || "Error desconocido en la API"
       );

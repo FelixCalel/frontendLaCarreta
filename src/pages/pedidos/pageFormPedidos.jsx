@@ -13,6 +13,7 @@ import {
 } from "../../store/Pedidos/thunks";
 import { getDetalleOrdenByPedidoId } from "../../store/Pedidos/DetallePedidos/thunks";
 import axios from "axios";
+import ProductosTable from "./componentes/detallesPedidosTable";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -117,7 +118,7 @@ const PageFormPedidos = () => {
         };
 
         await handleSubmit(newPedido);
-        onClose(); 
+        onClose();
       } else {
         toast({
           title: "Sin pedidos previos",
@@ -209,7 +210,7 @@ const PageFormPedidos = () => {
         isClosable: true,
       });
       onClose();
-      resetForm();
+      //resetForm();
     } catch (error) {
       console.error("Error al guardar el pedido:", error);
       toast({
@@ -234,7 +235,7 @@ const PageFormPedidos = () => {
     });
     setIsTienda1Disabled(false);
     setIsTienda2Disabled(false);
-    window.location.reload(true);
+    //window.location.reload(true);
   };
 
   const handleRealizarPedido = async () => {
@@ -325,6 +326,14 @@ const PageFormPedidos = () => {
         onClose={onDialogClose}
         onConfirm={handleRealizarPedido}
       />
+
+      {pedidoIdGuardado && (
+        <ProductosTable
+          pedidoId={pedidoIdGuardado}
+          deudorId={currentPedido.deudorId} // Asegúrate de pasar la prop correcta
+          tiendaId={currentPedido.tiendaId} // Asegúrate de pasar la prop correcta
+        />
+      )}
     </Box>
   );
 };

@@ -41,6 +41,7 @@ export const LoginForm = () => {
       navigate("/auth/home", { replace: true });
     }
   }, [actualUsuario, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -65,6 +66,10 @@ export const LoginForm = () => {
       const resp = await axios.post(`${BASE_URL}/usuarios/datos`, {
         correo: user.email,
       });
+
+      const rutasIds = resp.data.usuario.rutas?.map((r) => r.id) ?? [];
+      console.log("usuario.rutas:", resp.data.usuario.rutas);
+      console.log("rutasIds:", rutasIds);
 
       if (resp.data && resp.data.usuario) {
         const {
@@ -102,6 +107,7 @@ export const LoginForm = () => {
             token,
             roleId,
             paisId,
+            rutas: rutasIds,
           })
         );
 
