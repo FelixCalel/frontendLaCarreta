@@ -242,35 +242,6 @@ const EntrantesPage = () => {
             onConfirm={handleConfirmApprove}
             selectedPedidos={selectedPedidos}
           />
-
-          {/* <AlertDialog
-            isOpen={isApproveOpen}
-            onClose={onApproveClose}
-            isCentered
-          >
-            <AlertDialogOverlay>
-              <AlertDialogContent>
-                <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                  Aprobar Pedidos
-                </AlertDialogHeader>
-                <AlertDialogBody>
-                  ¿Estás seguro de que deseas aprobar los pedidos seleccionados?
-                </AlertDialogBody>
-                <AlertDialogFooter>
-                  <Button variant="outline" onClick={onApproveClose}>
-                    Cancelar
-                  </Button>
-                  <Button
-                    colorScheme="green"
-                    onClick={handleConfirmApprove}
-                    ml={3}
-                  >
-                    Aprobar
-                  </Button>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialogOverlay>
-          </AlertDialog> */}
           <AlertDialog isOpen={isCancelOpen} onClose={onCancelClose} isCentered>
             <AlertDialogOverlay>
               <AlertDialogContent>
@@ -283,7 +254,7 @@ const EntrantesPage = () => {
                 </AlertDialogBody>
                 <AlertDialogFooter>
                   <Button variant="outline" onClick={onCancelClose}>
-                    Cancelar
+                    Cerrar
                   </Button>
                   <Button
                     colorScheme="red"
