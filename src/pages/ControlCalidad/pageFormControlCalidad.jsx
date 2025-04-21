@@ -6,20 +6,17 @@ import {
   Heading,
   useDisclosure,
   useToast,
-  Stack,
   Spinner,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchCompras,
-  consolidateCompras,
-  //actualizarFechaIngreso,
-} from "../../store/Compras/thunks";
-//import FiltrosPedidos from "./componentes/FiltrosPedidos";
+import { fetchCompras, consolidateCompras } from "../../store/Compras/thunks";
 import ControlCalidadTable from "./componentes/ControlCalidadTable";
 import DetallesModal from "./componentes/DetallesModal";
 import * as ExcelJS from "exceljs";
+import FiltrosCompras from "./componentes/FiltrosCompras";
 import moment from "moment";
+import { FaFileExport } from "react-icons/fa";
 
 const ControlCalidadPage = () => {
   const dispatch = useDispatch();
@@ -27,25 +24,35 @@ const ControlCalidadPage = () => {
 
   const effectRan = useRef(false);
 
-  const [filtros] = useState({
-    fechaOrden: "",
-    palabrasClave: "",
-  });
-
   const { data: comprasData } = useSelector((state) => state.compras);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedCompra, setSelectedCompra] = useState(null);
-
   const [isLoading, setIsLoading] = useState(true);
+  const [comprasState, setComprasState] = useState(comprasData);
+
+  const pageBg = useColorModeValue("white", "gray.800");
+  const headingColor = useColorModeValue("gray.800", "white");
+  const [filtros, setFiltros] = useState({
+    fechaIngreso: "",
+    palabrasClave: "",
+  });
 
   useEffect(() => {
     if (effectRan.current) return;
+    effectRan.current = true;
+
+    const roleId = parseInt(localStorage.getItem("roleId") || 0);
+    if (isNaN(roleId) || roleId === 0) {
+      console.error("RoleId inválido:", roleId);
+      setIsLoading(false);
+      return;
+    }
 
     const hacerConsolidacionYObtener = async () => {
       try {
         await dispatch(consolidateCompras({ estadoId: 5 }));
-        await dispatch(fetchCompras());
+        await dispatch(fetchCompras(roleId));
       } catch (err) {
         toast({
           title: "Error",
@@ -59,7 +66,6 @@ const ControlCalidadPage = () => {
       }
     };
     hacerConsolidacionYObtener();
-    effectRan.current = true;
   }, [dispatch, toast]);
 
   if (isLoading) {
@@ -67,8 +73,8 @@ const ControlCalidadPage = () => {
   }
 
   const comprasFiltradas = comprasData.filter((compras) => {
-    const fechaCompra = moment.utc(compras.fecha).format("YYYY-MM-DD");
-    const fechaFiltro = filtros.fechaOrden;
+    const fechaCompra = moment.utc(compras.fechaIngreso).format("YYYY-MM-DD");
+    const fechaFiltro = filtros.fechaIngreso;
 
     const cumpleFecha = !fechaFiltro || fechaCompra === fechaFiltro;
 
@@ -77,9 +83,12 @@ const ControlCalidadPage = () => {
       (compras.nombre || "")
         .toLowerCase()
         .includes(filtros.palabrasClave.toLowerCase());
+    const tieneProveedor =
+      compras.nombreProveedor && compras.nombreProveedor !== "Sin proveedores";
 
-    return cumpleFecha && cumplePalabras;
+    return cumpleFecha && cumplePalabras && tieneProveedor;
   });
+
   const itemsAgrupadosPorDeudor = {};
   comprasFiltradas.forEach((compras) => {
     const deudor =
@@ -96,6 +105,7 @@ const ControlCalidadPage = () => {
       nombreProveedor: compras.nombreProveedor,
       cantidad: compras.cantidad,
       cantidadAsignada: compras.cantidadAsignada,
+      pedido_compra: compras.pedido_compra,
     });
   });
 
@@ -105,6 +115,13 @@ const ControlCalidadPage = () => {
       itemsAgrupadosPorDeudor[deudor]
     );
   }
+
+  const actualizarCantidadRecibida = (id, nuevaCantidad) => {
+    const updatedItems = comprasState.map((item) =>
+      item.id === id ? { ...item, pedido_compra: nuevaCantidad } : item
+    );
+    setComprasState(updatedItems);
+  };
 
   const handleEditar = (item) => {
     setSelectedCompra(item);
@@ -180,16 +197,28 @@ const ControlCalidadPage = () => {
     }
   };
 
+  const handleAplicarFiltros = (nuevosFiltros) => {
+    setFiltros(nuevosFiltros);
+  };
+
   return (
-    <Box p={6} boxShadow="xl" bg="white" rounded="lg">
-      <Heading mb={4}>Control De Calidad</Heading>
+    <Box p={6} boxShadow="xl" bg={pageBg} rounded="lg">
       <Flex justify="space-between" alignItems="center" mb={4}>
-        <Stack direction="row" spacing={2}>
-          <Button colorScheme="teal" onClick={handleExportarExcel}>
-            Exportar a Excel
-          </Button>
-        </Stack>
+        <Heading mb={4} color={headingColor}>
+          Inventario
+        </Heading>
+        <Button
+          colorScheme="green"
+          bg="green.500"
+          _hover={{ bg: "green.600" }}
+          leftIcon={<FaFileExport />}
+          onClick={handleExportarExcel}
+        >
+          Exportar a Excel
+        </Button>
       </Flex>
+
+      <FiltrosCompras onAplicarFiltros={handleAplicarFiltros} />
 
       <ControlCalidadTable
         itemsAgrupadosPorDeudor={itemsAgrupadosPorDeudorArray}
@@ -200,6 +229,7 @@ const ControlCalidadPage = () => {
         isOpen={isOpen}
         onClose={onClose}
         pedido={selectedCompra}
+        actualizarCantidadRecibida={actualizarCantidadRecibida}
       />
     </Box>
   );

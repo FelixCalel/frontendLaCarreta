@@ -6,7 +6,6 @@ import {
   Heading,
   useDisclosure,
   useToast,
-  Stack,
   Spinner,
   useColorModeValue,
 } from "@chakra-ui/react";
@@ -41,12 +40,32 @@ const PedidosEntrantesPage = () => {
   const headingColor = useColorModeValue("gray.800", "white");
 
   useEffect(() => {
+    const roleId = parseInt(localStorage.getItem("roleId") || "0", 10);
+
+    dispatch(fetchCompras(roleId));
+
+    const intervalId = setInterval(() => {
+      dispatch(fetchCompras(roleId));
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [dispatch]);
+
+  useEffect(() => {
     if (effectRan.current) return;
+    effectRan.current = true;
+
+    const roleId = parseInt(localStorage.getItem("roleId") || 0, 10);
+    if (isNaN(roleId) || roleId === 0) {
+      console.warn("No hay roleId. No se cargan las compras.");
+      setIsLoading(false);
+      return;
+    }
 
     const hacerConsolidacionYObtener = async () => {
       try {
         await dispatch(consolidateCompras({ estadoId: 5 }));
-        await dispatch(fetchCompras());
+        await dispatch(fetchCompras(roleId));
       } catch (err) {
         toast({
           title: "Error",
@@ -61,7 +80,6 @@ const PedidosEntrantesPage = () => {
     };
 
     hacerConsolidacionYObtener();
-    effectRan.current = true;
   }, [dispatch, toast]);
 
   if (isLoading) {
@@ -99,6 +117,7 @@ const PedidosEntrantesPage = () => {
       cantidad: compras.cantidad,
       pedido_venta: compras.pedido_venta,
       cantidadAsignada: compras.cantidadAsignada,
+      pedido_compra: compras.pedido_compra,
     });
   });
 
@@ -196,16 +215,15 @@ const PedidosEntrantesPage = () => {
       color={headingColor}
       rounded="lg"
     >
-      <Heading mb={4} color={headingColor}>
-        Pedidos Entrantes Compras
-      </Heading>
+      {/* Flex para el título y el botón en la misma fila */}
       <Flex justify="space-between" alignItems="center" mb={4}>
-        <Stack direction="row" spacing={2}>
-          <Button colorScheme="teal" onClick={handleExportarExcel}>
-            Exportar a Excel
-          </Button>
-        </Stack>
+        <Heading color={headingColor}>Pedidos Entrantes Compras</Heading>
+        <Button colorScheme="teal" onClick={handleExportarExcel}>
+          Exportar a Excel
+        </Button>
       </Flex>
+
+      {/* Aquí ya no necesitas otro Heading separado */}
 
       <FiltrosPedidos onAplicarFiltros={handleAplicarFiltros} />
 

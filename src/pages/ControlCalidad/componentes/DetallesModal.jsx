@@ -13,17 +13,28 @@ import {
   Input,
   useToast,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { updateCompra } from "../../../store/Compras/thunks";
+import { updateCompra, fetchCompras } from "../../../store/Compras/thunks";
 
-const DetallesModal = ({ isOpen, onClose, pedido }) => {
+const DetallesModal = ({
+  isOpen,
+  onClose,
+  pedido,
+  actualizarCantidadRecibida,
+}) => {
   const dispatch = useDispatch();
   const toast = useToast();
 
   const [cantidadRecibida, setCantidadRecibida] = useState(
-    pedido?.cantidadAsignada || 0
+    pedido?.pedido_compra || 0
   );
+
+  useEffect(() => {
+    if (pedido) {
+      setCantidadRecibida(pedido.pedido_compra || 0);
+    }
+  }, [pedido, isOpen]);
 
   if (!pedido) {
     return null;
@@ -34,9 +45,12 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
       await dispatch(
         updateCompra({
           id: pedido.id,
-          cantidadAsignada: Number(cantidadRecibida),
+          pedido_compra: Number(cantidadRecibida),
         })
       ).unwrap();
+
+      const roleId = parseInt(localStorage.getItem("roleId") || "0", 10);
+      await dispatch(fetchCompras(roleId));
 
       toast({
         title: "Actualizado",
@@ -46,6 +60,7 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
         isClosable: true,
       });
 
+      actualizarCantidadRecibida(pedido.id, cantidadRecibida);
       onClose();
     } catch (error) {
       console.error("Error al actualizar:", error);
@@ -71,37 +86,55 @@ const DetallesModal = ({ isOpen, onClose, pedido }) => {
             <Input
               isReadOnly
               value={
-                pedido.codigo && pedido.nombre
+                pedido?.codigo && pedido?.nombre
                   ? `${pedido.codigo} - ${pedido.nombre}`
                   : "Sin datos"
               }
+              borderRadius="md"
+              boxShadow="sm"
             />
           </FormControl>
-
           <FormControl mb={4}>
             <FormLabel>Subcliente</FormLabel>
-            <Input isReadOnly value={pedido.nombreTienda || "Sin Subcliente"} />
+            <Input
+              isReadOnly
+              value={pedido?.nombreTienda || "Sin Subcliente"}
+              borderRadius="md"
+              boxShadow="sm"
+            />
           </FormControl>
-
           <FormControl mb={4}>
             <FormLabel>Proveedor</FormLabel>
             <Input
               isReadOnly
-              value={pedido.nombreProveedor || "Sin Proveedor"}
+              value={pedido?.nombreProveedor || "Sin Proveedor"}
+              borderRadius="md"
+              boxShadow="sm"
             />
           </FormControl>
-
           <FormControl mb={4}>
             <FormLabel>Cantidad a recibir</FormLabel>
-            <Input isReadOnly value={pedido.cantidad || 0} />
+            <Input isReadOnly value={pedido?.cantidadAsignada || 0} />
           </FormControl>
-
           <FormControl mb={4}>
             <FormLabel>Cantidad recibida</FormLabel>
             <Input
               type="number"
+              min={0}
+              max={pedido?.cantidadAsignada || 0}
               value={cantidadRecibida}
-              onChange={(e) => setCantidadRecibida(e.target.value)}
+              onChange={(e) => {
+                let valor = Number(e.target.value);
+                if (valor < 0) valor = 0;
+                if (valor > pedido.cantidadAsignada) {
+                  valor = pedido.cantidadAsignada;
+                }
+                setCantidadRecibida(valor);
+              }}
+              onWheel={(e) => e.target.blur()}
+              borderColor="teal.500"
+              _hover={{ borderColor: "teal.600" }}
+              _focus={{ borderColor: "teal.600" }}
             />
           </FormControl>
         </ModalBody>
@@ -123,6 +156,7 @@ DetallesModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   pedido: PropTypes.object,
+  actualizarCantidadRecibida: PropTypes.func.isRequired,
 };
 
 export default DetallesModal;

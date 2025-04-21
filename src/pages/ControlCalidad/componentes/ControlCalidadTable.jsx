@@ -1,6 +1,16 @@
-// ControlCalidadTable.jsx
-import { Table, Thead, Tbody, Tr, Th, Td, Box, Button } from "@chakra-ui/react";
+import {
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Box,
+  Button,
+  useColorModeValue,
+} from "@chakra-ui/react";
 import PropTypes from "prop-types";
+import { FaEdit } from "react-icons/fa";
 
 const ControlCalidadTable = ({
   itemsAgrupadosPorDeudor,
@@ -23,18 +33,78 @@ const ControlCalidadTable = ({
     }
   });
 
+  const tableBg = useColorModeValue("white", "gray.700");
+  const tableHeaderBg = useColorModeValue("gray.100", "gray.600");
+  //const rowHoverBg = useColorModeValue("green.50", "green.900");
+
   return (
     <Box overflowX="auto">
-      <Table variant="striped" colorScheme="gray">
-        <Thead>
+      <Table
+        variant="striped"
+        colorScheme="gray"
+        bg={tableBg}
+        borderRadius="lg"
+        boxShadow="sm"
+      >
+        <Thead bg={tableHeaderBg}>
           <Tr>
-            <Th>Código</Th>
-            <Th>Nombre Item</Th>
-            <Th>Subcliente</Th>
-            <Th>Proveedor</Th>
-            <Th>Cantidad a recibir</Th>
-            <Th>Cantidad Recibida</Th>
-            <Th>Acciones</Th> {/* Nueva columna */}
+            <Th
+              borderBottom="2px solid"
+              borderColor={useColorModeValue("gray.300", "gray.600")}
+              textAlign="center"
+              p={4}
+            >
+              Código
+            </Th>
+
+            <Th
+              borderBottom="2px solid"
+              borderColor={useColorModeValue("gray.300", "gray.600")}
+              textAlign="center"
+              p={4}
+            >
+              Nombre Item
+            </Th>
+            <Th
+              borderBottom="2px solid"
+              borderColor={useColorModeValue("gray.300", "gray.600")}
+              textAlign="center"
+              p={4}
+            >
+              Subcliente
+            </Th>
+            <Th
+              borderBottom="2px solid"
+              borderColor={useColorModeValue("gray.300", "gray.600")}
+              textAlign="center"
+              p={4}
+            >
+              Proveedor
+            </Th>
+            <Th
+              borderBottom="2px solid"
+              borderColor={useColorModeValue("gray.300", "gray.600")}
+              textAlign="center"
+              p={4}
+            >
+              Cantidad a recibir
+            </Th>
+            <Th
+              borderBottom="2px solid"
+              borderColor={useColorModeValue("gray.300", "gray.600")}
+              textAlign="center"
+              p={4}
+            >
+              Cantidad Recibida
+            </Th>
+            <Th
+              borderBottom="2px solid"
+              borderColor={useColorModeValue("gray.300", "gray.600")}
+              textAlign="center"
+              p={4}
+            >
+              Acciones
+            </Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -46,13 +116,13 @@ const ControlCalidadTable = ({
                   <Td>{item.nombre || "Sin nombre"}</Td>
                   <Td>{item.nombreTienda}</Td>
                   <Td>{item.nombreProveedor || "null"}</Td>
-                  <Td>{item.cantidad || 0}</Td>
                   <Td>{item.cantidadAsignada || 0}</Td>
+                  <Td>{item.pedido_compra || 0}</Td>
                   <Td>
-                    {/* Botón para abrir modal de edición */}
                     <Button
                       colorScheme="blue"
                       size="sm"
+                      leftIcon={<FaEdit />}
                       onClick={() => onEditar(item)}
                     >
                       Editar
@@ -79,7 +149,7 @@ ControlCalidadTable.propTypes = {
   filtros: PropTypes.shape({
     palabrasClave: PropTypes.string,
   }).isRequired,
-  onEditar: PropTypes.func.isRequired, // Agregamos la prop
+  onEditar: PropTypes.func.isRequired,
 };
 
 export default ControlCalidadTable;

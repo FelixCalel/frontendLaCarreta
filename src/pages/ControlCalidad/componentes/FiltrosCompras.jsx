@@ -12,13 +12,13 @@ import PropTypes from "prop-types";
 import moment from "moment";
 import { SearchIcon } from "@chakra-ui/icons";
 
-const FiltrosPedidos = ({ onAplicarFiltros }) => {
-  const [fecha, setFecha] = useState("");
+const FiltrosCompras = ({ onAplicarFiltros }) => {
+  const [fechaIngreso, setFechaIngreso] = useState("");
   const [palabrasClave, setPalabrasClave] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onAplicarFiltros({ fecha, palabrasClave });
+    onAplicarFiltros({ fechaIngreso, palabrasClave });
   };
 
   return (
@@ -36,13 +36,13 @@ const FiltrosPedidos = ({ onAplicarFiltros }) => {
         align="flex-end"
       >
         <FormControl w={{ base: "100%", md: "200px" }}>
-          <FormLabel fontSize="sm">Fecha de Entrega</FormLabel>
+          <FormLabel fontSize="sm">Fecha de Ingreso a planta</FormLabel>
           <Input
             size="sm"
             type="date"
-            value={fecha}
+            value={fechaIngreso}
             onChange={(e) =>
-              setFecha(moment.utc(e.target.value).format("YYYY-MM-DD"))
+              setFechaIngreso(moment.utc(e.target.value).format("YYYY-MM-DD"))
             }
           />
         </FormControl>
@@ -71,8 +71,8 @@ const FiltrosPedidos = ({ onAplicarFiltros }) => {
   );
 };
 
-FiltrosPedidos.propTypes = {
+FiltrosCompras.propTypes = {
   onAplicarFiltros: PropTypes.func.isRequired,
 };
 
-export default FiltrosPedidos;
+export default FiltrosCompras;
