@@ -283,7 +283,7 @@ const PageFormPedidos = () => {
       <PedidosTable
         pedidosUsuario={pedidosUsuario}
         isMobile={isMobile}
-        isDetailsOpen={isDetailsOpen} // Estado para controlar los detalles abiertos
+        isDetailsOpen={isDetailsOpen}
         handleToggleDetails={(pedidoId, deudorId, tiendaId) => {
           setIsDetailsOpen(isDetailsOpen === pedidoId ? null : pedidoId);
 
@@ -330,8 +330,8 @@ const PageFormPedidos = () => {
       {pedidoIdGuardado && (
         <ProductosTable
           pedidoId={pedidoIdGuardado}
-          deudorId={currentPedido.deudorId} // Asegúrate de pasar la prop correcta
-          tiendaId={currentPedido.tiendaId} // Asegúrate de pasar la prop correcta
+          deudorId={currentPedido.deudorId}
+          tiendaId={currentPedido.tiendaId}
         />
       )}
     </Box>
