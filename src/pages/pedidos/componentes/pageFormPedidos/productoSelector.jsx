@@ -99,7 +99,7 @@ const ProductoSelector = ({ onSelect, reset }) => {
     <Flex pt="2" justify="start" align="center" w="full" flexDir="column">
       <FormControl>
         <HStack spacing={2} w="full" align="center" position="relative">
-          <Box flex="1" position="relative">
+          <Box position="relative">
             <AutoComplete openOnFocus>
               <AutoCompleteInput
                 variant="outline"
@@ -107,7 +107,8 @@ const ProductoSelector = ({ onSelect, reset }) => {
                 value={inputValue}
                 onChange={handleInputChange}
                 size="sm"
-                w="full"
+                w={{ base: "full", md: "480px" }}
+                position="relative"
               />
               <AutoCompleteList
                 onScroll={handleScroll}
@@ -125,6 +126,7 @@ const ProductoSelector = ({ onSelect, reset }) => {
                 maxHeight="50vh"
                 overflowY="auto"
                 overflowX="hidden"
+                w="full"
               >
                 {visibleItems.map((item) => (
                   <AutoCompleteItem

@@ -5,7 +5,12 @@ import CantidadInput from "../pageFormPedidos/cantidadInput";
 import MotionBox from "./motionBox";
 import PropTypes from "prop-types";
 
-const ProductoSelectorSection = ({ newProducto, setNewProducto, onAddProducto, resetFields }) => {
+const ProductoSelectorSection = ({
+  newProducto,
+  setNewProducto,
+  onAddProducto,
+  resetFields,
+}) => {
   return (
     <Box mt={4}>
       <MotionBox
@@ -20,11 +25,17 @@ const ProductoSelectorSection = ({ newProducto, setNewProducto, onAddProducto, r
       >
         <HStack spacing={2} justifyContent="space-between">
           <ProductoSelector
-            onSelect={(productoId, nombreProducto, cantidadDisponible, codigo) =>
+            onSelect={(
+              productoId,
+              nombreProducto,
+              cantidadDisponible,
+              codigo
+            ) =>
               setNewProducto((prev) => ({
                 ...prev,
                 productoId,
                 nombreProducto,
+                cantidad: "",
                 cantidadDisponible,
                 codigo,
               }))
@@ -36,13 +47,18 @@ const ProductoSelectorSection = ({ newProducto, setNewProducto, onAddProducto, r
             onChange={(e) =>
               setNewProducto((prev) => ({
                 ...prev,
-                cantidad: parseFloat(e.target.value),
+                cantidad: e.target.value,
               }))
             }
             placeholder="Cantidad"
           />
           <Tooltip label="Agregar producto" hasArrow>
-            <IconButton icon={<AddIcon />} colorScheme="teal" onClick={onAddProducto} size="sm" />
+            <IconButton
+              icon={<AddIcon />}
+              colorScheme="teal"
+              onClick={onAddProducto}
+              size="sm"
+            />
           </Tooltip>
         </HStack>
       </MotionBox>
