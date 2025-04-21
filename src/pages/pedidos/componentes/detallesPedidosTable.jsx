@@ -52,20 +52,6 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   });
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const normalizarDetalle = (d) => {
-    const idValido =
-      d.detallePedidoId !== undefined && d.detallePedidoId !== null
-        ? d.detallePedidoId
-        : d.id;
-    return {
-      detalleId: idValido,
-      productoId: d.productoId,
-      nombreProducto: d.nombreProducto,
-      codigo: d.codigo,
-      cantidadDisponible: d.cantidadDisponible ?? 0,
-      cantidad: d.cantidad,
-    };
-  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -74,70 +60,66 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   }, []);
 
   useEffect(() => {
-    setDetallesCargados(false);
-  }, [pedidoId]);
-
-  useEffect(() => {
-    const cargarDetallesPedido = async () => {
-      try {
-        if (![deudorId, pedidoId, tiendaId].every((id) => id && !isNaN(id))) {
-          toast({
-            title: "Error",
-            description: "Uno de los IDs no es válido.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
-          return;
-        }
-
-        setIsLoading(true);
-
-        const guardadosRaw = sessionStorage.getItem(`productos_${pedidoId}`);
-        const detallesLocales = guardadosRaw ? JSON.parse(guardadosRaw) : [];
-
-        console.log("Solicitando detalles del pedido con ID:", pedidoId);
-        const detallesBackend = await dispatch(
-          getDetalleOrdenByPedidoId(pedidoId)
-        ).unwrap();
-
-        const detallesBackendNormalizados =
-          detallesBackend.map(normalizarDetalle);
-
-        const mapaLocales = new Map(
-          detallesLocales.map((d) => [d.detalleId, d])
-        );
-        const fusionados = detallesBackendNormalizados.map(
-          (d) => mapaLocales.get(d.detalleId) ?? d
-        );
-
-        fusionados.sort((a, b) => a.detalleId - b.detalleId);
-
-        setProductos(fusionados);
-        sessionStorage.setItem(
-          `productos_${pedidoId}`,
-          JSON.stringify(fusionados)
-        );
-
-        setDetallesCargados(true);
-      } catch (error) {
-        console.error("Error en cargarDetallesPedido:", error);
+    const loadDetalles = async () => {
+      if (![deudorId, pedidoId, tiendaId].every((id) => id && !isNaN(id))) {
         toast({
           title: "Error",
-          description: "Hubo un problema al procesar los detalles del pedido.",
+          description: "Uno de los IDs no es válido.",
           status: "error",
           duration: 3000,
           isClosable: true,
         });
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const detallesRaw = await dispatch(
+          getDetalleOrdenByPedidoId(pedidoId)
+        ).unwrap();
+
+        const detalles = detallesRaw.map((d) => ({
+          ...d,
+          detallePedidoId: d.id,
+        }));
+
+        setProductos(detalles);
+        sessionStorage.setItem(
+          `productos_${pedidoId}`,
+          JSON.stringify(detalles)
+        );
+      } catch (err) {
+        console.error("Error al obtener detalles del servidor:", err);
+        const cache = sessionStorage.getItem(`productos_${pedidoId}`);
+        if (cache) {
+          setProductos(JSON.parse(cache));
+          toast({
+            title: "Cargado desde cache",
+            description:
+              "No se pudo obtener datos del servidor, usando cache local.",
+            status: "warning",
+            duration: 3000,
+            isClosable: true,
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "No se pudieron cargar los detalles del pedido.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
       } finally {
         setIsLoading(false);
+        setDetallesCargados(true);
       }
     };
 
     if (deudorId && pedidoId && tiendaId && !detallesCargados) {
-      cargarDetallesPedido();
+      loadDetalles();
     }
-  }, [deudorId, pedidoId, tiendaId, detallesCargados, toast, dispatch]);
+  }, [deudorId, pedidoId, tiendaId, detallesCargados, dispatch, toast]);
 
   useEffect(() => {
     if (detallesCargados && !hasLoadedProductosComunes.current) {
@@ -148,56 +130,54 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     }
   }, [detallesCargados]);
 
+  useEffect(() => {
+    setDetallesCargados(false);
+    setProductosComunesCargados(false);
+    hasLoadedProductosComunes.current = false;
+    setProductos([]);
+  }, [pedidoId]);
+
   const cargarProductosComunes = async () => {
-    console.log("cargarProductosComunes llamada");
+    if (productosComunesCargados) return;
+    setIsLoading(true);
+
     try {
-      if (productosComunesCargados) return;
-
-      setIsLoading(true);
-
-      const productosComunes = await dispatch(
+      const comunesRaw = await dispatch(
         getPedidosComunesByUsuarioId({ deudorId, pedidoId, tiendaId })
       ).unwrap();
+      const comunes = comunesRaw.map((c) => ({
+        ...c,
+        detallePedidoId: c.detallePedidoId ?? c.id,
+      }));
 
-      console.log("Productos comunes recibidos:", productosComunes);
+      setProductos((prev) => {
+        const nuevos = [
+          ...prev,
+          ...comunes.filter(
+            (c) => !prev.some((p) => p.detallePedidoId === c.detallePedidoId)
+          ),
+        ];
+        sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(nuevos));
+        return nuevos;
+      });
 
-      if (productosComunes.length > 0) {
-        setProductos((prev) => {
-          const idsPrevios = new Set(prev.map((p) => p.productoId));
-          const sinDuplicados = productosComunes.filter(
-            (p) => !idsPrevios.has(p.productoId)
-          );
-          const nuevos = [...prev, ...sinDuplicados];
-
-          sessionStorage.setItem(
-            `productos_${pedidoId}`,
-            JSON.stringify(nuevos)
-          );
-          return nuevos;
-        });
-
-        toast({
-          title: "Productos comunes agregados",
-          description: "Los productos comunes ya están en el pedido.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        toast({
-          title: "Sin productos comunes",
-          description: "No se encontraron productos comunes.",
-          status: "info",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-
-      await dispatch(getDetalleOrdenByPedidoId(pedidoId)).unwrap();
+      toast({
+        title:
+          comunes.length > 0
+            ? "Productos comunes agregados"
+            : "Sin productos comunes",
+        description:
+          comunes.length > 0
+            ? "Los productos comunes ya están en el pedido."
+            : "No se encontraron productos comunes.",
+        status: comunes.length > 0 ? "success" : "info",
+        duration: 3000,
+        isClosable: true,
+      });
 
       setProductosComunesCargados(true);
-    } catch (error) {
-      console.error("Error al cargar los productos comunes:", error);
+    } catch (err) {
+      console.error("Error al cargar comunes:", err);
       toast({
         title: "Error",
         description: "Hubo un problema al obtener los productos comunes.",
@@ -268,10 +248,14 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           throw new Error("El backend no devolvió un detallePedidoId válido.");
         }
 
-        const nuevoProducto = normalizarDetalle({
-          ...newProducto,
-          id: result.id,
-        });
+        const nuevoProducto = {
+          detallePedidoId: result.id,
+          productoId: newProducto.productoId,
+          nombreProducto: newProducto.nombreProducto,
+          cantidadDisponible: newProducto.cantidadDisponible,
+          codigo: newProducto.codigo,
+          cantidad: newProducto.cantidad,
+        };
 
         const nuevosProductos = [...productos, nuevoProducto];
         setProductos(nuevosProductos);
@@ -320,36 +304,25 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     }
   };
 
-  const handleRemoveProducto = async (detalleId) => {
-    if (!detalleId) {
-      console.error("Identificador de detalle no válido:", detalleId);
+  const handleRemoveProducto = async (detallePedidoId) => {
+    if (!detallePedidoId) {
+      console.error("DetallePedidoId no válido:", detallePedidoId);
       return;
     }
+
     try {
-      const resultAction = await dispatch(deleteDetalleOrden(detalleId));
-      if (deleteDetalleOrden.rejected.match(resultAction)) {
-        console.error(
-          "Error al eliminar:",
-          resultAction.error || resultAction.payload
-        );
-        toast({
-          title: "Error",
-          description: "Hubo un problema al eliminar el producto.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-      // Actualiza el estado
+      await dispatch(deleteDetalleOrden(detallePedidoId)).unwrap();
+
       const productosActualizados = productos.filter(
-        (prod) => prod.detalleId !== detalleId
+        (prod) => prod.detallePedidoId !== detallePedidoId
       );
       setProductos(productosActualizados);
       sessionStorage.setItem(
         `productos_${pedidoId}`,
         JSON.stringify(productosActualizados)
       );
+      console.log("Producto eliminado:", detallePedidoId);
+
       toast({
         title: "Producto eliminado.",
         description: "El producto ha sido eliminado exitosamente.",
@@ -358,7 +331,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error inesperado al eliminar el detalle:", error);
+      console.error("Error al eliminar el detalle del pedido:", error);
       toast({
         title: "Error.",
         description: "Hubo un problema al eliminar el producto.",
@@ -370,58 +343,38 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   };
 
   const handleCantidadChange = async (detalleId, cantidad) => {
-    if (!detalleId || !pedidoId) {
-      console.error("El detalleId o pedidoId son undefined o inválidos", {
-        detalleId,
-        pedidoId,
-      });
-      return;
-    }
-
+    if (!detalleId || !pedidoId) return;
+    setProductos((prev) =>
+      prev.map((p) =>
+        p.detallePedidoId === detalleId ? { ...p, cantidad } : p
+      )
+    );
     try {
       await dispatch(
-        updateDetalleOrden({
-          id: Number(detalleId),
-          pedidoId: Number(pedidoId),
-          cantidad,
-        })
+        updateDetalleOrden({ id: detalleId, pedidoId, cantidad })
       ).unwrap();
 
-      const productosActualizados = productos.map((prod) =>
-        prod.detallePedidoId === detalleId ? { ...prod, cantidad } : prod
-      );
-      setProductos(productosActualizados);
-      sessionStorage.setItem(
-        `productos_${pedidoId}`,
-        JSON.stringify(productosActualizados)
-      );
-      console.log(
-        `Cantidad actualizada para detalle ${detalleId}: ${cantidad}`
-      );
-
       toast({
-        title: "Cantidad actualizada.",
-        description: "La cantidad del producto se ha actualizado exitosamente.",
+        title: "Cantidad actualizada",
+        description: `La nueva cantidad es ${cantidad}.`,
         status: "success",
         duration: 2000,
         isClosable: true,
       });
-    } catch (error) {
-      console.error("Error al actualizar la cantidad del producto:", error);
+    } catch (err) {
       toast({
-        title: "Error.",
-        description: "No se pudo actualizar la cantidad del producto.",
+        title: "Error",
+        description: "No se pudo actualizar la cantidad.",
         status: "error",
-        duration: 2000,
+        duration: 3000,
         isClosable: true,
       });
     }
   };
 
   const getUniqueKey = (producto) => {
-    return producto.detalleId || producto.id || producto.productoId;
+    return producto.detallePedidoId || producto.id || producto.productoId;
   };
-
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("teal.600", "teal.300");
   const mobileCardBg = useColorModeValue("gray.50", "gray.700");
@@ -492,7 +445,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                           }
                           onBlur={() => {
                             handleCantidadChange(
-                              producto.detalleId,
+                              producto.detallePedidoId,
                               producto.cantidad
                             );
                           }}
@@ -507,7 +460,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                           icon={<DeleteIcon />}
                           colorScheme="red"
                           onClick={() =>
-                            handleRemoveProducto(producto.detalleId)
+                            handleRemoveProducto(producto.detallePedidoId)
                           }
                           size="xs"
                         />
