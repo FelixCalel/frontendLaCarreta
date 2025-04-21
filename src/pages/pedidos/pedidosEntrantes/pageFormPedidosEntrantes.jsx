@@ -284,7 +284,7 @@ const EntrantesPage = () => {
                 </AlertDialogBody>
                 <AlertDialogFooter>
                   <Button variant="outline" onClick={onCancelClose}>
-                    Cancelar
+                    Cerrar
                   </Button>
                   <Button
                     colorScheme="red"
