@@ -186,7 +186,9 @@ const AprobadosPage = () => {
             tienda: pedido.nombreTienda || "Sin tienda",
             producto: detalle.nombreProducto || "",
             cantidad: detalle.cantidad || 0,
-            deudor: pedido.nombreDeu || deudor,
+            deudor: `${pedido.nombreCorrelativo || ""}${
+              pedido.nombreCorrelativo ? " - " : ""
+            }${pedido.nombreDeu || ""}`,
             fechaEntrega,
           });
         }
@@ -225,7 +227,11 @@ const AprobadosPage = () => {
       }
       firstDeudor = false;
 
-      const deudorRow = worksheet.addRow([deudor]);
+      const deudorRow = worksheet.addRow([
+        `${pedidos[0]?.nombreCorrelativo || ""}${
+          pedidos[0]?.nombreCorrelativo ? " - " : ""
+        }${pedidos[0]?.nombreDeu || ""}`,
+      ]);
       deudorRow.font = { bold: true };
 
       const fechaOrdenObj = new Date(pedidos[0]?.fechaOrden);

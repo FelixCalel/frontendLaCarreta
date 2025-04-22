@@ -7,8 +7,6 @@ import Select from "react-select";
 import { chakra, useColorModeValue } from "@chakra-ui/react";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
-
-// Envolvemos React-Select con Chakra
 const ChakraReactSelect = chakra(Select);
 
 const TiendaSelector = ({
@@ -22,7 +20,6 @@ const TiendaSelector = ({
   const dispatch = useDispatch();
   const [tiendas, setTiendas] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const tiendasRedux = useSelector((state) => state.tiendas.data);
 
   useEffect(() => {
@@ -37,7 +34,6 @@ const TiendaSelector = ({
       let tiendasFiltradas = [];
 
       if (isRutaFilter) {
-        // Tiendas asignadas
         if (!rutaIds || rutaIds.length === 0) {
           setTiendas([]);
           setLoading(false);
@@ -47,12 +43,15 @@ const TiendaSelector = ({
           (tienda) => rutaIds.includes(tienda.rutaId) && tienda.estaActivo
         );
       } else {
-        // Tiendas NO asignadas
         if (paisId) {
           try {
-            const response = await axios.get(`${BASE_URL}/tienda/by-pais/${paisId}`);
+            const response = await axios.get(
+              `${BASE_URL}/tienda/by-pais/${paisId}`
+            );
             if (response && response.data) {
-              tiendasFiltradas = response.data.filter((tienda) => tienda.estaActivo);
+              tiendasFiltradas = response.data.filter(
+                (tienda) => tienda.estaActivo
+              );
             }
           } catch (error) {
             console.error("Error al cargar tiendas por país:", error);
@@ -67,42 +66,30 @@ const TiendaSelector = ({
     fetchTiendas();
   }, [paisId, rutaIds, isRutaFilter, tiendasRedux]);
 
-  // Opciones para react-select
   const options = tiendas.map((tienda) => ({
     value: tienda.id,
     label: tienda.nombre,
   }));
 
-  const selectedOption = options.find((option) => option.value === value) || null;
+  const selectedOption =
+    options.find((option) => option.value === value) || null;
   const placeholderColor = useColorModeValue("gray.600", "gray.200");
 
-  /****************************************************
-   * COLORES VERDES PARA EL PRIMER SELECTOR
-   * Y NARANJA PARA EL SEGUNDO, COMO EJEMPLO
-   ****************************************************/
-  // MODO CLARO - CONTROL (verde)
-  const controlBg1Light = "#9ae6b4"; // green.200
-  const controlBg1Dark  = "#2f855a"; // green.600
-  // MODO CLARO - MENÚ (verde muy claro)
-  const menuBg1Light    = "#f0fff4"; // green.50
-  const menuBg1Dark     = "#22543d"; // green.800
-
-  // MODO CLARO - CONTROL (naranja)
-  const controlBg2Light = "#FEEBC8"; // orange.200
-  const controlBg2Dark  = "#7B341E"; // orange.700
-  // MODO CLARO - MENÚ (naranja muy claro)
-  const menuBg2Light    = "#FFF7ED"; // un tono entre orange.50 y .100
-  const menuBg2Dark     = "#5F3B2F"; // un tono oscuro para menú
-
-  // Si NO es el segundo selector => verde
-  // Si es el segundo => naranja
+  const controlBg1Light = "#9ae6b4";
+  const controlBg1Dark = "#2f855a";
+  const menuBg1Light = "#f0fff4";
+  const menuBg1Dark = "#22543d";
+  const controlBg2Light = "#FEEBC8";
+  const controlBg2Dark = "#7B341E";
+  const menuBg2Light = "#FFF7ED";
+  const menuBg2Dark = "#5F3B2F";
   const controlBg = useColorModeValue(
     isSecondSelector ? controlBg2Light : controlBg1Light,
-    isSecondSelector ? controlBg2Dark  : controlBg1Dark
+    isSecondSelector ? controlBg2Dark : controlBg1Dark
   );
   const menuBg = useColorModeValue(
     isSecondSelector ? menuBg2Light : menuBg1Light,
-    isSecondSelector ? menuBg2Dark  : menuBg1Dark
+    isSecondSelector ? menuBg2Dark : menuBg1Dark
   );
 
   return (
@@ -117,9 +104,7 @@ const TiendaSelector = ({
       menuPosition="fixed"
       noOptionsMessage={() => "No se encontraron tiendas"}
       loadingMessage={() => "Cargando tiendas..."}
-
       styles={{
-        // Fondo del control
         control: (base) => ({
           ...base,
           backgroundColor: `${controlBg} !important`,
@@ -132,12 +117,10 @@ const TiendaSelector = ({
           ...base,
           backgroundColor: "transparent !important",
         }),
-        // Fondo del menú
         menu: (base) => ({
           ...base,
           backgroundColor: `${menuBg} !important`,
         }),
-        // Opciones
         option: (base, state) => ({
           ...base,
           backgroundColor: state.isFocused
@@ -145,7 +128,6 @@ const TiendaSelector = ({
             : "transparent",
           color: "inherit",
         }),
-        // Aquí ajustas el color del placeholder
         placeholder: (base) => ({
           ...base,
           color: placeholderColor,

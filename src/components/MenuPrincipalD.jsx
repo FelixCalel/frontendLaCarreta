@@ -10,7 +10,7 @@ import {
   useColorModeValue,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import { Link, useLocation  } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   HamburgerIcon,
   ChevronDownIcon,
@@ -19,7 +19,7 @@ import {
 } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchModulos } from "../store/RolPermisoUsuario/thunks";
-import iconCatalog from "../components/Iconos/IconCatalog"; 
+import iconCatalog from "../components/Iconos/IconCatalog";
 
 const MenuItem = ({
   item,
@@ -200,9 +200,7 @@ const MenuPrincipalD = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    const handleClickOutside = () => {
-
-    };
+    const handleClickOutside = () => {};
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -217,7 +215,7 @@ const MenuPrincipalD = () => {
     if (isMobile && enModuloPedido) {
       setIsExpanded(true);
     } else {
-      setIsExpanded(false); 
+      setIsExpanded(false);
     }
   }, [isMobile, location.pathname]);
 
@@ -227,7 +225,7 @@ const MenuPrincipalD = () => {
         const enModuloPedido = PEDIDO_ROUTES.some((route) =>
           location.pathname.startsWith(route)
         );
-  
+
         if (isMobile && enModuloPedido) {
           setOpenMenus({});
         } else {
@@ -236,14 +234,12 @@ const MenuPrincipalD = () => {
         }
       }
     };
-  
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isMobile, location.pathname]);
-  
-  
 
   const toggleMenu = () => {
     setIsExpanded(!isExpanded);
@@ -260,13 +256,13 @@ const MenuPrincipalD = () => {
     ? agruparModulos(modulos)
     : [];
 
-    if (loading) {
-      return <div>Cargando módulos...</div>;
-    }
-  
-    if (!modulosAgrupados.length) {
-      return <div>No hay módulos disponibles.</div>;
-    }
+  if (loading) {
+    return <div>Cargando módulos...</div>;
+  }
+
+  if (!modulosAgrupados.length) {
+    return <div>No hay módulos disponibles.</div>;
+  }
 
   return (
     <Box
