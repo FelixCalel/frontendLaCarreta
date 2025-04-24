@@ -40,7 +40,6 @@ const EntrantesPage = () => {
   const [detallesPedido, setDetallesPedido] = useState([]);
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  //const pedidosEntrantes = pedidos.filter((pedido) => pedido.estadoId === 2);
   const [isApproving, setIsApproving] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const {
@@ -228,7 +227,7 @@ const EntrantesPage = () => {
     }
   };
 
-  const pedidosFiltrados = useSelector(selectPedidosEntrantesPorRuta);
+  const pedidosFiltrados = useSelector(selectPedidosEntrantesPorRuta());
 
   const handleCloseApproveDialog = () => {
     onApproveClose();

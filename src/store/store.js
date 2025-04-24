@@ -19,6 +19,8 @@ import itemReducer from "./items/itemSlice";
 import comprasSlice from "./Compras/compraSlice.js";
 import proveedorReducer from "./Proveedor/proveedorSlice.js";
 
+const persistedAuth = JSON.parse(localStorage.getItem("authSlice") || "null");
+
 export const store = configureStore({
   reducer: {
     auth: authSlice.reducer,
@@ -41,4 +43,33 @@ export const store = configureStore({
     compras: comprasSlice,
     proveedores: proveedorReducer,
   },
+  preloadedState: persistedAuth ? { auth: persistedAuth } : {},
+});
+
+store.subscribe(() => {
+  const { auth } = store.getState();
+
+  // elige SOLO los campos que quieres persistir
+  const {
+    status,
+    uid,
+    email,
+    displayName,
+    token,
+    rutas,
+    user, // trae las rutas completas si las tienes
+  } = auth;
+
+  localStorage.setItem(
+    "authSlice",
+    JSON.stringify({
+      status,
+      uid,
+      email,
+      displayName,
+      token,
+      rutas,
+      user,
+    })
+  );
 });

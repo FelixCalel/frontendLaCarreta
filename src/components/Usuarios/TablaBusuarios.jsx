@@ -30,22 +30,25 @@ import { FiUserPlus, FiSearch } from "react-icons/fi";
 import axios from "axios";
 import RutaSelector from "./componentes/RutaSelector";
 import RolSelector from "./componentes/RolSelector";
+import { useDispatch } from "react-redux";
+import { setRutas } from "../../store/auth/authSlice";
+//import { fetchCurrentUser } from "../../store/auth/thunks";
+import { tablaPedidos } from "../../store/Pedidos/thunks";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const TablaBusuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
-  const [rutas, setRutas] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRoutes, setSelectedRoutes] = useState([]);
   const [filteredRutas, setFilteredRutas] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
-
+  const dispatch = useDispatch();
   const [allRoles, setAllRoles] = useState([]);
-
   const toast = useToast();
   const roleIdLogueado = localStorage.getItem("roleId");
+  const [rutas, setRutasLocal] = useState([]);
 
   useEffect(() => {
     const fetchUsuarios = async () => {
@@ -91,7 +94,7 @@ export const TablaBusuarios = () => {
           paisId: tienda.paisId,
         }));
 
-        setRutas(rutasExtraidas);
+        setRutasLocal(rutasExtraidas);
       } catch (error) {
         console.error(
           "Error al obtener las rutas vinculadas a tiendas:",
@@ -150,22 +153,24 @@ export const TablaBusuarios = () => {
         return;
       }
 
-      await axios.post(`${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`, {
-        rutaId: selectedRoutes,
-      });
+      const { data } = await axios.post(
+        `${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`,
+        { rutaId: selectedRoutes }
+      );
 
-      setUsuarios((prevUsuarios) =>
-        prevUsuarios.map((usuario) =>
-          usuario.id === usuarioId
-            ? {
-                ...usuario,
-                rutas: [...new Set([...usuario.rutas, ...selectedRoutes])].map(
-                  (rutaId) => ({ id: rutaId })
-                ),
-              }
-            : usuario
+      setUsuarios((prev) =>
+        prev.map((u) =>
+          u.id === usuarioId ? { ...u, rutas: data.usuario.rutas } : u
         )
       );
+
+      const currentUid = Number(localStorage.getItem("usuarioId") ?? 0);
+
+      if (usuarioId === currentUid) {
+        const ids = data.usuario.rutas.map((r) => r.id);
+        dispatch(setRutas({ ids, objetos: data.usuario.rutas }));
+        dispatch(tablaPedidos());
+      }
 
       toast({
         title: "Rutas asignadas correctamente",
@@ -203,7 +208,7 @@ export const TablaBusuarios = () => {
   };
 
   const handleOpenAssignRutas = async (usuario) => {
-    setSelectedUser(usuario.id);
+    setSelectedUser(usuario);
     setSelectedRoutes(
       usuario.rutas ? usuario.rutas.map((ruta) => ruta.id) : []
     );
@@ -351,18 +356,22 @@ export const TablaBusuarios = () => {
           <ModalHeader color={modalHeaderColor}>Asignar Rutas</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Text mb={4}>Asignar rutas al usuario ID: {selectedUser}</Text>
+            {" "}
+            <Text mb={4}>
+              Asignar rutas a&nbsp;{" "}
+              {selectedUser ? `${selectedUser.nombre}` : ""}{" "}
+            </Text>
             <RutaSelector
               selectedRoutes={selectedRoutes}
               setSelectedRoutes={setSelectedRoutes}
-              usuarioId={selectedUser}
+              usuarioId={selectedUser?.id}
               filteredRutas={filteredRutas}
             />
           </ModalBody>
           <ModalFooter>
             <Button
               colorScheme="green"
-              onClick={() => asignarRutas(selectedUser)}
+              onClick={() => asignarRutas(selectedUser?.id)}
             >
               Asignar
             </Button>

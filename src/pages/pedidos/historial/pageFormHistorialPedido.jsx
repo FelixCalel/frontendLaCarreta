@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Box, Heading, useToast, useColorModeValue } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { tablaPedidos } from "../../../store/Pedidos/thunks";
@@ -7,7 +7,8 @@ import Pagination from "../../../components/pagination";
 import PedidosTable from "./componente/pedidosTable";
 import PedidosCardList from "./componente/pedidoCardList";
 import DetallesPedidoModal from "./componente/detallesPedidoModal";
-
+import { selectPedidosEntrantesPorRuta } from "../pedidosEntrantes/componentes/rutaSelectors";
+import { tablaTienda } from "../../../store/Tienda/thunks";
 const HistorialPedidosPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
@@ -21,29 +22,16 @@ const HistorialPedidosPage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = parseInt(localStorage.getItem("roleId"), 10);
-  const pedidos = useSelector((state) => state.pedidos.data);
-
+  //const pedidos = useSelector((state) => state.pedidos.data);
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("teal.600", "teal.200");
   const noDataTextColor = useColorModeValue("gray.500", "gray.400");
 
-  const pedidosHistorial = pedidos
-    .filter((pedido) => {
-      const esAprobadoOCancelado =
-        pedido.estadoId === 3 || pedido.estadoId === 4;
-      const esPendiente = pedido.estadoId === 2;
-      const esExportado = pedido.estadoId === 5;
-
-      if (roleId === 1 || roleId === 3) {
-        return esAprobadoOCancelado || esPendiente || esExportado;
-      } else {
-        return (
-          (esAprobadoOCancelado || esPendiente || esExportado) &&
-          pedido.usuarioId === usuarioId
-        );
-      }
-    })
-    .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl));
+  const selectHistorial = useMemo(
+    () => selectPedidosEntrantesPorRuta([2, 3, 4, 5]),
+    []
+  );
+  const pedidosHistorial = useSelector(selectHistorial);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -53,6 +41,7 @@ const HistorialPedidosPage = () => {
   );
 
   useEffect(() => {
+    dispatch(tablaTienda());
     dispatch(tablaPedidos());
   }, [dispatch]);
 

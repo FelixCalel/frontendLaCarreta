@@ -8,7 +8,7 @@ import {
   CloseButton,
   HStack,
   useOutsideClick,
-  useColorModeValue,  // <-- Importar para modo claro/oscuro
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { FiBell } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
@@ -21,28 +21,24 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const ref = useRef();
-
-  // Usuario actual
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = localStorage.getItem("roleId");
-
-  // Pedidos desde Redux
   const pedidos = useSelector((state) => state.pedidos.data || []);
-
-  // Estados locales
   const [notificaciones, setNotificaciones] = useState([]);
   const [deletedNotifications, setDeletedNotifications] = useState(() => {
-    const storedDeleted = localStorage.getItem(`deletedNotifications_${usuarioId}`);
+    const storedDeleted = localStorage.getItem(
+      `deletedNotifications_${usuarioId}`
+    );
     return storedDeleted ? JSON.parse(storedDeleted) : [];
   });
 
-  // Sincronizar `deletedNotifications` con `localStorage` al cambiar usuario
   useEffect(() => {
-    const storedDeleted = localStorage.getItem(`deletedNotifications_${usuarioId}`);
+    const storedDeleted = localStorage.getItem(
+      `deletedNotifications_${usuarioId}`
+    );
     setDeletedNotifications(storedDeleted ? JSON.parse(storedDeleted) : []);
   }, [usuarioId]);
 
-  // Guardar en `localStorage` cada vez que cambien las notificaciones eliminadas
   useEffect(() => {
     localStorage.setItem(
       `deletedNotifications_${usuarioId}`,
@@ -50,33 +46,27 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     );
   }, [deletedNotifications, usuarioId]);
 
-  // Filtrar notificaciones según rol y estado, excluyendo eliminadas
   useEffect(() => {
     const usuarioPedidos = pedidos
       .filter(
         (pedido) =>
-          (pedido.usuarioId === usuarioId || roleId === "3") && // notificaciones propias o pendientes para rol 3
+          (pedido.usuarioId === usuarioId || roleId === "3") &&
           !deletedNotifications.includes(pedido.id)
       )
-      .filter(
-        (pedido) =>
-          roleId === "3"
-            ? // rol 3 => estado 2 (pendientes) o 5 (exportados) por ejemplo
-              pedido.estadoId === 2 || pedido.estadoId === 5
-            : // rol 2 => estado 3 (aprobados) o 4 (cancelados)
-              pedido.estadoId === 3 || pedido.estadoId === 4
+      .filter((pedido) =>
+        roleId === "3"
+          ? pedido.estadoId === 2 || pedido.estadoId === 5
+          : pedido.estadoId === 3 || pedido.estadoId === 4
       )
       .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl));
 
     setNotificaciones(usuarioPedidos);
   }, [pedidos, roleId, usuarioId, deletedNotifications]);
 
-  // Cargar pedidos al inicializar
   useEffect(() => {
     dispatch(tablaPedidos());
   }, [dispatch]);
 
-  // Manejar clic fuera del contenedor para cerrar notificaciones
   useOutsideClick({
     ref: ref,
     handler: () => {
@@ -84,7 +74,6 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     },
   });
 
-  // Manejo de redirecciones
   const handleNotificationClick = () => {
     if (roleId === "3") {
       navigate(`/pedidos/entrantes`);
@@ -93,7 +82,6 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     }
   };
 
-  // Manejo de eliminación de notificaciones
   const handleDeleteNotification = (pedidoId) => {
     const updatedNotifications = [...deletedNotifications, pedidoId];
     setDeletedNotifications(updatedNotifications);
@@ -103,14 +91,13 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     );
   };
 
-  const containerBg  = useColorModeValue("white", "gray.700");
+  const containerBg = useColorModeValue("white", "gray.700");
   const containerTxt = useColorModeValue("gray.700", "gray.200");
-  const borderColor  = useColorModeValue("gray.200", "gray.600");
-  const hoverBg      = useColorModeValue("gray.50",  "gray.600");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const hoverBg = useColorModeValue("gray.50", "gray.600");
 
   return (
     <Box position="relative">
-      {/* Icono de notificaciones */}
       <Tooltip label="Notificaciones" aria-label="Notificaciones Tooltip">
         <Box position="relative" onClick={onToggle}>
           <IconButton
@@ -137,7 +124,6 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
         </Box>
       </Tooltip>
 
-      {/* Notificaciones desplegables */}
       <Collapse in={isOpen} animateOpacity>
         <Box
           ref={ref}
@@ -145,14 +131,14 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
           top="60px"
           right="0"
           w="320px"
-          bg={containerBg}           // <-- Modo claro/oscuro
-          color={containerTxt}       // <-- Texto adaptado a modo
+          bg={containerBg}
+          color={containerTxt}
           boxShadow="lg"
           p={4}
           borderRadius="lg"
           zIndex="1000"
           border="1px solid"
-          borderColor={borderColor}  // <-- Borde adaptado
+          borderColor={borderColor}
         >
           {notificaciones.length > 0 ? (
             notificaciones.map((pedido) => (
@@ -162,7 +148,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
                 align="center"
                 p={2}
                 borderRadius="md"
-                _hover={{ bg: hoverBg }}  // <-- hover adaptado
+                _hover={{ bg: hoverBg }}
               >
                 <Box
                   onClick={handleNotificationClick}
@@ -201,7 +187,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
 }
 
 Notifications.propTypes = {
-  isOpen:   PropTypes.bool.isRequired,
+  isOpen: PropTypes.bool.isRequired,
   onToggle: PropTypes.func.isRequired,
-  onClose:  PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
