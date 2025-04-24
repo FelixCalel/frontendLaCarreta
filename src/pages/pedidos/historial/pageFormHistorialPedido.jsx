@@ -9,10 +9,10 @@ import PedidosCardList from "./componente/pedidoCardList";
 import DetallesPedidoModal from "./componente/detallesPedidoModal";
 import { selectPedidosEntrantesPorRuta } from "../pedidosEntrantes/componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
+
 const HistorialPedidosPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [detallesPedido, setDetallesPedido] = useState([]);
@@ -22,16 +22,24 @@ const HistorialPedidosPage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = parseInt(localStorage.getItem("roleId"), 10);
-  //const pedidos = useSelector((state) => state.pedidos.data);
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("teal.600", "teal.200");
   const noDataTextColor = useColorModeValue("gray.500", "gray.400");
+
+  const todosLosPedidos = useSelector((state) => state.pedidos.data || []);
 
   const selectHistorial = useMemo(
     () => selectPedidosEntrantesPorRuta([2, 3, 4, 5]),
     []
   );
-  const pedidosHistorial = useSelector(selectHistorial);
+  const pedidosPorRuta = useSelector(selectHistorial);
+
+  const pedidosHistorial =
+    roleId === 2
+      ? todosLosPedidos.filter(
+          (p) => p.usuarioId === usuarioId && [2, 3, 4, 5].includes(p.estadoId)
+        )
+      : pedidosPorRuta;
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -46,9 +54,9 @@ const HistorialPedidosPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   const handleVerDetalles = async (pedido) => {
@@ -59,21 +67,17 @@ const HistorialPedidosPage = () => {
         getDetalleOrdenByPedidoId(pedido.id)
       ).unwrap();
       setDetallesPedido(detalles);
-    } catch (error) {
-      console.error(
-        `Error al obtener los detalles del pedido ${pedido.id}:`,
-        error
-      );
+      setIsModalOpen(true);
+    } catch (err) {
       toast({
-        title: "Error",
-        description: "No se pudieron cargar los detalles del pedido.",
+        title: "Error al cargar detalles",
+        description: err.message,
         status: "error",
         duration: 3000,
         isClosable: true,
       });
     } finally {
       setIsLoadingDetalles(false);
-      setIsModalOpen(true);
     }
   };
 
@@ -104,7 +108,6 @@ const HistorialPedidosPage = () => {
               onVerDetalles={handleVerDetalles}
             />
           )}
-
           <Pagination
             currentPage={currentPage}
             totalItems={pedidosHistorial.length}
@@ -114,7 +117,7 @@ const HistorialPedidosPage = () => {
         </>
       ) : (
         <Box textAlign="center" color={noDataTextColor} mt={6}>
-          No hay pedidos aprobados o cancelados para mostrar.
+          No hay pedidos para mostrar.
         </Box>
       )}
 

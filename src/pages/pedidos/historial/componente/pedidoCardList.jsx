@@ -42,10 +42,12 @@ const PedidosCardList = ({ pedidos, roleId, onVerDetalles }) => {
             </Text>
             <Badge
               colorScheme={
-                pedido.estadoId === 3
-                  ? "green"
-                  : pedido.estadoId === 2
+                pedido.estadoId === 2
                   ? "yellow"
+                  : pedido.estadoId === 3
+                  ? "green"
+                  : pedido.estadoId === 5
+                  ? "blue"
                   : "red"
               }
               fontSize="sm"
@@ -53,10 +55,12 @@ const PedidosCardList = ({ pedidos, roleId, onVerDetalles }) => {
               py={1}
               rounded="full"
             >
-              {pedido.estadoId === 3
-                ? "Aprobado"
-                : pedido.estadoId === 2
+              {pedido.estadoId === 2
                 ? "Pendiente"
+                : pedido.estadoId === 3
+                ? "Aprobado"
+                : pedido.estadoId === 5
+                ? "Exportado"
                 : "Cancelado"}
             </Badge>
           </HStack>

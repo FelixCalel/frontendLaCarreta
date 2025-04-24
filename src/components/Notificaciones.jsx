@@ -15,7 +15,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
-import { tablaPedidos } from "../store/Pedidos/thunks";
+import { tablaPedidos, updatePedidoActivacion } from "../store/Pedidos/thunks";
 
 export default function Notifications({ isOpen, onToggle, onClose }) {
   const navigate = useNavigate();
@@ -24,44 +24,17 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = localStorage.getItem("roleId");
   const pedidos = useSelector((state) => state.pedidos.data || []);
-  const [notificaciones, setNotificaciones] = useState([]);
-  const [deletedNotifications, setDeletedNotifications] = useState(() => {
-    const storedDeleted = localStorage.getItem(
-      `deletedNotifications_${usuarioId}`
-    );
-    return storedDeleted ? JSON.parse(storedDeleted) : [];
-  });
+  const [locallyHidden, setLocallyHidden] = useState(new Set());
 
-  useEffect(() => {
-    const storedDeleted = localStorage.getItem(
-      `deletedNotifications_${usuarioId}`
-    );
-    setDeletedNotifications(storedDeleted ? JSON.parse(storedDeleted) : []);
-  }, [usuarioId]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      `deletedNotifications_${usuarioId}`,
-      JSON.stringify(deletedNotifications)
-    );
-  }, [deletedNotifications, usuarioId]);
-
-  useEffect(() => {
-    const usuarioPedidos = pedidos
-      .filter(
-        (pedido) =>
-          (pedido.usuarioId === usuarioId || roleId === "3") &&
-          !deletedNotifications.includes(pedido.id)
-      )
-      .filter((pedido) =>
-        roleId === "3"
-          ? pedido.estadoId === 2 || pedido.estadoId === 5
-          : pedido.estadoId === 3 || pedido.estadoId === 4
-      )
-      .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl));
-
-    setNotificaciones(usuarioPedidos);
-  }, [pedidos, roleId, usuarioId, deletedNotifications]);
+  const notificaciones = pedidos
+    .filter((p) => p.isActive)
+    .filter((pedido) => {
+      if (roleId === "3") return [2, 5].includes(pedido.estadoId);
+      return [3, 4, 5].includes(pedido.estadoId);
+    })
+    .filter((pedido) => roleId === "3" || pedido.usuarioId === usuarioId)
+    .filter((p) => !locallyHidden.has(p.id))
+    .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl));
 
   useEffect(() => {
     dispatch(tablaPedidos());
@@ -83,12 +56,8 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   };
 
   const handleDeleteNotification = (pedidoId) => {
-    const updatedNotifications = [...deletedNotifications, pedidoId];
-    setDeletedNotifications(updatedNotifications);
-    localStorage.setItem(
-      `deletedNotifications_${usuarioId}`,
-      JSON.stringify(updatedNotifications)
-    );
+    setLocallyHidden(new Set(locallyHidden).add(pedidoId));
+    dispatch(updatePedidoActivacion({ id: pedidoId, isActive: false }));
   };
 
   const containerBg = useColorModeValue("white", "gray.700");
@@ -163,7 +132,13 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
                     <Text fontSize="sm" fontWeight="medium">
                       Tu pedido <strong>ID: {pedido.id}</strong> ha sido{" "}
                       <strong>
-                        {pedido.estadoId === 3 ? "aprobado" : "cancelado"}
+                        {pedido.estadoId === 3
+                          ? "aprobado"
+                          : pedido.estadoId === 4
+                          ? "cancelado"
+                          : pedido.estadoId === 5
+                          ? "exportado"
+                          : "actualizado"}
                       </strong>
                       .
                     </Text>

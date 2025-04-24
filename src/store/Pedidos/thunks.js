@@ -104,3 +104,14 @@ export const tablaPedidosConDetalles = createAsyncThunk(
     }
   }
 );
+
+export const updatePedidoActivacion = createAsyncThunk(
+  "pedidos/updatePedidoActivacion",
+  async ({ id, isActive }) => {
+    const response = await axios.patch(
+      `${BASE_URL}/form/pedidos/actualizar-activacion/${id}`,
+      { isActive }
+    );
+    return response.data;
+  }
+);

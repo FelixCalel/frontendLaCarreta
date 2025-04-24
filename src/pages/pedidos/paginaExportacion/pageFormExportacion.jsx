@@ -14,6 +14,7 @@ import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos
 import {
   togglePedidoStatus,
   tablaPedidos,
+  updatePedidoActivacion,
 } from "../../../store/Pedidos/thunks";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -58,12 +59,18 @@ const AprobadosPage = () => {
     try {
       await Promise.all(
         pedidos.map(async (pedido) => {
-          await dispatch(togglePedidoStatus({ id: pedido.id, estadoId: 5 }));
+          await dispatch(
+            togglePedidoStatus({ id: pedido.id, estadoId: 5 })
+          ).unwrap();
+
+          await dispatch(
+            updatePedidoActivacion({ id: pedido.id, isActive: true })
+          ).unwrap();
         })
       );
-      console.log("Estados de los pedidos actualizados correctamente a 5.");
+      console.log("Pedidos exportados y activados correctamente.");
     } catch (error) {
-      console.error("Error al actualizar el estado de los pedidos:", error);
+      console.error("Error al exportar y activar pedidos:", error);
     }
   };
 
