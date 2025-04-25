@@ -34,6 +34,7 @@ import { useDispatch } from "react-redux";
 import { setRutas } from "../../store/auth/authSlice";
 //import { fetchCurrentUser } from "../../store/auth/thunks";
 import { tablaPedidos } from "../../store/Pedidos/thunks";
+import Pagination from "../../components/pagination";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -49,6 +50,20 @@ export const TablaBusuarios = () => {
   const toast = useToast();
   const roleIdLogueado = localStorage.getItem("roleId");
   const [rutas, setRutasLocal] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const usuariosFiltrados = usuarios.filter((u) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      u.nombre.toLowerCase().includes(term) ||
+      u.correo.toLowerCase().includes(term)
+    );
+  });
+
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const usuariosPagina = usuariosFiltrados.slice(indexOfFirst, indexOfLast);
 
   useEffect(() => {
     const fetchUsuarios = async () => {
@@ -294,62 +309,64 @@ export const TablaBusuarios = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {usuarios
-              .filter((usuario) =>
-                usuario.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-              )
-              .map((usuario) => {
-                const rolUsuario = allRoles.find(
-                  (rol) => rol.id === usuario.roleId
-                );
-                const rolNombre = rolUsuario?.nombre || "Sin rol";
-
-                return (
-                  <Tr key={usuario.id} _hover={{ bg: rowHoverBg }}>
-                    <Td>
-                      {usuario.nombre} {usuario.apellido}
-                    </Td>
-                    <Td>{usuario.correo}</Td>
-                    <Td>
-                      <Switch
-                        isChecked={usuario.estaActivo}
-                        onChange={() =>
-                          toggleUsuarioEstado(usuario.id, usuario.estaActivo)
-                        }
+            {usuariosPagina.map((usuario) => {
+              const rolUsuario = allRoles.find(
+                (rol) => rol.id === usuario.roleId
+              );
+              const rolNombre = rolUsuario?.nombre || "Sin rol";
+              return (
+                <Tr key={usuario.id} _hover={{ bg: rowHoverBg }}>
+                  <Td>
+                    {usuario.nombre} {usuario.apellido}
+                  </Td>
+                  <Td>{usuario.correo}</Td>
+                  <Td>
+                    <Switch
+                      isChecked={usuario.estaActivo}
+                      onChange={() =>
+                        toggleUsuarioEstado(usuario.id, usuario.estaActivo)
+                      }
+                      colorScheme="green"
+                    />
+                  </Td>
+                  <Td>{usuario.telefono}</Td>
+                  <Td>
+                    <Stack align="center" direction="row">
+                      <Button
+                        size="sm"
+                        onClick={() => handleOpenAssignRutas(usuario)}
+                        leftIcon={<FiUserPlus />}
                         colorScheme="green"
-                      />
-                    </Td>
-                    <Td>{usuario.telefono}</Td>
-                    <Td>
-                      <Stack align="center" direction="row">
-                        <Button
-                          size="sm"
-                          onClick={() => handleOpenAssignRutas(usuario)}
-                          leftIcon={<FiUserPlus />}
-                          colorScheme="green"
-                          variant="solid"
-                          _hover={{ bg: "green.300" }}
-                        >
-                          Asignar Rutas
-                        </Button>
-                      </Stack>
-                    </Td>
-                    <Td>
-                      {roleIdLogueado === "1" ? (
-                        <RolSelector usuario={usuario} allRoles={allRoles} />
-                      ) : (
-                        <Text fontSize="sm" color="gray.500">
-                          {rolNombre}
-                        </Text>
-                      )}
-                    </Td>
-                  </Tr>
-                );
-              })}
+                        variant="solid"
+                        _hover={{ bg: "green.300" }}
+                      >
+                        Asignar Rutas
+                      </Button>
+                    </Stack>
+                  </Td>
+                  <Td>
+                    {roleIdLogueado === "1" ? (
+                      <RolSelector usuario={usuario} allRoles={allRoles} />
+                    ) : (
+                      <Text fontSize="sm" color="gray.500">
+                        {rolNombre}
+                      </Text>
+                    )}
+                  </Td>
+                </Tr>
+              );
+            })}
           </Tbody>
         </Table>
       </Box>
-
+      <Box mb={8}>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={usuariosFiltrados.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
+      </Box>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>

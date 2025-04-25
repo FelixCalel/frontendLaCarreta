@@ -68,8 +68,8 @@ export const LoginForm = () => {
       });
 
       const rutasIds = resp.data.usuario.rutas?.map((r) => r.id) ?? [];
-      console.log("usuario.rutas:", resp.data.usuario.rutas);
-      console.log("rutasIds:", rutasIds);
+      //console.log("usuario.rutas:", resp.data.usuario.rutas);
+      //console.log("rutasIds:", rutasIds);
 
       if (resp.data && resp.data.usuario) {
         const {
@@ -107,7 +107,6 @@ export const LoginForm = () => {
             id: usuarioId,
           })
         );
-
         await dispatch(fetchCurrentUser());
 
         navigate("/auth/home", { replace: true });
