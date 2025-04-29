@@ -148,6 +148,18 @@ const AprobadosPage = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const isoToDMY = (iso) => {
+    if (!iso) return "Sin fecha";
+    const [yyyy, mm, dd] = iso.slice(0, 10).split("-");
+    return `${dd}/${mm}/${yyyy}`;
+  };
+
+  const isoToLocalDate = (iso) => {
+    if (!iso) return null;
+    const [yyyy, mm, dd] = iso.slice(0, 10).split("-").map(Number);
+    return new Date(yyyy, mm - 1, dd);
+  };
+
   async function addPedidosToWorksheetFormato1(worksheet, pedidosPorDeudor) {
     worksheet.mergeCells("A1:G1");
     const titleCell = worksheet.getCell("A1");
@@ -182,9 +194,7 @@ const AprobadosPage = () => {
       const { pedidos } = pedidosPorDeudor[deudor];
       for (const pedido of pedidos) {
         const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
-        const fechaEntrega = pedido.fechaOrden
-          ? format(new Date(pedido.fechaOrden), "dd/MM/yyyy", { locale: es })
-          : "Sin fecha";
+        const fechaEntrega = isoToDMY(pedido.fechaOrden);
 
         for (const detalle of detalles) {
           worksheet.addRow({
@@ -241,10 +251,10 @@ const AprobadosPage = () => {
       ]);
       deudorRow.font = { bold: true };
 
-      const fechaOrdenObj = new Date(pedidos[0]?.fechaOrden);
-      const fechaOrden = isNaN(fechaOrdenObj.getTime())
-        ? "Sin fecha"
-        : format(fechaOrdenObj, "dd 'de' MMMM 'de' yyyy", { locale: es });
+      const fechaOrdenObj = isoToLocalDate(pedidos[0]?.fechaOrden);
+      const fechaOrden = fechaOrdenObj
+        ? format(fechaOrdenObj, "dd 'de' MMMM 'de' yyyy", { locale: es })
+        : "Sin fecha";
 
       worksheet.addRow([`Fecha de entrega: ${fechaOrden}`]);
 
@@ -274,7 +284,7 @@ const AprobadosPage = () => {
       const commentRow = worksheet.addRow([
         "Comentario:",
         `Tienda: ${nombreTienda}`,
-        `Fecha Orden: ${format(fechaOrdenObj, "dd/MM/yyyy", { locale: es })}`,
+        `Fecha Orden: ${isoToDMY(pedidos[0]?.fechaOrden)}`,
       ]);
       commentRow.font = { bold: true };
       commentRow.alignment = {

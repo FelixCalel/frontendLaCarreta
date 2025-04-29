@@ -29,6 +29,7 @@ import {
 import ApproveOrderDialog from "../componentes/EntrantesFormPedidos/ApproveOrderDialog";
 import { selectPedidosEntrantesPorRuta } from "./componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
+//import { format } from "date-fns";
 const EntrantesPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
@@ -93,7 +94,22 @@ const EntrantesPage = () => {
   const handleConfirmApprove = async (orderDate) => {
     setIsApproving(true);
     try {
-      await handleAprobarPedidos(orderDate);
+      const ahora = new Date();
+
+      const [yyyy, mm, dd] = orderDate.split("-").map(Number);
+      const fechaHora = new Date(
+        yyyy,
+        mm - 1,
+        dd,
+        ahora.getHours(),
+        ahora.getMinutes(),
+        ahora.getSeconds(),
+        ahora.getMilliseconds()
+      );
+      const iso = fechaHora.toISOString();
+
+      await handleAprobarPedidos(iso);
+
       onApproveClose();
     } catch (error) {
       console.error("Error al aprobar pedidos:", error);
