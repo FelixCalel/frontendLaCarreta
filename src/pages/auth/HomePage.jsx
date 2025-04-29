@@ -21,7 +21,7 @@ import {
 
 const roleMap = {
   1: "Administrador",
-  2: "Usuario",
+  2: "Display",
   3: "Ventas",
   5: "Compras",
   6: "QA",
@@ -30,7 +30,7 @@ const roleMap = {
 
 const roleColorMap = {
   Administrador: "red",
-  Usuario: "blue",
+  Display: "blue",
   Ventas: "green",
   Supervisor: "pink",
   Compras: "orange",
@@ -39,7 +39,7 @@ const roleColorMap = {
 
 const roleIconMap = {
   Administrador: FaUserShield,
-  Usuario: FaUserAlt,
+  Display: FaUserAlt,
   Ventas: FaShoppingCart,
   Supervisor: FaUserTie,
   Compras: FaBox,

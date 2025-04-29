@@ -27,11 +27,9 @@ const ProductoSelector = ({ onSelect, reset }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [error, setError] = useState("");
-
+  const [renderItems, setRenderItems] = useState([]);
   const itemsAll = useSelector((state) => state.items.items);
-
   const [visibleItems, setVisibleItems] = useState([]);
-
   const listBg = useColorModeValue("white", "gray.800");
   const listBorderColor = useColorModeValue("gray.200", "gray.600");
   const itemHoverBg = useColorModeValue("gray.100", "gray.600");
@@ -60,6 +58,23 @@ const ProductoSelector = ({ onSelect, reset }) => {
       setError("");
     }
   };
+
+  useEffect(() => {
+    const term = inputValue.trim().toLowerCase();
+
+    if (term === "") {
+      setRenderItems(visibleItems);
+      return;
+    }
+
+    const matches = itemsAll.filter(
+      (it) =>
+        it.nombre.toLowerCase().includes(term) ||
+        it.codigo.toLowerCase().includes(term)
+    );
+
+    setRenderItems(matches.slice(0, 200));
+  }, [inputValue, itemsAll, visibleItems]);
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
@@ -128,7 +143,7 @@ const ProductoSelector = ({ onSelect, reset }) => {
                 overflowX="hidden"
                 w="full"
               >
-                {visibleItems.map((item) => (
+                {renderItems.map((item) => (
                   <AutoCompleteItem
                     key={`option-${item.id}`}
                     value={`${item.codigo} - ${item.nombre}`}
