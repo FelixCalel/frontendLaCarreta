@@ -11,7 +11,7 @@ const RolSelector = ({ usuario, allRoles }) => {
 
   const roleEmojis = {
     admin: "👑",
-    usuario: "👤",
+    display: "👤",
     ventas: "🛍️",
     compras: "🛒",
     qa: "🔎",

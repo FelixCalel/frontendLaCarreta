@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Button,
@@ -16,6 +16,7 @@ import {
   tablaPedidos,
   updatePedidoActivacion,
 } from "../../../store/Pedidos/thunks";
+import { selectPedidosEntrantesPorRuta } from "../pedidosEntrantes/componentes/rutaSelectors";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import * as ExcelJS from "exceljs";
@@ -28,7 +29,11 @@ const AprobadosPage = () => {
   const [isExporting, setIsExporting] = useState(false);
   const toast = useToast();
   const pedidos = useSelector((state) => state.pedidos.data);
-
+  const selectAprobadosPorRuta = useMemo(
+    () => selectPedidosEntrantesPorRuta([3]),
+    []
+  );
+  const pedidosAprobados = useSelector(selectAprobadosPorRuta);
   const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
 
@@ -39,7 +44,7 @@ const AprobadosPage = () => {
     fetchPedidos();
   }, [dispatch]);
 
-  const pedidosAprobados = pedidos.filter((pedido) => pedido.estadoId === 3);
+  //const pedidosAprobados = pedidos.filter((pedido) => pedido.estadoId === 3);
   const cargarDetallesPedidos = async (pedidos) => {
     const pedidosConDetalles = await Promise.all(
       pedidos.map(async (pedido) => {

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import PropTypes from 'prop-types';
+import { useState } from "react";
+import PropTypes from "prop-types";
 import {
   AlertDialog,
   AlertDialogOverlay,
@@ -16,14 +16,14 @@ const ApproveOrderDialog = ({
   onConfirm,
   selectedPedidos,
 }) => {
-  const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0]);
+  const [orderDate, setOrderDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
 
   const handleConfirm = () => {
-    // Convertir la fecha al formato dd/MM/yyyy
-    const [year, month, day] = orderDate.split('-');
+    const [year, month, day] = orderDate.split("-");
     const fechaFormateada = `${day}/${month}/${year}`;
-    
-    console.log('Fecha formateada a enviar:', fechaFormateada); // Para debugging
+    console.log("Fecha formateada a enviar:", fechaFormateada);
     onConfirm(fechaFormateada);
     onClose();
   };
@@ -40,14 +40,14 @@ const ApproveOrderDialog = ({
             <input
               type="date"
               id="order-date"
-              min={new Date().toISOString().split('T')[0]}
+              min={new Date().toISOString().split("T")[0]}
               value={orderDate}
               onChange={(e) => setOrderDate(e.target.value)}
               style={{
-                marginLeft: '10px',
-                padding: '5px',
-                border: '1px solid #ccc',
-                borderRadius: '4px'
+                marginLeft: "10px",
+                padding: "5px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
               }}
               required
             />

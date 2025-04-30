@@ -24,7 +24,10 @@ import {
 
 const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
   //const fechaGT = utcToZonedTime(pedido.fechaOrden, 'America/Guatemala');
-  const soloFecha = pedido.fechaOrden.slice(0, 10);
+  if (!pedido) {
+    return null;
+  }
+  const soloFecha = pedido.fechaOrden.slice(0, 10) ?? "";
   const [y, m, d] = soloFecha.split("-");
 
   if (!pedido) {
@@ -59,7 +62,7 @@ const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
               </Table>
               <Box mt={4}>
                 <Heading size="md">Fecha de entrega</Heading>
-                <Text>{`${d}/${m}/${y}`}</Text>
+                <Text>{soloFecha ? `${d}/${m}/${y}` : "—"}</Text>
               </Box>
             </>
           ) : (
