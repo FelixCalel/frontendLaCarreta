@@ -24,7 +24,7 @@ const createWebSocket = (url: string, onMessage: (event: MessageEvent) => void, 
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:3000';
+  const wsUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     let ws: WebSocket;
