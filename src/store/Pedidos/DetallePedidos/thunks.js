@@ -167,3 +167,24 @@ export const actualizarFechaOrden = createAsyncThunk(
     }
   }
 );
+
+export const copiarDetallesUltimoPedido = createAsyncThunk(
+  "detalleOrden/copiarUltimo",
+  async ({ ciudadId, deudorId, tiendaId, usuarioId }, { rejectWithValue }) => {
+    try {
+      const body = { ciudadId, deudorId, tiendaId, usuarioId };
+
+      const { data } = await axios.post(
+        `${BASE_URL}/detalle/pedido/copiar-ultimo`,
+        body
+      );
+
+      return data;
+    } catch (err) {
+      if (err.response && err.response.data) {
+        return rejectWithValue(err.response.data);
+      }
+      return rejectWithValue(err.message || "Error desconocido");
+    }
+  }
+);
