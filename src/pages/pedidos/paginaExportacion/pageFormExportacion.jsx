@@ -17,6 +17,7 @@ import {
   updatePedidoActivacion,
 } from "../../../store/Pedidos/thunks";
 import { selectPedidosEntrantesPorRuta } from "../pedidosEntrantes/componentes/rutaSelectors";
+import { tablaTienda } from "../../../store/Tienda/thunks";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import * as ExcelJS from "exceljs";
@@ -44,7 +45,11 @@ const AprobadosPage = () => {
     fetchPedidos();
   }, [dispatch]);
 
-  //const pedidosAprobados = pedidos.filter((pedido) => pedido.estadoId === 3);
+  useEffect(() => {
+    dispatch(tablaTienda());
+    dispatch(tablaPedidos());
+  }, [dispatch]);
+
   const cargarDetallesPedidos = async (pedidos) => {
     const pedidosConDetalles = await Promise.all(
       pedidos.map(async (pedido) => {
