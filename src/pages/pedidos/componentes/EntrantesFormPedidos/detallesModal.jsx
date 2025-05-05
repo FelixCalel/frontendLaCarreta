@@ -16,14 +16,22 @@ import {
   Button,
   Box,
   Heading,
-  Text
+  Text,
 } from "@chakra-ui/react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+//import { utcToZonedTime } from "date-fns-tz";
+//import { format } from "date-fns";
+//import { es } from "date-fns/locale";
 
 const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
-  if(!pedido){
-    return null; 
+  //const fechaGT = utcToZonedTime(pedido.fechaOrden, 'America/Guatemala');
+  if (!pedido) {
+    return null;
+  }
+  const soloFecha = pedido.fechaOrden.slice(0, 10) ?? "";
+  const [y, m, d] = soloFecha.split("-");
+
+  if (!pedido) {
+    return null;
   }
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
@@ -33,31 +41,31 @@ const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
         <ModalCloseButton />
         <ModalBody>
           {detalles && detalles.length > 0 ? (
-        <>
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Código</Th>
-              <Th>Producto</Th>
-              <Th>Cantidad</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {detalles.map((detalle) => (
-              <Tr key={detalle.id}>
-                <Td>{detalle.codigo || "Sin código"}</Td>
-                <Td>{detalle.nombreProducto || "Sin nombre"}</Td>
-                <Td>{detalle.cantidad}</Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-        <Box mt={4}>
-          <Heading size="md">Fecha de entrega</Heading>
-          <Text>{format(new Date(pedido.fechaOrden), "dd 'de' MMMM 'de' yyyy", { locale: es })}</Text>
-        </Box>
-      </>
-    ) : (
+            <>
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Código</Th>
+                    <Th>Producto</Th>
+                    <Th>Cantidad</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {detalles.map((detalle) => (
+                    <Tr key={detalle.id}>
+                      <Td>{detalle.codigo || "Sin código"}</Td>
+                      <Td>{detalle.nombreProducto || "Sin nombre"}</Td>
+                      <Td>{detalle.cantidad}</Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+              <Box mt={4}>
+                <Heading size="md">Fecha de entrega</Heading>
+                <Text>{soloFecha ? `${d}/${m}/${y}` : "—"}</Text>
+              </Box>
+            </>
+          ) : (
             <Box>No hay detalles disponibles</Box>
           )}
         </ModalBody>
@@ -88,7 +96,6 @@ DetallesModal.propTypes = {
     // Añade otras propiedades si es necesario
   }),
 };
-
 
 DetallesModal.defaultProps = {
   pedido: null,

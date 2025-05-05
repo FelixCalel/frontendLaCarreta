@@ -1,5 +1,9 @@
 {
-  "include": ["src/**/*.{ts,tsx}", "public/auth-success.ts", "vite-envs.d.ts"],
+  "include": [
+  "src",
+  "public/auth-success.ts",
+  "vite-env.d.ts"
+],
   "exclude": [
       "node_modules",
       "dist",
@@ -19,7 +23,7 @@
       /* Language and Environment */
       "target": "ES2016",
       "lib":["ES5","ES6","DOM"],                                      /* Specify a set of bundled library declaration files that describe the target runtime environment. */
-      // "jsx": "preserve",                                /* Specify what JSX code is generated. */
+      "jsx": "react-jsx",                                /* Specify what JSX code is generated. */
       // "experimentalDecorators": true,                   /* Enable experimental support for legacy experimental decorators. */
       // "emitDecoratorMetadata": true,                    /* Emit design-type metadata for decorated declarations in source files. */
       // "jsxFactory": "",                                 /* Specify the JSX factory function used when targeting React JSX emit, e.g. 'React.createElement' or 'h'. */
@@ -31,7 +35,7 @@
       // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
 
       /* Modules */
-      "module": "CommonJS",
+      "module": "ESNext",
       "rootDir": "src",                                    /* Specify the root folder within your source files. */
       "moduleResolution": "Node",                          /* Specify how TypeScript looks up a file from a given module specifier. */
       "baseUrl": "src",                                 /* Specify the base directory to resolve non-relative module names. */

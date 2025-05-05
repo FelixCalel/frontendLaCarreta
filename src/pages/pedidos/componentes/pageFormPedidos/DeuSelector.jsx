@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { Flex, FormControl, HStack, IconButton, FormHelperText } from "@chakra-ui/react";
+import { Flex, FormControl, HStack, IconButton } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
 import {
   AutoComplete,
@@ -18,9 +18,7 @@ const DeuSelector = ({ deudorId, onSelect }) => {
 
   useEffect(() => {
     if (deudorId && tiendas.length > 0) {
-      const tiendaConDeudor = tiendas.find(
-        (t) => t.deudorId === deudorId
-      );
+      const tiendaConDeudor = tiendas.find((t) => t.deudorId === deudorId);
 
       if (tiendaConDeudor) {
         const deudorObj = {
@@ -40,7 +38,7 @@ const DeuSelector = ({ deudorId, onSelect }) => {
   const handleSelectDeudor = (deu) => {
     setInputValue(`${deu.correlativo} - ${deu.nombre}`);
     setSelectedDeudor(deu);
-    onSelect(deu.id); 
+    onSelect(deu.id);
   };
 
   const handleClearInput = () => {
@@ -71,17 +69,16 @@ const DeuSelector = ({ deudorId, onSelect }) => {
             />
             <AutoCompleteList>
               {filteredDeudores.length > 0 ? (
-                filteredDeudores
-                  .map((deu) => (
-                    <AutoCompleteItem
-                      key={`deudor-${deu.id}`}
-                      value={`${deu.correlativo} - ${deu.nombre}`}
-                      textTransform="capitalize"
-                      onClick={() => handleSelectDeudor(deu)}
-                    >
-                      {`${deu.correlativo} - ${deu.nombre}`}
-                    </AutoCompleteItem>
-                  ))
+                filteredDeudores.map((deu) => (
+                  <AutoCompleteItem
+                    key={`deudor-${deu.id}`}
+                    value={`${deu.correlativo} - ${deu.nombre}`}
+                    textTransform="capitalize"
+                    onClick={() => handleSelectDeudor(deu)}
+                  >
+                    {`${deu.correlativo} - ${deu.nombre}`}
+                  </AutoCompleteItem>
+                ))
               ) : (
                 <AutoCompleteItem value="" disabled>
                   Sin deudor asignado
@@ -100,9 +97,6 @@ const DeuSelector = ({ deudorId, onSelect }) => {
             />
           )}
         </HStack>
-        <FormHelperText mt="2">
-          Seleccione el deudor
-        </FormHelperText>
       </FormControl>
     </Flex>
   );

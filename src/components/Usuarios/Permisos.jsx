@@ -56,7 +56,7 @@ export const Permisos = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [dialogRef] = useState(); // Referencia para cerrar el diálogo
+  const [dialogRef] = useState();
 
   const bgColor = useColorModeValue("#f9f9f9", "#1A202C");
   const tableHeaderBg = useColorModeValue("#e5e5e5", "#1A202C");
@@ -303,7 +303,6 @@ export const Permisos = () => {
             _hover={{ borderColor: "#512da8" }}
             _focus={{ borderColor: "#311b92", boxShadow: "0 0 5px #673ab7" }}
             isDisabled={!selectedModulo}
-            
           >
             {opciones
               .filter((opcion) =>
