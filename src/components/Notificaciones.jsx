@@ -16,6 +16,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { tablaPedidos, updatePedidoActivacion } from "../store/Pedidos/thunks";
+import { selectPedidosEntrantesPorRuta } from "../pages/pedidos/pedidosEntrantes/componentes/pedidosPorRuta";
+import { tablaTienda } from "../store/Tienda/thunks";
 
 export default function Notifications({ isOpen, onToggle, onClose }) {
   const navigate = useNavigate();
@@ -23,20 +25,27 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const ref = useRef();
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = localStorage.getItem("roleId");
-  const pedidos = useSelector((state) => state.pedidos.data || []);
+  //const pedidos = useSelector((state) => state.pedidos.data || []);
   const [locallyHidden, setLocallyHidden] = useState(new Set());
+  const pedidosRuta = useSelector(
+    selectPedidosEntrantesPorRuta([2, 5]) // 2 = pendiente, 5 = exportado
+  );
+  const pedidos = useSelector((state) => state.pedidos.data || []);
 
-  const notificaciones = pedidos
+  const basePedidos = roleId === "3" ? pedidosRuta : pedidos;
+  const notificaciones = basePedidos
     .filter((p) => p.isActive)
-    .filter((pedido) => {
-      if (roleId === "3") return [2, 5].includes(pedido.estadoId);
-      return [3, 4, 5].includes(pedido.estadoId);
-    })
+    .filter((p) =>
+      roleId === "3"
+        ? true // ya filtrado por ruta arriba
+        : p.usuarioId === usuarioId && [3, 4, 5].includes(p.estadoId)
+    )
     .filter((pedido) => roleId === "3" || pedido.usuarioId === usuarioId)
     .filter((p) => !locallyHidden.has(p.id))
     .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl));
 
   useEffect(() => {
+    dispatch(tablaTienda());
     dispatch(tablaPedidos());
   }, [dispatch]);
 
@@ -140,7 +149,6 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
                           ? "exportado"
                           : "actualizado"}
                       </strong>
-                      .
                     </Text>
                   )}
                 </Box>
