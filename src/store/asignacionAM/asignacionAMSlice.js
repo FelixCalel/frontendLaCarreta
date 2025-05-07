@@ -1,10 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchMesasActivasThunk, fetchMesasAsignadasThunk, fetchMesasDisponiblesThunk, asignarMesaThunk } from './thunks';
+import { fetchMesasActivasThunk, fetchMesasAsignadasThunk, fetchMesasDisponiblesThunk, fetchAsignacionesThunk ,
+  fetchCategoriasThunk, fetchGruposThunk, asignarTipoGrupoThunk, desasignarTipoGrupoThunk } from './thunks';
 
 const asignacionAMSlice = createSlice({
   name: 'asignacionAM',
   initialState: {
     mesasAsignadas: [],
+    asignaciones: [],
+    categorias: [],
+    grupos: [],
+    status: 'idle',
     loading: false,
     error: null,
   },
@@ -29,8 +34,25 @@ const asignacionAMSlice = createSlice({
       .addCase(fetchMesasDisponiblesThunk.fulfilled, (state, action) => {
         state.mesasDisponibles = action.payload;
       })
-      .addCase(asignarMesaThunk.fulfilled, (state, action) => {
-        state.mesasAsignadas.push(action.payload); // O recarga desde fetch
+
+
+      .addCase(fetchAsignacionesThunk.fulfilled, (state, action) => {
+        state.asignaciones = action.payload;
+        state.status = 'succeeded';
+      })
+      .addCase(fetchCategoriasThunk.fulfilled, (state, action) => {
+        state.categorias = action.payload;
+      })
+      .addCase(fetchGruposThunk.fulfilled, (state, action) => {
+        state.grupos = action.payload;
+      })
+      .addCase(asignarTipoGrupoThunk.fulfilled, (state, action) => {
+        state.asignaciones.push(action.payload);
+      })
+      .addCase(desasignarTipoGrupoThunk.fulfilled, (state, action) => {
+        state.asignaciones = state.asignaciones.map(a =>
+          a.id === action.payload.id ? { ...a, state: false } : a
+        );
       });
   },
 });

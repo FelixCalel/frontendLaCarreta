@@ -1,9 +1,11 @@
 // src/pages/asignarAreaMesa/pageAsignacion.jsx
 import { useEffect, useState } from "react";
-import { Box, Text, Spinner, Heading } from "@chakra-ui/react";
+import { Box, Text, Spinner, Heading, Flex } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-import MesasAsignadas from "./MesasAsignadas"; // Asegúrate que este path sea correcto
+import MesasAsignadas from "./MesasAsignadas";
+import AsignacionesTipoGrupo from "./AsignacionesTipoGrupo";
+
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -69,9 +71,15 @@ const PageAsignacion = () => {
       <Heading size="lg" mb={4} textAlign={"center"}>
         {nombreArea}
       </Heading>
+      <Flex>
 
-      {/* Aquí se integra el componente que renderiza las mesas */}
+      <Box flex={3} mr={4}>
+      </Box>
+      <Box flex={7}>
       <MesasAsignadas areaId={areaId} />
+      <AsignacionesTipoGrupo areaId={areaId} />
+      </Box>
+      </Flex>
     </Box>
   );
 };

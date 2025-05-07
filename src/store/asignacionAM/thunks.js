@@ -55,3 +55,52 @@ export const asignarMesaThunk = createAsyncThunk(
     return response.data;
   }
 );
+
+export const fetchAsignacionesThunk = createAsyncThunk(
+  'asignacionAM/fetchAsignaciones',
+  async (areaId) => {
+    const res = await axios.get(`${BASE_URL}/asignarArea/${areaId}`);
+    return res.data.filter(a => a.state === true); // solo activas
+  }
+);
+
+export const fetchCategoriasThunk = createAsyncThunk(
+  'asignacionAM/fetchCategorias',
+  async () => {
+    const res = await axios.get(`${BASE_URL}/categoria/`);
+    return res.data.filter(c => c.state === true);
+  }
+);
+
+export const fetchGruposThunk = createAsyncThunk(
+  'asignacionAM/fetchGrupos',
+  async () => {
+    const res = await axios.get(`${BASE_URL}/grupo/`);
+    return res.data.filter(g => g.state === true);
+  }
+);
+
+export const asignarTipoGrupoThunk = createAsyncThunk(
+  'asignacionAM/asignar',
+  async (data) => {
+    try {
+      const res = await axios.post(`${BASE_URL}/asignarArea/`, data);
+      return res.data;
+    }
+    catch (error) {
+      console.error("Error al asignar tipo de grupo:", error);
+      throw error;
+    }
+  }
+);
+
+export const desasignarTipoGrupoThunk = createAsyncThunk(
+  'asignacionAM/desasignar',
+  async ({ id, update_by }) => {
+    const res = await axios.put(`${BASE_URL}/asignarArea/${id}`, {
+      update_by,
+      state: false
+    });
+    return res.data;
+  }
+);
