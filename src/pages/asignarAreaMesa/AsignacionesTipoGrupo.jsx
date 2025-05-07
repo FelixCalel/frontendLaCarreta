@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Box, Table, Thead, Tbody, Tr, Th, Td,
-  Select, Button, Input,} from '@chakra-ui/react';
+  Select, Button, Input, Flex, Text, useColorModeValue } from '@chakra-ui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchAsignacionesThunk,
@@ -21,6 +21,9 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
   const [selectedGrupo, setSelectedGrupo] = useState('');
   const [comentario, setComentario] = useState('');
 
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
   
 
   const { asignaciones, categorias, grupos } = useSelector(state => state.AsignacionAreaMesa);
@@ -32,6 +35,13 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
       dispatch(fetchGruposThunk());
     }
   }, [dispatch, areaId]);
+
+  const filteredAsignaciones = asignaciones.filter(a => a?.state);
+  const totalPages = Math.ceil(filteredAsignaciones.length / itemsPerPage);
+  const paginatedAsignaciones = filteredAsignaciones.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const handleAsignar = () => {
     if (selectedCategoria && selectedGrupo) {
@@ -47,6 +57,7 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
         setSelectedGrupo('');
         setComentario('');
         dispatch(fetchAsignacionesThunk(areaId));
+        setCurrentPage(1);
       });
     }
   };
@@ -61,53 +72,121 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
   const nombreGrupo = (id) => grupos.find(g => g.id === id)?.name || '—';
 
   return (
-    
-    <Box mt={10}  overflowX="auto" overflowY="auto" maxW="70vw" maxH="50vh" w="100%" mx="auto" p={4} borderWidth={1} borderRadius="lg" boxShadow="md">
+    <Box mt={10} overflowX="auto" w="100%" mx="auto" maxW="auto" p={4} borderWidth={1} borderRadius="lg" boxShadow="md">
+      <Table minWidth="700px" variant="simple" mb={4}>
+        <Thead bg={useColorModeValue('green.600', 'gray.700')}>
+          <Tr>
+            <Th color={useColorModeValue('white', 'green.200')}>Categoría</Th>
+            <Th color={useColorModeValue('white', 'green.200')}>Grupo</Th>
+            <Th color={useColorModeValue('white', 'green.200')}>Comentario</Th>
+            <Th color={useColorModeValue('white', 'green.200')}>Acciones</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {paginatedAsignaciones.map((a) => (
+            <Tr key={a.id}>
+              <Td>{nombreCategoria(a.id_categoria)}</Td>
+              <Td>{nombreGrupo(a.id_grupo)}</Td>
+              <Td>{a.comentario || '—'}</Td>
+              <Td>
+                <Button 
+                  colorScheme="red" 
+                  size="sm" 
+                  variant='outline' 
+                  onClick={() => handleDesasignar(a.id)}
+                >
+                  Eliminar
+                </Button>
+              </Td>
+            </Tr>
+          ))}
 
-        <Table  minWidth="600px" variant="simple" mb={6}>
-            <Thead>
-            <Tr>
-                <Th>Categoría</Th>
-                <Th>Grupo</Th>
-                <Th>Comentario</Th>
-                <Th></Th>
-            </Tr>
-            </Thead>
-            <Tbody>
-            {asignaciones.filter(a => a.state).map((a) => (
-                <Tr key={a.id}>
-                <Td>{nombreCategoria(a.id_categoria)}</Td>
-                <Td>{nombreGrupo(a.id_grupo)}</Td>
-                <Td>{a.comentario}</Td>
-                <Td><Button colorScheme="red" size="sm" variant='outline' onClick={() => handleDesasignar(a.id)}>Eliminar</Button></Td>
-                </Tr>
+          {/* Fila de formulario para agregar (siempre visible) */}
+          <Tr>
+            <Td>
+              <Select 
+                placeholder="Seleccione categoría"
+                value={selectedCategoria}
+                onChange={(e) => setSelectedCategoria(e.target.value)}
+              >
+                {categorias.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </Select>
+            </Td>
+            <Td>
+              <Select 
+                placeholder="Seleccione grupo"
+                value={selectedGrupo}
+                onChange={(e) => setSelectedGrupo(e.target.value)}
+              >
+                {grupos.map(g => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </Select>
+            </Td>
+            <Td>
+              <Input 
+                placeholder="Comentario (opcional)"
+                value={comentario}
+                onChange={(e) => setComentario(e.target.value)}
+              />
+            </Td>
+            <Td>
+              <Button 
+                colorScheme="green" 
+                onClick={handleAsignar}
+                isDisabled={!selectedCategoria || !selectedGrupo}
+              >
+                Agregar
+              </Button>
+            </Td>
+          </Tr>
+        </Tbody>
+      </Table>
+
+      {filteredAsignaciones.length > 0 && (
+        <Flex justifyContent="space-between" alignItems="center" mt={4}>
+          <Text fontSize="sm">
+            Mostrando {paginatedAsignaciones.length} de {filteredAsignaciones.length} registros
+          </Text>
+          
+          <Flex gap={2}>
+            <Button
+              size="sm"
+              isDisabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => p - 1)}
+              variant='outline'
+              colorScheme='teal'
+            >
+              Anterior
+            </Button>
+            
+            {Array.from({ length: totalPages }, (_, i) => (
+              <Button
+                key={i + 1}
+                size="sm"
+                variant={currentPage === i + 1 ? 'solid' : 'outline'}
+                colorScheme={currentPage === i + 1 ? 'blue' : 'gray'}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                {i + 1}
+              </Button>
             ))}
-            <Tr>
-                <Td>
-                <Select placeholder="Categoría" value={selectedCategoria} onChange={(e) => setSelectedCategoria(e.target.value)}>
-                    {categorias.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                </Select>
-                </Td>
-                <Td>
-                <Select placeholder="Grupo" value={selectedGrupo} onChange={(e) => setSelectedGrupo(e.target.value)}>
-                    {grupos.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                    ))}
-                </Select>
-                </Td>
-                <Td>
-                <Input value={comentario} onChange={(e) => setComentario(e.target.value)} placeholder="Comentario" />
-                </Td>
-                <Td>
-                <Button colorScheme="green" onClick={handleAsignar}>+ Agregar</Button>
-                </Td>
-            </Tr>
-            </Tbody>
-        </Table>
+            
+            <Button
+              size="sm"
+              isDisabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(p => p + 1)}
+              variant='outline'
+              colorScheme='teal'
+            >
+                Siguiente
+            </Button>
+          </Flex>
+        </Flex>
+      )}
     </Box>
-    
   );
 };
 
