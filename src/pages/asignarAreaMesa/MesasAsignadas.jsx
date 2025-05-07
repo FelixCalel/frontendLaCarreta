@@ -66,22 +66,24 @@ const MesasAsignadas = ({ areaId }) => {
   return (
     <Box mt={6}>
       <Heading size="md" mb={4}>Mesas asignadas</Heading>
-      {mesasAsignadas.length === 0 ? (
-        <Text>No hay mesas asignadas.</Text>
-      ) : (
         <HStack spacing={2} wrap="wrap" border={"1px solid"} borderColor="gray.200" p={2} borderRadius="md">
-          {mesasAsignadas.map((mesa) => (
-            <Tag
-              size="lg"
-              key={mesa.id}
-              borderRadius="full"
-              variant='outline'
-              colorScheme="green"
-            >
-              <TagLabel>{getNombreMesa(mesa.id_mesa)}</TagLabel>
-              <TagCloseButton onClick={() => handleDesasignar(mesa.id)} />
-            </Tag>
-          ))}
+          {mesasAsignadas.length === 0 ? (
+            <Text>No hay mesas asignadas.</Text>
+            
+          ) : (
+            mesasAsignadas.map((mesa) => (
+              <Tag
+                size="lg"
+                key={mesa.id}
+                borderRadius="full"
+                variant='outline'
+                colorScheme="green"
+              >
+                <TagLabel>{getNombreMesa(mesa.id_mesa)}</TagLabel>
+                <TagCloseButton onClick={() => handleDesasignar(mesa.id)} />
+              </Tag>
+            ))
+          )}
           <Box ml="auto">
             <Menu>
               <MenuButton as={IconButton} icon={<ChevronDownIcon />} colorScheme="green" variant="ghost" aria-label="Agregar mesa" mb={3}>
@@ -100,7 +102,6 @@ const MesasAsignadas = ({ areaId }) => {
             </Menu>
           </Box>
         </HStack>
-      )}
       <ModalComentario
         isOpen={isOpen}
         onClose={() => {
@@ -118,7 +119,6 @@ const MesasAsignadas = ({ areaId }) => {
           onClose();
         }}
       />
-
     </Box>
   );
 };
