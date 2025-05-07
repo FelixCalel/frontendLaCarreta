@@ -22,6 +22,7 @@ import { PaginaExportacionPedido } from "../router/exportarPedidosRouter";
 import { PaginaPedidoCompras } from "../router/ComprasRouter";
 import { PaginaComprador } from "../router/CompradorRouter";
 import { PaginaControlCalidad } from "../router/ControlCalidadRouter";
+import { PaginaAsignacionAM } from "./AsignacionAreaMesaRoute";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -53,6 +54,12 @@ export const AppRouter = () => {
     { path: "/comprasPedidos/*", rutaId: 13, component: PaginaPedidoCompras },
     { path: "/comprador/*", rutaId: 14, component: PaginaComprador },
     { path: "/ControlCalidad/*", rutaId: 15, component: PaginaControlCalidad },
+    { path: "/area1/*", rutaId: 18, component: PaginaAsignacionAM },
+    { path: "/area2/*", rutaId: 19, component: PaginaAsignacionAM },
+    { path: "/area3/*", rutaId: 20, component: PaginaAsignacionAM },
+    { path: "/area4/*", rutaId: 21, component: PaginaAsignacionAM },
+    { path: "/area5/*", rutaId: 22, component: PaginaAsignacionAM },
+
   ];
 
   useEffect(() => {
@@ -82,7 +89,7 @@ export const AppRouter = () => {
     verificarAccesos();
   }, [dispatch, usuarioId, roleId]);
 
-  const rolesPermitidosAdmin = ["1", "2", "3", "4", "5", "6"];
+  const rolesPermitidosAdmin = ["1", "2", "3", "4", "5", "6", "9"];
 
   if (loading) {
     return <CheckingAuth />;

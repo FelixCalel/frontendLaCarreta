@@ -18,7 +18,7 @@ import detalleOrdenReducer from "./Pedidos/DetallePedidos/detalleOrdenSlice";
 import itemReducer from "./items/itemSlice";
 import comprasSlice from "./Compras/compraSlice.js";
 import proveedorReducer from "./Proveedor/proveedorSlice.js";
-
+import asignacionAMSlice from "./asignacionAM/asignacionAMSlice.js";
 export const store = configureStore({
   reducer: {
     auth: authSlice.reducer,
@@ -40,5 +40,6 @@ export const store = configureStore({
     asignacionMO: asignacionMOSlice,
     compras: comprasSlice,
     proveedores: proveedorReducer,
+    AsignacionAreaMesa: asignacionAMSlice,
   },
 });
