@@ -1,6 +1,6 @@
 // src/pages/asignarAreaMesa/pageAsignacion.jsx
 import { useEffect, useState } from "react";
-import { Box, Text, Spinner, Heading, Flex } from "@chakra-ui/react";
+import { Box, Text, Spinner, Heading } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import MesasAsignadas from "./MesasAsignadas";
@@ -67,19 +67,13 @@ const PageAsignacion = () => {
   }
 
   return (
-    <Box p={4}>
+    <Box p={5}>
       <Heading size="lg" mb={4} textAlign={"center"}>
         {nombreArea}
       </Heading>
-      <Flex>
 
-      <Box flex={3} mr={4}>
-      </Box>
-      <Box flex={7}>
       <MesasAsignadas areaId={areaId} />
       <AsignacionesTipoGrupo areaId={areaId} />
-      </Box>
-      </Flex>
     </Box>
   );
 };
