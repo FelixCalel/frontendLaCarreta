@@ -56,6 +56,8 @@ export const asignarMesaThunk = createAsyncThunk(
   }
 );
 
+
+
 export const fetchAsignacionesThunk = createAsyncThunk(
   'asignacionAM/fetchAsignaciones',
   async (areaId) => {
@@ -102,5 +104,40 @@ export const desasignarTipoGrupoThunk = createAsyncThunk(
       state: false
     });
     return res.data;
+  }
+);
+
+
+
+export const fetchUsuariosEncargadosThunk = createAsyncThunk(
+  'asignacionAM/fetchUsuariosEncargados',
+  async (_, thunkAPI) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/usuarios/todos`);
+      return response.data.usuarios.filter(
+        (u) => u.estaActivo && u.roleId === 10
+      );
+    } catch (error) {
+      console.error("Error fetching encargados:", error);
+      return thunkAPI.rejectWithValue("Error al obtener encargados");
+    }
+  }
+);
+
+export const actualizarEncargadoThunk = createAsyncThunk(
+  'asignacionAM/actualizarEncargado',
+  async ({ id, encargado, update_by }, thunkAPI) => {
+    try {
+      console.log("ID del encargado a actualizar:", encargado);
+      const response = await axios.put(`${BASE_URL}/area/${id}`, {
+        encargado: encargado,
+        update_by,
+        state: true,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error updating encargado:", error);
+      return thunkAPI.rejectWithValue("Error al actualizar el encargado");
+    }
   }
 );

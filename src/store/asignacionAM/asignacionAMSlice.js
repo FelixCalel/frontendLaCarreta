@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { fetchMesasActivasThunk, fetchMesasAsignadasThunk, fetchMesasDisponiblesThunk, fetchAsignacionesThunk ,
-  fetchCategoriasThunk, fetchGruposThunk, asignarTipoGrupoThunk, desasignarTipoGrupoThunk } from './thunks';
+  fetchCategoriasThunk, fetchGruposThunk, asignarTipoGrupoThunk, desasignarTipoGrupoThunk, fetchUsuariosEncargadosThunk,
+  actualizarEncargadoThunk } from './thunks';
 
 const asignacionAMSlice = createSlice({
   name: 'asignacionAM',
@@ -9,6 +10,8 @@ const asignacionAMSlice = createSlice({
     asignaciones: [],
     categorias: [],
     grupos: [],
+    usuariosEncargados: [],
+    encargadoActual: null,
     status: 'idle',
     loading: false,
     error: null,
@@ -53,7 +56,15 @@ const asignacionAMSlice = createSlice({
         state.asignaciones = state.asignaciones.map(a =>
           a.id === action.payload.id ? { ...a, state: false } : a
         );
+      })
+      .addCase(fetchUsuariosEncargadosThunk.fulfilled, (state, action) => {
+        state.usuariosEncargados = action.payload;
+      })
+      .addCase(actualizarEncargadoThunk.fulfilled, (state, action) => {
+        state.encargadoActual = action.payload;
+        state.status = 'encargado_actualizado';
       });
+
   },
 });
 
