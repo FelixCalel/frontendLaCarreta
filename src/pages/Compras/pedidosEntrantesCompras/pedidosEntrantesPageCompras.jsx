@@ -215,15 +215,12 @@ const PedidosEntrantesPage = () => {
       color={headingColor}
       rounded="lg"
     >
-      {/* Flex para el título y el botón en la misma fila */}
       <Flex justify="space-between" alignItems="center" mb={4}>
         <Heading color={headingColor}>Pedidos Entrantes Compras</Heading>
         <Button colorScheme="teal" onClick={handleExportarExcel}>
           Exportar a Excel
         </Button>
       </Flex>
-
-      {/* Aquí ya no necesitas otro Heading separado */}
 
       <FiltrosPedidos onAplicarFiltros={handleAplicarFiltros} />
 
