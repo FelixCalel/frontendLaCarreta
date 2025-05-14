@@ -8,69 +8,59 @@ import {
   fetchConsolidado,
 } from "./thunks";
 
+const initialState = {
+  data: [],
+  status: "idle",
+  error: null,
+  consolidado: [],
+  statusConsolidado: "idle",
+  consolidadoError: null,
+};
+
 const detalleOrdenSlice = createSlice({
   name: "detalleOrden",
-  initialState: {
-    data: [],
-    consolidado: [],
-    status: "idle",
-    statusConsolidado: "idle",
-    error: null,
-    consolidadoErro: null,
-  },
+  initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(tablaDetalleOrden.pending, (state) => {
-        state.status = "loading";
+      .addCase(tablaDetalleOrden.pending, (s) => {
+        s.status = "loading";
       })
-      .addCase(tablaDetalleOrden.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.data = action.payload.sort((a, b) => a.id - b.id);
+      .addCase(tablaDetalleOrden.fulfilled, (s, a) => {
+        s.status = "succeeded";
+        s.data = a.payload.sort((x, y) => x.id - y.id);
       })
-      .addCase(tablaDetalleOrden.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error.message;
+      .addCase(tablaDetalleOrden.rejected, (s, a) => {
+        s.status = "failed";
+        s.error = a.error.message;
       })
-      .addCase(addNewDetalleOrden.fulfilled, (state, action) => {
-        state.data.push(action.payload);
-        state.data.sort((a, b) => a.id - b.id);
+
+      .addCase(addNewDetalleOrden.fulfilled, (s, a) => {
+        s.data.push(a.payload);
+        s.data.sort((x, y) => x.id - y.id);
       })
-      .addCase(deleteDetalleOrden.fulfilled, (state, action) => {
-        state.data = state.data.filter(
-          (detalleOrden) => detalleOrden.id !== action.payload
-        );
-        state.data.sort((a, b) => a.id - b.id);
+      .addCase(deleteDetalleOrden.fulfilled, (s, a) => {
+        s.data = s.data.filter((d) => d.id !== a.payload);
       })
-      .addCase(updateDetalleOrden.fulfilled, (state, action) => {
-        const index = state.data.findIndex(
-          (detalleOrden) => detalleOrden.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.data[index] = action.payload;
-        }
-        state.data.sort((a, b) => a.id - b.id);
+      .addCase(updateDetalleOrden.fulfilled, (s, a) => {
+        const i = s.data.findIndex((d) => d.id === a.payload.id);
+        if (i !== -1) s.data[i] = a.payload;
       })
-      .addCase(toggleDetalleOrdenStatus.fulfilled, (state, action) => {
-        const index = state.data.findIndex(
-          (detalleOrden) => detalleOrden.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.data[index].estaActivo = action.payload.estaActivo;
-        }
-        state.data.sort((a, b) => a.id - b.id);
-      });
-    builder
-      .addCase(fetchConsolidado.pending, (state) => {
-        state.statusConsolidado = "loading";
+      .addCase(toggleDetalleOrdenStatus.fulfilled, (s, a) => {
+        const i = s.data.findIndex((d) => d.id === a.payload.id);
+        if (i !== -1) s.data[i].estaActivo = a.payload.estaActivo;
       })
-      .addCase(fetchConsolidado.fulfilled, (state, action) => {
-        state.statusConsolidado = "succeeded";
-        state.consolidado = action.payload;
+      .addCase(fetchConsolidado.pending, (s) => {
+        s.statusConsolidado = "loading";
+        s.consolidadoError = null;
       })
-      .addCase(fetchConsolidado.rejected, (state, action) => {
-        state.statusConsolidado = "failed";
-        state.consolidadoError = action.payload || action.error.message;
+      .addCase(fetchConsolidado.fulfilled, (s, a) => {
+        s.statusConsolidado = "succeeded";
+        s.consolidado = a.payload;
+      })
+      .addCase(fetchConsolidado.rejected, (s, a) => {
+        s.statusConsolidado = "failed";
+        s.consolidadoError = a.payload ?? a.error.message;
       });
   },
 });
@@ -79,5 +69,11 @@ export const selectOrderedDetalleOrden = createSelector(
   (state) => state.detalleOrden.data,
   (data) => data.slice().sort((a, b) => a.id - b.id)
 );
+
+export const selectConsolidadoEstado = (state) => ({
+  data: state.detalleOrden.consolidado,
+  status: state.detalleOrden.statusConsolidado,
+  error: state.detalleOrden.consolidadoError,
+});
 
 export default detalleOrdenSlice.reducer;
