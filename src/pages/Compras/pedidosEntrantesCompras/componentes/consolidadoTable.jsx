@@ -131,7 +131,7 @@ const ConsolidadoTable = ({ data, status = "succeeded", error }) => {
                         <Table size="sm" variant="simple">
                           <Thead>
                             <Tr>
-                              <Th>ID</Th>
+                              <Th>ID Proveedor/Nombre</Th>
                               <Th isNumeric>Cant.</Th>
                               <Hide below="md">
                                 <Th>Fecha ingreso</Th>

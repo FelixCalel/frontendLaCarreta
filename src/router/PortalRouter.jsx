@@ -34,40 +34,17 @@ export const PortalRouter = () => {
         <Route path="ordenes" element={<PageOrdenes />} />
         <Route path="facturas" element={<PageFacturas />} />
         <Route path="logout" element={<Logout />}></Route>
-        <Route path="listarUsuarios" element={<PageListarUsuarios />}>
-          {" "}
-        </Route>
-        <Route path="Modulos/listarModulos" element={<PageModulos />}>
-          {" "}
-        </Route>
-        <Route path="listarOpciones" element={<PageOpciones />}>
-          {" "}
-        </Route>
-        <Route path="listarRoles" element={<PaginaRole />}>
-          {" "}
-        </Route>
-        <Route path="listarPermisos" element={<PagePermiso />}>
-          {" "}
-        </Route>
-        <Route
-          path="listarPermisosRoles"
-          element={<PagePermisosRoles />}
-        ></Route>
-        <Route path="listarasignacionMO" element={<PageasignacionMO />}>
-          {" "}
-        </Route>
-        <Route path="listarDeus" element={<PageFormDeus />}>
-          {" "}
-        </Route>
-        <Route path="exportarPedidos" element={<AprobadosPage />}>
-          {" "}
-        </Route>
-        <Route path="listarCompras" element={<PedidosEntrantesPage />}>
-          {" "}
-        </Route>
-        <Route path="ControlCalidad" element={<ControlCalidadPage />}>
-          {" "}
-        </Route>
+        <Route path="listarUsuarios" element={<PageListarUsuarios />} />
+        <Route path="Modulos/listarModulos" element={<PageModulos />} />
+        <Route path="listarOpciones" element={<PageOpciones />} />
+        <Route path="listarRoles" element={<PaginaRole />} />
+        <Route path="listarPermisos" element={<PagePermiso />} />
+        <Route path="listarPermisosRoles" element={<PagePermisosRoles />} />
+        <Route path="listarasignacionMO" element={<PageasignacionMO />} />
+        <Route path="listarDeus" element={<PageFormDeus />} />
+        <Route path="exportarPedidos" element={<AprobadosPage />} />
+        <Route path="listarCompras" element={<PedidosEntrantesPage />} />
+        <Route path="ControlCalidad" element={<ControlCalidadPage />} />
       </Route>
     </Routes>
   );
