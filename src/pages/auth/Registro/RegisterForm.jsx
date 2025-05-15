@@ -60,7 +60,8 @@ export const RegisterForm = () => {
     }
 
     // Validar correo
-    if (!formData.correo) {0
+    if (!formData.correo) {
+      0;
       errors.correo = "El correo electrónico es obligatorio.";
     } else if (!/\S+@\S+\.\S+/.test(formData.correo)) {
       errors.correo = "El correo no tiene un formato válido.";
@@ -92,7 +93,7 @@ export const RegisterForm = () => {
 
   useEffect(() => {
     if (actualUsuario === "authenticated") {
-      return navigate("/admin/dashboard", { replace: true });
+      return navigate("/home", { replace: true });
     }
   }, [actualUsuario, navigate]);
 
