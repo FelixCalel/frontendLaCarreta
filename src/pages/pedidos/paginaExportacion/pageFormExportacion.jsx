@@ -179,8 +179,8 @@ const AprobadosPage = () => {
     worksheet.addRow([]);
     worksheet.columns = [
       { header: "Pedido ID", key: "pedidoId", width: 12 },
-      { header: "Código", key: "codigo", width: 15 },
       { header: "Tienda", key: "tienda", width: 25 },
+      { header: "Código", key: "codigo", width: 15 },
       { header: "Producto", key: "producto", width: 30 },
       { header: "Cantidad", key: "cantidad", width: 12 },
       { header: "Deudor", key: "deudor", width: 20 },
@@ -189,8 +189,8 @@ const AprobadosPage = () => {
 
     const headerRowIndex = worksheet.addRow([
       "Pedido ID",
-      "Código",
       "Tienda",
+      "Código",
       "Producto",
       "Cantidad",
       "Deudor",
@@ -209,8 +209,8 @@ const AprobadosPage = () => {
         for (const detalle of detalles) {
           worksheet.addRow({
             pedidoId: `P-${pedido.id}`,
-            codigo: detalle.codigo || "Sin código",
             tienda: pedido.nombreTienda || "Sin tienda",
+            codigo: detalle.codigo || "Sin código",
             producto: detalle.nombreProducto || "",
             cantidad: detalle.cantidad || 0,
             deudor: `${pedido.nombreCorrelativo || ""}${
@@ -238,8 +238,8 @@ const AprobadosPage = () => {
   async function addPedidosToWorksheetFormato2(worksheet, pedidosPorDeudor) {
     worksheet.columns = [
       { header: "Pedido ID", key: "pedidoId", width: 15 },
-      { header: "Código", key: "codigo", width: 15 },
       { header: "Tienda", key: "tienda", width: 25 },
+      { header: "Código", key: "codigo", width: 15 },
       { header: "Producto", key: "producto", width: 30 },
       { header: "Cantidad", key: "cantidad", width: 15 },
     ];
@@ -282,8 +282,8 @@ const AprobadosPage = () => {
         for (const detalle of detalles) {
           worksheet.addRow({
             pedidoId: `P-${pedido.id}`,
-            codigo: detalle.codigo || "Sin código",
             tienda: pedido.nombreTienda || "Sin tienda",
+            codigo: detalle.codigo || "Sin código",
             producto: detalle.nombreProducto,
             cantidad: detalle.cantidad,
           });

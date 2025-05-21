@@ -188,3 +188,20 @@ export const copiarDetallesUltimoPedido = createAsyncThunk(
     }
   }
 );
+
+export const fetchConsolidado = createAsyncThunk(
+  "detalleOrden/fetchConsolidado",
+  async (roleId, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/detalle/pedido/todos/${roleId}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error al obtener los detalles consolidado:", error);
+      return rejectWithValue(
+        error.response?.data || "Error al obtener el consolidado"
+      );
+    }
+  }
+);
