@@ -13,6 +13,7 @@ export const authSlice = createSlice({
     token: null,
     rutas: [],
     user: null,
+    roleId: null,
   },
   reducers: {
     registered: (state, { payload }) => {
@@ -24,6 +25,7 @@ export const authSlice = createSlice({
       state.errorMessage = null;
       state.token = payload.token;
       state.rutas = payload.rutas;
+      state.roleId = payload.roleId;
       state.user = payload;
     },
     login: (state, { payload }) => {
@@ -35,6 +37,7 @@ export const authSlice = createSlice({
       state.errorMessage = null;
       state.token = payload.token;
       state.rutas = payload.rutas?.length ? payload.rutas : state.rutas;
+      state.roleId = payload.roleId;
       state.user = {
         rutas: payload.rutasFull?.length
           ? payload.rutasFull
@@ -48,6 +51,7 @@ export const authSlice = createSlice({
       state.displayName = null;
       state.photoURL = null;
       state.token = null;
+      state.roleId = null;
       state.errorMessage = payload?.errorMessage || null;
       state.rutas = [];
       localStorage.removeItem("authSlice");

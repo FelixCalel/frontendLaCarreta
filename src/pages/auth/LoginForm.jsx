@@ -39,7 +39,7 @@ export const LoginForm = () => {
 
   useEffect(() => {
     if (actualUsuario?.status === "authenticated") {
-      navigate("/auth/home", { replace: true });
+      navigate("/home", { replace: true });
     }
   }, [actualUsuario, navigate]);
 

@@ -72,7 +72,7 @@ export const MenuPerfil = () => {
             _hover={{ bg: useColorModeValue("gray.100", "gray.700") }}
             _active={{ bg: useColorModeValue("gray.200", "gray.600") }}
           />
-          
+
           <MenuList
             bg={menuBgColor}
             borderRadius="md"
@@ -81,13 +81,13 @@ export const MenuPerfil = () => {
             minW="240px"
           >
             {/* Encabezado del menú */}
-            <Flex direction="column" alignItems="center" p={4} bg={menuHeaderBg}>
-              <Avatar
-                size="lg"
-                name={nombreUsuario}
-                bg={avatarBg}
-                mb={2}
-              />
+            <Flex
+              direction="column"
+              alignItems="center"
+              p={4}
+              bg={menuHeaderBg}
+            >
+              <Avatar size="lg" name={nombreUsuario} bg={avatarBg} mb={2} />
               <Text fontWeight="bold" color="white">
                 {nombreUsuario || "Nombre Usuario"}
               </Text>
@@ -126,7 +126,7 @@ export const MenuPerfil = () => {
               <>
                 <MenuItem
                   as={Link}
-                  to="/admin/listarRoles"
+                  to="/admin/roles"
                   icon={<FaKey />}
                   _hover={{ bg: menuItemHoverBg, color: "white" }}
                   _focus={{ bg: menuItemFocusBg, color: "white" }}
@@ -144,7 +144,7 @@ export const MenuPerfil = () => {
                 </MenuItem>
                 <MenuItem
                   as={Link}
-                  to="/admin/Modulos/listarModulos"
+                  to="/admin/modulos"
                   icon={<FaBoxes />}
                   _hover={{ bg: menuItemHoverBg, color: "white" }}
                   _focus={{ bg: menuItemFocusBg, color: "white" }}
@@ -153,7 +153,7 @@ export const MenuPerfil = () => {
                 </MenuItem>
                 <MenuItem
                   as={Link}
-                  to="/admin/listarOpciones"
+                  to="/admin/opciones"
                   icon={<FaThList />}
                   _hover={{ bg: menuItemHoverBg, color: "white" }}
                   _focus={{ bg: menuItemFocusBg, color: "white" }}
