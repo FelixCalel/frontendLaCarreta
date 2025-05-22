@@ -49,7 +49,7 @@ const roleIconMap = {
 const HomePage = () => {
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [rolNombre, setRolNombre] = useState("");
-
+  //comentario
   useEffect(() => {
     const nombre = localStorage.getItem("nombreUsuario");
     const roleId = localStorage.getItem("roleId");
