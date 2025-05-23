@@ -1,15 +1,14 @@
-import { Box } from '@chakra-ui/react';
-import TablaCiudad from './pageFormCiudad'
+import { Box } from "@chakra-ui/react";
+import TablaCiudad from "./pageFormCiudad";
 
-export const PageCiudad= () => {
-    return (
-      <>
+export const PageCiudad = () => {
+  return (
+    <>
       <Box p={6}>
-      <TablaCiudad />
-    </Box>
-      </>
-    )
-  }
+        <TablaCiudad />
+      </Box>
+    </>
+  );
+};
 
-  export default PageCiudad;
-  
+export default PageCiudad;
