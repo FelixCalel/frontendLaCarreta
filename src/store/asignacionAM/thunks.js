@@ -66,21 +66,6 @@ export const fetchAsignacionesThunk = createAsyncThunk(
   }
 );
 
-export const fetchCategoriasThunk = createAsyncThunk(
-  'asignacionAM/fetchCategorias',
-  async () => {
-    const res = await axios.get(`${BASE_URL}/categoria/`);
-    return res.data.filter(c => c.state === true);
-  }
-);
-
-export const fetchGruposThunk = createAsyncThunk(
-  'asignacionAM/fetchGrupos',
-  async () => {
-    const res = await axios.get(`${BASE_URL}/grupo/`);
-    return res.data.filter(g => g.state === true);
-  }
-);
 
 export const asignarTipoGrupoThunk = createAsyncThunk(
   'asignacionAM/asignar',
@@ -104,6 +89,19 @@ export const desasignarTipoGrupoThunk = createAsyncThunk(
       state: false
     });
     return res.data;
+  }
+);
+
+export const fetchProductosThunk = createAsyncThunk(
+  'asignacionAM/fetchProductos',
+  async (_, thunkAPI) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/items/todos`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      return thunkAPI.rejectWithValue("Error al obtener productos");
+    }
   }
 );
 
