@@ -12,7 +12,7 @@ export const PublicRoute = ({ children }) => {
 
   // Si el usuario está autenticado, lo redirigimos a la página de inicio
   if (actualUsuario.status === "authenticated") {
-    return <Navigate to="/home" replace />;
+    return <Navigate to="/auth/home" replace />;
   }
 
   // Si no está autenticado ni registrado, renderizamos las rutas públicas
