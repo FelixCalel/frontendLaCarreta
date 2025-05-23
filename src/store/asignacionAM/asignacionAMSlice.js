@@ -1,15 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchMesasActivasThunk, fetchMesasAsignadasThunk, fetchMesasDisponiblesThunk, fetchAsignacionesThunk ,
-  fetchCategoriasThunk, fetchGruposThunk, asignarTipoGrupoThunk, desasignarTipoGrupoThunk, fetchUsuariosEncargadosThunk,
-  actualizarEncargadoThunk } from './thunks';
+import { fetchMesasActivasThunk, fetchMesasAsignadasThunk, fetchMesasDisponiblesThunk, fetchAsignacionesThunk , fetchUsuariosEncargadosThunk,
+  actualizarEncargadoThunk, asignarTipoGrupoThunk, desasignarTipoGrupoThunk, fetchProductosThunk } from './thunks';
 
 const asignacionAMSlice = createSlice({
   name: 'asignacionAM',
   initialState: {
     mesasAsignadas: [],
     asignaciones: [],
-    categorias: [],
-    grupos: [],
+    productos: [],
     usuariosEncargados: [],
     encargadoActual: null,
     status: 'idle',
@@ -43,12 +41,6 @@ const asignacionAMSlice = createSlice({
         state.asignaciones = action.payload;
         state.status = 'succeeded';
       })
-      .addCase(fetchCategoriasThunk.fulfilled, (state, action) => {
-        state.categorias = action.payload;
-      })
-      .addCase(fetchGruposThunk.fulfilled, (state, action) => {
-        state.grupos = action.payload;
-      })
       .addCase(asignarTipoGrupoThunk.fulfilled, (state, action) => {
         state.asignaciones.push(action.payload);
       })
@@ -56,6 +48,9 @@ const asignacionAMSlice = createSlice({
         state.asignaciones = state.asignaciones.map(a =>
           a.id === action.payload.id ? { ...a, state: false } : a
         );
+      })
+      .addCase(fetchProductosThunk.fulfilled, (state, action) => {
+        state.productos = action.payload;
       })
       .addCase(fetchUsuariosEncargadosThunk.fulfilled, (state, action) => {
         state.usuariosEncargados = action.payload;
