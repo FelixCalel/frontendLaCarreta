@@ -13,6 +13,7 @@ import { PageFacturas } from '../../PageFacturas'
 import { PageConciliaciones } from '../../PageConciliaciones'
 import { RootLayout } from '../../layouts/RootLayout'
 
+
 export const PrincipalesRoute = () => {
   return (
     <>
@@ -27,6 +28,7 @@ export const PrincipalesRoute = () => {
         <Route path="ordenes" element={<PageOrdenes />} />
         <Route path="facturas" element={<PageFacturas />} />
         <Route path="conciliaciones" element={<PageConciliaciones />} />
+        
     </>
   )
 }

@@ -26,6 +26,7 @@ const roleMap = {
   5: "Compras",
   6: "QA",
   7: "Supervisor",
+  9: "Supervisor producción",
 };
 
 const roleColorMap = {
@@ -35,6 +36,7 @@ const roleColorMap = {
   Supervisor: "pink",
   Compras: "orange",
   QA: "purple",
+  'Supervisor producción': "teal",
 };
 
 const roleIconMap = {
@@ -44,6 +46,7 @@ const roleIconMap = {
   Supervisor: FaUserTie,
   Compras: FaBox,
   QA: FaSearch,
+  'Supervisor producción': FaUserShield,
 };
 
 const HomePage = () => {
