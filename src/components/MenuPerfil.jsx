@@ -126,7 +126,7 @@ export const MenuPerfil = () => {
               <>
                 <MenuItem
                   as={Link}
-                  to="/admin/roles"
+                  to="/admin/listarRoles"
                   icon={<FaKey />}
                   _hover={{ bg: menuItemHoverBg, color: "white" }}
                   _focus={{ bg: menuItemFocusBg, color: "white" }}
@@ -144,7 +144,7 @@ export const MenuPerfil = () => {
                 </MenuItem>
                 <MenuItem
                   as={Link}
-                  to="/admin/modulos"
+                  to="/admin/Modulos/listarModulos"
                   icon={<FaBoxes />}
                   _hover={{ bg: menuItemHoverBg, color: "white" }}
                   _focus={{ bg: menuItemFocusBg, color: "white" }}
@@ -153,7 +153,7 @@ export const MenuPerfil = () => {
                 </MenuItem>
                 <MenuItem
                   as={Link}
-                  to="/admin/opciones"
+                  to="/admin/listarOpciones"
                   icon={<FaThList />}
                   _hover={{ bg: menuItemHoverBg, color: "white" }}
                   _focus={{ bg: menuItemFocusBg, color: "white" }}

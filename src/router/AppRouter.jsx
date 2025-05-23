@@ -22,7 +22,6 @@ import { PaginaExportacionPedido } from "../router/exportarPedidosRouter";
 import { PaginaPedidoCompras } from "../router/ComprasRouter";
 import { PaginaComprador } from "../router/CompradorRouter";
 import { PaginaControlCalidad } from "../router/ControlCalidadRouter";
-//import { isAuthenticated } from "../providers/endpoints";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();

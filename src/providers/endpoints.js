@@ -15,7 +15,14 @@ export const singIn = async ({ correo_electronico, password }) => {
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem(
         "userData",
-        JSON.stringify({ id, nit, email, nombre_empresa, displayName, errorMessage })
+        JSON.stringify({
+          id,
+          nit,
+          email,
+          nombre_empresa,
+          displayName,
+          errorMessage,
+        })
       );
 
       // errores
@@ -62,7 +69,8 @@ export const registerUser = async (data) => {
       // cambio
       console.log(response);
       if (response.status === 200) {
-        const { id, nombres, apellidos, nombre_empresa } = response.data.usuario;
+        const { id, nombres, apellidos, nombre_empresa } =
+          response.data.usuario;
         // errores
         return {
           ok: true,
@@ -109,7 +117,8 @@ export const registerUserChildren = async (data) => {
       // cambio
       console.log(response);
       if (response.status === 200) {
-        const { id, nombres, apellidos, nombre_empresa } = response.data.usuario;
+        const { id, nombres, apellidos, nombre_empresa } =
+          response.data.usuario;
         // errores
         return {
           ok: true,
