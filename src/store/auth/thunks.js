@@ -26,14 +26,12 @@ export const startSignIn = ({ correo_electronico, password }) => {
             displayName:
               result.usuario.nombres + " " + result.usuario.apellidos,
             email: result.usuario.correo_electronico,
-            //nombre_empresa: result.usuario.nombre_empresa,
-            roleId: result.usuario.roleId,
+            nombre_empresa: result.usuario.nombre_empresa,
           };
 
           // Guardamos los datos en localStorage
           localStorage.setItem("userData", JSON.stringify(userData));
           localStorage.setItem("token", result.token); // Guarda el token si es necesario
-          localStorage.setItem("roleId", result.roleiD);
 
           dispatch(login(userData));
         } else {
@@ -138,13 +136,23 @@ export const startCreatingUserChildren = (
 
 export const obtenerDatosLogeado = () => {
   const data = JSON.parse(localStorage.getItem("userData"));
+
+  // Verificamos si los datos existen
+  if (!data) {
+    return null; // Retornamos null si no hay datos
+  }
+
+  // Validamos que todos los datos esperados estén presentes
   const payload = {
-    id: data.id,
-    uid: data.id,
-    displayName: data.displayName,
-    email: data.email,
-    //nombre_empresa: data.nombre_empresa,
+    uid: data.id || null,
+    displayName: data.displayName || null,
+    email: data.email || null,
+    nombre_empresa: data.nombre_empresa || null,
   };
+
+  if (!payload.uid || !payload.email) {
+    return null;
+  }
 
   return payload;
 };
