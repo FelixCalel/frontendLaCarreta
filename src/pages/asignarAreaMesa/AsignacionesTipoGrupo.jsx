@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Box, Table, Thead, Tbody, Tr, Th, Td,
-  Select, Button, Flex, Text, useColorModeValue
+   Button, Flex, Text, useColorModeValue
 } from '@chakra-ui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -11,6 +11,8 @@ import {
   desasignarTipoGrupoThunk,
   fetchProductosThunk
 } from '../../store/asignacionAM/thunks';
+import ReactSelect from 'react-select';
+
 
 const AsignacionesTipoGrupo = ({ areaId }) => {
   const dispatch = useDispatch();
@@ -40,7 +42,7 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
     if (selectedProducto) {
       dispatch(asignarTipoGrupoThunk({
         id_area: areaId,
-        productoId: Number(selectedProducto),
+        productoId: Number(selectedProducto.value),
         create_by: usuarioId,
         state: true
       })).then(() => {
@@ -91,15 +93,17 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
           })}
           <Tr>
             <Td colSpan={2}>
-              <Select
+              <ReactSelect
                 placeholder="Seleccione producto"
                 value={selectedProducto}
-                onChange={(e) => setSelectedProducto(e.target.value)}
-              >
-                {productos.map(p => (
-                  <option key={p.id} value={p.id}>{p.codigo} - {p.nombre}</option>
-                ))}
-              </Select>
+                onChange={setSelectedProducto}
+                options={productos.map(p => ({
+                  value: p.id,
+                  label: `${p.codigo} - ${p.nombre}`
+                }))}
+                isClearable={true}
+              />
+
             </Td>
             <Td>
               <Button
