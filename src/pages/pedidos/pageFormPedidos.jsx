@@ -17,10 +17,12 @@ import {
 } from "../../store/Pedidos/DetallePedidos/thunks";
 import axios from "axios";
 //import ProductosTable from "./componentes/detallesPedidosTable";
+import { useLocation } from "react-router-dom";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const PageFormPedidos = () => {
+  const location = useLocation();
   const dispatch = useDispatch();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -56,6 +58,13 @@ const PageFormPedidos = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (location.state?.openCrearPedido) {
+      onOpen();
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, onOpen]);
 
   useEffect(() => {
     const paisIdFromStorage = localStorage.getItem("paisId");
