@@ -270,8 +270,8 @@ const AprobadosPage = () => {
 
       const headerRow = worksheet.addRow([
         "Pedido ID",
-        "Código",
         "Tienda",
+        "Código",
         "Producto",
         "Cantidad",
       ]);
