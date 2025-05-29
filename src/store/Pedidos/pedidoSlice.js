@@ -6,6 +6,7 @@ import {
   togglePedidoStatus,
   tablaPedidos,
   tablaPedidosConDetalles,
+  updatePedidoActivacion,
 } from "./thunks";
 
 const pedidoSlice = createSlice({
@@ -25,7 +26,8 @@ const pedidoSlice = createSlice({
       .addCase(tablaPedidos.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.data = action.payload;
-        state.data.sort((a, b) => a.id - b.id);
+        // ↓ de mayor a menor
+        state.data.sort((a, b) => b.id - a.id);
       })
       .addCase(tablaPedidos.rejected, (state, action) => {
         state.status = "failed";
@@ -64,6 +66,22 @@ const pedidoSlice = createSlice({
       })
       .addCase(tablaPedidosConDetalles.rejected, (state, action) => {
         console.error("Error al obtener pedidos con detalles:", action.error);
+      })
+      .addCase(updatePedidoActivacion.pending, (state, action) => {
+        const { id, isActive } = action.meta.arg;
+        state.data = state.data.map((p) =>
+          p.id === id ? { ...p, isActive } : p
+        );
+      })
+      .addCase(updatePedidoActivacion.fulfilled, (state, action) => {
+        const updated = action.payload;
+        state.data = state.data.map((p) =>
+          p.id === updated.id ? { ...p, isActive: updated.isActive } : p
+        );
+      })
+      .addCase(updatePedidoActivacion.rejected, (state, action) => {
+        //state.status = "failed";
+        state.error = action.error.message;
       });
   },
 });

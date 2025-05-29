@@ -520,7 +520,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                               producto.cantidad
                             );
                           }}
-                          placeholder="Cantidad"
+                          placeholder="0"
                           size="sm"
                           width="50px"
                           maxWidth="50px"
@@ -562,6 +562,8 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
               borderWidth="1px"
               rounded="md"
               bg={addBoxBg}
+              w={{ base: "full", md: "680px" }}
+              mx={{ base: 0, md: "auto" }}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}

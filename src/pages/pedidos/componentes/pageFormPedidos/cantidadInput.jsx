@@ -8,36 +8,33 @@ const CantidadInput = ({
   onBlur,
   error,
   placeholder,
-  width,
+  width = "60px",
 }) => {
   const handleInputChange = (e) => {
-    const inputValue = e.target.value;
+    const v = e.target.value;
 
-    // Permitir valores numéricos y vacíos
-    if (!isNaN(inputValue) || inputValue === "") {
-      const parsedValue = parseFloat(inputValue) || 0;
-
-      // Validar que no exceda la cantidad máxima
-      if (parsedValue > max) {
-        onChange({ target: { value: max } }); // Limitar al valor máximo permitido
-        return;
-      }
-
-      onChange({ target: { value: inputValue } });
+    if (v === "") {
+      onChange({ target: { value: "" } });
+      return;
     }
+    if (!/^\d+$/.test(v)) return;
+    const asNumber = parseFloat(v);
+    if (max !== undefined && asNumber > max) return;
+
+    onChange({ target: { value: v } });
   };
 
   return (
-    <HStack spacing={2} align="start">
-      <FormControl mb={2} isInvalid={error}>
+    <HStack spacing={2}>
+      <FormControl isInvalid={!!error}>
         <Input
           name="cantidad"
           type="number"
-          value={value}
+          value={value === 0 ? "" : value}
           onChange={handleInputChange}
           onBlur={onBlur}
           placeholder={placeholder}
-          width={width || "60px"}
+          width={width}
           size="sm"
         />
         {error && <FormErrorMessage>{error}</FormErrorMessage>}

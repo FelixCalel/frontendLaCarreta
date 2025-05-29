@@ -23,6 +23,7 @@ import axios from "axios";
 import { login as loginAuth } from "../../store/auth/authSlice";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../middleware/firebase-config";
+import { fetchCurrentUser } from "../../store/auth/thunks";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -62,14 +63,13 @@ export const LoginForm = () => {
       }
 
       const token = await user.getIdToken();
-
       const resp = await axios.post(`${BASE_URL}/usuarios/datos`, {
         correo: user.email,
       });
 
       const rutasIds = resp.data.usuario.rutas?.map((r) => r.id) ?? [];
-      console.log("usuario.rutas:", resp.data.usuario.rutas);
-      console.log("rutasIds:", rutasIds);
+      //console.log("usuario.rutas:", resp.data.usuario.rutas);
+      //console.log("rutasIds:", rutasIds);
 
       if (resp.data && resp.data.usuario) {
         const {
@@ -91,12 +91,7 @@ export const LoginForm = () => {
         localStorage.setItem("nombreUsuario", nombre);
         localStorage.setItem("correoUsuario", correoUsuario);
         localStorage.setItem("usuarioId", usuarioId);
-        //console.log("Recibimos roleId del backend:", roleId);
         localStorage.setItem("roleId", roleId);
-        //console.log(
-        // "Ahora localStorage.getItem('roleId') =",
-        // localStorage.getItem("roleId")
-        //);
         localStorage.setItem("paisId", paisId);
 
         dispatch(
@@ -108,8 +103,11 @@ export const LoginForm = () => {
             roleId,
             paisId,
             rutas: rutasIds,
+            rutasFull: resp.data.usuario.rutas,
+            id: usuarioId,
           })
         );
+        await dispatch(fetchCurrentUser());
 
         navigate("/auth/home", { replace: true });
         window.location.reload();

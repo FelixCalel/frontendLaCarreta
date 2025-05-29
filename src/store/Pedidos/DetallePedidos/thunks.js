@@ -167,3 +167,41 @@ export const actualizarFechaOrden = createAsyncThunk(
     }
   }
 );
+
+export const copiarDetallesUltimoPedido = createAsyncThunk(
+  "detalleOrden/copiarUltimo",
+  async ({ ciudadId, deudorId, tiendaId, usuarioId }, { rejectWithValue }) => {
+    try {
+      const body = { ciudadId, deudorId, tiendaId, usuarioId };
+
+      const { data } = await axios.post(
+        `${BASE_URL}/detalle/pedido/copiar-ultimo`,
+        body
+      );
+
+      return data;
+    } catch (err) {
+      if (err.response && err.response.data) {
+        return rejectWithValue(err.response.data);
+      }
+      return rejectWithValue(err.message || "Error desconocido");
+    }
+  }
+);
+
+export const fetchConsolidado = createAsyncThunk(
+  "detalleOrden/fetchConsolidado",
+  async (roleId, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/detalle/pedido/todos/${roleId}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error al obtener los detalles consolidado:", error);
+      return rejectWithValue(
+        error.response?.data || "Error al obtener el consolidado"
+      );
+    }
+  }
+);

@@ -56,7 +56,7 @@ const PedidosTable = ({
               <Td>{pedido.id}</Td>
               <Td>{`${pedido.nombreCorrelativo} - ${pedido.nombreDeu}`}</Td>
               <Td>{pedido.nombreTienda}</Td>
-              <Td>{pedido.nombreUsuario}</Td>
+              <Td>{`${pedido.nombreUsuario} ${pedido.apellidoUsuario}`}</Td>
               <Td>
                 {format(new Date(pedido.creadoEl), "dd MMMM yyyy HH:mm", {
                   locale: es,
@@ -96,6 +96,7 @@ PedidosTable.propTypes = {
       nombreDeu: PropTypes.string,
       nombreTienda: PropTypes.string,
       nombreUsuario: PropTypes.string.isRequired,
+      apellidoUsuario: PropTypes.string.isRequired,
       creadoEl: PropTypes.string.isRequired,
       detalles: PropTypes.arrayOf(
         PropTypes.shape({

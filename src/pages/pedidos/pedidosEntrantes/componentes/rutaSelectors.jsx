@@ -1,36 +1,25 @@
 import { createSelector } from "@reduxjs/toolkit";
 
-const EMPTY = [];
+export const selectPedidosEntrantesPorRuta = (estadoIds = [2]) =>
+  createSelector(
+    [
+      /* 1 */ (s) => s.pedidos.data ?? [],
+      /* 2 */ (s) => s.tiendas.data ?? [],
+      /* 3 */ (s) =>
+        (s.auth.user?.rutas?.length ? s.auth.user.rutas : s.auth.rutas) ?? [],
+    ],
+    (pedidos, tiendas, rutasUsuario) => {
+      if (!rutasUsuario.length || !tiendas.length) return [];
 
-export const selectPedidosEntrantesPorRuta = createSelector(
-  [
-    (s) => s.pedidos.data ?? EMPTY,
-    (s) => s.tiendas.data ?? EMPTY,
-    (s) => s.auth.rutas ?? EMPTY,
-  ],
-  (pedidos, tiendas, rutasUsuario) => {
-    if (!rutasUsuario.length || !tiendas.length) return EMPTY;
+      const rutasSet = new Set(
+        rutasUsuario.map((r) => (typeof r === "object" ? +r.id : +r))
+      );
+      const tiendaRuta = new Map(tiendas.map((t) => [t.id, +t.rutaId]));
 
-    const rutasSet = new Set(
-      rutasUsuario.map((r) =>
-        typeof r === "object" ? Number(r.id) : Number(r)
-      )
-    );
-
-    const tiendaRuta = new Map(tiendas.map((t) => [t.id, Number(t.rutaId)]));
-
-    const filtrados = pedidos.filter(
-      (p) => p.estadoId === 2 && rutasSet.has(tiendaRuta.get(p.tiendaId))
-    );
-
-    if (import.meta.env.DEV) {
-      console.log("[selector] rutasSet", [...rutasSet]);
-      console.log(
-        "[selector] pedidos filtrados",
-        filtrados.map((p) => p.id)
+      return pedidos.filter(
+        (p) =>
+          rutasSet.has(tiendaRuta.get(p.tiendaId)) &&
+          estadoIds.includes(p.estadoId)
       );
     }
-
-    return filtrados;
-  }
-);
+  );

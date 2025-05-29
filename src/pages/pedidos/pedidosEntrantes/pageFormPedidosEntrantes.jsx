@@ -19,6 +19,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   tablaPedidos,
   togglePedidoStatus,
+  updatePedidoActivacion,
 } from "../../../store/Pedidos/thunks";
 import PedidosTable from "../componentes/EntrantesFormPedidos/PedidosTable";
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
@@ -29,6 +30,7 @@ import {
 import ApproveOrderDialog from "../componentes/EntrantesFormPedidos/ApproveOrderDialog";
 import { selectPedidosEntrantesPorRuta } from "./componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
+//import { format } from "date-fns";
 const EntrantesPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
@@ -40,7 +42,6 @@ const EntrantesPage = () => {
   const [detallesPedido, setDetallesPedido] = useState([]);
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  //const pedidosEntrantes = pedidos.filter((pedido) => pedido.estadoId === 2);
   const [isApproving, setIsApproving] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const {
@@ -91,15 +92,52 @@ const EntrantesPage = () => {
     if (pedidos.length) console.log("Ejemplo de pedido:", pedidos[0]);
   }, [pedidos]);
 
-  const handleConfirmApprove = async (orderDate) => {
+  const handleConfirmApprove = async (fechaParaBackend /* "DD/MM/YYYY" */) => {
     setIsApproving(true);
     try {
-      await handleAprobarPedidos(orderDate);
-      onApproveClose();
+      for (const pedidoId of selectedPedidos) {
+        await dispatch(
+          actualizarFechaOrden({
+            pedidoId,
+            fechaOrden: fechaParaBackend,
+          })
+        ).unwrap();
+        await dispatch(
+          togglePedidoStatus({
+            id: pedidoId,
+            estadoId: 3,
+          })
+        ).unwrap();
+
+        const pedido = pedidos.find((p) => p.id === pedidoId);
+        if (pedido && !pedido.isActive) {
+          await dispatch(
+            updatePedidoActivacion({ id: pedidoId, isActive: true })
+          ).unwrap();
+        }
+      }
+
+      await dispatch(tablaPedidos());
+
+      setSelectedPedidos([]);
+      toast({
+        title: "Pedidos aprobados",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
       console.error("Error al aprobar pedidos:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Hubo un error al aprobar pedidos.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
       setIsApproving(false);
+      onApproveClose();
     }
   };
 
@@ -115,55 +153,55 @@ const EntrantesPage = () => {
     }
   };
 
-  const handleAprobarPedidos = async (orderDate) => {
-    setIsLoading(true);
-    try {
-      for (const pedidoId of selectedPedidos) {
-        console.log("Procesando pedido:", pedidoId);
+  // const handleAprobarPedidos = async (orderDate) => {
+  //   setIsLoading(true);
+  //   try {
+  //     for (const pedidoId of selectedPedidos) {
+  //       console.log("Procesando pedido:", pedidoId);
 
-        await dispatch(
-          actualizarFechaOrden({
-            pedidoId,
-            fechaOrden: orderDate,
-          })
-        ).unwrap();
+  //       await dispatch(
+  //         actualizarFechaOrden({
+  //           pedidoId,
+  //           fechaOrden: orderDate,
+  //         })
+  //       ).unwrap();
 
-        console.log("Fecha actualizada, actualizando estado...");
+  //       console.log("Fecha actualizada, actualizando estado...");
 
-        const result = await dispatch(
-          togglePedidoStatus({
-            id: pedidoId,
-            estadoId: 3,
-          })
-        ).unwrap();
+  //       const result = await dispatch(
+  //         togglePedidoStatus({
+  //           id: pedidoId,
+  //           estadoId: 3,
+  //         })
+  //       ).unwrap();
 
-        console.log("Estado actualizado:", result);
-      }
+  //       console.log("Estado actualizado:", result);
+  //     }
 
-      await dispatch(tablaPedidos());
+  //     await dispatch(tablaPedidos());
 
-      setSelectedPedidos([]);
-      toast({
-        title: "Pedidos aprobados",
-        description:
-          "Los pedidos seleccionados han sido aprobados y la fecha de orden ha sido actualizada.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error al aprobar pedidos:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Hubo un error al procesar los pedidos.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     setSelectedPedidos([]);
+  //     toast({
+  //       title: "Pedidos aprobados",
+  //       description:
+  //         "Los pedidos seleccionados han sido aprobados y la fecha de orden ha sido actualizada.",
+  //       status: "success",
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error al aprobar pedidos:", error);
+  //     toast({
+  //       title: "Error",
+  //       description: error.message || "Hubo un error al procesar los pedidos.",
+  //       status: "error",
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleCancelarPedidos = async () => {
     setIsLoading(true);
@@ -228,7 +266,7 @@ const EntrantesPage = () => {
     }
   };
 
-  const pedidosFiltrados = useSelector(selectPedidosEntrantesPorRuta);
+  const pedidosFiltrados = useSelector(selectPedidosEntrantesPorRuta());
 
   const handleCloseApproveDialog = () => {
     onApproveClose();

@@ -11,13 +11,18 @@ import {
   deletePedido,
   togglePedidoStatus,
 } from "../../store/Pedidos/thunks";
-import { getDetalleOrdenByPedidoId } from "../../store/Pedidos/DetallePedidos/thunks";
+import {
+  getDetalleOrdenByPedidoId,
+  copiarDetallesUltimoPedido,
+} from "../../store/Pedidos/DetallePedidos/thunks";
 import axios from "axios";
-import ProductosTable from "./componentes/detallesPedidosTable";
+//import ProductosTable from "./componentes/detallesPedidosTable";
+import { useLocation } from "react-router-dom";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const PageFormPedidos = () => {
+  const location = useLocation();
   const dispatch = useDispatch();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -32,7 +37,7 @@ const PageFormPedidos = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [paisId, setPaisId] = useState(null);
   const [usuarioRutas, setUsuarioRutas] = useState([]);
-  const [productosCopiados, setProductosCopiados] = useState([]);
+  const [productosCopiados] = useState([]);
   const [currentPedido, setCurrentPedido] = useState({
     ciudadId: 0,
     tiendaId: 0,
@@ -46,12 +51,20 @@ const PageFormPedidos = () => {
   const [isTienda1Disabled, setIsTienda1Disabled] = useState(false);
   const [isTienda2Disabled, setIsTienda2Disabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const allTiendas = useSelector((state) => state.tiendas.data || []);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (location.state?.openCrearPedido) {
+      onOpen();
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, onOpen]);
 
   useEffect(() => {
     const paisIdFromStorage = localStorage.getItem("paisId");
@@ -98,42 +111,48 @@ const PageFormPedidos = () => {
 
   const copiarUltimoPedido = async (tiendaId) => {
     try {
-      const pedidosTiendaYDeudor = pedidos.filter(
-        (pedido) => pedido.tiendaId === tiendaId
-      );
-      if (pedidosTiendaYDeudor.length > 0) {
-        const ultimoPedido = pedidosTiendaYDeudor.sort(
-          (a, b) => new Date(b.creadoEl) - new Date(a.creadoEl)
-        )[0];
-        const detalles = await dispatch(
-          getDetalleOrdenByPedidoId(ultimoPedido.id)
-        ).unwrap();
-        setProductosCopiados(detalles);
-
-        const newPedido = {
-          ...currentPedido,
-          tiendaId: tiendaId,
-          creadoEl: new Date(),
-          productos: detalles,
-        };
-
-        await handleSubmit(newPedido);
-        onClose();
-      } else {
+      const tiendaSel = allTiendas.find((t) => t.id === tiendaId);
+      if (!tiendaSel) {
         toast({
-          title: "Sin pedidos previos",
-          description:
-            "No se encontraron pedidos anteriores para esta tienda y deudor.",
-          status: "info",
+          title: "Error",
+          description: "Tienda no encontrada.",
+          status: "error",
           duration: 3000,
           isClosable: true,
         });
+        return;
       }
+
+      const payload = {
+        ciudadId: tiendaSel.ciudadId,
+        deudorId: tiendaSel.deudorId,
+        tiendaId: tiendaId,
+        usuarioId: usuarioId,
+      };
+
+      const { pedido, detalles } = await dispatch(
+        copiarDetallesUltimoPedido(payload)
+      ).unwrap();
+
+      await dispatch(tablaPedidos());
+      setPedidoIdGuardado(pedido.id);
+      setIsDetailsOpen(pedido.id);
+
+      toast({
+        title: "Pedido copiado",
+        description: `Se creó el pedido #${pedido.id} con ${detalles.length} productos.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      onClose();
     } catch (error) {
-      console.error("Error al copiar productos del último pedido:", error);
+      console.error("Error al copiar pedido:", error);
       toast({
         title: "Error",
-        description: `No se pudieron copiar los productos: ${error.message}`,
+        description:
+          error?.message || error || "No se pudo copiar el último pedido.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -326,14 +345,6 @@ const PageFormPedidos = () => {
         onClose={onDialogClose}
         onConfirm={handleRealizarPedido}
       />
-
-      {pedidoIdGuardado && (
-        <ProductosTable
-          pedidoId={pedidoIdGuardado}
-          deudorId={currentPedido.deudorId}
-          tiendaId={currentPedido.tiendaId}
-        />
-      )}
     </Box>
   );
 };

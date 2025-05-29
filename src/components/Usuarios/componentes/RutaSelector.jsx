@@ -12,7 +12,6 @@ const RutaSelector = ({
 }) => {
   const handleCheckboxChange = async (rutaId, isChecked) => {
     if (isChecked) {
-      // Evita agregar rutas duplicadas
       if (!selectedRoutes.includes(rutaId)) {
         await asignarRuta(usuarioId, rutaId);
         setSelectedRoutes((prevSelectedRoutes) => [

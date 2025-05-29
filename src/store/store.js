@@ -43,3 +43,31 @@ export const store = configureStore({
     AsignacionAreaMesa: asignacionAMSlice,
   },
 });
+
+store.subscribe(() => {
+  const { auth } = store.getState();
+
+  // elige SOLO los campos que quieres persistir
+  const {
+    status,
+    uid,
+    email,
+    displayName,
+    token,
+    rutas,
+    user, // trae las rutas completas si las tienes
+  } = auth;
+
+  localStorage.setItem(
+    "authSlice",
+    JSON.stringify({
+      status,
+      uid,
+      email,
+      displayName,
+      token,
+      rutas,
+      user,
+    })
+  );
+});

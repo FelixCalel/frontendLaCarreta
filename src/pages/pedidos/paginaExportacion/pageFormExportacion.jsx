@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Button,
@@ -14,7 +14,10 @@ import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos
 import {
   togglePedidoStatus,
   tablaPedidos,
+  updatePedidoActivacion,
 } from "../../../store/Pedidos/thunks";
+import { selectPedidosEntrantesPorRuta } from "../pedidosEntrantes/componentes/rutaSelectors";
+import { tablaTienda } from "../../../store/Tienda/thunks";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import * as ExcelJS from "exceljs";
@@ -27,7 +30,11 @@ const AprobadosPage = () => {
   const [isExporting, setIsExporting] = useState(false);
   const toast = useToast();
   const pedidos = useSelector((state) => state.pedidos.data);
-
+  const selectAprobadosPorRuta = useMemo(
+    () => selectPedidosEntrantesPorRuta([3]),
+    []
+  );
+  const pedidosAprobados = useSelector(selectAprobadosPorRuta);
   const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
 
@@ -38,7 +45,11 @@ const AprobadosPage = () => {
     fetchPedidos();
   }, [dispatch]);
 
-  const pedidosAprobados = pedidos.filter((pedido) => pedido.estadoId === 3);
+  useEffect(() => {
+    dispatch(tablaTienda());
+    dispatch(tablaPedidos());
+  }, [dispatch]);
+
   const cargarDetallesPedidos = async (pedidos) => {
     const pedidosConDetalles = await Promise.all(
       pedidos.map(async (pedido) => {
@@ -58,12 +69,18 @@ const AprobadosPage = () => {
     try {
       await Promise.all(
         pedidos.map(async (pedido) => {
-          await dispatch(togglePedidoStatus({ id: pedido.id, estadoId: 5 }));
+          await dispatch(
+            togglePedidoStatus({ id: pedido.id, estadoId: 5 })
+          ).unwrap();
+
+          await dispatch(
+            updatePedidoActivacion({ id: pedido.id, isActive: true })
+          ).unwrap();
         })
       );
-      console.log("Estados de los pedidos actualizados correctamente a 5.");
+      console.log("Pedidos exportados y activados correctamente.");
     } catch (error) {
-      console.error("Error al actualizar el estado de los pedidos:", error);
+      console.error("Error al exportar y activar pedidos:", error);
     }
   };
 
@@ -141,6 +158,18 @@ const AprobadosPage = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const isoToDMY = (iso) => {
+    if (!iso) return "Sin fecha";
+    const [yyyy, mm, dd] = iso.slice(0, 10).split("-");
+    return `${dd}/${mm}/${yyyy}`;
+  };
+
+  const isoToLocalDate = (iso) => {
+    if (!iso) return null;
+    const [yyyy, mm, dd] = iso.slice(0, 10).split("-").map(Number);
+    return new Date(yyyy, mm - 1, dd);
+  };
+
   async function addPedidosToWorksheetFormato1(worksheet, pedidosPorDeudor) {
     worksheet.mergeCells("A1:G1");
     const titleCell = worksheet.getCell("A1");
@@ -150,8 +179,8 @@ const AprobadosPage = () => {
     worksheet.addRow([]);
     worksheet.columns = [
       { header: "Pedido ID", key: "pedidoId", width: 12 },
-      { header: "Código", key: "codigo", width: 15 },
       { header: "Tienda", key: "tienda", width: 25 },
+      { header: "Código", key: "codigo", width: 15 },
       { header: "Producto", key: "producto", width: 30 },
       { header: "Cantidad", key: "cantidad", width: 12 },
       { header: "Deudor", key: "deudor", width: 20 },
@@ -160,8 +189,8 @@ const AprobadosPage = () => {
 
     const headerRowIndex = worksheet.addRow([
       "Pedido ID",
-      "Código",
       "Tienda",
+      "Código",
       "Producto",
       "Cantidad",
       "Deudor",
@@ -175,18 +204,18 @@ const AprobadosPage = () => {
       const { pedidos } = pedidosPorDeudor[deudor];
       for (const pedido of pedidos) {
         const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
-        const fechaEntrega = pedido.fechaOrden
-          ? format(new Date(pedido.fechaOrden), "dd/MM/yyyy", { locale: es })
-          : "Sin fecha";
+        const fechaEntrega = isoToDMY(pedido.fechaOrden);
 
         for (const detalle of detalles) {
           worksheet.addRow({
             pedidoId: `P-${pedido.id}`,
-            codigo: detalle.codigo || "Sin código",
             tienda: pedido.nombreTienda || "Sin tienda",
+            codigo: detalle.codigo || "Sin código",
             producto: detalle.nombreProducto || "",
             cantidad: detalle.cantidad || 0,
-            deudor: pedido.nombreDeu || deudor,
+            deudor: `${pedido.nombreCorrelativo || ""}${
+              pedido.nombreCorrelativo ? " - " : ""
+            }${pedido.nombreDeu || ""}`,
             fechaEntrega,
           });
         }
@@ -209,8 +238,8 @@ const AprobadosPage = () => {
   async function addPedidosToWorksheetFormato2(worksheet, pedidosPorDeudor) {
     worksheet.columns = [
       { header: "Pedido ID", key: "pedidoId", width: 15 },
-      { header: "Código", key: "codigo", width: 15 },
       { header: "Tienda", key: "tienda", width: 25 },
+      { header: "Código", key: "codigo", width: 15 },
       { header: "Producto", key: "producto", width: 30 },
       { header: "Cantidad", key: "cantidad", width: 15 },
     ];
@@ -225,20 +254,24 @@ const AprobadosPage = () => {
       }
       firstDeudor = false;
 
-      const deudorRow = worksheet.addRow([deudor]);
+      const deudorRow = worksheet.addRow([
+        `${pedidos[0]?.nombreCorrelativo || ""}${
+          pedidos[0]?.nombreCorrelativo ? " - " : ""
+        }${pedidos[0]?.nombreDeu || ""}`,
+      ]);
       deudorRow.font = { bold: true };
 
-      const fechaOrdenObj = new Date(pedidos[0]?.fechaOrden);
-      const fechaOrden = isNaN(fechaOrdenObj.getTime())
-        ? "Sin fecha"
-        : format(fechaOrdenObj, "dd 'de' MMMM 'de' yyyy", { locale: es });
+      const fechaOrdenObj = isoToLocalDate(pedidos[0]?.fechaOrden);
+      const fechaOrden = fechaOrdenObj
+        ? format(fechaOrdenObj, "dd 'de' MMMM 'de' yyyy", { locale: es })
+        : "Sin fecha";
 
       worksheet.addRow([`Fecha de entrega: ${fechaOrden}`]);
 
       const headerRow = worksheet.addRow([
         "Pedido ID",
-        "Código",
         "Tienda",
+        "Código",
         "Producto",
         "Cantidad",
       ]);
@@ -249,8 +282,8 @@ const AprobadosPage = () => {
         for (const detalle of detalles) {
           worksheet.addRow({
             pedidoId: `P-${pedido.id}`,
-            codigo: detalle.codigo || "Sin código",
             tienda: pedido.nombreTienda || "Sin tienda",
+            codigo: detalle.codigo || "Sin código",
             producto: detalle.nombreProducto,
             cantidad: detalle.cantidad,
           });
@@ -261,7 +294,7 @@ const AprobadosPage = () => {
       const commentRow = worksheet.addRow([
         "Comentario:",
         `Tienda: ${nombreTienda}`,
-        `Fecha Orden: ${format(fechaOrdenObj, "dd/MM/yyyy", { locale: es })}`,
+        `Fecha Orden: ${isoToDMY(pedidos[0]?.fechaOrden)}`,
       ]);
       commentRow.font = { bold: true };
       commentRow.alignment = {
