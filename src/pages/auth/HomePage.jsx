@@ -99,23 +99,23 @@ const HomePage = () => {
       <Flex flex="1">
         <MenuPrincipalD />
 
-        <Box flex="1" py={4} px={{ base: 4, md: 4 }}>
+        <Box flex="1" py={2} px={{ base: 2, md: 2 }}>
           <Box maxW="1900px" mx="auto">
-            <VStack align="stretch" spacing={4}>
+            <VStack align="stretch" spacing={2}>
               <Box
                 bg={cardBg}
                 border="1px solid"
                 borderColor={cardBorder}
                 borderRadius="lg"
-                p={{ base: 6, md: 5 }}
+                p={{ base: 4, md: 4 }}
                 //boxShadow="md"
               >
-                <VStack align="stretch" spacing={4}>
+                <VStack align="stretch" spacing={2}>
                   <Heading fontSize={{ base: "2xl", md: "3xl" }}>
                     Bienvenido {nombreUsuario}
                     {rolNombre !== "Sin rol" && (
                       <Badge
-                        ml={3}
+                        ml={2}
                         variant="subtle"
                         colorScheme={badgeColorScheme}
                         fontSize="xs"
@@ -144,13 +144,13 @@ const HomePage = () => {
                   border="1px solid"
                   borderColor={cardBorder}
                   borderRadius="lg"
-                  p={{ base: 6, md: 5 }}
+                  p={{ base: 4, md: 4 }}
                   //boxShadow="md"
                   display="flex"
                   flexDirection="column"
                   justifyContent="space-between"
                 >
-                  <VStack align="stretch" spacing={4}>
+                  <VStack align="stretch" spacing={2}>
                     <Heading
                       as="h2"
                       fontSize={{ base: "xl", md: "2xl" }}
@@ -164,14 +164,14 @@ const HomePage = () => {
                       abrirá directamente el formulario.
                     </Text>
 
-                    <HStack fontSize="sm" color="gray.500">
+                    <HStack fontSize="xs" color="gray.500">
                       <Icon as={FaRegLightbulb} />
                       <span>{tips[tipIndex]}</span>
                     </HStack>
                   </VStack>
 
                   <Button
-                    mt={6}
+                    mt={4}
                     colorScheme="green"
                     leftIcon={<FaPlusCircle />}
                     size="lg"

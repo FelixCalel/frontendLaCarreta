@@ -1,4 +1,3 @@
-// src/components/Register/component/ContactField.jsx
 import { useMemo } from "react";
 import {
   FormControl,
@@ -11,29 +10,32 @@ import {
 import { AtSignIcon, PhoneIcon } from "@chakra-ui/icons";
 import PropTypes from "prop-types";
 
-function isEmail(value) {
-  return /\S+@\S+\.\S+/.test(value);
-}
-function isPhone(value) {
-  return /^[\d\s()+-]+$/.test(value);
-}
+const phoneRegex = /^[\d\s()+-]+$/;
 
 export default function ContactField({ value, onChange, error }) {
   const { icon, placeholder } = useMemo(() => {
-    if (isEmail(value)) {
-      return { icon: <AtSignIcon color="gray.400" />, placeholder: "Correo" };
+    const soloTelefono =
+      value && phoneRegex.test(value) && !value.includes("@");
+    if (soloTelefono) {
+      return {
+        icon: <PhoneIcon color="gray.400" />,
+        placeholder: "Teléfono",
+      };
     }
-    return { icon: <PhoneIcon color="gray.400" />, placeholder: "Teléfono" };
+    return {
+      icon: <AtSignIcon color="gray.400" />,
+      placeholder: "Correo",
+    };
   }, [value]);
 
   return (
     <FormControl id="contact" isInvalid={!!error} isRequired>
-      <FormLabel>Regístrate con correo o teléfono</FormLabel>
+      <FormLabel>Correo Electronico</FormLabel>
 
       <InputGroup>
         <InputLeftElement pointerEvents="none">{icon}</InputLeftElement>
         <Input
-          name="contact" // ← campo único
+          name="contact"
           type="text"
           placeholder={`Ingresa tu ${placeholder.toLowerCase()}`}
           value={value}
@@ -41,6 +43,7 @@ export default function ContactField({ value, onChange, error }) {
           focusBorderColor="green.500"
           borderRadius="md"
           size="lg"
+          pl="2.5rem"
         />
       </InputGroup>
 
@@ -58,4 +61,7 @@ ContactField.propTypes = {
   onChange: PropTypes.func.isRequired,
   error: PropTypes.string,
 };
-ContactField.defaultProps = { error: "" };
+
+ContactField.defaultProps = {
+  error: "",
+};

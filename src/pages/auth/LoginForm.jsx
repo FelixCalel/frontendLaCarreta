@@ -83,7 +83,6 @@ export const LoginForm = () => {
 
         if (!estaActivo) {
           setError("Tu usuario está inactivo. No tienes acceso al sistema.");
-
           return;
         }
 

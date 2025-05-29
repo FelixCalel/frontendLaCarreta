@@ -17,14 +17,17 @@ import {
   ModalFooter,
   ModalCloseButton,
   Input,
+  InputLeftElement,
+  InputGroup,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   registerUser,
-  sendSMSCode,
-  verifySMSCode,
+  //sendSMSCode,
+  //verifySMSCode,
 } from "../../../middleware/api";
+import { PhoneIcon } from "@chakra-ui/icons";
 import FirstNameField from "./component/FirstNameField";
 import LastNameField from "./component/LastNameField";
 import PaisSelector from "./component/paisSelector";
@@ -40,11 +43,12 @@ const RegisterForm = () => {
   const { data: paises } = useSelector((state) => state.paises);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-
+  const isEmail = (v) => /^\S+@\S+\.\S+$/.test(v);
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
     contact: "",
+    telefono: "",
     paisId: "",
     contrasena: "",
     confirmPassword: "",
@@ -54,6 +58,7 @@ const RegisterForm = () => {
   const [loadingVerify, setLoadingVerify] = useState(false);
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
+  const USE_SMS = false;
 
   useEffect(() => {
     if (auth === "authenticated") navigate("/home", { replace: true });
@@ -79,12 +84,20 @@ const RegisterForm = () => {
 
     const emailR = /^\S+@\S+\.\S+$/;
     const phoneR = /^[\d\s()+-]+$/;
-    const { contact, ...rest } = formData;
+
+    const { contact, telefono, ...rest } = formData;
     let payload;
     let phoneE164 = "";
 
     if (emailR.test(contact)) {
-      payload = { ...rest, correo: contact.trim(), telefono: null };
+      if (!phoneR.test(telefono || "")) {
+        v.telefono = "Ingresa un teléfono válido";
+      }
+      payload = {
+        ...rest,
+        correo: contact.trim(),
+        telefono: telefono ? telefono.replace(/\D+/g, "") : null,
+      };
     } else if (phoneR.test(contact)) {
       const pais = paises.find((p) => p.id == formData.paisId);
       if (pais?.dialCode) {
@@ -92,7 +105,9 @@ const RegisterForm = () => {
           pais.dialCode.replace(/\s/g, "") + contact.replace(/\D+/g, "");
         payload = { ...rest, correo: null, telefono: phoneE164 };
       } else v.paisId = "Selecciona un país con código válido";
-    } else v.contact = "Ingresa un correo o teléfono válido";
+    } else {
+      v.contact = "Ingresa un correo o teléfono válido";
+    }
 
     if (Object.keys(v).length) {
       setErrors(v);
@@ -105,7 +120,7 @@ const RegisterForm = () => {
       return;
     }
 
-    if (phoneE164) {
+    if (USE_SMS && phoneE164 && !emailR.test(contact)) {
       const sms = await sendSMSCode(phoneE164);
       if (!sms.ok) {
         setErrors({ general: sms.errorMessage });
@@ -127,6 +142,8 @@ const RegisterForm = () => {
         duration: 5000,
       });
       setMessage("Usuario creado correctamente.");
+
+      navigate("/auth/login", { replace: true });
     }
   };
 
@@ -144,6 +161,8 @@ const RegisterForm = () => {
       });
       onClose();
       setMessage("Usuario creado y verificado correctamente.");
+
+      navigate("/auth/login", { replace: true });
     } else setErrors({ general: res.errorMessage });
   };
 
@@ -186,6 +205,26 @@ const RegisterForm = () => {
                 onChange={handleChange}
                 error={errors.contact}
               />
+
+              {isEmail(formData.contact) && (
+                <InputGroup>
+                  <InputLeftElement pointerEvents="none">
+                    <PhoneIcon color="gray.400" />
+                  </InputLeftElement>
+
+                  <Input
+                    name="telefono"
+                    type="text"
+                    placeholder="Ingresa tu teléfono"
+                    value={formData.telefono}
+                    onChange={handleChange}
+                    focusBorderColor="green.500"
+                    borderRadius="md"
+                    size="lg"
+                  />
+                </InputGroup>
+              )}
+
               <PasswordField
                 label="Contraseña"
                 name="contrasena"

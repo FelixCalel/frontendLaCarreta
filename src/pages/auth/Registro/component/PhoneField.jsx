@@ -9,7 +9,7 @@ export default function PhoneField({ value, onChange, error }) {
       <Input
         name="telefono"
         type="tel"
-        placeholder="Ingresa tu teléfono"
+        placeholder="Ingresa tu teléfono o correo"
         value={value}
         onChange={onChange}
         focusBorderColor="green.500"
