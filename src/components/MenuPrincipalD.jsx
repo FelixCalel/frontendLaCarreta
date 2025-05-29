@@ -28,6 +28,7 @@ const MenuItem = ({
   indentLevel = 0,
   openMenus,
   setOpenMenus,
+  currentPath,
 }) => {
   const isOpen = openMenus[item.nombre] || false;
   const hasChildren = item.opciones && item.opciones.length > 0;
@@ -35,6 +36,12 @@ const MenuItem = ({
   const textColor = useColorModeValue("gray.700", "gray.200");
   const bgColorSecondary = useColorModeValue("gray.50", "gray.600");
   const textColorSecondary = useColorModeValue("gray.600", "gray.300");
+  const location = useLocation();
+  const isActive = item.ruta
+    ? currentPath === item.ruta || currentPath.startsWith(item.ruta + "/")
+    : false;
+
+  const [open, setOpen] = useState(isActive);
 
   const handleToggle = (e) => {
     if (!isExpanded) {
@@ -48,6 +55,15 @@ const MenuItem = ({
       }));
     }
   };
+
+  useEffect(() => {
+    if (hasChildren) {
+      const childActive = item.opciones?.some((sub) =>
+        currentPath.startsWith(sub.ruta)
+      );
+      setOpen(isActive || childActive);
+    }
+  }, [currentPath, isActive, hasChildren, item.opciones]);
 
   return (
     <Flex
@@ -72,6 +88,8 @@ const MenuItem = ({
           style={{
             display: "flex",
             alignItems: "center",
+            justifyContent: "flex-start",
+            columnGap: "8px",
             textDecoration: "none",
             flex: 1,
           }}
@@ -110,6 +128,7 @@ const MenuItem = ({
                 indentLevel={indentLevel + 1}
                 openMenus={openMenus}
                 setOpenMenus={setOpenMenus}
+                currentPath={location.pathname}
               />
             ))}
           </VStack>
@@ -138,6 +157,7 @@ MenuItem.propTypes = {
   indentLevel: PropTypes.number,
   openMenus: PropTypes.object.isRequired,
   setOpenMenus: PropTypes.func.isRequired,
+  currentPath: PropTypes.string.isRequired,
 };
 
 const agruparModulos = (data) => {
@@ -184,6 +204,8 @@ const MenuPrincipalD = () => {
   const [openMenus, setOpenMenus] = useState({});
   const boxBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  const sidebarBg = useColorModeValue("white", "gray.900"); // ⬅️  más oscuro
+  const sidebarBorder = useColorModeValue("gray.200", "gray.700");
   const menuRef = useRef(null);
 
   const menuWidth = useBreakpointValue({
@@ -268,14 +290,14 @@ const MenuPrincipalD = () => {
     <Box
       ref={menuRef}
       w={isExpanded ? menuWidth : "60px"}
-      bg={boxBg}
+      bg={sidebarBg}
       position={isExpanded ? "absolute" : "relative"}
-      top={0}
+      top={isExpanded ? "16px" : 0}
       zIndex={isExpanded ? 10 : "auto"}
       transition="width 0.5s"
-      p={4}
+      p={2}
       boxShadow="base"
-      borderRight={`1px solid ${borderColor}`}
+      borderRight={`1px solid ${sidebarBorder}`}
     >
       <IconButton
         icon={isExpanded ? <CloseIcon /> : <HamburgerIcon />}
@@ -294,6 +316,7 @@ const MenuPrincipalD = () => {
             toggleMenu={toggleMenu}
             openMenus={openMenus}
             setOpenMenus={setOpenMenus}
+            currentPath={location.pathname}
           />
         ))}
       </VStack>
