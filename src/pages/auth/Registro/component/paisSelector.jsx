@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import PropTypes from 'prop-types'; // Importa la librería de prop-types
-import { tablaPais } from '../../../../store/pais/thunks';
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import PropTypes from "prop-types";
+import { Select, FormControl, FormLabel, Text } from "@chakra-ui/react";
+import { tablaPais } from "../../../../store/pais/thunks";
 
-const PaisSelector = ({ onPaisChange }) => {
+export default function PaisSelector({ value, onPaisChange, error }) {
   const dispatch = useDispatch();
   const { data: paises, status } = useSelector((state) => state.paises);
 
@@ -11,29 +12,44 @@ const PaisSelector = ({ onPaisChange }) => {
     dispatch(tablaPais());
   }, [dispatch]);
 
-  if (status === 'loading') {
-    return <p>Cargando países...</p>;
+  if (status === "loading") {
+    return <Text>Cargando países...</Text>;
   }
-
-  if (status === 'failed') {
-    return <p>Error al cargar los países.</p>;
+  if (status === "failed") {
+    return <Text color="red.500">Error al cargar los países.</Text>;
   }
 
   return (
-    <select onChange={(e) => onPaisChange(e.target.value)}>
-      <option value="">Selecciona un país</option>
-      {paises.map((pais) => (
-        <option key={pais.id} value={pais.id}>
-          {pais.nombre}
-        </option>
-      ))}
-    </select>
+    <FormControl id="pais" isInvalid={!!error} isRequired>
+      <FormLabel>País</FormLabel>
+      <Select
+        placeholder="Selecciona un país"
+        value={value}
+        onChange={(e) => onPaisChange(Number(e.target.value))}
+        focusBorderColor="green.500"
+      >
+        {paises.map((pais) => (
+          <option key={pais.id} value={pais.id}>
+            {pais.nombre} {pais.dialCode ? `(${pais.dialCode})` : ""}
+          </option>
+        ))}
+      </Select>
+      {error && (
+        <Text color="red.500" fontSize="sm" mt={1}>
+          {error}
+        </Text>
+      )}
+    </FormControl>
   );
-};
+}
 
-// Validación de prop-types
 PaisSelector.propTypes = {
-  onPaisChange: PropTypes.func.isRequired,  // Validamos que onPaisChange es requerido y es una función
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onPaisChange: PropTypes.func.isRequired,
+  error: PropTypes.string,
 };
 
-export default PaisSelector;
+PaisSelector.defaultProps = {
+  value: "",
+  error: "",
+};
