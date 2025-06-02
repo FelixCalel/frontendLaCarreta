@@ -24,8 +24,8 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   registerUser,
-  //sendSMSCode,
-  //verifySMSCode,
+  sendSMSCode,
+  verifySMSCode,
 } from "../../../middleware/api";
 import { PhoneIcon } from "@chakra-ui/icons";
 import FirstNameField from "./component/FirstNameField";
@@ -58,7 +58,6 @@ const RegisterForm = () => {
   const [loadingVerify, setLoadingVerify] = useState(false);
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
-  const USE_SMS = false;
 
   useEffect(() => {
     if (auth === "authenticated") navigate("/home", { replace: true });
@@ -120,7 +119,7 @@ const RegisterForm = () => {
       return;
     }
 
-    if (USE_SMS && phoneE164 && !emailR.test(contact)) {
+    if (phoneE164 && !emailR.test(contact)) {
       const sms = await sendSMSCode(phoneE164);
       if (!sms.ok) {
         setErrors({ general: sms.errorMessage });

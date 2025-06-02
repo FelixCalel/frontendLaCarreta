@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { authSlice } from "./auth";
+/* ⬇️  tus otros reducers exactamente como ya los tenías ⬇️ */
 import { usuariosReducer } from "./usuarios/usuariosSlice";
 import paisesReducer from "./pais/paisSlice";
 import empresaReducer from "./Empresa/empresaSlice";
@@ -19,6 +20,7 @@ import itemReducer from "./items/itemSlice";
 import comprasSlice from "./Compras/compraSlice.js";
 import proveedorReducer from "./Proveedor/proveedorSlice.js";
 import asignacionAMSlice from "./asignacionAM/asignacionAMSlice.js";
+
 export const store = configureStore({
   reducer: {
     auth: authSlice.reducer,
@@ -44,30 +46,5 @@ export const store = configureStore({
   },
 });
 
-store.subscribe(() => {
-  const { auth } = store.getState();
-
-  // elige SOLO los campos que quieres persistir
-  const {
-    status,
-    uid,
-    email,
-    displayName,
-    token,
-    rutas,
-    user, // trae las rutas completas si las tienes
-  } = auth;
-
-  localStorage.setItem(
-    "authSlice",
-    JSON.stringify({
-      status,
-      uid,
-      email,
-      displayName,
-      token,
-      rutas,
-      user,
-    })
-  );
-});
+/*  El slice auth se guarda/lee de localStorage por sí solo;
+    ya no necesitas store.subscribe()  */
