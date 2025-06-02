@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Box, Table, Thead, Tbody, Tr, Th, Td,
-  Select, Button, Flex, Text, useColorModeValue
+  Button, Flex, Text, useColorModeValue, useBreakpointValue, Stack, Card, CardBody, CardHeader
 } from '@chakra-ui/react';
 import { useDispatch, useSelector } from 'react-redux';
+import Select from 'react-select';
 import {
   fetchAsignacionesThunk,
   asignarTipoGrupoThunk,
@@ -15,8 +16,9 @@ import {
 const AsignacionesTipoGrupo = ({ areaId }) => {
   const dispatch = useDispatch();
   const usuarioId = Number(localStorage.getItem('usuarioId'));
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
-  const [selectedProducto, setSelectedProducto] = useState('');
+  const [selectedProducto, setSelectedProducto] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
@@ -40,11 +42,11 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
     if (selectedProducto) {
       dispatch(asignarTipoGrupoThunk({
         id_area: areaId,
-        productoId: Number(selectedProducto),
+        productoId: Number(selectedProducto.value),
         create_by: usuarioId,
         state: true
       })).then(() => {
-        setSelectedProducto('');
+        setSelectedProducto(null);
         dispatch(fetchAsignacionesThunk(areaId));
         setCurrentPage(1);
       });
@@ -58,25 +60,75 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
   };
 
   const obtenerProducto = (id) => productos.find(p => p.id === id);
+  const colorTh = useColorModeValue('white', 'green.200');
+  const colorThead = useColorModeValue('green.600', 'gray.700');
+
 
   return (
     <Box mt={10} w="100%" mx="auto" p={4} borderWidth={1} borderRadius="lg" boxShadow="md">
-      <Table minWidth="700px" variant="simple" mb={4}>
-        <Thead bg={useColorModeValue('green.600', 'gray.700')}>
-          <Tr>
-            <Th color={useColorModeValue('white', 'green.200')}>Código</Th>
-            <Th color={useColorModeValue('white', 'green.200')}>Nombre</Th>
-            <Th color={useColorModeValue('white', 'green.200')}>Acciones</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
+      {!isMobile ? (
+        <Table minWidth="700px" variant="simple" mb={4}>
+          <Thead bg={colorThead}>
+            <Tr>
+              <Th color={colorTh}>Código</Th>
+              <Th color={colorTh}>Nombre</Th>
+              <Th color={colorTh}>Acciones</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {paginatedAsignaciones.map((a) => {
+              const prod = obtenerProducto(a.productoId);
+              return (
+                <Tr key={a.id}>
+                  <Td>{prod?.codigo || '—'}</Td>
+                  <Td>{prod?.nombre || '—'}</Td>
+                  <Td>
+                    <Button
+                      colorScheme="red"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDesasignar(a.id)}
+                    >
+                      Eliminar
+                    </Button>
+                  </Td>
+                </Tr>
+              );
+            })}
+            <Tr>
+              <Td colSpan={2}>
+                <Select
+                  placeholder="Seleccione producto"
+                  value={selectedProducto}
+                  onChange={setSelectedProducto}
+                  options={productos.map(p => ({
+                    value: p.id,
+                    label: `${p.codigo} - ${p.nombre}`
+                  }))}
+                  isClearable
+                />
+              </Td>
+              <Td>
+                <Button
+                  colorScheme="green"
+                  onClick={handleAsignar}
+                  isDisabled={!selectedProducto}
+                >
+                  Agregar
+                </Button>
+              </Td>
+            </Tr>
+          </Tbody>
+        </Table>
+      ) : (
+        <Stack spacing={4} mb={4}>
           {paginatedAsignaciones.map((a) => {
             const prod = obtenerProducto(a.productoId);
             return (
-              <Tr key={a.id}>
-                <Td>{prod?.codigo || '—'}</Td>
-                <Td>{prod?.nombre || '—'}</Td>
-                <Td>
+              <Card key={a.id} border="1px solid" borderColor="gray.200">
+                <CardHeader fontWeight="bold">{prod?.codigo || '—'}</CardHeader>
+                <CardBody>
+                  <Text mb={2}>{prod?.nombre || '—'}</Text>
                   <Button
                     colorScheme="red"
                     size="sm"
@@ -85,42 +137,41 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
                   >
                     Eliminar
                   </Button>
-                </Td>
-              </Tr>
+                </CardBody>
+              </Card>
             );
           })}
-          <Tr>
-            <Td colSpan={2}>
-              <Select
-                placeholder="Seleccione producto"
-                value={selectedProducto}
-                onChange={(e) => setSelectedProducto(e.target.value)}
-              >
-                {productos.map(p => (
-                  <option key={p.id} value={p.id}>{p.codigo} - {p.nombre}</option>
-                ))}
-              </Select>
-            </Td>
-            <Td>
-              <Button
-                colorScheme="green"
-                onClick={handleAsignar}
-                isDisabled={!selectedProducto}
-              >
-                Agregar
-              </Button>
-            </Td>
-          </Tr>
-        </Tbody>
-      </Table>
+
+          <Box>
+            <Select
+              placeholder="Seleccione producto"
+              value={selectedProducto}
+              onChange={setSelectedProducto}
+              options={productos.map(p => ({
+                value: p.id,
+                label: `${p.codigo} - ${p.nombre}`
+              }))}
+              isClearable
+            />
+            <Button
+              mt={2}
+              colorScheme="green"
+              onClick={handleAsignar}
+              isDisabled={!selectedProducto}
+            >
+              Agregar
+            </Button>
+          </Box>
+        </Stack>
+      )}
 
       {filteredAsignaciones.length > 0 && (
-        <Flex justifyContent="space-between" alignItems="center" mt={4}>
+        <Flex justifyContent="space-between" alignItems="center" mt={4} flexWrap="wrap" gap={2}>
           <Text fontSize="sm">
             Mostrando {paginatedAsignaciones.length} de {filteredAsignaciones.length} registros
           </Text>
 
-          <Flex gap={2}>
+          <Flex gap={2} wrap="wrap">
             <Button
               size="sm"
               isDisabled={currentPage === 1}

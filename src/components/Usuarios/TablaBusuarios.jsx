@@ -54,10 +54,19 @@ export const TablaBusuarios = () => {
   const itemsPerPage = 10;
 
   const usuariosFiltrados = usuarios.filter((u) => {
-    const term = searchTerm.toLowerCase();
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+
+    const nombre = (u.nombre ?? "").toLowerCase();
+    const apellido = (u.apellido ?? "").toLowerCase();
+    const correo = (u.correo ?? "").toLowerCase();
+    const nombreCompleto = `${nombre} ${apellido}`.trim();
+
     return (
-      u.nombre.toLowerCase().includes(term) ||
-      u.correo.toLowerCase().includes(term)
+      nombre.includes(term) ||
+      apellido.includes(term) ||
+      nombreCompleto.includes(term) ||
+      correo.includes(term)
     );
   });
 

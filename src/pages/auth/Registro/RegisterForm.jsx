@@ -1,403 +1,294 @@
-import axios from "axios";
-const BASE_URL = import.meta.env.VITE_API_URL;
-
-import { useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Box,
-  Button,
   Flex,
-  FormControl,
-  FormLabel,
-  Input,
+  Box,
   VStack,
   Heading,
-  Alert,
-  AlertIcon,
+  Text,
   Link,
   useToast,
+  useDisclosure,
+  Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  Input,
+  InputLeftElement,
   InputGroup,
-  InputRightElement,
-  Divider,
-  Text,
 } from "@chakra-ui/react";
-import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import {
+  registerUser,
+  sendSMSCode,
+  verifySMSCode,
+} from "../../../middleware/api";
+import { PhoneIcon } from "@chakra-ui/icons";
+import FirstNameField from "./component/FirstNameField";
+import LastNameField from "./component/LastNameField";
 import PaisSelector from "./component/paisSelector";
+import PasswordField from "./component/PasswordField";
+import ConfirmPasswordField from "./component/ConfirmPasswordField";
+import ContactField from "./component/ContactField";
+import ErrorAlerts from "./component/ErrorAlerts";
+import SubmitButton from "./component/SubmitButton";
 
-export const RegisterForm = () => {
+const RegisterForm = () => {
   const navigate = useNavigate();
-  const actualUsuario = useSelector((state) => state.auth);
+  const auth = useSelector((state) => state.auth);
+  const { data: paises } = useSelector((state) => state.paises);
+  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const isEmail = (v) => /^\S+@\S+\.\S+$/.test(v);
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
-    correo: "",
+    contact: "",
     telefono: "",
-    contrasena: "",
-    confirmacionContrasena: "",
-    estadoActivo: true,
-    correoValidado: false,
     paisId: "",
+    contrasena: "",
+    confirmPassword: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState({});
+  const [verifyCode, setVerifyCode] = useState("");
+  const [pendingPhone, setPendingPhone] = useState("");
+  const [loadingVerify, setLoadingVerify] = useState(false);
+  const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
-  const toast = useToast();
-
-  const validateForm = () => {
-    const errors = {};
-
-    // Validar nombre y apellido (solo letras, mínimo 2 caracteres)
-    const nameRegex = /^[a-zA-Z\s]{2,}$/;
-    if (!nameRegex.test(formData.nombre)) {
-      errors.nombre =
-        "El nombre solo debe contener letras y ser mayor a 2 caracteres.";
-    }
-    if (!nameRegex.test(formData.apellido)) {
-      errors.apellido =
-        "El apellido solo debe contener letras y ser mayor a 2 caracteres.";
-    }
-
-    // Validar correo
-    if (!formData.correo) {
-      0;
-      errors.correo = "El correo electrónico es obligatorio.";
-    } else if (!/\S+@\S+\.\S+/.test(formData.correo)) {
-      errors.correo = "El correo no tiene un formato válido.";
-    }
-
-    // Validar teléfono (solo números, mínimo 8 caracteres)
-    if (!/^\d{8,}$/.test(formData.telefono)) {
-      errors.telefono =
-        "El teléfono solo debe contener números y tener al menos 8 dígitos.";
-    }
-
-    // Validar contraseñas (iguales, mínimo 8 caracteres, al menos un número y una letra)
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
-    if (!passwordRegex.test(formData.contrasena)) {
-      errors.contrasena =
-        "La contraseña debe tener al menos 6 caracteres, incluir letras y números.";
-    }
-    if (formData.contrasena !== formData.confirmacionContrasena) {
-      errors.confirmacionContrasena = "Las contraseñas no coinciden.";
-    }
-
-    // Validar país (debe ser seleccionado)
-    if (!formData.paisId) {
-      errors.paisId = "Debe seleccionar un país.";
-    }
-
-    return errors;
-  };
 
   useEffect(() => {
-    if (actualUsuario === "authenticated") {
-      return navigate("/home", { replace: true });
-    }
-  }, [actualUsuario, navigate]);
-
-  useEffect(() => {
-    if (formData.contrasena === formData.confirmacionContrasena) {
-      setError(""); // Limpia el error si las contraseñas coinciden
-    }
-  }, [formData.contrasena, formData.confirmacionContrasena]);
+    if (auth === "authenticated") navigate("/home", { replace: true });
+  }, [auth, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((f) => ({ ...f, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrors({});
+    setMessage("");
 
-    // Validar formulario
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setError(validationErrors);
+    const v = {};
+    if (!formData.nombre.trim()) v.nombre = "El nombre es obligatorio";
+    if (!formData.apellido.trim()) v.apellido = "El apellido es obligatorio";
+    if (!formData.paisId) v.paisId = "Selecciona un país";
+    if (!formData.contrasena) v.contrasena = "La contraseña es obligatoria";
+    if (formData.contrasena !== formData.confirmPassword)
+      v.confirmPassword = "Las contraseñas no coinciden";
+
+    const emailR = /^\S+@\S+\.\S+$/;
+    const phoneR = /^[\d\s()+-]+$/;
+
+    const { contact, telefono, ...rest } = formData;
+    let payload;
+    let phoneE164 = "";
+
+    if (emailR.test(contact)) {
+      if (!phoneR.test(telefono || "")) {
+        v.telefono = "Ingresa un teléfono válido";
+      }
+      payload = {
+        ...rest,
+        correo: contact.trim(),
+        telefono: telefono ? telefono.replace(/\D+/g, "") : null,
+      };
+    } else if (phoneR.test(contact)) {
+      const pais = paises.find((p) => p.id == formData.paisId);
+      if (pais?.dialCode) {
+        phoneE164 =
+          pais.dialCode.replace(/\s/g, "") + contact.replace(/\D+/g, "");
+        payload = { ...rest, correo: null, telefono: phoneE164 };
+      } else v.paisId = "Selecciona un país con código válido";
+    } else {
+      v.contact = "Ingresa un correo o teléfono válido";
+    }
+
+    if (Object.keys(v).length) {
+      setErrors(v);
       return;
     }
 
-    setError("");
-    try {
-      const response = await registerUser(formData);
-      if (response.ok) {
-        toast({
-          title: "Usuario creado.",
-          description:
-            "Usuario creado correctamente. Por favor, verifica tu correo electrónico.",
-          status: "success",
-          duration: 5000,
-          isClosable: true,
-          position: "top",
-        });
-        setMessage(
-          "Usuario creado correctamente. Por favor, verifica tu correo electrónico."
-        );
-      } else {
-        setError({ general: response.errorMessage });
+    const res = await registerUser(payload);
+    if (!res.ok) {
+      setErrors({ general: res.errorMessage });
+      return;
+    }
+
+    if (phoneE164 && !emailR.test(contact)) {
+      const sms = await sendSMSCode(phoneE164);
+      if (!sms.ok) {
+        setErrors({ general: sms.errorMessage });
+        return;
       }
-    } catch (err) {
-      setError({ general: "Error al registrar el usuario." });
+      setPendingPhone(phoneE164);
+      onOpen();
+      toast({
+        title: "Código enviado",
+        description: "Revisa tu SMS e ingresa el código",
+        status: "info",
+        duration: 5000,
+      });
+    } else {
+      toast({
+        title: "Usuario creado",
+        description: "Revisa tu correo electrónico para activarlo.",
+        status: "success",
+        duration: 5000,
+      });
+      setMessage("Usuario creado correctamente.");
+
+      navigate("/auth/login", { replace: true });
     }
   };
 
+  const handleVerifySMS = async () => {
+    setLoadingVerify(true);
+    const res = await verifySMSCode(pendingPhone, verifyCode.trim());
+    setLoadingVerify(false);
+
+    if (res.ok) {
+      toast({
+        title: "Teléfono verificado",
+        description: "¡Cuenta activada con éxito!",
+        status: "success",
+        duration: 5000,
+      });
+      onClose();
+      setMessage("Usuario creado y verificado correctamente.");
+
+      navigate("/auth/login", { replace: true });
+    } else setErrors({ general: res.errorMessage });
+  };
+
   return (
-    <Flex
-      minHeight="100vh"
-      align="center"
-      justify="center"
-      bg="gray.50"
-      padding="20px"
-    >
+    <Flex minH="100vh" align="center" justify="center" bg="gray.50" p={4}>
       <Box
         p={8}
-        width={{ base: "full", md: "450px" }}
+        w={{ base: "100%", md: "450px" }}
+        bg="white"
         borderRadius="lg"
         boxShadow="2xl"
-        bg="white"
-        border="1px solid"
-        borderColor="green.200"
       >
-        <VStack spacing={6}>
-          <Heading as="h2" size="lg" textAlign="center" color="green.600">
-            Crea tu Cuenta
-          </Heading>
-          <Text fontSize="sm" color="gray.500">
-            Completa el siguiente formulario para registrarte
-          </Text>
-        </VStack>
+        <VStack spacing={4}>
+          <Heading color="green.600">Crea tu Cuenta</Heading>
+          <Text color="gray.500">Completa el formulario para registrarte</Text>
 
-        <form onSubmit={handleSubmit}>
-          <VStack spacing={4} mt={6}>
-            <FormControl id="nombre" isInvalid={!!error.nombre} isRequired>
-              <FormLabel>Nombre</FormLabel>
-              <Input
-                name="nombre"
-                type="text"
-                placeholder="Ingresa tu nombre"
+          <ErrorAlerts errors={errors} />
+
+          <form style={{ width: "100%" }} onSubmit={handleSubmit}>
+            <VStack spacing={4}>
+              <FirstNameField
                 value={formData.nombre}
                 onChange={handleChange}
-                focusBorderColor="green.500"
-                borderRadius="md"
-                size="lg"
+                error={errors.nombre}
               />
-              {error.nombre && (
-                <Text color="red.500" fontSize="sm">
-                  {error.nombre}
-                </Text>
-              )}
-            </FormControl>
-
-            <FormControl id="apellido" isInvalid={!!error.apellido} isRequired>
-              <FormLabel>Apellido</FormLabel>
-              <Input
-                name="apellido"
-                type="text"
-                placeholder="Ingresa tu apellido"
+              <LastNameField
                 value={formData.apellido}
                 onChange={handleChange}
-                focusBorderColor="green.500"
-                borderRadius="md"
-                size="lg"
+                error={errors.apellido}
               />
-              {error.apellido && (
-                <Text color="red.500" fontSize="sm">
-                  {error.apellido}
-                </Text>
-              )}
-            </FormControl>
-
-            <FormControl id="pais" isRequired>
-              <FormLabel>País</FormLabel>
               <PaisSelector
                 value={formData.paisId}
                 onPaisChange={(paisId) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    paisId: parseInt(paisId, 10),
-                  }))
+                  setFormData((p) => ({ ...p, paisId }))
                 }
+                error={errors.paisId}
               />
-            </FormControl>
-
-            <FormControl id="correo" isRequired>
-              <FormLabel>Correo Electrónico</FormLabel>
-              <Input
-                name="correo"
-                type="email"
-                placeholder="Ingresa tu correo electrónico"
-                value={formData.correo}
+              <ContactField
+                value={formData.contact}
                 onChange={handleChange}
-                focusBorderColor="green.500"
-                borderRadius="md"
-                size="lg"
+                error={errors.contact}
               />
-            </FormControl>
 
-            <FormControl id="telefono" isInvalid={!!error.telefono} isRequired>
-              <FormLabel>Teléfono</FormLabel>
-              <Input
-                name="telefono"
-                type="tel"
-                placeholder="Ingresa tu teléfono"
-                value={formData.telefono}
-                onChange={handleChange}
-                focusBorderColor="green.500"
-                borderRadius="md"
-                size="lg"
-              />
-              {error.telefono && (
-                <Text color="red.500" fontSize="sm">
-                  {error.telefono}
-                </Text>
+              {isEmail(formData.contact) && (
+                <InputGroup>
+                  <InputLeftElement pointerEvents="none">
+                    <PhoneIcon color="gray.400" />
+                  </InputLeftElement>
+
+                  <Input
+                    name="telefono"
+                    type="text"
+                    placeholder="Ingresa tu teléfono"
+                    value={formData.telefono}
+                    onChange={handleChange}
+                    focusBorderColor="green.500"
+                    borderRadius="md"
+                    size="lg"
+                  />
+                </InputGroup>
               )}
-            </FormControl>
 
-            <Divider my={4} borderColor="gray.300" />
-
-            <FormControl id="contrasena" isRequired>
-              <FormLabel>Contraseña</FormLabel>
-              <InputGroup>
-                <Input
-                  name="contrasena"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Ingresa tu contraseña"
-                  value={formData.contrasena}
-                  onChange={handleChange}
-                  focusBorderColor="green.500"
-                  borderRadius="md"
-                  size="lg"
-                />
-                <InputRightElement width="4.5rem">
-                  <Button
-                    h="1.75rem"
-                    size="sm"
-                    onClick={() => setShowPassword(!showPassword)}
-                    variant="ghost"
-                  >
-                    {showPassword ? <ViewOffIcon /> : <ViewIcon />}
-                  </Button>
-                </InputRightElement>
-              </InputGroup>
-            </FormControl>
-
-            <FormControl id="confirmacionContrasena" isRequired>
-              <FormLabel>Confirmar Contraseña</FormLabel>
-              <InputGroup>
-                <Input
-                  name="confirmacionContrasena"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirma tu contraseña"
-                  value={formData.confirmacionContrasena}
-                  onChange={handleChange}
-                  focusBorderColor="green.500"
-                  borderRadius="md"
-                  size="lg"
-                />
-                <InputRightElement width="4.5rem">
-                  <Button
-                    h="1.75rem"
-                    size="sm"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    variant="ghost"
-                  >
-                    {showConfirmPassword ? <ViewOffIcon /> : <ViewIcon />}
-                  </Button>
-                </InputRightElement>
-              </InputGroup>
-            </FormControl>
-          </VStack>
-
-          {error.general && (
-            <Alert
-              status="error"
-              variant="left-accent"
-              borderRadius="md"
-              mt={4}
-            >
-              <AlertIcon />
-              {error.general}
-            </Alert>
-          )}
-
-          {Object.keys(error).map((key) => (
-            <Alert
-              key={key}
-              status="error"
-              variant="left-accent"
-              borderRadius="md"
-              mt={4}
-            >
-              <AlertIcon />
-              {error[key]}
-            </Alert>
-          ))}
+              <PasswordField
+                label="Contraseña"
+                name="contrasena"
+                value={formData.contrasena}
+                onChange={handleChange}
+                error={errors.contrasena}
+              />
+              <ConfirmPasswordField
+                label="Confirmar contraseña"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                error={errors.confirmPassword}
+              />
+              <SubmitButton>Registrar</SubmitButton>
+            </VStack>
+          </form>
 
           {message && (
-            <Alert
-              status="success"
-              variant="left-accent"
-              borderRadius="md"
-              mt={4}
-            >
-              <AlertIcon />
+            <Text color="green.600" fontWeight="bold">
               {message}
-            </Alert>
+            </Text>
           )}
 
-          <Button
-            type="submit"
-            colorScheme="green"
-            size="lg"
-            mt={6}
-            width="full"
-            borderRadius="md"
-          >
-            Registrar
-          </Button>
-
-          <Flex justifyContent="center" mt={5}>
-            <Link as="a" href="/auth/login" color="green.600">
-              Volver al inicio de sesión
-            </Link>
-          </Flex>
-        </form>
+          <Link color="green.600" href="/auth/login">
+            Volver al inicio de sesión
+          </Link>
+        </VStack>
       </Box>
+
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Verificar teléfono</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text mb={3}>
+              Hemos enviado un SMS al <b>{pendingPhone}</b>. Ingresa el código
+              de 6 dígitos para activar tu cuenta.
+            </Text>
+            <Input
+              placeholder="Código SMS"
+              value={verifyCode}
+              onChange={(e) => setVerifyCode(e.target.value)}
+              maxLength={6}
+              focusBorderColor="green.500"
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="green"
+              mr={3}
+              onClick={handleVerifySMS}
+              isLoading={loadingVerify}
+            >
+              Verificar
+            </Button>
+            <Button variant="ghost" onClick={onClose}>
+              Cancelar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 };
 
-async function registerUser(data) {
-  const userData = {
-    nombre: data.nombre,
-    apellido: data.apellido,
-    correo: data.correo,
-    telefono: parseInt(data.telefono, 10),
-    contrasena: data.contrasena,
-    estadoActivo: data.estadoActivo,
-    correoValidado: data.correoValidado,
-    paisId: data.paisId,
-    roleId: 2,
-  };
-
-  try {
-    const response = await axios.post(
-      `${BASE_URL}/usuarios/registro`,
-      userData
-    );
-    return {
-      ok: true,
-      usuario: response.data.usuario,
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      errorMessage:
-        error.response?.data?.error || "Error al registrar el usuario",
-    };
-  }
-}
+export default RegisterForm;

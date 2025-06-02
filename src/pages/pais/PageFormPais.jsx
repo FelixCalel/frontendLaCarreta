@@ -39,7 +39,11 @@ const PageFormPais = () => {
   const { data, status, error } = useSelector((state) => state.paises);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentPais, setCurrentPais] = useState({ id: "", nombre: "" });
+  const [currentPais, setCurrentPais] = useState({
+    id: "",
+    nombre: "",
+    dialCode: "",
+  });
 
   useEffect(() => {
     if (status === "idle") {
@@ -79,7 +83,11 @@ const PageFormPais = () => {
   };
 
   const handleEdit = (pais) => {
-    setCurrentPais(pais);
+    setCurrentPais({
+      id: pais.id,
+      nombre: pais.nombre,
+      dialCode: pais.dialCode ?? "",
+    });
     setIsEditMode(true);
     onOpen();
   };
@@ -141,7 +149,7 @@ const PageFormPais = () => {
           colorScheme="green"
           onClick={() => {
             setIsEditMode(false);
-            setCurrentPais({ nombre: "" });
+            setCurrentPais({ nombre: "", dialCode: "" });
             onOpen();
           }}
         >
@@ -168,6 +176,9 @@ const PageFormPais = () => {
             <Flex direction="column" gap={3}>
               <Text fontWeight="bold" fontSize="lg">
                 {pais.nombre}
+              </Text>
+              <Text fontSize="sm" color="gray.600">
+                Codigo de Pais: {pais.dialCode}
               </Text>
               <Text fontSize="sm" color="gray.500">
                 Creado: {formatDate(pais.creadoEl)}
@@ -218,6 +229,17 @@ const PageFormPais = () => {
                 value={currentPais.nombre}
                 onChange={handleInputChange}
                 placeholder="Ingrese el nombre del país"
+                focusBorderColor="teal.500"
+                size="lg"
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Código de Pais</FormLabel>
+              <Input
+                name="dialCode"
+                value={currentPais.dialCode}
+                onChange={handleInputChange}
+                placeholder="+000"
                 focusBorderColor="teal.500"
                 size="lg"
               />

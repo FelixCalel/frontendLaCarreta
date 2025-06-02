@@ -83,7 +83,6 @@ export const LoginForm = () => {
 
         if (!estaActivo) {
           setError("Tu usuario está inactivo. No tienes acceso al sistema.");
-
           return;
         }
 
@@ -110,7 +109,7 @@ export const LoginForm = () => {
         await dispatch(fetchCurrentUser());
 
         navigate("/auth/home", { replace: true });
-        window.location.reload();
+        //window.location.reload();
       } else {
         setError("Error al obtener datos del usuario.");
       }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MenuPrincipalD from "../../components/MenuPrincipalD";
 import {
@@ -6,9 +7,12 @@ import {
   Flex,
   Heading,
   Text,
-  useColorModeValue,
   Badge,
   Icon,
+  Button,
+  VStack,
+  HStack,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import {
   FaUserShield,
@@ -17,6 +21,8 @@ import {
   FaBox,
   FaSearch,
   FaUserTie,
+  FaPlusCircle,
+  FaRegLightbulb,
 } from "react-icons/fa";
 
 const roleMap = {
@@ -28,7 +34,6 @@ const roleMap = {
   7: "Supervisor",
   9: "Supervisor producción",
 };
-
 const roleColorMap = {
   Administrador: "red",
   Display: "blue",
@@ -36,9 +41,8 @@ const roleColorMap = {
   Supervisor: "pink",
   Compras: "orange",
   QA: "purple",
-  'Supervisor producción': "teal",
+  "Supervisor producción": "teal",
 };
-
 const roleIconMap = {
   Administrador: FaUserShield,
   Display: FaUserAlt,
@@ -46,32 +50,44 @@ const roleIconMap = {
   Supervisor: FaUserTie,
   Compras: FaBox,
   QA: FaSearch,
-  'Supervisor producción': FaUserShield,
+  "Supervisor producción": FaUserShield,
 };
+
+const tips = [
+  "Recuerda revisar la cantidad de los items antes de realizar el pedido.",
+  "Puedes ver el historial de pedidos en el menu lateral.",
+  "Activa el modo oscuro con el ícono de luna.",
+];
 
 const HomePage = () => {
   const [nombreUsuario, setNombreUsuario] = useState("");
-  const [rolNombre, setRolNombre] = useState("");
-  //comentario
+  const [rolNombre, setRolNombre] = useState("Sin rol");
+  const [roleId, setRoleId] = useState(null);
+  const [tipIndex, setTipIndex] = useState(0);
+
+  const navigate = useNavigate();
+
   useEffect(() => {
-    const nombre = localStorage.getItem("nombreUsuario");
-    const roleId = localStorage.getItem("roleId");
+    const nombre = localStorage.getItem("nombreUsuario") ?? "";
+    const roleIdLS = parseInt(localStorage.getItem("roleId"), 10);
 
-    if (nombre) {
-      setNombreUsuario(nombre);
-    }
+    setNombreUsuario(nombre);
 
-    if (roleId && roleMap[roleId]) {
-      setRolNombre(roleMap[roleId]);
-    } else {
-      setRolNombre("Sin rol");
+    if (!isNaN(roleIdLS) && roleMap[roleIdLS]) {
+      setRolNombre(roleMap[roleIdLS]);
+      setRoleId(roleIdLS);
     }
+    const id = setInterval(
+      () => setTipIndex((i) => (i + 1) % tips.length),
+      12000
+    );
+    return () => clearInterval(id);
   }, []);
 
   const pageBg = useColorModeValue("gray.50", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
-  const contentBg = useColorModeValue("white", "gray.900");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const cardBg = useColorModeValue("white", "gray.900");
+  const cardBorder = useColorModeValue("gray.200", "gray.700");
 
   const badgeColorScheme = roleColorMap[rolNombre] || "gray";
   const RoleIcon = roleIconMap[rolNombre];
@@ -80,45 +96,98 @@ const HomePage = () => {
     <Flex minH="100vh" direction="column" bg={pageBg} color={textColor}>
       <NavBar />
 
-      <Flex flex="1" direction="row">
+      <Flex flex="1">
         <MenuPrincipalD />
 
-        <Box flex="1" p={4} bg={contentBg}>
-          <Box
-            bg="transparent"
-            color={textColor}
-            p={8}
-            borderRadius="md"
-            mb={6}
-            boxShadow="md"
-            border="1px solid"
-            borderColor={borderColor}
-          >
-            <Heading as="h1" size="xl">
-              Bienvenido, {nombreUsuario}
-              {rolNombre && rolNombre !== "Sin rol" && (
-                <Badge
-                  ml={3}
-                  variant="subtle"
-                  colorScheme={badgeColorScheme}
-                  fontSize="xs"
-                  lineHeight="1"
-                  px={2}
-                  py={0.5}
-                  borderRadius="full"
-                  display="inline-flex"
-                  alignItems="center"
-                  gap={1}
+        <Box flex="1" py={2} px={{ base: 2, md: 2 }}>
+          <Box maxW="1900px" mx="auto">
+            <VStack align="stretch" spacing={2}>
+              <Box
+                bg={cardBg}
+                border="1px solid"
+                borderColor={cardBorder}
+                borderRadius="lg"
+                p={{ base: 4, md: 4 }}
+                //boxShadow="md"
+              >
+                <VStack align="stretch" spacing={2}>
+                  <Heading fontSize={{ base: "2xl", md: "3xl" }}>
+                    Bienvenido {nombreUsuario}
+                    {rolNombre !== "Sin rol" && (
+                      <Badge
+                        ml={2}
+                        variant="subtle"
+                        colorScheme={badgeColorScheme}
+                        fontSize="xs"
+                        px={2}
+                        py={0.5}
+                        borderRadius="full"
+                      >
+                        <HStack spacing={1}>
+                          {RoleIcon && <Icon as={RoleIcon} boxSize={3} />}
+                          <span>{rolNombre}</span>
+                        </HStack>
+                      </Badge>
+                    )}
+                  </Heading>
+
+                  <Text fontSize={{ base: "sm", md: "md" }}>
+                    ¡Nos alegra tenerte de vuelta! Explora el menú lateral para
+                    acceder a las secciones disponibles.
+                  </Text>
+                </VStack>
+              </Box>
+
+              {roleId === 2 && (
+                <Box
+                  bg={cardBg}
+                  border="1px solid"
+                  borderColor={cardBorder}
+                  borderRadius="lg"
+                  p={{ base: 4, md: 4 }}
+                  //boxShadow="md"
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="space-between"
                 >
-                  {RoleIcon && <Icon as={RoleIcon} boxSize={3} />}
-                  {rolNombre}
-                </Badge>
+                  <VStack align="stretch" spacing={2}>
+                    <Heading
+                      as="h2"
+                      fontSize={{ base: "xl", md: "2xl" }}
+                      color="green.600"
+                    >
+                      ¿Listo para tu pedido?
+                    </Heading>
+
+                    <Text fontSize={{ base: "sm", md: "md" }}>
+                      Haz clic y crea tu pedido de manera rápida. El sistema
+                      abrirá directamente el formulario.
+                    </Text>
+
+                    <HStack fontSize="xs" color="gray.500">
+                      <Icon as={FaRegLightbulb} />
+                      <span>{tips[tipIndex]}</span>
+                    </HStack>
+                  </VStack>
+
+                  <Button
+                    mt={4}
+                    colorScheme="green"
+                    leftIcon={<FaPlusCircle />}
+                    size="lg"
+                    alignSelf={{ base: "stretch", md: "flex-start" }}
+                    onClick={() =>
+                      navigate("/pedido/listar", {
+                        state: { openCrearPedido: true },
+                      })
+                    }
+                    _hover={{ transform: "scale(1.03)" }}
+                  >
+                    Crear pedido
+                  </Button>
+                </Box>
               )}
-            </Heading>
-            <Text fontSize="md" mt={2}>
-              ¡Nos alegra tenerte de vuelta! Explora el menú lateral para
-              acceder a las secciones disponibles.
-            </Text>
+            </VStack>
           </Box>
         </Box>
       </Flex>
