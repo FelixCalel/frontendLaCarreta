@@ -109,7 +109,7 @@ export const LoginForm = () => {
         await dispatch(fetchCurrentUser());
 
         navigate("/auth/home", { replace: true });
-        //window.location.reload();
+        window.location.reload();
       } else {
         setError("Error al obtener datos del usuario.");
       }
