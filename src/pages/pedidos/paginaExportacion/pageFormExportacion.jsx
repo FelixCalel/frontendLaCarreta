@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import {
   Box,
   Button,
@@ -11,10 +11,12 @@ import { useDispatch, useSelector } from "react-redux";
 import AprobadosTable from "../componentes/exportacionFormPedidos/tableAprobados";
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
+import ConfirmExportDialog from "./components/confirmDialog";
 import {
   togglePedidoStatus,
   tablaPedidos,
   updatePedidoActivacion,
+  exportarPedidoSap,
 } from "../../../store/Pedidos/thunks";
 import { selectPedidosEntrantesPorRuta } from "../pedidosEntrantes/componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
@@ -37,6 +39,21 @@ const AprobadosPage = () => {
   const pedidosAprobados = useSelector(selectAprobadosPorRuta);
   const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
+  const {
+    isOpen: isExportDlgOpen,
+    onOpen: openExportDlg,
+    onClose: closeExportDlg,
+  } = useDisclosure();
+  const [exportVariant, setExportVariant] = useState("f1");
+
+  const pedirConfirmacion = (variant) =>
+    new Promise((resolve) => {
+      setExportVariant(variant);
+      confirmExportRef.current = resolve;
+      openExportDlg();
+    });
+
+  const confirmExportRef = useRef(() => {});
 
   useEffect(() => {
     const fetchPedidos = async () => {
@@ -84,11 +101,23 @@ const AprobadosPage = () => {
     }
   };
 
+  const sinPedidosToast = () =>
+    toast({
+      title: "Sin pedidos aprobados",
+      description: "No hay pedidos en estado 'Aprobado' para exportar.",
+      status: "info",
+      duration: 3000,
+      isClosable: true,
+    });
+
   const handleExportConsolidadoFormato1 = async () => {
     if (pedidosAprobados.length === 0) {
-      console.log("No hay pedidos aprobados para exportar.");
+      sinPedidosToast();
       return;
     }
+
+    const ok = await pedirConfirmacion("f1");
+    if (!ok) return;
 
     setIsExporting(true);
     try {
@@ -98,12 +127,29 @@ const AprobadosPage = () => {
       const pedidosPorDeudor = agruparPedidosPorDeudor(pedidosConDetalles);
       await addPedidosToWorksheetFormato1(worksheet, pedidosPorDeudor);
       await descargarWorkbook(workbook, "pedidos_consolidados_formato1.xlsx");
+
+      const { payload, meta } = await dispatch(exportarPedidoSap()).unwrap();
+      console.log("Resultado envío SAP:", payload || meta);
+
       await actualizarEstadoPedidosExportados(pedidosAprobados);
-    } catch (error) {
-      console.error(
-        "Error al exportar pedidos consolidados (formato 1):",
-        error
-      );
+
+      toast({
+        title: "Exportación completada",
+        description: "Archivo generado y pedidos enviados a SAP.",
+        status: "success",
+        duration: 4000,
+        isClosable: true,
+      });
+    } catch (err) {
+      console.error("Error en exportación formato 1:", err);
+      toast({
+        title: "Error",
+        description:
+          err?.message || "No se pudieron exportar los pedidos (formato 1).",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
     } finally {
       setIsExporting(false);
     }
@@ -111,9 +157,12 @@ const AprobadosPage = () => {
 
   const handleExportConsolidadoFormato2 = async () => {
     if (pedidosAprobados.length === 0) {
-      console.log("No hay pedidos aprobados para exportar.");
+      sinPedidosToast();
       return;
     }
+
+    const ok = await pedirConfirmacion("f1");
+    if (!ok) return;
 
     setIsExporting(true);
     try {
@@ -123,12 +172,29 @@ const AprobadosPage = () => {
       const pedidosPorDeudor = agruparPedidosPorDeudor(pedidosConDetalles);
       await addPedidosToWorksheetFormato2(worksheet, pedidosPorDeudor);
       await descargarWorkbook(workbook, "pedidos_consolidados_formato2.xlsx");
+
+      const { payload, meta } = await dispatch(exportarPedidoSap()).unwrap();
+      console.log("Resultado envío SAP:", payload || meta);
+
       await actualizarEstadoPedidosExportados(pedidosAprobados);
-    } catch (error) {
-      console.error(
-        "Error al exportar pedidos consolidados (formato 2):",
-        error
-      );
+
+      toast({
+        title: "Exportación completada",
+        description: "Archivo generado y pedidos enviados a SAP.",
+        status: "success",
+        duration: 4000,
+        isClosable: true,
+      });
+    } catch (err) {
+      console.error("Error en exportación formato 2:", err);
+      toast({
+        title: "Error",
+        description:
+          err?.message || "No se pudieron exportar los pedidos (formato 2).",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
     } finally {
       setIsExporting(false);
     }
@@ -378,6 +444,20 @@ const AprobadosPage = () => {
           Exportar Formato 2
         </Button>
       </Flex>
+      <ConfirmExportDialog
+        isOpen={isExportDlgOpen}
+        onClose={() => {
+          closeExportDlg();
+          confirmExportRef.current(false);
+        }}
+        onConfirm={() => {
+          confirmExportRef.current(true);
+          closeExportDlg();
+        }}
+        isLoading={isExporting}
+        pedidosCount={pedidosAprobados.length}
+        variant={exportVariant}
+      />
 
       <AprobadosTable
         pedidosAprobados={pedidosAprobados}

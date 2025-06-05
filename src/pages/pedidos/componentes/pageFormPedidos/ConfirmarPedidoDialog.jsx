@@ -1,4 +1,4 @@
-import PropTypes from "prop-types"; // Importa PropTypes
+import PropTypes from "prop-types";
 import {
   AlertDialog,
   AlertDialogBody,
@@ -53,15 +53,14 @@ const ConfirmDialog = ({
   );
 };
 
-// Validación de props con PropTypes
 ConfirmDialog.propTypes = {
-  isOpen: PropTypes.bool.isRequired, // Define si el diálogo está abierto
-  onClose: PropTypes.func.isRequired, // Función para cerrar el diálogo
-  onConfirm: PropTypes.func.isRequired, // Función para confirmar la acción
-  isLoading: PropTypes.bool, // Indica si se está cargando algo
-  confirmMessage: PropTypes.string, // Mensaje de confirmación
-  confirmButtonLabel: PropTypes.string, // Texto del botón de confirmación
-  cancelButtonLabel: PropTypes.string, // Texto del botón de cancelar
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  isLoading: PropTypes.bool,
+  confirmMessage: PropTypes.string,
+  confirmButtonLabel: PropTypes.string,
+  cancelButtonLabel: PropTypes.string,
 };
 
 export default ConfirmDialog;

@@ -115,3 +115,23 @@ export const updatePedidoActivacion = createAsyncThunk(
     return response.data;
   }
 );
+
+const DBSAP = import.meta.env.VITE_DBSAP;
+const IPSAP = import.meta.env.VITE_IPSAP;
+
+export const exportarPedidoSap = createAsyncThunk(
+  "sap/exportarPedidos",
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(
+        `${BASE_URL}/sap/deus/exportarPedidos`,
+        { dbsap: DBSAP, ipsap: IPSAP }
+      );
+      return data.enviados || data;
+    } catch (err) {
+      return rejectWithValue(
+        (err.response && err.response.data) || "Error al exportar pedidos a SAP"
+      );
+    }
+  }
+);

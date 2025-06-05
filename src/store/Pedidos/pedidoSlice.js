@@ -7,6 +7,7 @@ import {
   tablaPedidos,
   tablaPedidosConDetalles,
   updatePedidoActivacion,
+  exportarPedidoSap,
 } from "./thunks";
 
 const pedidoSlice = createSlice({
@@ -16,6 +17,9 @@ const pedidoSlice = createSlice({
     pedidosConDetalles: [],
     status: "idle",
     error: null,
+    exportStatus: "idle",
+    exportResultado: null,
+    exportError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -26,7 +30,6 @@ const pedidoSlice = createSlice({
       .addCase(tablaPedidos.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.data = action.payload;
-        // ↓ de mayor a menor
         state.data.sort((a, b) => b.id - a.id);
       })
       .addCase(tablaPedidos.rejected, (state, action) => {
@@ -82,6 +85,18 @@ const pedidoSlice = createSlice({
       .addCase(updatePedidoActivacion.rejected, (state, action) => {
         //state.status = "failed";
         state.error = action.error.message;
+      })
+      .addCase(exportarPedidoSap.pending, (state) => {
+        state.exportStatus = "loading";
+        state.exportError = null;
+      })
+      .addCase(exportarPedidoSap.fulfilled, (state, action) => {
+        state.exportStatus = "succeeded";
+        state.exportResultado = action.payload;
+      })
+      .addCase(exportarPedidoSap.rejected, (state, action) => {
+        state.exportStatus = "failed";
+        state.exportError = action.payload || action.error.message;
       });
   },
 });

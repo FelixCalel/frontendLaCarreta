@@ -221,7 +221,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
       return;
     }
 
-    if (newProducto.productoId && newProducto.cantidad > 0) {
+    if (newProducto.productoId && newProducto.cantidad !== "") {
       if (newProducto.cantidad > newProducto.cantidadDisponible) {
         toast({
           title: "Cantidad excedida",
@@ -590,7 +590,9 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                   onChange={(e) =>
                     setNewProducto({
                       ...newProducto,
-                      cantidad: parseFloat(e.target.value) || 0,
+                      // cantidad: parseFloat(e.target.value) || 0,
+                      cantidad:
+                        e.target.value === "" ? "" : parseFloat(e.target.value),
                     })
                   }
                   placeholder="0"
