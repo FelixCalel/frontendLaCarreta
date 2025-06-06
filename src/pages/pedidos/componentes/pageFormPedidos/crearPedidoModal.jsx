@@ -53,9 +53,9 @@ const PedidoModal = ({
   const assignedIconColor = useColorModeValue("teal.500", "teal.300");
   const noAssignedIconColor = useColorModeValue("red.500", "red.300");
   const personIconColor = useColorModeValue("teal.600", "teal.200");
-  const handleDeudorSelect = (deudorId) => {
-    setCurrentPedido((prev) => ({ ...prev, deudorId }));
-  };
+  // const handleDeudorSelect = (deudorId) => {
+  //   setCurrentPedido((prev) => ({ ...prev, deudorId }));
+  // };
 
   const allTiendas = useSelector((state) => state.tiendas.data || []);
   const obtenerTiendaPorId = (tiendaId) => {
@@ -203,7 +203,7 @@ const PedidoModal = ({
                 <DeuSelector
                   ciudadId={currentPedido.ciudadId}
                   deudorId={currentPedido.deudorId}
-                  onSelect={handleDeudorSelect}
+                  // onSelect={handleDeudorSelect}
                 />
               </FormControl>
             </VStack>
