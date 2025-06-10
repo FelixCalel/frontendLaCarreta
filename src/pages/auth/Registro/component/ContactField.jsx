@@ -12,7 +12,7 @@ import PropTypes from "prop-types";
 
 const phoneRegex = /^[\d\s()+-]+$/;
 
-export default function ContactField({ value, onChange, error }) {
+export default function ContactField({ value, onChange, error = "" }) {
   const { icon, placeholder } = useMemo(() => {
     const soloTelefono =
       value && phoneRegex.test(value) && !value.includes("@");
@@ -20,11 +20,13 @@ export default function ContactField({ value, onChange, error }) {
       return {
         icon: <PhoneIcon color="gray.400" />,
         placeholder: "Teléfono",
+        label: "Teléfono",
       };
     }
     return {
       icon: <AtSignIcon color="gray.400" />,
       placeholder: "Correo",
+      label: "Correo Electrónico",
     };
   }, [value]);
 
@@ -44,6 +46,7 @@ export default function ContactField({ value, onChange, error }) {
           borderRadius="md"
           size="lg"
           pl="2.5rem"
+          autoComplete="off"
         />
       </InputGroup>
 

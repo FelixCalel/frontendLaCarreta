@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { FormControl, FormLabel, Input, Text } from "@chakra-ui/react";
 
-export default function FirstNameField({ value, onChange, error }) {
+export default function FirstNameField({ value, onChange, error = "" }) {
   return (
     <FormControl id="nombre" isInvalid={!!error} isRequired>
       <FormLabel>Nombre</FormLabel>

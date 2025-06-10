@@ -16,7 +16,7 @@ export default function ConfirmPasswordField({
   name = "confirmPassword",
   value,
   onChange,
-  error,
+  error = "",
 }) {
   const [show, setShow] = React.useState(false);
   return (

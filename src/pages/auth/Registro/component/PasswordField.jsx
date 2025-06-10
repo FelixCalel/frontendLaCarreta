@@ -11,7 +11,13 @@ import {
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import PropTypes from "prop-types";
 
-export default function PasswordField({ label, name, value, onChange, error }) {
+export default function PasswordField({
+  label,
+  name,
+  value,
+  onChange,
+  error = "",
+}) {
   const [show, setShow] = React.useState(false);
   return (
     <FormControl id={name} isInvalid={!!error} isRequired>
@@ -26,6 +32,7 @@ export default function PasswordField({ label, name, value, onChange, error }) {
           focusBorderColor="green.500"
           borderRadius="md"
           size="lg"
+          autoComplete="new-password"
         />
         <InputRightElement width="4.5rem">
           <Button
