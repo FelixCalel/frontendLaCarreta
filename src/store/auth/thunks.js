@@ -14,11 +14,11 @@ export const checkingAuthentication = () => {
     dispatch(checkingCredentials());
   };
 };
-export const startSignIn = ({ correo_electronico, password }) => {
+export const startSignIn = ({ correo_electronico, password, paisId }) => {
   return async (dispatch) => {
     dispatch(checkingCredentials());
 
-    await singIn({ correo_electronico, password })
+    await singIn({ correo_electronico, password, paisId })
       .then((result) => {
         if (result.ok) {
           const userData = {
@@ -27,6 +27,7 @@ export const startSignIn = ({ correo_electronico, password }) => {
               result.usuario.nombres + " " + result.usuario.apellidos,
             email: result.usuario.correo_electronico,
             nombre_empresa: result.usuario.nombre_empresa,
+            paisId: result.usuario.paisId,
           };
 
           // Guardamos los datos en localStorage

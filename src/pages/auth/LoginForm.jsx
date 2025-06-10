@@ -107,7 +107,6 @@ export const LoginForm = () => {
           })
         );
         await dispatch(fetchCurrentUser());
-
         navigate("/auth/home", { replace: true });
         window.location.reload();
       } else {

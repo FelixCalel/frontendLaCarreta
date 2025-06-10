@@ -1,7 +1,7 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 
-// const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 // // Thunk para obtener los datos del usuario logueado
 // export const obtenerUsuarioActual = createAsyncThunk(
@@ -12,7 +12,7 @@ import axios from 'axios';
 
 //     // Filtrar solo el usuario con el id del logueado
 //     const usuarioActual = data.find((usuario) => usuario.id === parseInt(usuarioId));
-    
+
 //     if (!usuarioActual) {
 //       throw new Error("Usuario no encontrado");
 //     }
@@ -20,3 +20,15 @@ import axios from 'axios';
 //     return usuarioActual;
 //   }
 // );
+
+export const fetchUsuario = createAsyncThunk(
+  "usuarios/fetchUsuario",
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.get(`${BASE_URL}usuarios/todos`);
+      return data.usuarios;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);

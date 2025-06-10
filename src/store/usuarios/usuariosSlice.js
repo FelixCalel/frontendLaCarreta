@@ -75,6 +75,11 @@ export const createusuarios = createAsyncThunk(
   }
 );
 
+const saveState = (state) => {
+  console.log("Guardando estado en localStorage:", state);
+  localStorage.setItem("authSlice", JSON.stringify(state)); // Usa el mismo LOCAL_KEY que has utilizado antes
+};
+
 // Define tu slice de Redux
 export const usuariosSlice = createSlice({
   name: "usuarios",
@@ -83,6 +88,7 @@ export const usuariosSlice = createSlice({
     items: [],
     status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null,
+    paisId: null, // Asegúrate de tener `paisId` en el estado inicial
   },
   reducers: {
     // Puedes definir otras acciones sincrónicas aquí si es necesario
@@ -91,11 +97,19 @@ export const usuariosSlice = createSlice({
     builder
       .addCase(fetchUsuarios.pending, (state) => {
         state.status = "loading"; // Actualiza el estado a 'loading' mientras se realiza la solicitud
+        state.error = null;
       })
       .addCase(fetchUsuarios.fulfilled, (state, action) => {
         console.log(action, "<---");
         state.status = "succeeded";
-        state.items = action.payload.usuarios; // Actualiza los items con los usuarios obtenidos
+        state.items = action.payload.usuarios; // Asegúrate de que action.payload tenga `usuarios` y `paisId`
+        state.data = action.payload;
+
+        // Si necesitas también asegurarte de que el paisId se guarde en el estado global
+        if (action.payload.paisId) {
+          state.paisId = action.payload.paisId;
+          saveState(state); // Guarda nuevamente el estado con paisId
+        }
       })
       .addCase(fetchUsuarios.rejected, (state, action) => {
         state.status = "failed";

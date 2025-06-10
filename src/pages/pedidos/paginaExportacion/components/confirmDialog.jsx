@@ -48,7 +48,7 @@ export default function ConfirmExportDialog({
             borderTopRadius="md"
           >
             <Icon as={FiUploadCloud} boxSize={6} />
-            Exportar pedidos a SAP
+            Exportar pedidos
           </AlertDialogHeader>
 
           <AlertDialogBody>
@@ -58,7 +58,7 @@ export default function ConfirmExportDialog({
                 <Text as="span" fontWeight="bold">
                   {pedidosCount}
                 </Text>{" "}
-                pedido(s) a SAP y se generará el Excel ({textoFormato}).
+                pedido(s) se generará el Excel ({textoFormato}).
               </Text>
               <Text>¿Quieres continuar?</Text>
             </VStack>

@@ -1,4 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { tablaEmpresa } from "../Empresa/thunks";
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -8,7 +9,7 @@ export const tablaPedidos = createAsyncThunk(
   async () => {
     const response = await axios.get(`${BASE_URL}/form/pedidos/todos`);
     const data = response.data;
-    data.sort((a, b) => a.id - b.id); // Ordenar los datos
+    data.sort((a, b) => a.id - b.id);
     return data;
   }
 );
@@ -116,22 +117,40 @@ export const updatePedidoActivacion = createAsyncThunk(
   }
 );
 
-const DBSAP = import.meta.env.VITE_DBSAP;
-const IPSAP = import.meta.env.VITE_IPSAP;
-
 export const exportarPedidoSap = createAsyncThunk(
   "sap/exportarPedidos",
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, dispatch, rejectWithValue }) => {
     try {
+      // 🔄 1) Fuerzo recarga de empresas (sea cual sea su estado actual)
+      await dispatch(tablaEmpresa()).unwrap();
+
+      const empresas = getState().empresas.data;
+
+      // 🔑 2) Obtener paisId del usuario logueado desde localStorage o getState
+      const paisId = localStorage.getItem("paisId") || getState().auth.paisId;
+
+      if (!paisId) {
+        return rejectWithValue("No se pudo obtener el paisId del usuario");
+      }
+
+      console.log({ paisId, empresas });
+
+      // 🔍 3) Filtrar la empresa correspondiente al paisId
+      const emp = empresas.find((e) => e.paisId == paisId && e.estaActivo);
+
+      if (!emp) {
+        return rejectWithValue("No hay configuración SAP para tu país");
+      }
+
+      // 📤 4) Hacer la solicitud con los datos de la empresa
       const { data } = await axios.post(
         `${BASE_URL}/sap/deus/exportarPedidos`,
-        { dbsap: DBSAP, ipsap: IPSAP }
+        { dbsap: emp.baseDatos, ipsap: emp.ipBaseDatos }
       );
       return data.enviados || data;
     } catch (err) {
-      return rejectWithValue(
-        (err.response && err.response.data) || "Error al exportar pedidos a SAP"
-      );
+      const msg = err.response?.data || err.message || err;
+      return rejectWithValue(msg);
     }
   }
 );

@@ -3,17 +3,19 @@ import { fetchCurrentUser } from "./thunks";
 
 const LOCAL_KEY = "authSlice";
 
-/* ----------  helpers ---------- */
 const loadState = () => {
   try {
     const s = JSON.parse(localStorage.getItem(LOCAL_KEY) || "{}");
+    console.log(s);
     return {
       status: s.status ?? "not-authenticated",
       uid: s.uid ?? null,
-      email: s.email ?? null,
+      correo: s.correo ?? null,
       displayName: s.displayName ?? null,
       photoURL: s.photoURL ?? null,
       errorMessage: null,
+      paisId: s.paisId ?? null,
+      roleId: s.roleId ?? null,
       token: s.token ?? null,
       rutas: s.rutas ?? [],
       user: s.user ?? null,
@@ -22,10 +24,12 @@ const loadState = () => {
     return {
       status: "not-authenticated",
       uid: null,
-      email: null,
+      correo: null,
       displayName: null,
       photoURL: null,
       errorMessage: null,
+      paisId: null,
+      roleId: null,
       token: null,
       rutas: [],
       user: null,
@@ -33,10 +37,10 @@ const loadState = () => {
   }
 };
 
-const saveState = (state) =>
+const saveState = (state) => {
+  console.log("Guardando estado en localStorage:", state);
   localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
-
-/* ----------  slice ---------- */
+};
 export const authSlice = createSlice({
   name: "auth",
   initialState: loadState(),
@@ -45,21 +49,25 @@ export const authSlice = createSlice({
     registered: (state, { payload }) => {
       state.status = "registered";
       state.uid = payload.uid;
-      state.email = payload.email;
+      state.correo = payload.correo;
       state.displayName = payload.displayName;
       state.photoURL = payload.photoURL ?? null;
-      state.token = payload.token ?? null;
-      state.rutas = payload.rutas ?? [];
       state.user = payload;
+      state.paisId = payload.paisId;
+      state.roleId = payload.roleId;
+      state.token = payload.token ?? null;
       saveState(state);
+      state.rutas = payload.rutas ?? [];
     },
 
     login: (state, { payload }) => {
       state.status = "authenticated";
       state.uid = payload.uid;
-      state.email = payload.email;
+      state.correo = payload.correo;
       state.displayName = payload.displayName;
       state.photoURL = payload.photoURL ?? null;
+      state.paisId = payload.paisId ?? null;
+      state.roleId = payload.roleId ?? null;
       state.token = payload.token ?? null;
       state.rutas =
         payload.rutas && payload.rutas.length ? payload.rutas : state.rutas;
@@ -75,10 +83,12 @@ export const authSlice = createSlice({
     logout: (state, { payload }) => {
       state.status = "not-authenticated";
       state.uid = null;
-      state.email = null;
+      state.correo = null;
       state.displayName = null;
       state.photoURL = null;
       state.token = null;
+      state.paisId = null;
+      state.roleId = null;
       state.errorMessage = payload?.errorMessage || null;
       state.rutas = [];
       state.user = null;
@@ -106,7 +116,9 @@ export const authSlice = createSlice({
         state.user = payload;
         state.rutas = payload.rutas || [];
         state.uid = payload.id;
-        state.email = payload.correo;
+        state.correo = payload.correo;
+        state.paisId = payload.paisId;
+        state.roleId = payload.roleId;
         state.displayName = payload.nombre;
         saveState(state);
       })

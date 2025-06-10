@@ -18,11 +18,14 @@ import {
   updatePedidoActivacion,
   exportarPedidoSap,
 } from "../../../store/Pedidos/thunks";
+import { tablaEmpresa } from "../../../store/Empresa/thunks";
+//import { fetchUsuario } from "../../../store/usuarios/ususarios.thunks";
 import { selectPedidosEntrantesPorRuta } from "../pedidosEntrantes/componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import * as ExcelJS from "exceljs";
+//import { fetchCurrentUser } from "../../../store/auth/thunks";
 
 const AprobadosPage = () => {
   const dispatch = useDispatch();
@@ -64,7 +67,9 @@ const AprobadosPage = () => {
 
   useEffect(() => {
     dispatch(tablaTienda());
-    dispatch(tablaPedidos());
+    dispatch(tablaEmpresa());
+    //dispatch(fetchUsuario());
+    //
   }, [dispatch]);
 
   const cargarDetallesPedidos = async (pedidos) => {
@@ -161,7 +166,7 @@ const AprobadosPage = () => {
       return;
     }
 
-    const ok = await pedirConfirmacion("f1");
+    const ok = await pedirConfirmacion("f2");
     if (!ok) return;
 
     setIsExporting(true);

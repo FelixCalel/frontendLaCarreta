@@ -10,7 +10,8 @@ export const singIn = async ({ correo_electronico, password }) => {
       const { token, usuario } = response.data;
       const displayName = usuario.nombres + " " + usuario.apellidos;
       const email = usuario.correo_electronico;
-      const { id, nit, nombre_empresa, errorMessage } = response.data.usuario;
+      const { id, nit, nombre_empresa, paisId, errorMessage } =
+        response.data.usuario;
 
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem(
@@ -18,19 +19,21 @@ export const singIn = async ({ correo_electronico, password }) => {
         JSON.stringify({
           id,
           nit,
+          token,
           email,
+          paisId,
           nombre_empresa,
           displayName,
           errorMessage,
         })
       );
-
-      // errores
       return {
         ok: true,
         id: usuario.id,
         nit: usuario.nit,
-        email,
+        correo: usuario.correo,
+        paisId: usuario.paisId,
+        roleId: usuario.roleId,
         nombre_empresa: usuario.nombre_empresa,
         displayName: displayName,
         errorMessage: null,
@@ -51,13 +54,14 @@ export const registerUser = async (data) => {
   const estado = true;
 
   const userData = {
-    username: username, // Esto es equivalente a username: username
+    username: username,
     password: data.contrasenia,
     nombres: data.nombres,
     apellidos: data.apellidos,
     nit: data.nit,
     nombre_empresa: data.nombreProveedorEmpresa,
     correo_electronico: data.correoElectronico,
+    paisId: data.paisId,
     telefono,
     celular,
     estado,
@@ -69,7 +73,7 @@ export const registerUser = async (data) => {
       // cambio
       console.log(response);
       if (response.status === 200) {
-        const { id, nombres, apellidos, nombre_empresa } =
+        const { id, nombres, apellidos, correo, paisId, nombre_empresa } =
           response.data.usuario;
         // errores
         return {
@@ -108,6 +112,7 @@ export const registerUserChildren = async (data) => {
     estado,
     parentId: data.parentId,
     roleId: parseInt(data.roleId),
+    paisId: data.paisId,
   };
 
   console.log("userData", userData);
