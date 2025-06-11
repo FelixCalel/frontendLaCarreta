@@ -121,28 +121,17 @@ export const exportarPedidoSap = createAsyncThunk(
   "sap/exportarPedidos",
   async (_, { getState, dispatch, rejectWithValue }) => {
     try {
-      // 🔄 1) Fuerzo recarga de empresas (sea cual sea su estado actual)
       await dispatch(tablaEmpresa()).unwrap();
-
       const empresas = getState().empresas.data;
-
-      // 🔑 2) Obtener paisId del usuario logueado desde localStorage o getState
       const paisId = localStorage.getItem("paisId") || getState().auth.paisId;
-
       if (!paisId) {
         return rejectWithValue("No se pudo obtener el paisId del usuario");
       }
-
       console.log({ paisId, empresas });
-
-      // 🔍 3) Filtrar la empresa correspondiente al paisId
       const emp = empresas.find((e) => e.paisId == paisId && e.estaActivo);
-
       if (!emp) {
         return rejectWithValue("No hay configuración SAP para tu país");
       }
-
-      // 📤 4) Hacer la solicitud con los datos de la empresa
       const { data } = await axios.post(
         `${BASE_URL}/sap/deus/exportarPedidos`,
         { dbsap: emp.baseDatos, ipsap: emp.ipBaseDatos }
