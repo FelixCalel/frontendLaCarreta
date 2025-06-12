@@ -8,6 +8,10 @@ import {
   AlertDialogBody,
   AlertDialogFooter,
   Button,
+  FormControl,
+  FormLabel,
+  Input,
+  VStack,
 } from "@chakra-ui/react";
 
 const ApproveOrderDialog = ({
@@ -19,12 +23,13 @@ const ApproveOrderDialog = ({
   const [orderDate, setOrderDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+  const [comentario, setComentario] = useState("");
 
   const handleConfirm = () => {
     const [year, month, day] = orderDate.split("-");
     const fechaFormateada = `${day}/${month}/${year}`;
     console.log("Fecha formateada a enviar:", fechaFormateada);
-    onConfirm(fechaFormateada);
+    onConfirm({ fechaOrden: fechaFormateada, comentario });
     onClose();
   };
 
@@ -36,21 +41,28 @@ const ApproveOrderDialog = ({
             Aprobar {selectedPedidos.length} Pedidos
           </AlertDialogHeader>
           <AlertDialogBody>
-            <label htmlFor="order-date">Fecha de Orden:</label>
-            <input
-              type="date"
-              id="order-date"
-              min={new Date().toISOString().split("T")[0]}
-              value={orderDate}
-              onChange={(e) => setOrderDate(e.target.value)}
-              style={{
-                marginLeft: "10px",
-                padding: "5px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-              }}
-              required
-            />
+            <VStack spacing={4} align="stretch">
+              <FormControl>
+                <FormLabel htmlFor="order-date">Fecha de Orden:</FormLabel>
+                <Input
+                  id="order-date"
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={orderDate}
+                  onChange={(e) => setOrderDate(e.target.value)}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel htmlFor="comentario">Comentario:</FormLabel>
+                <Input
+                  id="comentario"
+                  placeholder="Escribe un comentario..."
+                  value={comentario}
+                  onChange={(e) => setComentario(e.target.value)}
+                />
+              </FormControl>
+            </VStack>
           </AlertDialogBody>
           <AlertDialogFooter>
             <Button variant="outline" onClick={onClose}>

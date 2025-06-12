@@ -150,13 +150,16 @@ export const getPedidosComunesByUsuarioId = createAsyncThunk(
 
 export const actualizarFechaOrden = createAsyncThunk(
   "detalleOrden/actualizarFechaOrden",
-  async ({ pedidoId, fechaOrden }) => {
+  async ({ pedidoId, fechaOrden, comentario }) => {
     try {
-      console.log("Fecha antes de enviar al backend:", fechaOrden);
+      console.log("Payload a enviar:", { fechaOrden, comentario });
 
       const response = await axios.patch(
         `${BASE_URL}/form/pedidos/actualizar-fecha/${pedidoId}`,
-        { fechaOrden }
+        {
+          fechaOrden,
+          comentario,
+        }
       );
 
       console.log("Respuesta del servidor:", response.data);

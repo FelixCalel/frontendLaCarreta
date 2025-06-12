@@ -92,14 +92,15 @@ const EntrantesPage = () => {
     if (pedidos.length) console.log("Ejemplo de pedido:", pedidos[0]);
   }, [pedidos]);
 
-  const handleConfirmApprove = async (fechaParaBackend /* "DD/MM/YYYY" */) => {
+  const handleConfirmApprove = async ({ fechaOrden, comentario }) => {
     setIsApproving(true);
     try {
       for (const pedidoId of selectedPedidos) {
         await dispatch(
           actualizarFechaOrden({
             pedidoId,
-            fechaOrden: fechaParaBackend,
+            fechaOrden,
+            comentario,
           })
         ).unwrap();
         await dispatch(
@@ -152,56 +153,6 @@ const EntrantesPage = () => {
       onCancelClose();
     }
   };
-
-  // const handleAprobarPedidos = async (orderDate) => {
-  //   setIsLoading(true);
-  //   try {
-  //     for (const pedidoId of selectedPedidos) {
-  //       console.log("Procesando pedido:", pedidoId);
-
-  //       await dispatch(
-  //         actualizarFechaOrden({
-  //           pedidoId,
-  //           fechaOrden: orderDate,
-  //         })
-  //       ).unwrap();
-
-  //       console.log("Fecha actualizada, actualizando estado...");
-
-  //       const result = await dispatch(
-  //         togglePedidoStatus({
-  //           id: pedidoId,
-  //           estadoId: 3,
-  //         })
-  //       ).unwrap();
-
-  //       console.log("Estado actualizado:", result);
-  //     }
-
-  //     await dispatch(tablaPedidos());
-
-  //     setSelectedPedidos([]);
-  //     toast({
-  //       title: "Pedidos aprobados",
-  //       description:
-  //         "Los pedidos seleccionados han sido aprobados y la fecha de orden ha sido actualizada.",
-  //       status: "success",
-  //       duration: 3000,
-  //       isClosable: true,
-  //     });
-  //   } catch (error) {
-  //     console.error("Error al aprobar pedidos:", error);
-  //     toast({
-  //       title: "Error",
-  //       description: error.message || "Hubo un error al procesar los pedidos.",
-  //       status: "error",
-  //       duration: 3000,
-  //       isClosable: true,
-  //     });
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
   const handleCancelarPedidos = async () => {
     setIsLoading(true);
@@ -339,7 +290,6 @@ const EntrantesPage = () => {
       </Flex>
       <PedidosTable
         pedidosEntrantes={pedidosFiltrados}
-        //pedidosEntrantes={pedidosEntrantes}
         selectedPedidos={selectedPedidos}
         setSelectedPedidos={setSelectedPedidos}
         handleVerDetalles={handleVerDetalles}

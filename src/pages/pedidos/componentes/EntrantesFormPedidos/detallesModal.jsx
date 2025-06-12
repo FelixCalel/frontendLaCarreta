@@ -15,62 +15,114 @@ import {
   Td,
   Button,
   Box,
-  Heading,
   Text,
+  Flex,
+  Icon,
+  Divider,
+  useColorModeValue,
+  VStack,
 } from "@chakra-ui/react";
-//import { utcToZonedTime } from "date-fns-tz";
-//import { format } from "date-fns";
-//import { es } from "date-fns/locale";
+import { FaCalendarAlt, FaCommentDots, FaBoxOpen } from "react-icons/fa";
 
 const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
-  //const fechaGT = utcToZonedTime(pedido.fechaOrden, 'America/Guatemala');
-  if (!pedido) {
-    return null;
-  }
-  const soloFecha = pedido.fechaOrden.slice(0, 10) ?? "";
-  const [y, m, d] = soloFecha.split("-");
+  // Llamadas a hooks al inicio
+  const bg = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const rowHoverBg = useColorModeValue("gray.50", "gray.700");
+  const commentTextColor = useColorModeValue("gray.700", "gray.300");
 
-  if (!pedido) {
-    return null;
-  }
+  if (!pedido) return null;
+
+  // Extraer fecha
+  const fechaIso = pedido.fechaOrden.slice(0, 10);
+  const [year, month, day] = fechaIso.split("-");
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Detalles del Pedido {pedido.id}</ModalHeader>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      isCentered
+      motionPreset="slideInBottom"
+    >
+      <ModalOverlay bg="blackAlpha.600" />
+      <ModalContent
+        bg={bg}
+        borderRadius="lg"
+        boxShadow="xl"
+        border="1px solid"
+        borderColor={borderColor}
+      >
+        <ModalHeader>
+          <Flex align="center">
+            <Icon as={FaBoxOpen} w={6} h={6} mr={3} />
+            Detalles del Pedido{" "}
+            <Text as="span" fontWeight="bold">
+              #{pedido.id}
+            </Text>
+          </Flex>
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          {detalles && detalles.length > 0 ? (
-            <>
-              <Table variant="simple">
-                <Thead>
+          <VStack spacing={5} align="stretch">
+            {/* Lista de productos */}
+            <Box>
+              <Text fontSize="lg" fontWeight="semibold" mb={2}>
+                Productos
+              </Text>
+              <Table variant="simple" size="sm">
+                <Thead bg={borderColor}>
                   <Tr>
                     <Th>Código</Th>
                     <Th>Producto</Th>
-                    <Th>Cantidad</Th>
+                    <Th textAlign="right">Cantidad</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {detalles.map((detalle) => (
-                    <Tr key={detalle.id}>
-                      <Td>{detalle.codigo || "Sin código"}</Td>
-                      <Td>{detalle.nombreProducto || "Sin nombre"}</Td>
-                      <Td>{detalle.cantidad}</Td>
+                  {detalles.map((item) => (
+                    <Tr key={item.id} _hover={{ bg: rowHoverBg }}>
+                      <Td>{item.codigo}</Td>
+                      <Td>{item.nombreProducto}</Td>
+                      <Td textAlign="right">{item.cantidad}</Td>
                     </Tr>
                   ))}
                 </Tbody>
               </Table>
-              <Box mt={4}>
-                <Heading size="md">Fecha de entrega</Heading>
-                <Text>{soloFecha ? `${d}/${m}/${y}` : "—"}</Text>
+            </Box>
+
+            <Divider borderColor={borderColor} />
+
+            {/* Fecha de entrega */}
+            <Flex align="center">
+              <Icon as={FaCalendarAlt} w={5} h={5} mr={2} color="teal.500" />
+              <Text>
+                Fecha de entrega:{" "}
+                <Text as="span" fontWeight="bold">
+                  {day}/{month}/{year}
+                </Text>
+              </Text>
+            </Flex>
+
+            <Divider borderColor={borderColor} />
+
+            {/* Comentario */}
+            <Flex align="flex-start">
+              <Icon as={FaCommentDots} w={5} h={5} mr={2} color="orange.400" />
+              <Box>
+                <Text fontWeight="semibold" mb={1}>
+                  Comentario
+                </Text>
+                <Text color={commentTextColor}>
+                  {pedido.comentario && pedido.comentario.trim()
+                    ? pedido.comentario
+                    : "— sin comentario —"}
+                </Text>
               </Box>
-            </>
-          ) : (
-            <Box>No hay detalles disponibles</Box>
-          )}
+            </Flex>
+          </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button colorScheme="blue" onClick={onClose}>
+          <Button onClick={onClose} colorScheme="green" variant="outline">
             Cerrar
           </Button>
         </ModalFooter>
@@ -84,20 +136,21 @@ DetallesModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   detalles: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.number.isRequired,
+      id: PropTypes.number,
       codigo: PropTypes.string,
-      nombreProducto: PropTypes.string.isRequired,
-      cantidad: PropTypes.number.isRequired,
+      nombreProducto: PropTypes.string,
+      cantidad: PropTypes.number,
     })
   ),
   pedido: PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    fechaOrden: PropTypes.string.isRequired,
-    // Añade otras propiedades si es necesario
+    id: PropTypes.number,
+    fechaOrden: PropTypes.string,
+    comentario: PropTypes.string,
   }),
 };
 
 DetallesModal.defaultProps = {
+  detalles: [],
   pedido: null,
 };
 

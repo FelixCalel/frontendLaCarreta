@@ -63,6 +63,7 @@ const PageFormEmpresa = () => {
     estaActivo: true,
     baseDatos: "",
     ipBaseDatos: "",
+    serie: "",
     paisId: "",
   });
   const [errors, setErrors] = useState({});
@@ -99,6 +100,7 @@ const PageFormEmpresa = () => {
       formErrors.baseDatos = "La base de datos es obligatoria";
     if (!currentEmpresa.ipBaseDatos)
       formErrors.ipBaseDatos = "La IP SAP es obligatoria";
+    if (!currentEmpresa.serie) formErrors.serie = "La serie es obligatoria;";
     if (!currentEmpresa.paisId) formErrors.paisId = "El país es obligatorio";
     return formErrors;
   };
@@ -398,6 +400,9 @@ const PageFormEmpresa = () => {
                 <strong>Base de Datos:</strong> {empresa.baseDatos}
               </Text>
               <Text>
+                <strong>Serie:</strong> {empresa.serie}
+              </Text>
+              <Text>
                 <strong>IP SAP:</strong> {empresa.ipBaseDatos}
               </Text>
               <Text>
@@ -528,6 +533,19 @@ const PageFormEmpresa = () => {
                   <FormErrorMessage>{errors.ipBaseDatos}</FormErrorMessage>
                 )}
               </FormControl>
+              <FormControl isInvalid={errors.serie} isRequired>
+                <FormLabel>Serie</FormLabel>
+                <Input
+                  name="serie"
+                  value={currentEmpresa.serie}
+                  onChange={handleInputChange}
+                  placeholder="Ingrese la serie de la empresa"
+                />
+                {errors.serie && (
+                  <FormErrorMessage>{errors.serie}</FormErrorMessage>
+                )}
+              </FormControl>
+
               <FormControl isInvalid={errors.paisId} isRequired>
                 <FormLabel>País</FormLabel>
                 <Select
