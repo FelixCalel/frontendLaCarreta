@@ -1,6 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import PropTypes from "prop-types";
-import { Flex, FormHelperText, InputGroup, InputRightElement, IconButton } from "@chakra-ui/react";
+import {
+  Flex,
+  FormHelperText,
+  InputGroup,
+  InputRightElement,
+  IconButton,
+} from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -18,17 +24,17 @@ const DeuSelector = ({ onSelect, selectedDeudorId }) => {
   const [showOptions, setShowOptions] = useState(false);
   const autoCompleteRef = useRef(null);
 
-  // Cargar deudores al montar el componente
   useEffect(() => {
     dispatch(tablaDeudores());
   }, [dispatch]);
 
-  // Establecer el valor inicial cuando hay un deudor seleccionado
   useEffect(() => {
     if (selectedDeudorId && deudores.length > 0) {
-      const selectedDeudor = deudores.find(d => d.id === selectedDeudorId);
+      const selectedDeudor = deudores.find((d) => d.id === selectedDeudorId);
       if (selectedDeudor) {
-        setInputValue(`${selectedDeudor.correlativo} - ${selectedDeudor.nombre}`);
+        setInputValue(
+          `${selectedDeudor.correlativo} - ${selectedDeudor.nombre}`
+        );
       }
     }
   }, [selectedDeudorId, deudores]);
@@ -63,8 +69,7 @@ const DeuSelector = ({ onSelect, selectedDeudorId }) => {
     setShowOptions(true);
   };
 
-  // Filtrar deudores solo por texto de búsqueda
-  const filteredDeudores = deudores.filter(deu => {
+  const filteredDeudores = deudores.filter((deu) => {
     const searchText = `${deu.correlativo} - ${deu.nombre}`.toLowerCase();
     const inputSearch = inputValue.toLowerCase();
     return !inputValue || searchText.includes(inputSearch);
@@ -110,12 +115,10 @@ const DeuSelector = ({ onSelect, selectedDeudorId }) => {
               </AutoCompleteItem>
             ))
           ) : (
-            <AutoCompleteItem
-              key="no-results"
-              value=""
-              isDisabled
-            >
-              {inputValue ? "No se encontraron deudores" : "No hay deudores disponibles"}
+            <AutoCompleteItem key="no-results" value="" isDisabled>
+              {inputValue
+                ? "No se encontraron deudores"
+                : "No hay deudores disponibles"}
             </AutoCompleteItem>
           )}
         </AutoCompleteList>
@@ -130,7 +133,7 @@ const DeuSelector = ({ onSelect, selectedDeudorId }) => {
 };
 
 DeuSelector.propTypes = {
-  ciudadId: PropTypes.string,
+  //ciudadId: PropTypes.string,
   onSelect: PropTypes.func.isRequired,
   selectedDeudorId: PropTypes.string,
 };

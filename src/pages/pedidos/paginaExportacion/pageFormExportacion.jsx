@@ -68,8 +68,6 @@ const AprobadosPage = () => {
   useEffect(() => {
     dispatch(tablaTienda());
     dispatch(tablaEmpresa());
-    //dispatch(fetchUsuario());
-    //
   }, [dispatch]);
 
   const cargarDetallesPedidos = async (pedidos) => {
@@ -116,44 +114,42 @@ const AprobadosPage = () => {
     });
 
   const handleExportConsolidadoFormato1 = async () => {
-    if (pedidosAprobados.length === 0) {
+    if (!pedidosAprobados.length) {
       sinPedidosToast();
       return;
     }
 
-    const ok = await pedirConfirmacion("f1");
-    if (!ok) return;
-
     setIsExporting(true);
     try {
+      const sapResult = await dispatch(exportarPedidoSap()).unwrap();
+      if (sapResult.error) {
+        toast({
+          title: "Error al exportar a SAP",
+          description: sapResult.error,
+          status: "error",
+        });
+        return;
+      }
+
       const pedidosConDetalles = await cargarDetallesPedidos(pedidosAprobados);
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Pedidos Consolidados");
-      const pedidosPorDeudor = agruparPedidosPorDeudor(pedidosConDetalles);
-      await addPedidosToWorksheetFormato1(worksheet, pedidosPorDeudor);
-      await descargarWorkbook(workbook, "pedidos_consolidados_formato1.xlsx");
-
-      const { payload, meta } = await dispatch(exportarPedidoSap()).unwrap();
-      console.log("Resultado envío SAP:", payload || meta);
+      const worksheet = workbook.addWorksheet("Consolidado");
+      const agrupado = agruparPedidosPorDeudor(pedidosConDetalles);
+      await addPedidosToWorksheetFormato1(worksheet, agrupado);
+      await descargarWorkbook(workbook, "pedidos_formato1.xlsx");
 
       await actualizarEstadoPedidosExportados(pedidosAprobados);
-
       toast({
         title: "Exportación completada",
-        description: "Archivo generado y pedidos enviados a SAP.",
+        description: "SAP y Excel OK.",
         status: "success",
-        duration: 4000,
-        isClosable: true,
       });
     } catch (err) {
-      console.error("Error en exportación formato 1:", err);
+      console.error("Error exportando:", err);
       toast({
-        title: "Error",
-        description:
-          err?.message || "No se pudieron exportar los pedidos (formato 1).",
+        title: "Error inesperado",
+        description: err.message,
         status: "error",
-        duration: 4000,
-        isClosable: true,
       });
     } finally {
       setIsExporting(false);
@@ -171,33 +167,41 @@ const AprobadosPage = () => {
 
     setIsExporting(true);
     try {
+      const sapResult = await dispatch(exportarPedidoSap()).unwrap();
+      if (sapResult.error) {
+        toast({
+          title: "Error al exportar a SAP",
+          description: sapResult.error,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
       const pedidosConDetalles = await cargarDetallesPedidos(pedidosAprobados);
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Pedidos Consolidados");
+      const worksheet = workbook.addWorksheet("Pedidos Consolidados F2");
       const pedidosPorDeudor = agruparPedidosPorDeudor(pedidosConDetalles);
       await addPedidosToWorksheetFormato2(worksheet, pedidosPorDeudor);
       await descargarWorkbook(workbook, "pedidos_consolidados_formato2.xlsx");
 
-      const { payload, meta } = await dispatch(exportarPedidoSap()).unwrap();
-      console.log("Resultado envío SAP:", payload || meta);
-
       await actualizarEstadoPedidosExportados(pedidosAprobados);
-
       toast({
         title: "Exportación completada",
-        description: "Archivo generado y pedidos enviados a SAP.",
+        description: "SAP y Excel (Formato 2) generados correctamente.",
         status: "success",
-        duration: 4000,
+        duration: 3000,
         isClosable: true,
       });
     } catch (err) {
       console.error("Error en exportación formato 2:", err);
       toast({
-        title: "Error",
+        title: "Error inesperado",
         description:
-          err?.message || "No se pudieron exportar los pedidos (formato 2).",
+          err.message || "No se pudo completar la exportación Formato 2.",
         status: "error",
-        duration: 4000,
+        duration: 3000,
         isClosable: true,
       });
     } finally {
