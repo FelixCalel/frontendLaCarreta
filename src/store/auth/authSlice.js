@@ -6,7 +6,7 @@ const LOCAL_KEY = "authSlice";
 const loadState = () => {
   try {
     const s = JSON.parse(localStorage.getItem(LOCAL_KEY) || "{}");
-    console.log(s);
+    //console.log(s);
     return {
       status: s.status ?? "not-authenticated",
       uid: s.uid ?? null,
@@ -38,7 +38,7 @@ const loadState = () => {
 };
 
 const saveState = (state) => {
-  console.log("Guardando estado en localStorage:", state);
+  //console.log("Guardando estado en localStorage:", state);
   localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
 };
 export const authSlice = createSlice({

@@ -11,7 +11,7 @@ export const useWebSocket = () => useContext(WebSocketContext);
 const createWebSocket = (url: string, onMessage: (event: MessageEvent) => void, onOpen: () => void, onClose: () => void, onError: (event: Event) => void): WebSocket => {
   const ws = new WebSocket(url);
   ws.onopen = () => {
-    console.log("Conectado al servidor WebSocket");
+    //console.log("Conectado al servidor WebSocket");
     onOpen();
   };
   ws.onmessage = onMessage;
@@ -34,7 +34,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ws = createWebSocket(
         wsUrl,
         (event) => {
-          console.log("Mensaje recibido:", event.data);
+          //onsole.log("Mensaje recibido:", event.data);
         },
         () => {
           setSocket(ws);
