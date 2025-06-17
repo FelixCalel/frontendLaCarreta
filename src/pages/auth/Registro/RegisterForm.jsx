@@ -177,9 +177,7 @@ const RegisterForm = () => {
         <VStack spacing={4}>
           <Heading color="green.600">Crea tu Cuenta</Heading>
           <Text color="gray.500">Completa el formulario para registrarte</Text>
-
           <ErrorAlerts errors={errors} />
-
           <form style={{ width: "100%" }} onSubmit={handleSubmit}>
             <VStack spacing={4}>
               <FirstNameField
