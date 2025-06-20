@@ -1,6 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { authSlice } from "./auth";
-/* ⬇️  tus otros reducers exactamente como ya los tenías ⬇️ */
 import { usuariosReducer } from "./usuarios/usuariosSlice";
 import paisesReducer from "./pais/paisSlice";
 import empresaReducer from "./Empresa/empresaSlice";
@@ -20,6 +19,7 @@ import itemReducer from "./items/itemSlice";
 import comprasSlice from "./Compras/compraSlice.js";
 import proveedorReducer from "./Proveedor/proveedorSlice.js";
 import asignacionAMSlice from "./asignacionAM/asignacionAMSlice.js";
+import { pedidoProduccionApi } from "../services/pedidoProduction.api.ts";
 
 export const store = configureStore({
   reducer: {
@@ -43,8 +43,8 @@ export const store = configureStore({
     compras: comprasSlice,
     proveedores: proveedorReducer,
     AsignacionAreaMesa: asignacionAMSlice,
+    [pedidoProduccionApi.reducerPath]: pedidoProduccionApi.reducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(pedidoProduccionApi.middleware),
 });
-
-/*  El slice auth se guarda/lee de localStorage por sí solo;
-    ya no necesitas store.subscribe()  */
