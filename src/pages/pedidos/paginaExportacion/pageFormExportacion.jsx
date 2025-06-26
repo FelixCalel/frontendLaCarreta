@@ -114,6 +114,9 @@ const AprobadosPage = () => {
     });
 
   const handleExportConsolidadoFormato1 = async () => {
+    const ok = await pedirConfirmacion("f1");
+    if (!ok) return;
+
     if (!pedidosAprobados.length) {
       sinPedidosToast();
       return;
