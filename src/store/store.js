@@ -19,7 +19,7 @@ import itemReducer from "./items/itemSlice";
 import comprasSlice from "./Compras/compraSlice.js";
 import proveedorReducer from "./Proveedor/proveedorSlice.js";
 import asignacionAMSlice from "./asignacionAM/asignacionAMSlice.js";
-import { pedidoProduccionApi } from "../services/pedidoProduction.api.ts";
+import { pedidoProduccionApi } from "../services/pedidoProductionApi.ts";
 
 export const store = configureStore({
   reducer: {

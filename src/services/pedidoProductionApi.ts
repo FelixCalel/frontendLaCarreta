@@ -9,50 +9,46 @@ import type {
 export const pedidoProduccionApi = createApi({
     reducerPath: 'pedidoProduccionApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: import.meta.env.VITE_API_URL
+        baseUrl: import.meta.env.VITE_API_URL,
     }),
-    tagTypes: ['PedidoProduccion'],
+    tagTypes: ['PedidoProduccion', 'DetalleProduccion'],
     endpoints: (builder) => ({
-
-        // 1) Metadata
+        /** 1) Metadata de la tabla */
         getPedidoProduccionMetadata: builder.query<Metadata[], void>({
             query: () => '/pedidoProduccion/metadata',
         }),
 
-        // 2) Todos los pedidos
+        /** 2) Listar todos los pedidos de producción */
         getAllPedidosProduccion: builder.query<PedidoProduccion[], void>({
             query: () => '/pedidoProduccion',
             providesTags: (result) =>
                 result
                     ? [
-                        ...result.map(({ id }) => ({ type: 'PedidoProduccion' as const, id })),
+                        ...result.map(({ id }) => ({
+                            type: 'PedidoProduccion' as const,
+                            id,
+                        })),
                         { type: 'PedidoProduccion', id: 'LIST' },
                     ]
                     : [{ type: 'PedidoProduccion', id: 'LIST' }],
         }),
 
-        // 3) Un pedido por ID
+        /** 3) Obtener un pedido de producción por su ID */
         getPedidoProduccionById: builder.query<PedidoProduccion, number>({
             query: (id) => `/pedidoProduccion/${id}`,
-            providesTags: (_res, _err, id) => [{ type: 'PedidoProduccion', id }],
+            providesTags: (_res, _err, id) => [
+                { type: 'PedidoProduccion', id },
+            ],
         }),
 
-        // 4) Detalles + producción
+        /** 4) Obtener detalles + producción de un pedido */
         getDetallesYProduccion: builder.query<DetalleProduccion[], number>({
             query: (id) => `/pedidoProduccion/${id}/detalles`,
-            providesTags: (result, _err, id) =>
-                result
-                    ? [
-                        ...result.map(({ id_detallePedido }) => ({
-                            type: 'PedidoProduccion' as const,
-                            id: id_detallePedido,
-                        })),
-                        { type: 'PedidoProduccion', id: `DETALLES_${id}` },
-                    ]
-                    : [{ type: 'PedidoProduccion', id: `DETALLES_${id}` }],
+            providesTags: (_res, _err, id) => [
+                { type: 'DetalleProduccion', id },
+            ],
         }),
 
-        // 5) Actualizar pedido
         updatePedidoProduccion: builder.mutation<
             PedidoProduccion,
             { id: number; data: UpdatePedidoDto }
@@ -63,8 +59,7 @@ export const pedidoProduccionApi = createApi({
                 body: data,
             }),
             invalidatesTags: (_res, _err, { id }) => [
-                { type: 'PedidoProduccion', id },
-                { type: 'PedidoProduccion', id: 'LIST' },
+                { type: 'PedidoProduccion', id }
             ],
         }),
     }),

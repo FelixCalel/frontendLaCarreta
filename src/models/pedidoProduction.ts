@@ -32,6 +32,11 @@ export interface PedidoProduccion {
     update_by: number | null
     state: boolean
     id_detallePedido: number
+    itemCode: string
+    productoNombre: string
+    tienda: string
+    pais: string
+    unidadMedida: string
 }
 
 

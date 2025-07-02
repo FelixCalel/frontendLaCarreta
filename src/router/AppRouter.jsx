@@ -23,6 +23,7 @@ import { PaginaPedidoCompras } from "../router/ComprasRouter";
 import { PaginaComprador } from "../router/CompradorRouter";
 import { PaginaControlCalidad } from "../router/ControlCalidadRouter";
 import { PaginaAsignacionAM } from "./AsignacionAreaMesaRoute";
+import { produccionOrden } from "./pedidoProduccion";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -59,7 +60,7 @@ export const AppRouter = () => {
     { path: "/area3/*", rutaId: 20, component: PaginaAsignacionAM },
     { path: "/area4/*", rutaId: 21, component: PaginaAsignacionAM },
     { path: "/area5/*", rutaId: 22, component: PaginaAsignacionAM },
-
+    { path: "/produccion/*", rutaId: 23, component: produccionOrden },
   ];
 
   useEffect(() => {
