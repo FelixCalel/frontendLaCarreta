@@ -207,6 +207,7 @@ const PageFormPedidos = () => {
       tiendaId: tiendaSeleccionada,
       deudorId: currentPedido.deudorId,
       creadoEl: today,
+      estadoId: currentPedido.estadoId ?? 1,
       productos:
         productosCopiados.length > 0
           ? productosCopiados
