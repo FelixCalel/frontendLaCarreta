@@ -62,7 +62,7 @@ export const AppRouter = () => {
     { path: "/area4/*", rutaId: 21, component: PaginaAsignacionAM },
     { path: "/area5/*", rutaId: 22, component: PaginaAsignacionAM },
     { path: "/mesa/*", rutaId: 23, component: produccionOrden },
-    { path: "/mesa/*", rutaId: 24, component: produccionOrdenSuper },
+    { path: "/produccion/*", rutaId: 24, component: produccionOrdenSuper },
   ];
 
   useEffect(() => {

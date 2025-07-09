@@ -13,12 +13,10 @@ export const pedidoProduccionApi = createApi({
     }),
     tagTypes: ['PedidoProduccion', 'DetalleProduccion'],
     endpoints: (builder) => ({
-        /** 1) Metadata de la tabla */
         getPedidoProduccionMetadata: builder.query<Metadata[], void>({
             query: () => '/pedidoProduccion/metadata',
         }),
 
-        /** 2) Listar todos los pedidos de producción */
         getAllPedidosProduccion: builder.query<PedidoProduccion[], void>({
             query: () => '/pedidoProduccion',
             providesTags: (result) =>
@@ -33,7 +31,6 @@ export const pedidoProduccionApi = createApi({
                     : [{ type: 'PedidoProduccion', id: 'LIST' }],
         }),
 
-        /** 3) Obtener un pedido de producción por su ID */
         getPedidoProduccionById: builder.query<PedidoProduccion, number>({
             query: (id) => `/pedidoProduccion/${id}`,
             providesTags: (_res, _err, id) => [
@@ -41,7 +38,6 @@ export const pedidoProduccionApi = createApi({
             ],
         }),
 
-        /** 4) Obtener detalles + producción de un pedido */
         getDetallesYProduccion: builder.query<DetalleProduccion[], number>({
             query: (id) => `/pedidoProduccion/${id}/detalles`,
             providesTags: (_res, _err, id) => [
