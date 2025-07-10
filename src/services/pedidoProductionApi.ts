@@ -4,6 +4,7 @@ import type {
     PedidoProduccion,
     DetalleProduccion,
     UpdatePedidoDto,
+    PedidoAgrupado
 } from '../models/pedidoProduction'
 
 export const pedidoProduccionApi = createApi({
@@ -11,7 +12,7 @@ export const pedidoProduccionApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: import.meta.env.VITE_API_URL,
     }),
-    tagTypes: ['PedidoProduccion', 'DetalleProduccion'],
+    tagTypes: ['PedidoProduccion', 'DetalleProduccion', 'PedidoAgrupado'],
     endpoints: (builder) => ({
         getPedidoProduccionMetadata: builder.query<Metadata[], void>({
             query: () => '/pedidoProduccion/metadata',
@@ -55,9 +56,43 @@ export const pedidoProduccionApi = createApi({
                 body: data,
             }),
             invalidatesTags: (_res, _err, { id }) => [
-                { type: 'PedidoProduccion', id }
+                { type: 'PedidoProduccion', id },
+                // invalidamos la lista agrupada por si cambia algo de estado
+                { type: 'PedidoAgrupado', id: 'LIST' },
             ],
         }),
+
+        getPedidosAgrupados: builder.query<PedidoAgrupado[], void>({
+            query: () => '/pedidoProduccion/agrupados',
+            providesTags: (result) =>
+                result
+                    ? [
+                        ...result.map(({ pedidoId }) => ({
+                            type: 'PedidoAgrupado' as const,
+                            id: pedidoId,
+                        })),
+                        { type: 'PedidoAgrupado', id: 'LIST' },
+                    ]
+                    : [{ type: 'PedidoAgrupado', id: 'LIST' }],
+        }),
+
+        avanzarEtapa: builder.mutation<
+            { message: string },               // respuesta del backend
+            { pedidoId: number; usuarioId: number } // cuerpo que enviamos
+        >({
+            query: (body) => ({
+                url: '/lineaTiempo/avanzar-etapa',
+                method: 'POST',
+                body,
+            }),
+            // invalidar lo que necesites refrescar:
+            invalidatesTags: (_res, _err, { pedidoId }) => [
+                { type: 'PedidoAgrupado', id: pedidoId },
+                { type: 'PedidoProduccion', id: pedidoId },
+            ],
+        }),
+
+
     }),
 })
 
@@ -67,4 +102,6 @@ export const {
     useGetPedidoProduccionByIdQuery,
     useGetDetallesYProduccionQuery,
     useUpdatePedidoProduccionMutation,
+    useGetPedidosAgrupadosQuery,
+    useAvanzarEtapaMutation,
 } = pedidoProduccionApi

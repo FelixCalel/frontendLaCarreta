@@ -44,4 +44,11 @@ export interface DetalleProduccion {
     [key: string]: any
 }
 
+
+export interface PedidoAgrupado {
+    pedidoId: number
+    tienda: string
+    pais: string
+    items: PedidoProduccion[]
+}
 export type UpdatePedidoDto = Partial<Omit<PedidoProduccion, 'id'>>

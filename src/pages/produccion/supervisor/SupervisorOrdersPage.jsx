@@ -1,49 +1,40 @@
 import { useState, useMemo } from "react";
 import { Box, Heading, Center, Spinner, Text } from "@chakra-ui/react";
-import { useGetAllPedidosProduccionQuery } from "../../../services/pedidoProductionApi";
+import { useGetPedidosAgrupadosQuery } from "../../../services/pedidoProductionApi";
 import { FilterPanel } from "../../../components/production/FilterPanel";
-import { CardGrid } from "../../../components/production/PedidoCard";
+import { GroupCardGrid } from "../../../components/production/GroupCardGrid";
 
 const SupervisorOrdersPage = () => {
   const {
-    data: pedidos = [],
+    data: agrupados = [],
     isLoading,
     error,
-  } = useGetAllPedidosProduccionQuery();
-
+  } = useGetPedidosAgrupadosQuery();
   const [term, setTerm] = useState("");
   const [country, setCountry] = useState("");
   const [client, setClient] = useState("");
-  const [stateF, setStateF] = useState("");
 
   const countries = useMemo(
-    () => Array.from(new Set(pedidos.map((p) => p.pais))),
-    [pedidos]
+    () => Array.from(new Set(agrupados.map((g) => g.pais))),
+    [agrupados]
   );
   const clients = useMemo(
-    () => Array.from(new Set(pedidos.map((p) => p.tienda))),
-    [pedidos]
+    () => Array.from(new Set(agrupados.map((g) => g.tienda))),
+    [agrupados]
   );
-  // const states = useMemo(
-  //   () =>
-  //     Array.from(
-  //       new Set(pedidos.map((p) => (p.completo ? "Completado" : "Pendiente")))
-  //     ),
-  //   [pedidos]
-  // );
 
-  const filtered = useMemo(() => {
-    return pedidos
-      .filter(
-        (d) =>
-          !term || d.productoNombre.toLowerCase().includes(term.toLowerCase())
-      )
-      .filter((d) => !country || d.pais === country)
-      .filter((d) => !client || d.tienda === client)
-      .filter(
-        (d) => !stateF || (d.completo ? "Completado" : "Pendiente") === stateF
-      );
-  }, [pedidos, term, country, client, stateF]);
+  const filtered = useMemo(
+    () =>
+      agrupados.filter(
+        (g) =>
+          (!term ||
+            g.pedidoId.toString().includes(term) ||
+            g.tienda.toLowerCase().includes(term.toLowerCase())) &&
+          (!country || g.pais === country) &&
+          (!client || g.tienda === client)
+      ),
+    [agrupados, term, country, client]
+  );
 
   if (isLoading) {
     return (
@@ -74,13 +65,11 @@ const SupervisorOrdersPage = () => {
         onCountryChange={setCountry}
         clientFilter={client}
         onClientChange={setClient}
-        stateFilter={stateF}
-        onStateChange={setStateF}
         countries={countries}
         clients={clients}
       />
 
-      <CardGrid pedidos={filtered} />
+      <GroupCardGrid pedidos={filtered} />
     </Box>
   );
 };
