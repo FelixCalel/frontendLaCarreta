@@ -230,16 +230,15 @@ const MenuPrincipalD = () => {
   }, []);
 
   useEffect(() => {
-    const enModuloPedido = PEDIDO_ROUTES.some((route) =>
-      location.pathname.startsWith(route)
+    const enModuloPedido = PEDIDO_ROUTES.some((r) =>
+      location.pathname.startsWith(r)
     );
 
-    if (isMobile && enModuloPedido) {
-      setIsExpanded(true);
-    } else {
-      setIsExpanded(false);
-    }
-  }, [isMobile, location.pathname]);
+    const debeExpandir = enModuloPedido && isMobile;
+    setIsExpanded(debeExpandir);
+
+    if (!enModuloPedido) setOpenMenus({});
+  }, [location.pathname, isMobile]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -285,6 +284,10 @@ const MenuPrincipalD = () => {
   if (!modulosAgrupados.length) {
     return <div>No hay módulos disponibles.</div>;
   }
+
+  modulosAgrupados.forEach((m) => {
+    m.opciones = m.opciones.filter((op) => !op.ruta?.includes(":"));
+  });
 
   return (
     <Box

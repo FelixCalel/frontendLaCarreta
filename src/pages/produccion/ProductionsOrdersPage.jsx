@@ -3,7 +3,6 @@ import { Box, Spinner, Text, Heading } from "@chakra-ui/react";
 import { useGetAllPedidosProduccionQuery } from "../../services/pedidoProductionApi";
 import { FilterPanel } from "../../components/production/FilterPanel";
 import { OrdersTable } from "../../components/production/OrdersTable";
-import { ActionButtons } from "../../components/production/ActionButtons";
 
 export const ProductionOrdersPage = () => {
   const { data = [], isLoading, error } = useGetAllPedidosProduccionQuery();
@@ -41,10 +40,6 @@ export const ProductionOrdersPage = () => {
       );
   }, [data, itemFilter, countryFilter, clientFilter, stateFilter]);
 
-  const handleSave = () => {
-    console.log("Guardar cambios...");
-  };
-
   if (isLoading)
     return (
       <Box textAlign="center" mt="20">
@@ -77,8 +72,6 @@ export const ProductionOrdersPage = () => {
       />
 
       <OrdersTable data={filtered} />
-
-      <ActionButtons onSave={handleSave} onFinish={handleSave} />
     </Box>
   );
 };

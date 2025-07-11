@@ -30,7 +30,6 @@ import { OrdersTable } from "../../../components/production/OrdersTable";
 import { ActionButtons } from "../../../components/production/ActionButtons";
 
 const ProductionOrderDetailPage = () => {
-  /* ----------------------- datos y filtros ----------------------- */
   const { pedidoId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -89,12 +88,10 @@ const ProductionOrderDetailPage = () => {
     [items, term, country, client, stateFilter]
   );
 
-  /* ---------------------- modal comentario ---------------------- */
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [comment, setComment] = useState("");
   const [noComment, setNoComment] = useState(false);
 
-  /* ---------------------- llamada RTK Query --------------------- */
   const [avanzarEtapa, { isLoading: isSending }] = useAvanzarEtapaMutation();
 
   const handleFinalizeClick = () => {
@@ -111,7 +108,7 @@ const ProductionOrderDetailPage = () => {
       await avanzarEtapa({
         pedidoId: Number(pedidoId),
         usuarioId,
-        comentario, // <-- opcional, si tu backend lo maneja
+        comentario,
       }).unwrap();
 
       toast({
@@ -123,8 +120,6 @@ const ProductionOrderDetailPage = () => {
       });
 
       onClose();
-      // si quieres volver a la lista:
-      // navigate(-1);
     } catch (err) {
       toast({
         title: "Error",
@@ -168,7 +163,7 @@ const ProductionOrderDetailPage = () => {
           ← Volver
         </Button>
         <Heading size="md">Detalle Pedido #{group.pedidoId}</Heading>
-        <ActionButtons onSave={handleFinalizeClick} />
+        <ActionButtons onFinish={handleFinalizeClick} />
       </Flex>
 
       <FilterPanel
