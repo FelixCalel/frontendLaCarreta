@@ -5,11 +5,16 @@ import { FilterPanel } from "../../components/production/FilterPanel";
 import { OrdersTable } from "../../components/production/OrdersTable";
 
 export const ProductionOrdersPage = () => {
-  const { data = [], isLoading, error } = useGetAllPedidosProduccionQuery();
   const [itemFilter, setItemFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
+  const {
+    data: apiData = [],
+    isLoading,
+    error,
+  } = useGetAllPedidosProduccionQuery();
+  const data = useMemo(() => apiData.filter((d) => d.etapaId === 1), [apiData]);
 
   const countries = useMemo(
     () => Array.from(new Set(data.map((d) => d.pais))),

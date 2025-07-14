@@ -4,7 +4,11 @@ export interface Metadata {
     isNullable: string
     defaultValue: string | null
 }
-
+export interface AvanzarEtapaPayload {
+    pedidoId: number;
+    usuarioId: number;
+    comentario?: string | null;
+}
 
 export interface PedidoProduccion {
     id: number
@@ -52,3 +56,32 @@ export interface PedidoAgrupado {
     items: PedidoProduccion[]
 }
 export type UpdatePedidoDto = Partial<Omit<PedidoProduccion, 'id'>>
+
+export interface AvanzarEtapaPayload {
+    pedidoId: number;
+    usuarioId: number;
+    comentario?: string | null;
+}
+
+export interface AvanzarEtapaDetallePayload {
+    detalleOrdenId: number;
+    usuarioId: number;
+}
+
+export interface AvanzarMultiEtapaDetallePayload {
+    detalleOrdenIds: number[];
+    usuarioId: number;
+}
+
+export interface AvanceOK {               // respuesta simple de tus controladores
+    ok: boolean;
+    mensaje: string;
+}
+
+export interface AvanceMultiplesOK {
+    ok: boolean;
+    resultado: {
+        procesados: number;
+        errores: string[];
+    };
+}

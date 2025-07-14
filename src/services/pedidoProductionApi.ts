@@ -4,7 +4,12 @@ import type {
     PedidoProduccion,
     DetalleProduccion,
     UpdatePedidoDto,
-    PedidoAgrupado
+    PedidoAgrupado,
+    AvanzarEtapaPayload,
+    AvanceOK,
+    AvanzarEtapaDetallePayload,
+    AvanceMultiplesOK,
+    AvanzarMultiEtapaDetallePayload
 } from '../models/pedidoProduction'
 
 export const pedidoProduccionApi = createApi({
@@ -77,21 +82,52 @@ export const pedidoProduccionApi = createApi({
         }),
 
         avanzarEtapa: builder.mutation<
-            { message: string },               // respuesta del backend
-            { pedidoId: number; usuarioId: number } // cuerpo que enviamos
+            { message: string },
+            AvanzarEtapaPayload
         >({
             query: (body) => ({
                 url: '/lineaTiempo/avanzar-etapa',
                 method: 'POST',
                 body,
             }),
-            // invalidar lo que necesites refrescar:
-            invalidatesTags: (_res, _err, { pedidoId }) => [
+            invalidatesTags: (_result, _error, { pedidoId }) => [
                 { type: 'PedidoAgrupado', id: pedidoId },
                 { type: 'PedidoProduccion', id: pedidoId },
+                { type: 'DetalleProduccion', id: pedidoId },
             ],
         }),
 
+        avanzarEtapaDetalle: builder.mutation<
+            AvanceOK,
+            AvanzarEtapaDetallePayload
+        >({
+            query: (body) => ({
+                url: '/lineaTiempoDetalle/avanzar',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: (_r, _e, { detalleOrdenId }) => [
+                { type: 'DetalleProduccion', id: detalleOrdenId },
+            ],
+        }),
+
+        avanzarMultiEtapaDetalle: builder.mutation<
+            AvanceMultiplesOK,
+            AvanzarMultiEtapaDetallePayload
+        >({
+            query: (body) => ({
+                url: '/lineaTiempoDetalle/avanzar-multiples',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: (_r, _e, { detalleOrdenIds }) => [
+                ...detalleOrdenIds.map((id) => ({
+                    type: 'DetalleProduccion' as const,
+                    id,
+                })),
+                { type: 'DetalleProduccion', id: 'LIST' },
+            ],
+        }),
 
     }),
 })
@@ -104,4 +140,6 @@ export const {
     useUpdatePedidoProduccionMutation,
     useGetPedidosAgrupadosQuery,
     useAvanzarEtapaMutation,
+    useAvanzarEtapaDetalleMutation,
+    useAvanzarMultiEtapaDetalleMutation,
 } = pedidoProduccionApi

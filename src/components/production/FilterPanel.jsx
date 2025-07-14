@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import {
   Flex,
   Input,
@@ -6,8 +5,10 @@ import {
   InputLeftElement,
   Select,
   Box,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
+import PropTypes from "prop-types";
 
 export const FilterPanel = ({
   itemFilter,
@@ -20,65 +21,86 @@ export const FilterPanel = ({
   onStateChange,
   countries,
   clients,
-}) => (
-  <Flex wrap="wrap" gap={4} mb={2} align="center" justify="center" w="100%">
-    <Box>
-      <InputGroup maxW="240px">
-        <InputLeftElement pointerEvents="none">
-          <SearchIcon color="gray.300" />
-        </InputLeftElement>
-        <Input
-          placeholder="Buscar ITEM"
-          value={itemFilter}
-          onChange={(e) => onItemChange(e.target.value)}
-        />
-      </InputGroup>
-    </Box>
+}) => {
+  /* Colores coherentes en ambos temas */
+  const fieldBg = useColorModeValue("white", "gray.700");
+  const fieldBorder = useColorModeValue("gray.300", "gray.600");
+  const fieldText = useColorModeValue("gray.800", "gray.100");
+  const placeholder = useColorModeValue("gray.400", "gray.400");
 
-    <Box>
-      <Select
-        placeholder="País"
-        maxW="160px"
-        value={countryFilter}
-        onChange={(e) => onCountryChange(e.target.value)}
-      >
-        {countries.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </Select>
-    </Box>
+  const commonProps = {
+    bg: fieldBg,
+    color: fieldText,
+    borderColor: fieldBorder,
+    _placeholder: { color: placeholder },
+    _hover: { borderColor: fieldBorder },
+    _focus: { borderColor: "green.400", boxShadow: "0 0 0 1px #38A169" },
+  };
 
-    <Box>
-      <Select
-        placeholder="Cliente"
-        maxW="200px"
-        value={clientFilter}
-        onChange={(e) => onClientChange(e.target.value)}
-      >
-        {clients.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </Select>
-    </Box>
+  return (
+    <Flex wrap="wrap" gap={4} mb={2} align="center" justify="center" w="100%">
+      <Box>
+        <InputGroup maxW="240px">
+          <InputLeftElement pointerEvents="none">
+            <SearchIcon color="gray.300" />
+          </InputLeftElement>
+          <Input
+            {...commonProps}
+            placeholder="Buscar ITEM"
+            value={itemFilter}
+            onChange={(e) => onItemChange(e.target.value)}
+          />
+        </InputGroup>
+      </Box>
 
-    <Box>
-      <Select
-        placeholder="Estado del pedido"
-        maxW="200px"
-        value={stateFilter}
-        onChange={(e) => onStateChange(e.target.value)}
-      >
-        <option value="En Proceso">En Proceso</option>
-        <option value="Completado">Completado</option>
-        <option value="Pendiente">Pendiente</option>
-      </Select>
-    </Box>
-  </Flex>
-);
+      <Box>
+        <Select
+          {...commonProps}
+          placeholder="País"
+          maxW="160px"
+          value={countryFilter}
+          onChange={(e) => onCountryChange(e.target.value)}
+        >
+          {countries.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </Select>
+      </Box>
+
+      <Box>
+        <Select
+          {...commonProps}
+          placeholder="Cliente"
+          maxW="200px"
+          value={clientFilter}
+          onChange={(e) => onClientChange(e.target.value)}
+        >
+          {clients.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </Select>
+      </Box>
+
+      <Box>
+        <Select
+          {...commonProps}
+          placeholder="Estado del pedido"
+          maxW="200px"
+          value={stateFilter}
+          onChange={(e) => onStateChange(e.target.value)}
+        >
+          <option value="En Proceso">En Proceso</option>
+          <option value="Completado">Completado</option>
+          <option value="Pendiente">Pendiente</option>
+        </Select>
+      </Box>
+    </Flex>
+  );
+};
 
 FilterPanel.propTypes = {
   itemFilter: PropTypes.string.isRequired,

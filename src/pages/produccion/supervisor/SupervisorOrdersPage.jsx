@@ -25,14 +25,19 @@ const SupervisorOrdersPage = () => {
 
   const filtered = useMemo(
     () =>
-      agrupados.filter(
-        (g) =>
-          (!term ||
-            g.pedidoId.toString().includes(term) ||
-            g.tienda.toLowerCase().includes(term.toLowerCase())) &&
-          (!country || g.pais === country) &&
-          (!client || g.tienda === client)
-      ),
+      agrupados.filter((g) => {
+        const tienePendientes = g.items.some((it) => it.etapaId === 1);
+
+        const fTerm =
+          !term ||
+          g.pedidoId.toString().includes(term) ||
+          g.tienda.toLowerCase().includes(term.toLowerCase());
+
+        const fPais = !country || g.pais === country;
+        const fCli = !client || g.tienda === client;
+
+        return tienePendientes && fTerm && fPais && fCli;
+      }),
     [agrupados, term, country, client]
   );
 
@@ -67,6 +72,7 @@ const SupervisorOrdersPage = () => {
         onClientChange={setClient}
         countries={countries}
         clients={clients}
+        onStateChange={() => {}}
       />
 
       <GroupCardGrid pedidos={filtered} />
