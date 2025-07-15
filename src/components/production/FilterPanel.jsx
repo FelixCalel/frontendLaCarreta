@@ -22,7 +22,6 @@ export const FilterPanel = ({
   countries,
   clients,
 }) => {
-  /* Colores coherentes en ambos temas */
   const fieldBg = useColorModeValue("white", "gray.700");
   const fieldBorder = useColorModeValue("gray.300", "gray.600");
   const fieldText = useColorModeValue("gray.800", "gray.100");

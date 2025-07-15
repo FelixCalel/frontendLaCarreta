@@ -27,17 +27,24 @@ export const ProductionOrdersPage = () => {
 
   const filtered = useMemo(() => {
     return data
-      .filter(
-        (d) =>
-          (!itemFilter ||
-            d.productoNombre
-              .toLowerCase()
-              .includes(itemFilter.toLowerCase())) &&
-          (!countryFilter || d.pais === countryFilter) &&
-          (!clientFilter || d.tienda === clientFilter) &&
-          (!stateFilter ||
-            (d.completo ? "Completado" : "Pendiente") === stateFilter)
-      )
+      .filter((d) => {
+        const coincideTexto =
+          !itemFilter ||
+          d.productoNombre.toLowerCase().includes(itemFilter.toLowerCase());
+        const coincidePais = !countryFilter || d.pais === countryFilter;
+        const coincideCliente = !clientFilter || d.tienda === clientFilter;
+        const procesado = +(d.cantidad ?? 0);
+        const estado = d.completo
+          ? "Completado"
+          : procesado > 0
+          ? "En Proceso"
+          : "Pendiente";
+        const coincideEstado = !stateFilter || estado === stateFilter;
+
+        return (
+          coincideTexto && coincidePais && coincideCliente && coincideEstado
+        );
+      })
       .sort((a, b) =>
         a.productoNombre.localeCompare(b.productoNombre, undefined, {
           sensitivity: "base",

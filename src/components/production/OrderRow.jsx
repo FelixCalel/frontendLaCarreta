@@ -19,7 +19,6 @@ import {
 } from "../../services/pedidoProductionApi";
 import { OrderDetailsTable } from "./OrderDetailsTable";
 
-// Mapeo de labels para los campos del panel
 const FIELD_LABELS = {
   mpUtilizada: "MP Utilizada",
   mp1ra: "MP 1ra.",
@@ -32,16 +31,18 @@ const FIELD_LABELS = {
 };
 
 export const OrderRow = ({ order, isExpanded, onToggle }) => {
-  const { data: details, isLoading } = useGetDetallesYProduccionQuery(order.id);
+  const {
+    data: details,
+    isLoading,
+    refetch,
+  } = useGetDetallesYProduccionQuery(order.id, { skip: order.ptmq });
   const [updatePedido] = useUpdatePedidoProduccionMutation();
-
-  // Estado local: cantidad procesada y faltante
+  const [isPTMQ, setIsPTMQ] = useState(order.ptmq ?? false);
   const [cantidadLocal, setCantidadLocal] = useState(order.cantidad || 0);
   const [faltanteLocal, setFaltanteLocal] = useState(
     (order.cantidadUnidad ?? 0) - (order.cantidad || 0)
   );
 
-  // Estado local: campos del panel
   const [prodFields, setProdFields] = useState({
     mpUtilizada: order.mpUtilizada ?? 0,
     mp1ra: order.mp1ra ?? 0,
@@ -53,11 +54,22 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
     trazabilidad_Prod: order.trazabilidad_Prod ?? "",
   });
 
-  // Sincronizar si cambian externamente
   useEffect(() => {
     setCantidadLocal(order.cantidad || 0);
     setFaltanteLocal((order.cantidadUnidad ?? 0) - (order.cantidad || 0));
   }, [order.cantidad, order.cantidadUnidad]);
+
+  useEffect(() => setIsPTMQ(order.ptmq), [order.ptmq]);
+
+  const handlePTMQToggle = (checked) => {
+    updatePedido({ id: order.id, data: { ptmq: checked } })
+      .unwrap()
+      .then(() => {
+        setIsPTMQ(checked);
+        if (!checked) refetch();
+      })
+      .catch(() => setIsPTMQ(order.ptmq));
+  };
 
   useEffect(() => {
     setProdFields({
@@ -81,7 +93,6 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
     order.trazabilidad_Prod,
   ]);
 
-  // Actualiza cantidad procesada + faltante
   const handleCantidadChange = (raw) => {
     const maximo = order.cantidadUnidad ?? 0;
     const nueva = Math.min(Math.max(0, raw), maximo);
@@ -201,7 +212,12 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
                   </Box>
                 ))}
               </Flex>
-              <OrderDetailsTable details={details} isLoading={isLoading} />
+              <OrderDetailsTable
+                details={details}
+                isLoading={isLoading}
+                isPTMQ={isPTMQ}
+                onTogglePTMQ={handlePTMQToggle}
+              />
             </Box>
           </Collapse>
         </Td>
@@ -228,6 +244,7 @@ OrderRow.propTypes = {
     rechazo: PropTypes.number,
     basura: PropTypes.number,
     trazabilidad_Prod: PropTypes.string,
+    ptmq: PropTypes.bool,
   }).isRequired,
   isExpanded: PropTypes.bool.isRequired,
   onToggle: PropTypes.func.isRequired,
