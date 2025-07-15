@@ -1,0 +1,15 @@
+import PropTypes from "prop-types";
+import { SimpleGrid } from "@chakra-ui/react";
+import { GroupCard } from "./DigitadorCard";
+
+export const GroupCardGrid = ({ groups }) => (
+  <SimpleGrid columns={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing={4} mb={6}>
+    {groups.map((g) => (
+      <GroupCard key={g.pedidoId} group={g} />
+    ))}
+  </SimpleGrid>
+);
+
+GroupCardGrid.propTypes = {
+  groups: PropTypes.arrayOf(PropTypes.object).isRequired,
+};

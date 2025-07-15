@@ -1,17 +1,6 @@
 import PropTypes from "prop-types";
 import { Box, Checkbox, Text, Badge } from "@chakra-ui/react";
 
-/**
- * pedido: {
- *   id,
- *   productoNombre,
- *   tienda,
- *   pais,
- *   cantidadUnidad,
- *   unidadMedida,
- *   completo
- * }
- */
 export const OrderCard = ({ pedido, isSelected, onToggle }) => {
   const colorScheme = pedido.completo ? "green" : "gray";
   const labelEstado = pedido.completo ? "Completado" : "Pendiente";

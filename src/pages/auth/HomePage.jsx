@@ -23,16 +23,22 @@ import {
   FaUserTie,
   FaPlusCircle,
   FaRegLightbulb,
+  FaLaptop,
+  FaHardHat,
+  FaTools,
 } from "react-icons/fa";
 
 const roleMap = {
   1: "Administrador",
-  2: "Display",
+  2: "Usuario",
   3: "Ventas",
   5: "Compras",
   6: "QA",
   7: "Supervisor",
+  8: "Rol Ejemplo",
   9: "Supervisor producción",
+  10: "Encargado de área",
+  11: "Digitador",
 };
 const roleColorMap = {
   Administrador: "red",
@@ -42,6 +48,8 @@ const roleColorMap = {
   Compras: "orange",
   QA: "purple",
   "Supervisor producción": "teal",
+  "Encargado de área": "cyan",
+  Digitador: "yellow",
 };
 const roleIconMap = {
   Administrador: FaUserShield,
@@ -50,7 +58,9 @@ const roleIconMap = {
   Supervisor: FaUserTie,
   Compras: FaBox,
   QA: FaSearch,
-  "Supervisor producción": FaUserShield,
+  "Supervisor producción": FaHardHat,
+  "Encargado de área": FaTools,
+  Digitador: FaLaptop,
 };
 
 const tips = [

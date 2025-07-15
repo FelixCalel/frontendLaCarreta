@@ -26,6 +26,9 @@ import { PaginaAsignacionAM } from "./AsignacionAreaMesaRoute";
 import { produccionOrden } from "./pedidoProduccion";
 import { produccionOrdenSuper } from "./supervisorProduction";
 import { productionOrdenDetails } from "./pedidoProductionDetail";
+import { digitadorOrden } from "./digitadorOrden";
+import { digitadorDetalleOrden } from "./detalleDigitadorOrden";
+
 export const AppRouter = () => {
   const dispatch = useDispatch();
   const [accesosPermitidos, setAccesosPermitidos] = useState({});
@@ -64,6 +67,8 @@ export const AppRouter = () => {
     { path: "/mesa/*", rutaId: 23, component: produccionOrden },
     { path: "/produccion/*", rutaId: 24, component: produccionOrdenSuper },
     { path: "/despacho/*", rutaId: 25, component: productionOrdenDetails },
+    { path: "/digitador/*", rutaId: 26, component: digitadorOrden },
+    { path: "/detalle/*", rutaId: 27, component: digitadorDetalleOrden },
   ];
 
   useEffect(() => {
