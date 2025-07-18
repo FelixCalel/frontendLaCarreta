@@ -27,7 +27,6 @@ import {
 import { FaCalendarAlt, FaCommentDots, FaBoxOpen } from "react-icons/fa";
 
 const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
-  /* ---------  tokens de color / estilos --------- */
   const bg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const rowHoverBg = useColorModeValue("gray.50", "gray.700");
@@ -40,7 +39,6 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
 
   if (!pedido) return null;
 
-  /* ---------  Fechas formateadas  --------- */
   const [y, m, d] = pedido.fechaOrden.slice(0, 10).split("-");
   const fechaUser = `${d}/${m}/${y}`;
 
@@ -83,7 +81,6 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
 
         <ModalBody>
           <VStack spacing={5} align="stretch">
-            {/* ----------------  BLOQUE DISPLAY  ---------------- */}
             {pedido.comentarioDisplay || pedido.fechaOrdenDisplay ? (
               <>
                 <Flex
@@ -120,7 +117,6 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
               </>
             ) : null}
 
-            {/* ----------------  LISTA DE PRODUCTOS  ---------------- */}
             <Box>
               <Text fontSize="lg" fontWeight="semibold" mb={2}>
                 Productos
@@ -153,7 +149,6 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
 
             <Divider borderColor={borderColor} />
 
-            {/* ----------------  BLOQUE FECHA/COMENTARIO FINAL  ---------------- */}
             <Flex align="center" gap={2}>
               <Badge colorScheme="teal" bg={badgeBgUser}>
                 Entrega
@@ -193,7 +188,6 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
   );
 };
 
-/* ----------  PropTypes  ---------- */
 DetallesModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
