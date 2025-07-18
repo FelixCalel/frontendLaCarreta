@@ -26,6 +26,7 @@ import {
 import { FaCalendarAlt, FaCommentDots, FaBoxOpen } from "react-icons/fa";
 
 const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
+  // Llamadas a hooks al inicio
   const bg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const rowHoverBg = useColorModeValue("gray.50", "gray.700");
