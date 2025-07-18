@@ -21,7 +21,6 @@ import {
   Stack,
   Icon,
   Divider,
-  VStack,
   useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
