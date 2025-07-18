@@ -31,6 +31,8 @@ import ApproveOrderDialog from "../componentes/EntrantesFormPedidos/ApproveOrder
 import { selectPedidosEntrantesPorRuta } from "./componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 import { useSearch } from "../../../components/component/SearchContext";
+import CancelOrderDialog from "./componentes/CancelOrderDialog";
+
 //import { format } from "date-fns";
 
 const EntrantesPage = () => {
