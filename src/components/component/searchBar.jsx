@@ -13,16 +13,23 @@ import {
 import { FiSearch } from "react-icons/fi";
 import PropTypes from "prop-types";
 
-const SearchBar = ({ placeholder, onSearch, suggestions, onSuggestionClick }) => {
-  const [query, setQuery] = useState("");
+const SearchBar = ({
+  placeholder,
+  onSearch,
+  suggestions = [],
+  onSuggestionClick,
+  initialValue = "",
+}) => {
+  const [query, setQuery] = useState(initialValue);
+  const launchSearch = () => onSearch(query.trim());
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter" && query.trim()) {
-      onSearch(query.trim());
+    if (e.key === "Enter") {
+      e.preventDefault(); // evita que el Enter recargue la página
+      launchSearch();
     }
   };
 
-  // Colores dinámicos según modo claro/oscuro
   const inputBg = useColorModeValue("white", "gray.800");
   const inputColor = useColorModeValue("gray.800", "white");
   const iconColor = useColorModeValue("gray.500", "gray.400");
@@ -57,11 +64,10 @@ const SearchBar = ({ placeholder, onSearch, suggestions, onSuggestionClick }) =>
           ml={2}
           colorScheme="blue"
           borderRadius="full"
-          onClick={() => onSearch(query.trim())}
+          onClick={launchSearch}
         />
       </Flex>
 
-      {/* Sugerencias dinámicas */}
       {suggestions && suggestions.length > 0 && (
         <Box
           position="absolute"
@@ -83,7 +89,7 @@ const SearchBar = ({ placeholder, onSearch, suggestions, onSuggestionClick }) =>
                 _hover={{ bg: suggestionsHoverBg }}
                 onClick={() => onSuggestionClick(item)}
               >
-                {item.nombre} - {item.correlativo}
+                {item.label}
               </ListItem>
             ))}
           </List>
@@ -97,7 +103,8 @@ SearchBar.propTypes = {
   placeholder: PropTypes.string,
   onSearch: PropTypes.func.isRequired,
   suggestions: PropTypes.array,
-  onSuggestionClick: PropTypes.func.isRequired,
+  onSuggestionClick: PropTypes.func,
+  initialValue: PropTypes.string,
 };
 
 export default SearchBar;

@@ -15,23 +15,14 @@ import { Link } from "react-router-dom";
 import { MenuPerfil } from "./MenuPerfil";
 import Notifications from "./Notificaciones";
 import SearchBar from "./component/searchBar";
+import { useSearch } from "./component/SearchContext";
 
 export default function NavBar() {
   const { isOpen, onToggle, onClose } = useDisclosure();
 
-  // Función de búsqueda
-  const handleSearch = (query) => {
-    console.log("Búsqueda realizada:", query);
-    // Implementar lógica de búsqueda aquí (navegación, API, etc.)
-  };
+  const { setQuery } = useSearch();
+  const handleSearch = (q) => setQuery(q);
 
-  // Acción al hacer clic en una sugerencia
-  const handleSuggestionClick = (suggestion) => {
-    console.log("Sugerencia seleccionada:", suggestion);
-    // Implementar lógica para manejar sugerencias aquí
-  };
-
-  // Hook para el modo oscuro
   const { colorMode, toggleColorMode } = useColorMode();
 
   return (
@@ -48,7 +39,6 @@ export default function NavBar() {
       width="100%"
       boxShadow="sm"
     >
-      {/* Logo */}
       <Box display="flex" alignItems="center">
         <Link to="/auth/home">
           <Image
@@ -61,14 +51,12 @@ export default function NavBar() {
         </Link>
       </Box>
 
-      {/* Barra de búsqueda */}
       <Box
         flex={1}
         mx={{ base: "5px", md: "10px" }}
         display="flex"
         justifyContent="center"
       >
-        {/* Icono de búsqueda solo en mobile */}
         <Box display={{ base: "block", md: "none" }}>
           <Link to="/buscar">
             <Tooltip label="Buscar" aria-label="Buscar Tooltip">
@@ -82,20 +70,14 @@ export default function NavBar() {
           </Link>
         </Box>
 
-        {/* Barra de búsqueda solo en desktop */}
         <Box display={{ base: "none", md: "block" }} flex={1}>
-          <SearchBar
-            onSearch={handleSearch}
-            onSuggestionClick={handleSuggestionClick}
-          />
+          <SearchBar onSearch={handleSearch} />
         </Box>
       </Box>
 
       <Spacer />
 
-      {/* Iconos del lado derecho */}
       <HStack spacing={{ base: "10px", md: "20px" }}>
-        {/* Botón para cambiar modo oscuro/claro */}
         <IconButton
           variant="ghost"
           aria-label="Toggle Color Mode"
@@ -103,10 +85,8 @@ export default function NavBar() {
           onClick={toggleColorMode}
         />
 
-        {/* Notificaciones */}
         <Notifications isOpen={isOpen} onToggle={onToggle} onClose={onClose} />
 
-        {/* Menú de perfil */}
         <MenuPerfil />
       </HStack>
     </Flex>

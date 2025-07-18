@@ -56,10 +56,10 @@ export const updatePedido = createAsyncThunk(
 
 export const togglePedidoStatus = createAsyncThunk(
   "pedidos/togglePedidoStatus",
-  async ({ id, estadoId }) => {
+  async ({ id, estadoId, comentarioDisplay, fechaOrdenDisplay }) => {
     const response = await axios.patch(
       `${BASE_URL}/form/pedidos/actualizar-estado/${id}`,
-      { estadoId }
+      { estadoId, comentarioDisplay, fechaOrdenDisplay }
     );
     return response.data;
   }

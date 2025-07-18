@@ -30,13 +30,18 @@ import {
 import ApproveOrderDialog from "../componentes/EntrantesFormPedidos/ApproveOrderDialog";
 import { selectPedidosEntrantesPorRuta } from "./componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
+import { useSearch } from "../../../components/component/SearchContext";
 //import { format } from "date-fns";
+
 const EntrantesPage = () => {
+  const { query, setSuggestions } = useSearch();
+  const [lista, setLista] = useState([]);
   const dispatch = useDispatch();
   const toast = useToast();
   const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
   const pedidos = useSelector((state) => state.pedidos.data);
+  const pedidosRuta = useSelector(selectPedidosEntrantesPorRuta());
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPedidos, setSelectedPedidos] = useState([]);
   const [detallesPedido, setDetallesPedido] = useState([]);
@@ -78,6 +83,18 @@ const EntrantesPage = () => {
   }, [tiendas]);
 
   useEffect(() => {
+    const sug = pedidos
+      .flatMap((p) => [
+        { id: `d-${p.id}`, label: p.nombreDeu },
+        { id: `t-${p.id}`, label: p.nombreTienda },
+        { id: `u-${p.id}`, label: `${p.nombreUsuario} ${p.apellidoUsuario}` },
+      ])
+      .flat();
+    setSuggestions(sug);
+    return () => setSuggestions([]);
+  }, [pedidos, setSuggestions]);
+
+  useEffect(() => {
     const tienda1 = tiendas.find((t) => t.id === 1);
     const tienda12 = tiendas.find((t) => t.id === 12);
     console.log("Tienda 1:", tienda1);
@@ -91,6 +108,22 @@ const EntrantesPage = () => {
   useEffect(() => {
     if (pedidos.length) console.log("Ejemplo de pedido:", pedidos[0]);
   }, [pedidos]);
+
+  useEffect(() => {
+    if (!pedidosRuta.length) return;
+
+    const q = query.trim().toLowerCase();
+
+    setLista(
+      q
+        ? pedidosRuta.filter((p) =>
+            `${p.nombreDeu} ${p.nombreTienda} ${p.nombreUsuario} ${p.apellidoUsuario}`
+              .toLowerCase()
+              .includes(q)
+          )
+        : pedidosRuta
+    );
+  }, [pedidosRuta, query]);
 
   const handleConfirmApprove = async ({ fechaOrden, comentario }) => {
     setIsApproving(true);
@@ -217,8 +250,6 @@ const EntrantesPage = () => {
     }
   };
 
-  const pedidosFiltrados = useSelector(selectPedidosEntrantesPorRuta());
-
   const handleCloseApproveDialog = () => {
     onApproveClose();
   };
@@ -289,7 +320,9 @@ const EntrantesPage = () => {
         </Flex>
       </Flex>
       <PedidosTable
-        pedidosEntrantes={pedidosFiltrados}
+        pedidosEntrantes={lista}
+        highlight={query}
+        // pedidosEntrantes={pedidosFiltrados}
         selectedPedidos={selectedPedidos}
         setSelectedPedidos={setSelectedPedidos}
         handleVerDetalles={handleVerDetalles}

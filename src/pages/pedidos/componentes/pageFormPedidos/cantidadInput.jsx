@@ -30,8 +30,8 @@ const CantidadInput = ({
         <Input
           name="cantidad"
           type="number"
-          // value={value === 0 ? "" : value}
-          value={value}
+          value={value === 0 ? "" : value}
+          //value={value}
           onChange={handleInputChange}
           onBlur={onBlur}
           placeholder={placeholder}

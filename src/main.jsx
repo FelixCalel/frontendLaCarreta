@@ -8,6 +8,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { AuthWrapper } from "./components/AuthWrapper";
+import { SearchProvider } from "./components/component/SearchContext";
 
 const container = document.getElementById("root");
 const root = createRoot(container);
@@ -19,9 +20,11 @@ root.render(
         <ColorModeScript initialColorMode={theme.config.initialColorMode} />
         <ChakraProvider theme={theme}>
           <BrowserRouter>
-            <AuthWrapper>
-              <App />
-            </AuthWrapper>
+            <SearchProvider>
+              <AuthWrapper>
+                <App />
+              </AuthWrapper>
+            </SearchProvider>
           </BrowserRouter>
         </ChakraProvider>
       </AuthProvider>

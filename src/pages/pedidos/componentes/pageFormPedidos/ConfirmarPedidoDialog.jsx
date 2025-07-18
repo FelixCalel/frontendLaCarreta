@@ -7,6 +7,10 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
   Button,
+  FormControl,
+  FormLabel,
+  Textarea,
+  Input,
 } from "@chakra-ui/react";
 import { useRef } from "react";
 
@@ -18,6 +22,10 @@ const ConfirmDialog = ({
   confirmMessage = "¿Estás seguro de que quieres realizar este pedido?",
   confirmButtonLabel = "Sí",
   cancelButtonLabel = "No",
+  comentario,
+  setComentario,
+  fecha,
+  setFecha,
 }) => {
   const cancelRef = useRef();
 
@@ -32,17 +40,36 @@ const ConfirmDialog = ({
           <AlertDialogHeader fontSize="lg" fontWeight="bold">
             Confirmar Pedido
           </AlertDialogHeader>
-          <AlertDialogBody>{confirmMessage}</AlertDialogBody>
+          <AlertDialogBody>
+            {confirmMessage}
+            <FormControl mt={4} isRequired>
+              <FormLabel>Fecha del pedido</FormLabel>
+              <Input
+                type="date"
+                min={new Date().toISOString().split("T")[0]}
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Comentario </FormLabel>
+              <Textarea
+                value={comentario}
+                onChange={(e) => setComentario(e.target.value)}
+                maxLength={255}
+                placeholder="Ej.: entregar por la mañana"
+              />
+            </FormControl>
+          </AlertDialogBody>
           <AlertDialogFooter>
             <Button ref={cancelRef} onClick={onClose} isDisabled={isLoading}>
               {cancelButtonLabel}
             </Button>
             <Button
               colorScheme="green"
-              onClick={onConfirm}
+              onClick={() => onConfirm({ comentario, fecha })}
               ml={3}
               isLoading={isLoading}
-              _hover={{ transform: "scale(1.05)", transition: "0.2s" }}
             >
               {confirmButtonLabel}
             </Button>
@@ -61,6 +88,10 @@ ConfirmDialog.propTypes = {
   confirmMessage: PropTypes.string,
   confirmButtonLabel: PropTypes.string,
   cancelButtonLabel: PropTypes.string,
+  comentario: PropTypes.string.isRequired,
+  setComentario: PropTypes.func.isRequired,
+  fecha: PropTypes.string.isRequired,
+  setFecha: PropTypes.func.isRequired,
 };
 
 export default ConfirmDialog;

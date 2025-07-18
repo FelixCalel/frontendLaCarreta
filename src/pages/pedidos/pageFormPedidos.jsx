@@ -48,6 +48,8 @@ const PageFormPedidos = () => {
   const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(null);
   const [selectedPedidoId, setSelectedPedidoId] = useState(null);
+  const [comentarioDialog, setComentarioDialog] = useState("");
+  const [fechaDialog, setFechaDialog] = useState("");
   const [isTienda1Disabled, setIsTienda1Disabled] = useState(false);
   const [isTienda2Disabled, setIsTienda2Disabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -258,7 +260,7 @@ const PageFormPedidos = () => {
     //window.location.reload(true);
   };
 
-  const handleRealizarPedido = async () => {
+  const handleRealizarPedido = async ({ comentario, fecha }) => {
     try {
       const detalles = await dispatch(
         getDetalleOrdenByPedidoId(selectedPedidoId)
@@ -275,8 +277,14 @@ const PageFormPedidos = () => {
       }
 
       await dispatch(
-        togglePedidoStatus({ id: selectedPedidoId, estadoId: 2 })
+        togglePedidoStatus({
+          id: selectedPedidoId,
+          estadoId: 2,
+          fechaOrdenDisplay: fecha,
+          comentarioDisplay: comentario,
+        })
       ).unwrap();
+
       dispatch(tablaPedidos());
       toast({
         title: "Pedido realizado",
@@ -314,6 +322,8 @@ const PageFormPedidos = () => {
         handleDeletePedido={(pedidoId) => dispatch(deletePedido(pedidoId))}
         showRealizarPedidoConfirmation={(pedidoId) => {
           setSelectedPedidoId(pedidoId);
+          setComentarioDialog("");
+          setFechaDialog("");
           onDialogOpen();
         }}
         deudorId={currentPedido.deudorId}
@@ -345,6 +355,10 @@ const PageFormPedidos = () => {
         isOpen={isDialogOpen}
         onClose={onDialogClose}
         onConfirm={handleRealizarPedido}
+        fecha={fechaDialog}
+        setFecha={setFechaDialog}
+        comentario={comentarioDialog}
+        setComentario={setComentarioDialog}
       />
     </Box>
   );

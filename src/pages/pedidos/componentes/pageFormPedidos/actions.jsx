@@ -14,7 +14,9 @@ const PedidoActions = ({ pedido, onDialogOpen, setSelectedPedidoId }) => {
         <IconButton
           icon={<DeleteIcon />}
           colorScheme="red"
-          onClick={() => {/* Add delete action here */}}
+          onClick={() => {
+            /* Add delete action here */
+          }}
           size="sm"
         />
       </Tooltip>

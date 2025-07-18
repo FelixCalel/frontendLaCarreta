@@ -19,19 +19,21 @@ const PedidosTable = ({
   selectedPedidos,
   setSelectedPedidos,
   handleVerDetalles,
+  highlight = "",
 }) => {
-  const tableColorScheme = useColorModeValue("gray", "blue");
+  const hl = highlight.trim().toLowerCase();
+  const stripe = useColorModeValue("gray", "blue");
+  const hlBg = useColorModeValue("yellow.100", "yellow.700");
 
-  const handleSelectPedido = (pedidoId) => {
-    if (selectedPedidos.includes(pedidoId)) {
-      setSelectedPedidos(selectedPedidos.filter((id) => id !== pedidoId));
-    } else {
-      setSelectedPedidos([...selectedPedidos, pedidoId]);
-    }
-  };
+  const toggleSelect = (id) =>
+    setSelectedPedidos(
+      selectedPedidos.includes(id)
+        ? selectedPedidos.filter((pid) => pid !== id)
+        : [...selectedPedidos, id]
+    );
 
   return (
-    <Table variant="striped" colorScheme={tableColorScheme} size="md">
+    <Table variant="striped" colorScheme={stripe} size="md">
       <Thead>
         <Tr>
           <Th>Seleccionar</Th>
@@ -43,44 +45,53 @@ const PedidosTable = ({
           <Th>Acciones</Th>
         </Tr>
       </Thead>
+
       <Tbody>
-        {pedidosEntrantes.length > 0 ? (
-          pedidosEntrantes.map((pedido) => (
-            <Tr key={pedido.id}>
-              <Td style={{ width: "50px" }}>
-                <Checkbox
-                  isChecked={selectedPedidos.includes(pedido.id)}
-                  onChange={() => handleSelectPedido(pedido.id)}
-                />
-              </Td>
-              <Td>{pedido.id}</Td>
-              <Td>{`${pedido.nombreCorrelativo} - ${pedido.nombreDeu}`}</Td>
-              <Td>{pedido.nombreTienda}</Td>
-              <Td>{`${pedido.nombreUsuario} ${pedido.apellidoUsuario}`}</Td>
-              <Td>
-                {format(new Date(pedido.creadoEl), "dd MMMM yyyy HH:mm", {
-                  locale: es,
-                })}
-              </Td>
-              <Td>
-                <Tooltip label="Ver Detalles" hasArrow>
-                  <Button
-                    colorScheme="blue"
-                    size="sm"
-                    onClick={() =>
-                      handleVerDetalles(pedido.id, pedido.detalles)
-                    }
-                  >
-                    Ver Detalles
-                  </Button>
-                </Tooltip>
-              </Td>
-            </Tr>
-          ))
+        {pedidosEntrantes.length ? (
+          pedidosEntrantes.map((p) => {
+            const textoFila = (
+              `${p.nombreCorrelativo} ${p.nombreDeu} ` +
+              `${p.nombreTienda} ` +
+              `${p.nombreUsuario} ${p.apellidoUsuario}`
+            ).toLowerCase();
+
+            const coincide = hl && textoFila.includes(hl);
+
+            return (
+              <Tr key={p.id} bg={coincide ? hlBg : undefined}>
+                <Td w="50px">
+                  <Checkbox
+                    isChecked={selectedPedidos.includes(p.id)}
+                    onChange={() => toggleSelect(p.id)}
+                  />
+                </Td>
+                <Td>{p.id}</Td>
+                <Td>{`${p.nombreCorrelativo} - ${p.nombreDeu}`}</Td>
+                <Td>{p.nombreTienda}</Td>
+                <Td>{`${p.nombreUsuario} ${p.apellidoUsuario}`}</Td>
+                <Td>
+                  {format(new Date(p.creadoEl), "dd MMMM yyyy HH:mm", {
+                    locale: es,
+                  })}
+                </Td>
+                <Td>
+                  <Tooltip label="Ver Detalles" hasArrow>
+                    <Button
+                      colorScheme="blue"
+                      size="sm"
+                      onClick={() => handleVerDetalles(p.id)}
+                    >
+                      Ver Detalles
+                    </Button>
+                  </Tooltip>
+                </Td>
+              </Tr>
+            );
+          })
         ) : (
           <Tr>
-            <Td colSpan="8" align="center">
-              No hay pedidos pedidos
+            <Td colSpan={7} textAlign="center">
+              No hay pedidos
             </Td>
           </Tr>
         )}
@@ -93,23 +104,18 @@ PedidosTable.propTypes = {
   pedidosEntrantes: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.number.isRequired,
+      nombreCorrelativo: PropTypes.string,
       nombreDeu: PropTypes.string,
       nombreTienda: PropTypes.string,
-      nombreUsuario: PropTypes.string.isRequired,
-      apellidoUsuario: PropTypes.string.isRequired,
+      nombreUsuario: PropTypes.string,
+      apellidoUsuario: PropTypes.string,
       creadoEl: PropTypes.string.isRequired,
-      detalles: PropTypes.arrayOf(
-        PropTypes.shape({
-          codigo: PropTypes.string,
-          nombreProducto: PropTypes.string.isRequired,
-          cantidad: PropTypes.number.isRequired,
-        })
-      ),
     })
   ).isRequired,
   selectedPedidos: PropTypes.arrayOf(PropTypes.number).isRequired,
   setSelectedPedidos: PropTypes.func.isRequired,
   handleVerDetalles: PropTypes.func.isRequired,
+  highlight: PropTypes.string,
 };
 
 export default PedidosTable;

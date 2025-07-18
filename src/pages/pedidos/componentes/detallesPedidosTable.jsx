@@ -52,7 +52,12 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   });
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
+  const ordenarPorNombre = (arr) =>
+    arr.slice().sort((a, b) =>
+      (a.nombreProducto || "").localeCompare(b.nombreProducto || "", "es", {
+        sensitivity: "base",
+      })
+    );
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
@@ -83,7 +88,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           detallePedidoId: d.id,
         }));
 
-        setProductos(detalles);
+        setProductos(ordenarPorNombre(detalles));
         sessionStorage.setItem(
           `productos_${pedidoId}`,
           JSON.stringify(detalles)
