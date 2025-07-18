@@ -31,6 +31,8 @@ import ApproveOrderDialog from "../componentes/EntrantesFormPedidos/ApproveOrder
 import { selectPedidosEntrantesPorRuta } from "./componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 import { useSearch } from "../../../components/component/SearchContext";
+import CancelOrderDialog from "./componentes/CancelOrderDialog";
+
 //import { format } from "date-fns";
 
 const EntrantesPage = () => {
@@ -175,37 +177,53 @@ const EntrantesPage = () => {
     }
   };
 
-  const handleConfirmCancel = async () => {
-    setIsCancelling(true);
-    try {
-      await handleCancelarPedidos();
-    } catch (error) {
-      console.error("Error al cancelar pedidos:", error);
-    } finally {
-      setIsCancelling(false);
-      onCancelClose();
-    }
-  };
-
-  const handleCancelarPedidos = async () => {
+  const handleCancelarPedidos = async (comentario) => {
     setIsLoading(true);
+
     try {
       for (const pedidoId of selectedPedidos) {
-        await dispatch(togglePedidoStatus({ id: pedidoId, estadoId: 4 }));
+        await dispatch(
+          togglePedidoStatus({ id: pedidoId, estadoId: 4 })
+        ).unwrap();
+
+        await dispatch(
+          actualizarFechaOrden({
+            pedidoId,
+            fechaOrden: null,
+            comentario,
+          })
+        ).unwrap();
       }
+
       setSelectedPedidos([]);
+
       toast({
         title: "Pedidos cancelados",
-        description: "Los pedidos seleccionados han sido cancelados.",
-        status: "error",
+        description:
+          "Los pedidos seleccionados han sido cancelados correctamente.",
+        status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
       console.error("Error al cancelar pedidos:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cancelar los pedidos.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onCancelDialogConfirm = async (comentario) => {
+    setIsCancelling(true);
+    await handleCancelarPedidos(comentario);
+    setIsCancelling(false);
+    onCancelClose();
   };
 
   const handleVerDetalles = async (pedidoId) => {
@@ -306,13 +324,15 @@ const EntrantesPage = () => {
                   <Button variant="outline" onClick={onCancelClose}>
                     Cerrar
                   </Button>
-                  <Button
-                    colorScheme="red"
-                    onClick={handleConfirmCancel}
-                    ml={3}
-                  >
+                  <Button colorScheme="red" onClick={onCancelOpen} ml={3}>
                     Cancelar
                   </Button>
+                  <CancelOrderDialog
+                    isOpen={isCancelOpen}
+                    onClose={onCancelClose}
+                    onConfirm={onCancelDialogConfirm}
+                    cantidad={selectedPedidos.length}
+                  />
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialogOverlay>

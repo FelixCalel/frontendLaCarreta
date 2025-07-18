@@ -19,27 +19,32 @@ import {
   Flex,
   Icon,
   Divider,
+  Badge,
   useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
 import { FaCalendarAlt, FaCommentDots, FaBoxOpen } from "react-icons/fa";
 
 const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
-  // Llamadas a hooks al inicio
+  /* ---------  tokens de color / estilos --------- */
   const bg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const rowHoverBg = useColorModeValue("gray.50", "gray.700");
-  const commentTextColor = useColorModeValue("gray.700", "gray.300");
+  const commentTextC = useColorModeValue("gray.700", "gray.300");
+  const badgeBgDisplay = useColorModeValue("purple.500", "purple.400");
+  const badgeBgUser = useColorModeValue("teal.600", "teal.500");
 
   if (!pedido) return null;
 
-  const fechaIso = pedido.fechaOrden.slice(0, 10);
-  const [year, month, day] = fechaIso.split("-");
-  const sortedDetalles = [...detalles].sort((a, b) =>
-    a.nombreProducto.localeCompare(b.nombreProducto)
-  );
+  /* ---------  Fechas formateadas  --------- */
+  const [y, m, d] = pedido.fechaOrden.slice(0, 10).split("-");
+  const fechaUser = `${d}/${m}/${y}`;
 
-  if (!pedido) return null;
+  let fechaDisplay = null;
+  if (pedido.fechaOrdenDisplay) {
+    const [yy, mm, dd] = pedido.fechaOrdenDisplay.slice(0, 10).split("-");
+    fechaDisplay = `${dd}/${mm}/${yy}`;
+  }
 
   return (
     <Modal
@@ -58,17 +63,56 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
         borderColor={borderColor}
       >
         <ModalHeader>
-          <Flex align="center">
-            <Icon as={FaBoxOpen} w={6} h={6} mr={3} />
-            Detalles del Pedido{" "}
+          <Flex align="center" gap={2}>
+            <Icon as={FaBoxOpen} w={6} h={6} />
+            <Text>Detalles del Pedido&nbsp;</Text>
             <Text as="span" fontWeight="bold">
               #{pedido.id}
             </Text>
           </Flex>
         </ModalHeader>
         <ModalCloseButton />
+
         <ModalBody>
           <VStack spacing={5} align="stretch">
+            {/* ----------------  BLOQUE DISPLAY  ---------------- */}
+            {pedido.comentarioDisplay || pedido.fechaOrdenDisplay ? (
+              <>
+                <Flex
+                  px={4}
+                  py={2}
+                  border="1px solid"
+                  borderColor={borderColor}
+                  borderRadius="md"
+                  bg={useColorModeValue("purple.50", "purple.900")}
+                  direction="column"
+                  gap={2}
+                >
+                  <Flex align="center" gap={2}>
+                    <Badge colorScheme="purple" bg={badgeBgDisplay}>
+                      Display
+                    </Badge>
+                    {fechaDisplay && (
+                      <>
+                        <Icon as={FaCalendarAlt} />
+                        <Text fontSize="sm">{fechaDisplay}</Text>
+                      </>
+                    )}
+                  </Flex>
+                  {pedido.comentarioDisplay && (
+                    <Flex align="flex-start" gap={2}>
+                      <Icon as={FaCommentDots} />
+                      <Text fontSize="sm" color={commentTextC}>
+                        {pedido.comentarioDisplay.trim()}
+                      </Text>
+                    </Flex>
+                  )}
+                </Flex>
+                <Divider borderColor={borderColor} />
+              </>
+            ) : null}
+
+            {/* ----------------  LISTA DE PRODUCTOS  ---------------- */}
             <Box>
               <Text fontSize="lg" fontWeight="semibold" mb={2}>
                 Productos
@@ -78,15 +122,15 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
                   <Tr>
                     <Th>Código</Th>
                     <Th>Producto</Th>
-                    <Th textAlign="right">Cantidad</Th>
+                    <Th isNumeric>Cantidad</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {sortedDetalles.map((item) => (
-                    <Tr key={item.id} _hover={{ bg: rowHoverBg }}>
-                      <Td>{item.codigo}</Td>
-                      <Td>{item.nombreProducto}</Td>
-                      <Td textAlign="right">{item.cantidad}</Td>
+                  {detalles.map((it) => (
+                    <Tr key={it.id} _hover={{ bg: rowHoverBg }}>
+                      <Td>{it.codigo}</Td>
+                      <Td>{it.nombreProducto}</Td>
+                      <Td isNumeric>{it.cantidad}</Td>
                     </Tr>
                   ))}
                 </Tbody>
@@ -95,33 +139,31 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
 
             <Divider borderColor={borderColor} />
 
-            <Flex align="center">
-              <Icon as={FaCalendarAlt} w={5} h={5} mr={2} color="teal.500" />
-              <Text>
-                Fecha de entrega:{" "}
-                <Text as="span" fontWeight="bold">
-                  {day}/{month}/{year}
-                </Text>
-              </Text>
+            {/* ----------------  BLOQUE FECHA/COMENTARIO FINAL  ---------------- */}
+            <Flex align="center" gap={2}>
+              <Badge colorScheme="teal" bg={badgeBgUser}>
+                Entrega
+              </Badge>
+              <Icon as={FaCalendarAlt} />
+              <Text fontWeight="bold">{fechaUser}</Text>
             </Flex>
 
             <Divider borderColor={borderColor} />
 
-            <Flex align="flex-start">
-              <Icon as={FaCommentDots} w={5} h={5} mr={2} color="orange.400" />
+            <Flex align="flex-start" gap={2}>
+              <Icon as={FaCommentDots} color="orange.400" />
               <Box>
                 <Text fontWeight="semibold" mb={1}>
                   Comentario
                 </Text>
-                <Text color={commentTextColor}>
-                  {pedido.comentario && pedido.comentario.trim()
-                    ? pedido.comentario
-                    : "— sin comentario —"}
+                <Text color={commentTextC}>
+                  {pedido.comentario?.trim() || "— sin comentario —"}
                 </Text>
               </Box>
             </Flex>
           </VStack>
         </ModalBody>
+
         <ModalFooter>
           <Button onClick={onClose} colorScheme="green" variant="outline">
             Cerrar
@@ -132,6 +174,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
   );
 };
 
+/* ----------  PropTypes  ---------- */
 DetallesModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
@@ -147,12 +190,9 @@ DetallesModal.propTypes = {
     id: PropTypes.number,
     fechaOrden: PropTypes.string,
     comentario: PropTypes.string,
+    fechaOrdenDisplay: PropTypes.string,
+    comentarioDisplay: PropTypes.string,
   }),
-};
-
-DetallesModal.defaultProps = {
-  detalles: [],
-  pedido: null,
 };
 
 export default DetallesModal;
