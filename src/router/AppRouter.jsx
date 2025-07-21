@@ -28,6 +28,7 @@ import { produccionOrdenSuper } from "./supervisorProduction";
 import { productionOrdenDetails } from "./pedidoProductionDetail";
 import { digitadorOrden } from "./digitadorOrden";
 import { digitadorDetalleOrden } from "./detalleDigitadorOrden";
+import { digitadorFabricacionOrden } from "./digitadorFabricacionOrden";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -69,6 +70,11 @@ export const AppRouter = () => {
     { path: "/despacho/*", rutaId: 25, component: productionOrdenDetails },
     { path: "/digitador/*", rutaId: 26, component: digitadorOrden },
     { path: "/detalle/*", rutaId: 27, component: digitadorDetalleOrden },
+    {
+      path: "/fabricacion/*",
+      rutaId: 28,
+      component: digitadorFabricacionOrden,
+    },
   ];
 
   useEffect(() => {
