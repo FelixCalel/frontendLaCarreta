@@ -25,7 +25,6 @@ import {
 import { FaCalendarAlt, FaCommentDots, FaBoxOpen } from "react-icons/fa";
 
 const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
-  // Llamadas a hooks al inicio
   const bg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const rowHoverBg = useColorModeValue("gray.50", "gray.700");
@@ -33,9 +32,13 @@ const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
 
   if (!pedido) return null;
 
-  // Extraer fecha
   const fechaIso = pedido.fechaOrden.slice(0, 10);
   const [year, month, day] = fechaIso.split("-");
+  const sortedDetalles = [...detalles].sort((a, b) =>
+    a.nombreProducto.localeCompare(b.nombreProducto)
+  );
+
+  if (!pedido) return null;
 
   return (
     <Modal
@@ -65,7 +68,6 @@ const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={5} align="stretch">
-            {/* Lista de productos */}
             <Box>
               <Text fontSize="lg" fontWeight="semibold" mb={2}>
                 Productos
@@ -79,7 +81,7 @@ const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {detalles.map((item) => (
+                  {sortedDetalles.map((item) => (
                     <Tr key={item.id} _hover={{ bg: rowHoverBg }}>
                       <Td>{item.codigo}</Td>
                       <Td>{item.nombreProducto}</Td>
@@ -92,7 +94,6 @@ const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
 
             <Divider borderColor={borderColor} />
 
-            {/* Fecha de entrega */}
             <Flex align="center">
               <Icon as={FaCalendarAlt} w={5} h={5} mr={2} color="teal.500" />
               <Text>
@@ -105,7 +106,6 @@ const DetallesModal = ({ isOpen, onClose, detalles, pedido }) => {
 
             <Divider borderColor={borderColor} />
 
-            {/* Comentario */}
             <Flex align="flex-start">
               <Icon as={FaCommentDots} w={5} h={5} mr={2} color="orange.400" />
               <Box>

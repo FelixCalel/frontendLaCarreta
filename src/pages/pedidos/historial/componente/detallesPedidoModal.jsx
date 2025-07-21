@@ -1,23 +1,24 @@
 import PropTypes from "prop-types";
+import { useMemo } from "react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Box,
   Button,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
   Spinner,
-  VStack,
+  Table,
+  Tbody,
+  Th,
+  Thead,
+  Td,
+  Tr,
   Text,
+  VStack,
   useColorModeValue,
 } from "@chakra-ui/react";
 
@@ -33,6 +34,14 @@ const DetallesPedidoModal = ({
   const emptyColor = useColorModeValue("gray.500", "gray.400");
   const tableColorScheme = useColorModeValue("gray", "blue");
 
+  const sortedDetalles = useMemo(
+    () =>
+      [...detalles].sort((a, b) =>
+        a.nombreProducto.localeCompare(b.nombreProducto)
+      ),
+    [detalles]
+  );
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
@@ -44,7 +53,7 @@ const DetallesPedidoModal = ({
             <Box display="flex" justifyContent="center" alignItems="center">
               <Spinner size="lg" />
             </Box>
-          ) : detalles.length > 0 ? (
+          ) : sortedDetalles.length > 0 ? (
             <>
               <Box display={{ base: "none", md: "block" }}>
                 <Table variant="simple" colorScheme={tableColorScheme}>
@@ -56,7 +65,7 @@ const DetallesPedidoModal = ({
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {detalles.map((detalle) => (
+                    {sortedDetalles.map((detalle) => (
                       <Tr key={detalle.id}>
                         <Td>{detalle.codigo || "N/A"}</Td>
                         <Td>{detalle.nombreProducto}</Td>
@@ -67,10 +76,9 @@ const DetallesPedidoModal = ({
                 </Table>
               </Box>
 
-              {/* Vista en pantallas pequeñas: Tarjetas */}
               <Box display={{ base: "block", md: "none" }}>
                 <VStack spacing={4} align="stretch">
-                  {detalles.map((detalle) => (
+                  {sortedDetalles.map((detalle) => (
                     <Box
                       key={detalle.id}
                       p={3}
@@ -110,7 +118,6 @@ const DetallesPedidoModal = ({
   );
 };
 
-// Validación de PropTypes
 DetallesPedidoModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
