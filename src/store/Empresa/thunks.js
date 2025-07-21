@@ -1,10 +1,10 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const tablaEmpresa = createAsyncThunk(
-  'empresas/fetchEmpresas',
+  "empresas/fetchEmpresas",
   async () => {
     const response = await axios.get(`${BASE_URL}/empresa/todos`);
     const data = response.data;
@@ -14,7 +14,7 @@ export const tablaEmpresa = createAsyncThunk(
 );
 
 export const addNewEmpresa = createAsyncThunk(
-  'empresas/addNewEmpresa',
+  "empresas/addNewEmpresa",
   async (newEmpresa) => {
     const response = await axios.post(`${BASE_URL}/empresa/create`, newEmpresa);
     return response.data;
@@ -22,7 +22,7 @@ export const addNewEmpresa = createAsyncThunk(
 );
 
 export const deleteEmpresa = createAsyncThunk(
-  'empresas/deleteEmpresa',
+  "empresas/deleteEmpresa",
   async (id) => {
     await axios.delete(`${BASE_URL}/empresa/eliminar/${id}`);
     return id;
@@ -30,52 +30,72 @@ export const deleteEmpresa = createAsyncThunk(
 );
 
 export const updateEmpresa = createAsyncThunk(
-  'empresas/updateEmpresa',
+  "empresas/updateEmpresa",
   async (empresa) => {
-    const response = await axios.put(`${BASE_URL}/empresa/actualizar/${empresa.id}`, empresa);
+    const response = await axios.put(
+      `${BASE_URL}/empresa/actualizar/${empresa.id}`,
+      empresa
+    );
     return response.data;
   }
 );
 
 export const toggleEmpresaStatus = createAsyncThunk(
-  'empresas/toggleEmpresaStatus',
+  "empresas/toggleEmpresaStatus",
   async ({ id, estaActivo }) => {
-    const response = await axios.patch(`${BASE_URL}/empresa/actualizar-estado/${id}`, { estaActivo });
+    const response = await axios.patch(
+      `${BASE_URL}/empresa/actualizar-estado/${id}`,
+      { estaActivo }
+    );
     return response.data;
   }
 );
 
-export const tablaPais = createAsyncThunk(
-  'paises/fetchPaises',
-  async () => {
-    const response = await axios.get(`${BASE_URL}/pais/todos`);
-    const data = response.data;
-    data.sort((a, b) => a.id - b.id); 
-    return data;
-  }
-);
-
+export const tablaPais = createAsyncThunk("paises/fetchPaises", async () => {
+  const response = await axios.get(`${BASE_URL}/pais/todos`);
+  const data = response.data;
+  data.sort((a, b) => a.id - b.id);
+  return data;
+});
 
 export const sincronizarClientes = createAsyncThunk(
-  'empresas/sincronizarClientes',
+  "empresas/sincronizarClientes",
   async ({ dbsap, ipsap, empresaId }) => {
-    const response = await axios.post(`${BASE_URL}/sap/deus/sincronizarClientes`, {
-      dbsap,
-      ipsap,
-      empresaId
-    });
+    const response = await axios.post(
+      `${BASE_URL}/sap/deus/sincronizarClientes`,
+      {
+        dbsap,
+        ipsap,
+        empresaId,
+      }
+    );
     return response.data;
   }
 );
 
 export const sincronizarItems = createAsyncThunk(
-  'empresas/sincronizarItems',
+  "empresas/sincronizarItems",
   async ({ dbsap, ipsap, empresaId, warehouses }) => {
-    const response = await axios.post(`${BASE_URL}/sap/items/sincronizarItems`, {
-      warehouses,
+    const response = await axios.post(
+      `${BASE_URL}/sap/items/sincronizarItems`,
+      {
+        warehouses,
+        dbsap,
+        ipsap,
+        empresaId,
+      }
+    );
+    return response.data;
+  }
+);
+
+export const importarRecetas = createAsyncThunk(
+  "recetas/importar",
+  async ({ dbsap, ipsap, warehouses }) => {
+    const response = await axios.post(`${BASE_URL}/sap/receta/importar`, {
       dbsap,
       ipsap,
-      empresaId
+      warehouses,
     });
     return response.data;
   }

@@ -43,6 +43,7 @@ import {
   tablaPais,
   sincronizarClientes,
   sincronizarItems,
+  importarRecetas,
 } from "../../store/Empresa/thunks";
 
 const MotionBox = motion(Box);
@@ -55,7 +56,8 @@ const PageFormEmpresa = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [warehouseModalOpen, setWarehouseModalOpen] = useState(false);
   const [warehouses, setWarehouses] = useState("");
-
+  const [recetaModalOpen, setRecetaModalOpen] = useState(false);
+  const [warehousesReceta, setWarehousesReceta] = useState("");
   const [currentEmpresa, setCurrentEmpresa] = useState({
     id: "",
     nombre: "",
@@ -181,11 +183,51 @@ const PageFormEmpresa = () => {
     }
   };
 
+  const handleSyncReceta = async () => {
+    const emp = data.find((e) => e.id === currentEmpresa.id);
+    if (!emp) return;
+
+    const formattedWarehouses = warehousesReceta
+      .split(",")
+      .map((w) => `'${w.trim()}'`)
+      .join(",");
+
+    setSyncDisabled((prev) => ({ ...prev, [`receta-${emp.id}`]: true }));
+    toast({ title: "Sincronizando recetas…", status: "info", duration: 15000 });
+
+    try {
+      const result = await dispatch(
+        importarRecetas({
+          dbsap: emp.baseDatos,
+          ipsap: emp.ipBaseDatos,
+          warehouses: formattedWarehouses,
+        })
+      );
+
+      if (result.error) throw result.error;
+      toast({
+        title: "Recetas sincronizadas",
+        status: "success",
+        duration: 5000,
+      });
+    } catch {
+      toast({
+        title: "Error al sincronizar recetas",
+        status: "error",
+        duration: 5000,
+      });
+    } finally {
+      setTimeout(() => {
+        setSyncDisabled((prev) => ({ ...prev, [`receta-${emp.id}`]: false }));
+      }, 5000);
+      setRecetaModalOpen(false);
+    }
+  };
+
   const handleSyncWithWarehouses = async () => {
     const empresa = data.find((emp) => emp.id === currentEmpresa.id);
     if (!empresa) return;
 
-    // Deshabilitar el botón de sincronización dentro del modal
     setSyncDisabled((prevState) => ({ ...prevState, [empresa.id]: true }));
     toast({
       title: "Sincronización en progreso...",
@@ -196,7 +238,6 @@ const PageFormEmpresa = () => {
     });
 
     try {
-      // Formatear warehouses como un string
       const formattedWarehouses = formatWarehouses(warehouses);
 
       console.log("Datos enviados:", {
@@ -206,7 +247,6 @@ const PageFormEmpresa = () => {
         warehouses: formattedWarehouses,
       });
 
-      // Realizar la sincronización
       const syncResult = await dispatch(
         sincronizarItems({
           dbsap: empresa.baseDatos,
@@ -245,16 +285,14 @@ const PageFormEmpresa = () => {
         isClosable: true,
       });
     } finally {
-      // Mantener el botón deshabilitado y habilitarlo después de un tiempo
       setTimeout(() => {
         setSyncDisabled((prevState) => ({ ...prevState, [empresa.id]: false }));
-      }, 5000); // Espera 5 segundos antes de habilitar el botón
+      }, 5000);
 
       setWarehouseModalOpen(false);
     }
   };
 
-  // Formatear warehouses como un string en lugar de array
   const formatWarehouses = (warehouses) => {
     return warehouses
       .split(",")
@@ -453,7 +491,20 @@ const PageFormEmpresa = () => {
                     }}
                     variant="outline"
                     colorScheme={syncDisabled[empresa.id] ? "gray" : "green"}
-                    isDisabled={syncDisabled[empresa.id]} // Deshabilita el botón si `syncDisabled` es true
+                    isDisabled={syncDisabled[empresa.id]}
+                  />
+                </Tooltip>
+                <Tooltip label="Sincronizar Recetas">
+                  <IconButton
+                    icon={<FaSyncAlt />}
+                    onClick={() => {
+                      setCurrentEmpresa(empresa);
+                      setRecetaModalOpen(true);
+                    }}
+                    variant="outline"
+                    colorScheme="purple"
+                    isDisabled={syncDisabled[`receta-${empresa.id}`]}
+                    isLoading={syncDisabled[`receta-${empresa.id}`]}
                   />
                 </Tooltip>
               </Stack>
@@ -597,7 +648,7 @@ const PageFormEmpresa = () => {
               colorScheme="green"
               mr={3}
               onClick={handleSyncWithWarehouses}
-              isDisabled={syncDisabled[currentEmpresa.id]} // Deshabilita el botón durante la sincronización
+              isDisabled={syncDisabled[currentEmpresa.id]}
             >
               Sincronizar
             </Button>
@@ -605,6 +656,36 @@ const PageFormEmpresa = () => {
               variant="ghost"
               onClick={() => setWarehouseModalOpen(false)}
             >
+              Cancelar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      <Modal isOpen={recetaModalOpen} onClose={() => setRecetaModalOpen(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Sincronizar Recetas</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>Almacenes para receta (coma separado)</FormLabel>
+              <Input
+                placeholder="CA-0300, CA-0100, ..."
+                value={warehousesReceta}
+                onChange={(e) => setWarehousesReceta(e.target.value)}
+              />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="purple"
+              mr={3}
+              onClick={handleSyncReceta}
+              isDisabled={syncDisabled[`receta-${currentEmpresa.id}`]}
+            >
+              Sincronizar Recetas
+            </Button>
+            <Button variant="ghost" onClick={() => setRecetaModalOpen(false)}>
               Cancelar
             </Button>
           </ModalFooter>
