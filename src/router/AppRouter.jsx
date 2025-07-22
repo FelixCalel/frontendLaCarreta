@@ -29,6 +29,7 @@ import { productionOrdenDetails } from "./pedidoProductionDetail";
 import { digitadorOrden } from "./digitadorOrden";
 import { digitadorDetalleOrden } from "./detalleDigitadorOrden";
 import { digitadorFabricacionOrden } from "./digitadorFabricacionOrden";
+import { fabricacionDetailOrder } from "./FabricacionDetails";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -74,6 +75,11 @@ export const AppRouter = () => {
       path: "/fabricacion/*",
       rutaId: 28,
       component: digitadorFabricacionOrden,
+    },
+    {
+      path: "/detalleFabricacion/*",
+      rutaId: 29,
+      component: fabricacionDetailOrder,
     },
   ];
 

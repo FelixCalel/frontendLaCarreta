@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Box,
   Button,
@@ -29,6 +29,12 @@ import {
   Stack,
   Tooltip,
   useColorModeValue,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { FaSyncAlt } from "react-icons/fa";
@@ -72,6 +78,13 @@ const PageFormEmpresa = () => {
   const isMobile = useBreakpointValue({ base: true, md: false });
   const [syncDisabled, setSyncDisabled] = useState({});
   const toast = useToast();
+  const [deleteId, setDeleteId] = useState(null);
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
+  const cancelRef = useRef();
 
   useEffect(() => {
     if (status === "idle") {
@@ -81,6 +94,14 @@ const PageFormEmpresa = () => {
       dispatch(tablaPais());
     }
   }, [dispatch, status, paisesStatus]);
+
+  const buildWarehousesParam = (str = "") =>
+    str
+      .split(",")
+      .map((w) => w.trim())
+      .filter(Boolean)
+      .map((w) => `'${w}'`)
+      .join(",");
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -187,10 +208,11 @@ const PageFormEmpresa = () => {
     const emp = data.find((e) => e.id === currentEmpresa.id);
     if (!emp) return;
 
-    const formattedWarehouses = warehousesReceta
-      .split(",")
-      .map((w) => `'${w.trim()}'`)
-      .join(",");
+    const formattedWarehouses = buildWarehousesParam(warehousesReceta);
+    if (!formattedWarehouses) {
+      toast({ title: "Ingresa al menos un almacén", status: "warning" });
+      return;
+    }
 
     setSyncDisabled((prev) => ({ ...prev, [`receta-${emp.id}`]: true }));
     toast({ title: "Sincronizando recetas…", status: "info", duration: 15000 });
@@ -203,14 +225,14 @@ const PageFormEmpresa = () => {
           warehouses: formattedWarehouses,
         })
       );
-
       if (result.error) throw result.error;
+
       toast({
         title: "Recetas sincronizadas",
         status: "success",
         duration: 5000,
       });
-    } catch {
+    } catch (e) {
       toast({
         title: "Error al sincronizar recetas",
         status: "error",
@@ -228,7 +250,13 @@ const PageFormEmpresa = () => {
     const empresa = data.find((emp) => emp.id === currentEmpresa.id);
     if (!empresa) return;
 
-    setSyncDisabled((prevState) => ({ ...prevState, [empresa.id]: true }));
+    const formattedWarehouses = buildWarehousesParam(warehouses);
+    if (!formattedWarehouses) {
+      toast({ title: "Ingresa al menos un almacén", status: "warning" });
+      return;
+    }
+
+    setSyncDisabled((prev) => ({ ...prev, [empresa.id]: true }));
     toast({
       title: "Sincronización en progreso...",
       description: "Por favor, espera mientras se sincronizan los datos.",
@@ -238,15 +266,6 @@ const PageFormEmpresa = () => {
     });
 
     try {
-      const formattedWarehouses = formatWarehouses(warehouses);
-
-      console.log("Datos enviados:", {
-        dbsap: empresa.baseDatos,
-        ipsap: empresa.ipBaseDatos,
-        empresaId: empresa.id,
-        warehouses: formattedWarehouses,
-      });
-
       const syncResult = await dispatch(
         sincronizarItems({
           dbsap: empresa.baseDatos,
@@ -256,27 +275,17 @@ const PageFormEmpresa = () => {
         })
       );
 
-      if (syncResult.error) {
-        console.error("Error en la sincronización:", syncResult.error);
-        toast({
-          title: "Error en la sincronización.",
-          description:
-            "No se pudo completar la sincronización. Verifique los datos e intente nuevamente.",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-      } else {
-        toast({
-          title: "Sincronización completada.",
-          description: "La sincronización se completó correctamente.",
-          status: "success",
-          duration: 5000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      console.error("Error en la sincronización:", error);
+      if (syncResult.error) throw syncResult.error;
+
+      toast({
+        title: "Sincronización completada.",
+        description: "La sincronización se completó correctamente.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (e) {
+      console.error("Error en la sincronización:", e);
       toast({
         title: "Error en la sincronización.",
         description: "Ocurrió un error inesperado. Intente nuevamente.",
@@ -286,31 +295,30 @@ const PageFormEmpresa = () => {
       });
     } finally {
       setTimeout(() => {
-        setSyncDisabled((prevState) => ({ ...prevState, [empresa.id]: false }));
+        setSyncDisabled((prev) => ({ ...prev, [empresa.id]: false }));
       }, 5000);
-
       setWarehouseModalOpen(false);
     }
   };
 
-  const formatWarehouses = (warehouses) => {
-    return warehouses
-      .split(",")
-      .map((wh) => `'${wh.trim()}'`)
-      .join(", ");
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    onDeleteOpen();
   };
 
-  const handleDelete = (id) => {
-    dispatch(deleteEmpresa(id)).then(() => {
-      dispatch(tablaEmpresa());
-      toast({
-        title: "Empresa eliminada.",
-        description: "La empresa ha sido eliminada correctamente.",
-        status: "info",
-        duration: 2500,
-        isClosable: true,
-      });
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    await dispatch(deleteEmpresa(deleteId));
+    dispatch(tablaEmpresa());
+    toast({
+      title: "Empresa eliminada.",
+      description: "La empresa ha sido eliminada correctamente.",
+      status: "info",
+      duration: 2500,
+      isClosable: true,
     });
+    setDeleteId(null);
+    onDeleteClose();
   };
 
   const handleEdit = (empresa) => {
@@ -458,7 +466,7 @@ const PageFormEmpresa = () => {
                 <Tooltip label="Eliminar" aria-label="Eliminar">
                   <IconButton
                     icon={<DeleteIcon />}
-                    onClick={() => handleDelete(empresa.id)}
+                    onClick={() => confirmDelete(empresa.id)}
                     variant="outline"
                     colorScheme="red"
                   />
@@ -691,6 +699,37 @@ const PageFormEmpresa = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+      <AlertDialog
+        isOpen={isDeleteOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={() => {
+          setDeleteId(null);
+          onDeleteClose();
+        }}
+        isCentered
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Eliminar empresa
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              ¿Seguro que deseas eliminar esta empresa? Esta acción no se puede
+              deshacer.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onDeleteClose}>
+                Cancelar
+              </Button>
+              <Button colorScheme="red" ml={3} onClick={handleDelete}>
+                Sí, eliminar
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   );
 };

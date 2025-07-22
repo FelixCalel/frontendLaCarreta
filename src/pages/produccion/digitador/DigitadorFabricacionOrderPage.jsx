@@ -14,7 +14,7 @@ import {
 import { SearchIcon } from "@chakra-ui/icons";
 import { FaFileUpload } from "react-icons/fa";
 import { useGetPedidosAgrupadosQuery } from "../../../services/pedidoProductionApi";
-import { GroupCardGrid } from "../../../components/production/digitador/DigitadorCardGrid";
+import { GroupCardGrid } from "../../../components/production/digitador/FabricacionCardGrid";
 
 const DigitadorFabricacionOrdersPage = () => {
   const { data: groups = [], isLoading, error } = useGetPedidosAgrupadosQuery();
