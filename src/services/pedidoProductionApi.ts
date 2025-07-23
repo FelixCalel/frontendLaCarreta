@@ -9,7 +9,9 @@ import type {
     AvanceOK,
     AvanzarEtapaDetallePayload,
     AvanceMultiplesOK,
-    AvanzarMultiEtapaDetallePayload
+    AvanzarMultiEtapaDetallePayload,
+    RecetaLinea,
+    UpdateRecetaLineaDto,
 } from '../models/pedidoProduction'
 
 export const pedidoProduccionApi = createApi({
@@ -17,8 +19,9 @@ export const pedidoProduccionApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: import.meta.env.VITE_API_URL,
     }),
-    tagTypes: ['PedidoProduccion', 'DetalleProduccion', 'PedidoAgrupado'],
+    tagTypes: ['PedidoProduccion', 'DetalleProduccion', 'PedidoAgrupado', 'RecetaPedido'],
     endpoints: (builder) => ({
+
         getPedidoProduccionMetadata: builder.query<Metadata[], void>({
             query: () => '/pedidoProduccion/metadata',
         }),
@@ -28,10 +31,7 @@ export const pedidoProduccionApi = createApi({
             providesTags: (result) =>
                 result
                     ? [
-                        ...result.map(({ id }) => ({
-                            type: 'PedidoProduccion' as const,
-                            id,
-                        })),
+                        ...result.map(({ id }) => ({ type: 'PedidoProduccion' as const, id })),
                         { type: 'PedidoProduccion', id: 'LIST' },
                     ]
                     : [{ type: 'PedidoProduccion', id: 'LIST' }],
@@ -39,16 +39,12 @@ export const pedidoProduccionApi = createApi({
 
         getPedidoProduccionById: builder.query<PedidoProduccion, number>({
             query: (id) => `/pedidoProduccion/${id}`,
-            providesTags: (_res, _err, id) => [
-                { type: 'PedidoProduccion', id },
-            ],
+            providesTags: (_res, _err, id) => [{ type: 'PedidoProduccion', id }],
         }),
 
         getDetallesYProduccion: builder.query<DetalleProduccion[], number>({
             query: (id) => `/pedidoProduccion/${id}/detalles`,
-            providesTags: (_res, _err, id) => [
-                { type: 'DetalleProduccion', id },
-            ],
+            providesTags: (_res, _err, id) => [{ type: 'DetalleProduccion', id }],
         }),
 
         updatePedidoProduccion: builder.mutation<
@@ -62,7 +58,6 @@ export const pedidoProduccionApi = createApi({
             }),
             invalidatesTags: (_res, _err, { id }) => [
                 { type: 'PedidoProduccion', id },
-                // invalidamos la lista agrupada por si cambia algo de estado
                 { type: 'PedidoAgrupado', id: 'LIST' },
             ],
         }),
@@ -81,26 +76,21 @@ export const pedidoProduccionApi = createApi({
                     : [{ type: 'PedidoAgrupado', id: 'LIST' }],
         }),
 
-        avanzarEtapa: builder.mutation<
-            { message: string },
-            AvanzarEtapaPayload
-        >({
+        avanzarEtapa: builder.mutation<{ message: string }, AvanzarEtapaPayload>({
             query: (body) => ({
                 url: '/lineaTiempo/avanzar-etapa',
                 method: 'POST',
                 body,
             }),
-            invalidatesTags: (_result, _error, { pedidoId }) => [
+            invalidatesTags: (_r, _e, { pedidoId }) => [
                 { type: 'PedidoAgrupado', id: pedidoId },
                 { type: 'PedidoProduccion', id: pedidoId },
                 { type: 'DetalleProduccion', id: pedidoId },
+                { type: 'RecetaPedido', id: pedidoId },
             ],
         }),
 
-        avanzarEtapaDetalle: builder.mutation<
-            AvanceOK,
-            AvanzarEtapaDetallePayload
-        >({
+        avanzarEtapaDetalle: builder.mutation<AvanceOK, AvanzarEtapaDetallePayload>({
             query: (body) => ({
                 url: '/lineaTiempoDetalle/avanzar',
                 method: 'POST',
@@ -121,14 +111,32 @@ export const pedidoProduccionApi = createApi({
                 body,
             }),
             invalidatesTags: (_r, _e, { detalleOrdenIds }) => [
-                ...detalleOrdenIds.map((id) => ({
-                    type: 'DetalleProduccion' as const,
-                    id,
-                })),
+                ...detalleOrdenIds.map((id) => ({ type: 'DetalleProduccion' as const, id })),
                 { type: 'DetalleProduccion', id: 'LIST' },
             ],
         }),
 
+        getRecetaByPedido: builder.query<RecetaLinea[], number>({
+            query: (pedidoId) => `/receta/pedido/${pedidoId}`,
+            providesTags: (_res, _err, pedidoId) => [
+                { type: 'RecetaPedido', id: pedidoId },
+            ],
+        }),
+
+        updateRecetaLinea: builder.mutation<
+            RecetaLinea,
+            { id: number; data: UpdateRecetaLineaDto; pedidoId: number }
+        >({
+            query: ({ id, data }) => ({
+                url: `/receta/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: (_res, _err, { pedidoId, id }) => [
+                { type: 'RecetaPedido', id: pedidoId },
+                { type: 'RecetaPedido', id: 'LIST' },
+            ],
+        }),
     }),
 })
 
@@ -142,4 +150,6 @@ export const {
     useAvanzarEtapaMutation,
     useAvanzarEtapaDetalleMutation,
     useAvanzarMultiEtapaDetalleMutation,
+    useGetRecetaByPedidoQuery,
+    useUpdateRecetaLineaMutation,
 } = pedidoProduccionApi

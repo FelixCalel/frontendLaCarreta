@@ -16,8 +16,11 @@ import { ChevronRightIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import {
   useGetDetallesYProduccionQuery,
   useUpdatePedidoProduccionMutation,
+  useGetRecetaByPedidoQuery,
 } from "../../services/pedidoProductionApi";
 import { OrderDetailsTable } from "./OrderDetailsTable";
+import { RecetaTable } from "./RecetaTable";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 const FIELD_LABELS = {
   mpUtilizada: "MP Utilizada",
@@ -30,19 +33,42 @@ const FIELD_LABELS = {
   trazabilidad_Prod: "Trazabilidad",
 };
 
+const FIELD_SPECS = {
+  mpUtilizada: { w: "70px", type: "number" },
+  mp1ra: { w: "70px", type: "number" },
+  mp2da: { w: "70px", type: "number" },
+  mp3ra: { w: "70px", type: "number" },
+  mpSobrante: { w: "70px", type: "number" },
+  rechazo: { w: "70px", type: "number" },
+  basura: { w: "70px", type: "number" },
+  trazabilidad_Prod: { w: "70px", type: "text" },
+};
+
 export const OrderRow = ({ order, isExpanded, onToggle }) => {
+  const shouldFetch = isExpanded && !order.ptmq;
+  const recetaArg = shouldFetch ? order.id : skipToken;
+
+  console.log("[OrderRow] getRecetaByPedido arg =>", recetaArg);
   const {
-    data: details,
-    isLoading,
-    refetch,
-  } = useGetDetallesYProduccionQuery(order.id, { skip: order.ptmq });
+    data: receta = [],
+    isFetching: loadingReceta,
+    isSuccess,
+    isError,
+    error,
+    requestId,
+  } = useGetRecetaByPedidoQuery(recetaArg);
+  const hasReceta = receta.length > 0;
   const [updatePedido] = useUpdatePedidoProduccionMutation();
   const [isPTMQ, setIsPTMQ] = useState(order.ptmq ?? false);
   const [cantidadLocal, setCantidadLocal] = useState(order.cantidad || 0);
   const [faltanteLocal, setFaltanteLocal] = useState(
     (order.cantidadUnidad ?? 0) - (order.cantidad || 0)
   );
-
+  const {
+    data: details = [],
+    isLoading: loadingDetalles,
+    refetch: refetchDetalles,
+  } = useGetDetallesYProduccionQuery(shouldFetch ? order.id : skipToken);
   const [prodFields, setProdFields] = useState({
     mpUtilizada: order.mpUtilizada ?? 0,
     mp1ra: order.mp1ra ?? 0,
@@ -55,31 +81,59 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
   });
 
   useEffect(() => {
+    if (loadingReceta) {
+      console.log("[OrderRow] FETCHING /receta/pedido/", order.id, {
+        requestId,
+      });
+    }
+  }, [loadingReceta, order.id, requestId]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      console.log("[OrderRow] RECETA OK", receta);
+    }
+    if (isError) {
+      console.error("[OrderRow] RECETA ERROR", error);
+    }
+  }, [isSuccess, isError, receta, error]);
+
+  useEffect(() => {
     setCantidadLocal(order.cantidad || 0);
     setFaltanteLocal((order.cantidadUnidad ?? 0) - (order.cantidad || 0));
   }, [order.cantidad, order.cantidadUnidad]);
 
   useEffect(() => setIsPTMQ(order.ptmq), [order.ptmq]);
 
-  const handlePTMQToggle = (checked) => {
-    updatePedido({ id: order.id, data: { ptmq: checked } })
-      .unwrap()
-      .then(() => {
-        setIsPTMQ(checked);
-        if (!checked) refetch();
-      })
-      .catch(() => setIsPTMQ(order.ptmq));
+  useEffect(() => {
+    if (shouldFetch) {
+      refetchDetalles?.();
+    }
+  }, [shouldFetch, refetchDetalles]);
+
+  useEffect(() => {
+    if (isSuccess && receta.length === 0 && !order.ptmq) {
+      updatePedido({ id: order.id, data: { ptmq: true } }).catch(() => {});
+    }
+  }, [isSuccess, receta.length, order.ptmq, order.id, updatePedido]);
+
+  const handlePTMQToggle = async (checked) => {
+    try {
+      await updatePedido({ id: order.id, data: { ptmq: checked } }).unwrap();
+      setIsPTMQ(checked);
+    } catch {
+      setIsPTMQ(order.ptmq);
+    }
   };
 
   useEffect(() => {
     setProdFields({
-      mpUtilizada: order.mpUtilizada ?? 0,
-      mp1ra: order.mp1ra ?? 0,
-      mp2da: order.mp2da ?? 0,
-      mp3ra: order.mp3ra ?? 0,
-      mpSobrante: order.mpSobrante ?? 0,
-      rechazo: order.rechazo ?? 0,
-      basura: order.basura ?? 0,
+      mpUtilizada: order.mpUtilizada ?? "",
+      mp1ra: order.mp1ra ?? "",
+      mp2da: order.mp2da ?? "",
+      mp3ra: order.mp3ra ?? "",
+      mpSobrante: order.mpSobrante ?? "",
+      rechazo: order.rechazo ?? "",
+      basura: order.basura ?? "",
       trazabilidad_Prod: order.trazabilidad_Prod ?? "",
     });
   }, [
@@ -196,28 +250,59 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
       <Tr>
         <Td colSpan={8} p={0} border="none">
           <Collapse in={isExpanded} animateOpacity>
-            <Box p={3} bg={panelBg}>
-              <Flex wrap="wrap" fontSize="sm" mb={3}>
-                {Object.entries(prodFields).map(([field, value]) => (
-                  <Box key={field} flex="1 1 120px" mb={2}>
-                    <Text fontWeight="semibold">{FIELD_LABELS[field]}:</Text>
-                    <Input
-                      size="sm"
-                      type={field === "trazabilidad_Prod" ? "text" : "number"}
-                      min={0}
-                      value={value}
-                      onChange={(e) => handleFieldChange(field, e.target.value)}
-                      w="60px"
-                    />
-                  </Box>
-                ))}
+            <Box p={3} bg={panelBg} align="center">
+              <Flex
+                gap={3}
+                wrap="nowrap"
+                overflowX="auto"
+                justify="center"
+                align="center"
+                fontSize="sm"
+                mb={3}
+              >
+                {Object.entries(prodFields).map(([field, value]) => {
+                  const spec = FIELD_SPECS[field] ?? {
+                    w: "80px",
+                    type: "number",
+                  };
+                  return (
+                    <Box key={field} flex="0 0 auto" whiteSpace="nowrap">
+                      <Text fontWeight="semibold" mb={1}>
+                        {FIELD_LABELS[field]}:
+                      </Text>
+                      <Input
+                        size="xs"
+                        h="26px"
+                        w={spec.w}
+                        type={spec.type}
+                        value={value}
+                        min={0}
+                        onChange={(e) =>
+                          handleFieldChange(field, e.target.value)
+                        }
+                        focusBorderColor="green.400"
+                        px={2}
+                      />
+                    </Box>
+                  );
+                })}
               </Flex>
+
               <OrderDetailsTable
                 details={details}
-                isLoading={isLoading}
+                isLoading={loadingDetalles}
+                showPTMQ={!hasReceta}
                 isPTMQ={isPTMQ}
                 onTogglePTMQ={handlePTMQToggle}
               />
+
+              {hasReceta && (
+                <RecetaTable
+                  pedidoId={order.id}
+                  receta={receta}
+                  isLoading={loadingReceta}
+                />
+              )}
             </Box>
           </Collapse>
         </Td>

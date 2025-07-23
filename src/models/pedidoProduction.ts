@@ -73,7 +73,7 @@ export interface AvanzarMultiEtapaDetallePayload {
     usuarioId: number;
 }
 
-export interface AvanceOK {               // respuesta simple de tus controladores
+export interface AvanceOK {
     ok: boolean;
     mensaje: string;
 }
@@ -85,3 +85,23 @@ export interface AvanceMultiplesOK {
         errores: string[];
     };
 }
+
+export interface RecetaLinea {
+    id: number;
+    item: string;
+    id_almacen: number;
+    descripcion?: string | null;
+    cantidad_base: number;
+    cantidad_requerida: number;
+    nombre_unidad: string;
+    create_at: string;
+    update_at: string;
+    create_by: number | null;
+    update_by: number | null;
+    state: boolean;
+    pedido_produccionid: number;
+}
+export type UpdateRecetaLineaDto = Partial<Pick<
+    RecetaLinea,
+    'descripcion' | 'cantidad_base' | 'cantidad_requerida' | 'nombre_unidad' | 'id_almacen' | 'state'
+>>;

@@ -17,27 +17,20 @@ export const OrdersTable = ({ data }) => {
     setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
 
   const headerBg = useColorModeValue("gray.100", "gray.700");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const groupHeadBg = useColorModeValue("gray.200", "gray.600");
 
   return (
     <TableContainer
       w="100%"
-      maxW="100%"
       border="1px solid"
-      borderColor={borderColor}
+      borderColor={useColorModeValue("gray.200", "gray.600")}
       borderRadius="md"
       shadow="sm"
       overflowX="auto"
       fontSize="md"
       p={2}
     >
-      <Table
-        variant="simple"
-        size="md"
-        tableLayout="fixed"
-        w="100%"
-        minW="100%"
-      >
+      <Table variant="simple" size="md" tableLayout="fixed" w="100%">
         <Thead bg={headerBg} position="sticky" top={0} zIndex={1}>
           <Tr>
             <Th w="36px" px={2} />
@@ -50,14 +43,18 @@ export const OrdersTable = ({ data }) => {
             <Th px={2}>Faltante</Th>
           </Tr>
         </Thead>
+
         <Tbody>
-          {data.map((order) => (
+          {data.map((order, idx) => (
             <Fragment key={order.id}>
+              <Tr bg={groupHeadBg}></Tr>
               <OrderRow
                 order={order}
                 isExpanded={!!expandedRows[order.id]}
                 onToggle={toggleRow}
               />
+
+              {idx < data.length - 1 && <Tr></Tr>}
             </Fragment>
           ))}
         </Tbody>
