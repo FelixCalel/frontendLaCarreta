@@ -26,7 +26,6 @@ export const DigitadorItemsTable = ({ items }) => {
     <Table size="sm" variant="striped">
       <Thead>
         <Tr>
-          {/* <Th>Área</Th> */}
           <Th>ITEM</Th>
           <Th>Descripción artículo/serv</Th>
           <Th isNumeric>Pedido</Th>

@@ -7,7 +7,6 @@ import {
   Th,
   Td,
   Checkbox,
-  Text,
   Center,
   useColorModeValue,
 } from "@chakra-ui/react";
@@ -16,13 +15,7 @@ export const FabricacionDetailsTable = ({ details }) => {
   const headerBg = useColorModeValue("green.100", "green.800");
 
   if (!details || details.length === 0) {
-    return (
-      <Center py={4}>
-        <Text color={useColorModeValue("gray.600", "gray.400")}>
-          No hay detalles para esta orden.
-        </Text>
-      </Center>
-    );
+    return <Center py={4}></Center>;
   }
 
   return (

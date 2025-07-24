@@ -45,7 +45,7 @@ const FIELD_SPECS = {
 };
 
 export const OrderRow = ({ order, isExpanded, onToggle }) => {
-  const shouldFetch = isExpanded && !order.ptmq;
+  const shouldFetch = isExpanded;
   const recetaArg = shouldFetch ? order.id : skipToken;
 
   console.log("[OrderRow] getRecetaByPedido arg =>", recetaArg);
