@@ -265,6 +265,8 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
                     w: "80px",
                     type: "number",
                   };
+                  const isTraz = field === "trazabilidad_Prod";
+
                   return (
                     <Box key={field} flex="0 0 auto" whiteSpace="nowrap">
                       <Text fontWeight="semibold" mb={1}>
@@ -276,11 +278,20 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
                         w={spec.w}
                         type={spec.type}
                         value={value}
-                        min={0}
-                        onChange={(e) =>
-                          handleFieldChange(field, e.target.value)
+                        isReadOnly={isTraz}
+                        variant={isTraz ? "unstyled" : "outline"}
+                        focusBorderColor={isTraz ? "transparent" : "green.400"}
+                        _focus={
+                          isTraz
+                            ? { boxShadow: "none", borderColor: "transparent" }
+                            : {}
                         }
-                        focusBorderColor="green.400"
+                        onChange={(e) => {
+                          if (isTraz) return;
+                          const raw = e.target.value;
+                          setProdFields((prev) => ({ ...prev, [field]: raw }));
+                          handleFieldChange(field, raw);
+                        }}
                         px={2}
                       />
                     </Box>
@@ -295,7 +306,6 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
                 isPTMQ={isPTMQ}
                 onTogglePTMQ={handlePTMQToggle}
               />
-
               {hasReceta && (
                 <RecetaTable
                   pedidoId={order.id}

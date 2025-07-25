@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import {
+  Box,
   Table,
   Thead,
   Tbody,
@@ -6,71 +9,72 @@ import {
   Th,
   Td,
   Checkbox,
+  Input,
   Spinner,
-  Box,
   TableContainer,
   useColorModeValue,
   useToast,
   Text,
 } from "@chakra-ui/react";
-import PropTypes from "prop-types";
-import { useRef } from "react";
 import { useUpdateRecetaLineaMutation } from "../../services/pedidoProductionApi";
 
 export const RecetaTable = ({ pedidoId, receta, isLoading }) => {
   const [updateLinea] = useUpdateRecetaLineaMutation();
   const toast = useToast();
 
-  const headBg = useColorModeValue("green.50", "green.700");
+  const headBg = useColorModeValue("green.100", "green.700");
+  const inputBorderColor = useColorModeValue("gray.300", "gray.600");
   const headColor = useColorModeValue("gray.800", "whiteAlpha.900");
-  const stripe = useColorModeValue("gray.50", "gray.700");
-  const hover = useColorModeValue("gray.100", "gray.600");
-  const cardBorder = useColorModeValue("gray.200", "gray.700");
+  const stripeBg = useColorModeValue("gray.50", "gray.800");
+  const hoverBg = useColorModeValue("gray.100", "gray.600");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
 
-  const timerRef = useRef();
-  const sendUpdate = (payload) => {
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(async () => {
-      try {
-        await updateLinea(payload).unwrap();
-      } catch {
-        toast({
-          status: "error",
-          description: "No se pudo guardar el cambio",
-          duration: 3000,
-        });
-      }
-    }, 350);
+  const [baseValues, setBaseValues] = useState({});
+  const [stateValues, setStateValues] = useState({});
+
+  useEffect(() => {
+    const b = {};
+    const s = {};
+    receta.forEach((r) => {
+      b[r.id] = r.cantidad_base != null ? String(r.cantidad_base) : "";
+      s[r.id] = !!r.state;
+    });
+    setBaseValues(b);
+    setStateValues(s);
+  }, [receta]);
+
+  const updateField = async (id, field, raw) => {
+    const data = {};
+    data[field] =
+      field === "cantidad_base" ? (raw === "" ? null : Number(raw)) : raw;
+    try {
+      await updateLinea({ id, pedidoId, data }).unwrap();
+    } catch {
+      toast({
+        status: "error",
+        description: "Error al guardar",
+        duration: 3000,
+      });
+    }
   };
 
-  const handleChange = (row, field, raw) => {
-    const value = field === "state" ? raw : Number(raw);
-    sendUpdate({ id: row.id, pedidoId, data: { [field]: value } });
-  };
-
-  if (isLoading) return <Spinner size="sm" />;
-
-  const W_CHECK = "40px";
-  const W_NUM = "60px";
-  const W_BASE = "90px";
-  const W_REQ = "100px";
-  const W_UNI = "90px";
-  const W_ALM = "140px";
+  if (isLoading) {
+    return (
+      <Box py={4} textAlign="center">
+        <Spinner />
+      </Box>
+    );
+  }
 
   return (
     <Box
       border="1px solid"
-      borderColor={cardBorder}
+      borderColor={borderColor}
       borderRadius="md"
-      shadow="sm"
+      overflow="hidden"
     >
       <TableContainer maxH="360px" overflowY="auto">
-        <Table
-          size="sm"
-          variant="striped"
-          tableLayout="fixed"
-          sx={{ "th, td": { verticalAlign: "middle" } }}
-        >
+        <Table size="sm" variant="striped" tableLayout="fixed">
           <Thead
             bg={headBg}
             color={headColor}
@@ -79,76 +83,70 @@ export const RecetaTable = ({ pedidoId, receta, isLoading }) => {
             zIndex={1}
           >
             <Tr>
-              <Th w={W_CHECK}></Th>
-              <Th w={W_NUM}>No.</Th>
+              <Th w="40px" />
+              <Th w="60px">No.</Th>
               <Th>Descripción</Th>
-              <Th w={W_BASE} isNumeric>
+              <Th w="100px" isNumeric>
                 Cant. base
               </Th>
-              <Th w={W_REQ} isNumeric>
+              <Th w="100px" isNumeric>
                 Ctd. req.
               </Th>
-              <Th w={W_UNI}>Unidad</Th>
-              <Th w={W_ALM}>Almacén</Th>
+              <Th w="100px">Unidad</Th>
+              <Th>Almacén</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {receta.map((r, i) => (
+            {receta.map((r, idx) => (
               <Tr
                 key={r.id}
-                bg={i % 2 === 0 ? "transparent" : stripe}
-                _hover={{ bg: hover }}
+                bg={idx % 2 === 0 ? "transparent" : stripeBg}
+                _hover={{ bg: hoverBg }}
               >
-                <Td w={W_CHECK}>
+                <Td textAlign="center">
                   <Checkbox
-                    isChecked={r.state}
-                    onChange={(e) => handleChange(r, "state", e.target.checked)}
+                    isChecked={stateValues[r.id]}
+                    onChange={(e) => {
+                      const v = e.target.checked;
+                      setStateValues((prev) => ({ ...prev, [r.id]: v }));
+                      updateField(r.id, "state", v);
+                    }}
                     size="sm"
-                    aria-label="Usar ingrediente"
                     colorScheme="green"
                   />
                 </Td>
-
-                <Td w={W_NUM}>{r.item}</Td>
-
-                <Td>{r.descripcion ?? "-"}</Td>
-
-                <Td w={W_BASE} isNumeric>
-                  <Text
-                    as="span"
-                    display="inline-block"
-                    w="100%"
+                <Td>{r.item}</Td>
+                <Td>{r.descripcion || "-"}</Td>
+                <Td isNumeric>
+                  <Input
+                    size="xs"
+                    variant="outline"
+                    borderWidth="1px"
+                    borderColor={inputBorderColor}
+                    borderRadius="sm"
+                    _hover={{ borderColor: "green.400" }}
+                    type="number"
+                    value={baseValues[r.id]}
+                    onChange={(e) =>
+                      setBaseValues((prev) => ({
+                        ...prev,
+                        [r.id]: e.target.value,
+                      }))
+                    }
+                    onBlur={(e) =>
+                      updateField(r.id, "cantidad_base", e.target.value)
+                    }
                     textAlign="center"
-                  >
-                    {r.cantidad_base}
-                  </Text>
+                    focusBorderColor="green.400"
+                  />
                 </Td>
-
-                <Td w={W_REQ} isNumeric>
-                  <Text
-                    as="span"
-                    display="inline-block"
-                    w="100%"
-                    textAlign="center"
-                  >
-                    {r.cantidad_requerida}
-                  </Text>
+                <Td isNumeric>
+                  <Text textAlign="center">{r.cantidad_requerida}</Text>
                 </Td>
-
-                <Td w={W_UNI}>
-                  <Text
-                    as="span"
-                    display="inline-block"
-                    w="100%"
-                    textAlign="center"
-                  >
-                    {r.nombre_unidad}
-                  </Text>
+                <Td>
+                  <Text textAlign="center">{r.nombre_unidad}</Text>
                 </Td>
-
-                <Td v w={W_ALM}>
-                  {r.almacen_name ?? r.id_almacen}
-                </Td>
+                <Td>{r.almacen_name || r.id_almacen}</Td>
               </Tr>
             ))}
           </Tbody>
@@ -160,6 +158,24 @@ export const RecetaTable = ({ pedidoId, receta, isLoading }) => {
 
 RecetaTable.propTypes = {
   pedidoId: PropTypes.number.isRequired,
-  receta: PropTypes.array.isRequired,
+  receta: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      item: PropTypes.string.isRequired,
+      descripcion: PropTypes.string,
+      cantidad_base: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      cantidad_requerida: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.string,
+      ]),
+      nombre_unidad: PropTypes.string,
+      almacen_name: PropTypes.string,
+      state: PropTypes.bool,
+    })
+  ).isRequired,
   isLoading: PropTypes.bool,
+};
+
+RecetaTable.defaultProps = {
+  isLoading: false,
 };
