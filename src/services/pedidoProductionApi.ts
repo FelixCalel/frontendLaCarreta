@@ -46,11 +46,7 @@ export const pedidoProduccionApi = createApi({
             query: (id) => `/pedidoProduccion/${id}/detalles`,
             providesTags: (_res, _err, id) => [{ type: 'DetalleProduccion', id }],
         }),
-
-        updatePedidoProduccion: builder.mutation<
-            PedidoProduccion,
-            { id: number; data: UpdatePedidoDto }
-        >({
+        updatePedidoProduccion: builder.mutation<PedidoProduccion, { id: number; data: UpdatePedidoDto }>({
             query: ({ id, data }) => ({
                 url: `/pedidoProduccion/${id}`,
                 method: 'PUT',
@@ -58,9 +54,11 @@ export const pedidoProduccionApi = createApi({
             }),
             invalidatesTags: (_res, _err, { id }) => [
                 { type: 'PedidoProduccion', id },
+                // **muy importante**: invalida la lista de grupos
                 { type: 'PedidoAgrupado', id: 'LIST' },
             ],
         }),
+
 
         getPedidosAgrupados: builder.query<PedidoAgrupado[], void>({
             query: () => '/pedidoProduccion/agrupados',

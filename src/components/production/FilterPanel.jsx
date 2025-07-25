@@ -1,18 +1,7 @@
-import {
-  Flex,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Select,
-  Box,
-  useColorModeValue,
-} from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
+import { Flex, Select, Box, useColorModeValue } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 
 export const FilterPanel = ({
-  itemFilter,
-  onItemChange,
   countryFilter,
   onCountryChange,
   clientFilter,
@@ -38,20 +27,6 @@ export const FilterPanel = ({
 
   return (
     <Flex wrap="wrap" gap={4} mb={2} align="center" justify="center" w="100%">
-      <Box>
-        <InputGroup maxW="240px">
-          <InputLeftElement pointerEvents="none">
-            <SearchIcon color="gray.300" />
-          </InputLeftElement>
-          <Input
-            {...commonProps}
-            placeholder="Buscar ITEM"
-            value={itemFilter}
-            onChange={(e) => onItemChange(e.target.value)}
-          />
-        </InputGroup>
-      </Box>
-
       <Box>
         <Select
           {...commonProps}
@@ -102,8 +77,6 @@ export const FilterPanel = ({
 };
 
 FilterPanel.propTypes = {
-  itemFilter: PropTypes.string.isRequired,
-  onItemChange: PropTypes.func.isRequired,
   countryFilter: PropTypes.string,
   onCountryChange: PropTypes.func.isRequired,
   clientFilter: PropTypes.string,
