@@ -187,10 +187,11 @@ const EntrantesPage = () => {
         ).unwrap();
 
         await dispatch(
-          actualizarFechaOrden({
-            pedidoId,
+          togglePedidoStatus({
+            id: pedidoId,
+            estadoId: 4,
+            comentario: comentario.trim(),
             fechaOrden: null,
-            comentario,
           })
         ).unwrap();
       }
