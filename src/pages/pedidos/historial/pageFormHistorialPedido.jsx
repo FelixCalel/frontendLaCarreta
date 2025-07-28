@@ -66,7 +66,13 @@ const HistorialPedidosPage = () => {
       const detalles = await dispatch(
         getDetalleOrdenByPedidoId(pedido.id)
       ).unwrap();
-      setDetallesPedido(detalles);
+      const detallesOrdenados = detalles.slice().sort((a, b) =>
+        a.nombreProducto.localeCompare(b.nombreProducto, undefined, {
+          sensitivity: "base",
+        })
+      );
+
+      setDetallesPedido(detallesOrdenados);
       setIsModalOpen(true);
     } catch (err) {
       toast({
