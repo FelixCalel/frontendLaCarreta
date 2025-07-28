@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Spinner,
@@ -11,7 +11,10 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { CheckCircleIcon } from "@chakra-ui/icons";
-import { useGetPedidosAgrupadosQuery } from "../../services/pedidoProductionApi";
+import {
+  useGetPedidosAgrupadosQuery,
+  useProcesarEstado5Mutation,
+} from "../../services/pedidoProductionApi";
 import { FilterPanel } from "../../components/production/FilterPanel";
 import { OrdersTable } from "../../components/production/OrdersTable";
 
@@ -21,12 +24,18 @@ const ProductionOrdersPage = () => {
   const [clientFilter, setClientFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
   const [selectedPedidoId, setSelectedPedidoId] = useState(null);
+  const [syncReady, setSyncReady] = useState(false);
+  const [procesarEstado5] = useProcesarEstado5Mutation();
+
+  useEffect(() => {
+    procesarEstado5(undefined).finally(() => setSyncReady(true));
+  }, [procesarEstado5]);
 
   const {
     data: agrupados = [],
     isLoading,
     error,
-  } = useGetPedidosAgrupadosQuery();
+  } = useGetPedidosAgrupadosQuery(undefined, { skip: !syncReady });
 
   const cardBg = useColorModeValue("white", "gray.700");
   const cardBorder = useColorModeValue("gray.200", "gray.600");
@@ -103,7 +112,7 @@ const ProductionOrdersPage = () => {
       .sort((a, b) => a.pedidoId - b.pedidoId);
   }, [mesaGroups, itemFilter, countryFilter, clientFilter, stateFilter]);
 
-  if (isLoading) {
+  if (isLoading || !syncReady) {
     return (
       <Box textAlign="center" py={20}>
         <Spinner size="xl" />

@@ -135,6 +135,15 @@ export const pedidoProduccionApi = createApi({
                 { type: 'RecetaPedido', id: 'LIST' },
             ],
         }),
+
+        procesarEstado5: builder.mutation<{ procesados: number; errores: string[] }, void>({
+            query: () => ({
+                url: '/lineaTiempo/procesar-estado5',
+                method: 'POST',
+                body: {},
+            }),
+            invalidatesTags: [{ type: 'PedidoAgrupado', id: 'LIST' }],
+        }),
     }),
 })
 
@@ -150,4 +159,5 @@ export const {
     useAvanzarMultiEtapaDetalleMutation,
     useGetRecetaByPedidoQuery,
     useUpdateRecetaLineaMutation,
+    useProcesarEstado5Mutation,
 } = pedidoProduccionApi
