@@ -25,30 +25,42 @@ import {
 } from "@chakra-ui/react";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
-  useGetAllPedidosProduccionQuery,
+  useGetPedidosAgrupadosQuery,
   useAvanzarEtapaMutation,
   useAvanzarMultiEtapaDetalleMutation,
+  useGetRecetaByPedidoQuery,
 } from "../../../services/pedidoProductionApi";
-
 import FilterPanelFabricacion from "../../../components/production/fabricacion/FilterPanelFabricacion";
 import { FabricacionRow } from "../../../components/production/fabricacion/FabricacionRow";
 
 const FabricacionPage = () => {
+  const { pedidoId: raw } = useParams();
+  const pedidoId = Number(raw);
   const navigate = useNavigate();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-
-  const {
-    data: pedidos = [],
-    isLoading,
-    error,
-  } = useGetAllPedidosProduccionQuery();
+  const { data: groups = [], isLoading, error } = useGetPedidosAgrupadosQuery();
 
   const [avanzarEtapa, { isLoading: sendingPedido }] =
     useAvanzarEtapaMutation();
   const [avanzarMultiDetalle, { isLoading: sendingDetalles }] =
     useAvanzarMultiEtapaDetalleMutation();
+
+  const group = useMemo(
+    () => groups.find((g) => g.pedidoId === pedidoId),
+    [groups, pedidoId]
+  );
+
+  // FabricacionPage.jsx
+  const { data: receta = [], isLoading: cargandoReceta } =
+    useGetRecetaByPedidoQuery(pedidoId);
+
+  const baseItems = useMemo(
+    () => (group?.items ?? []).filter((it) => it.etapaId === 2),
+    [group]
+  );
 
   const [term, setTerm] = useState("");
   const [estado, setEstado] = useState("");
@@ -57,22 +69,39 @@ const FabricacionPage = () => {
   const [noComment, setNoComment] = useState(false);
   const isSending = sendingPedido || sendingDetalles;
 
-  const filtered = useMemo(
-    () =>
-      pedidos
-        .filter((o) => {
-          const byText =
-            !term ||
-            o.itemCode?.toLowerCase().includes(term.toLowerCase()) ||
-            o.productoNombre?.toLowerCase().includes(term.toLowerCase());
-          const byEstado =
-            !estado || (o.completo ? "Completado" : "Pendiente") === estado;
-          const byMesa = !mesa || String(o.id_asigArea) === mesa;
-          return byText && byEstado && byMesa;
+  console.log({ pedidoId });
+
+  const filtered = useMemo(() => {
+    const txt = term.toLowerCase();
+
+    return baseItems
+      .filter((it) => {
+        const byText =
+          !term ||
+          it.itemCode.toLowerCase().includes(txt) ||
+          it.productoNombre.toLowerCase().includes(txt);
+
+        const byEstado =
+          !estado || (it.completo ? "Completado" : "Pendiente") === estado;
+
+        const byMesa = !mesa || String(it.id_asigArea) === mesa;
+
+        return byText && byEstado && byMesa;
+      })
+      .sort((a, b) =>
+        a.productoNombre.localeCompare(b.productoNombre, "es", {
+          sensitivity: "base",
         })
-        .sort((a, b) => a.id - b.id),
-    [pedidos, term, estado, mesa]
-  );
+      );
+  }, [baseItems, term, estado, mesa]);
+
+  if (isLoading) {
+    return (
+      <Center py={20}>
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
 
   const handleOpenModal = () => {
     if (!filtered.length) {
@@ -184,8 +213,15 @@ const FabricacionPage = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {filtered.map((o) => (
-            <FabricacionRow key={o.id} order={o} />
+          {filtered.map((o, idx) => (
+            <FabricacionRow
+              key={o.id_detallePedido ?? o.id}
+              order={o}
+              pedidoId={pedidoId}
+              receta={receta}
+              cargandoReceta={cargandoReceta}
+              mostrarReceta={idx === 0}
+            />
           ))}
         </Tbody>
       </Table>

@@ -41,7 +41,7 @@ const PedidosTable = ({
           <Th>Deudor</Th>
           <Th>Tienda</Th>
           <Th>Usuario</Th>
-          <Th>Fecha</Th>
+          <Th>Fecha Orden</Th>
           <Th>Acciones</Th>
         </Tr>
       </Thead>
@@ -70,7 +70,7 @@ const PedidosTable = ({
                 <Td>{p.nombreTienda}</Td>
                 <Td>{`${p.nombreUsuario} ${p.apellidoUsuario}`}</Td>
                 <Td>
-                  {format(new Date(p.creadoEl), "dd MMMM yyyy HH:mm", {
+                  {format(new Date(p.fechaOrdenDisplay), "dd MMMM yyyy", {
                     locale: es,
                   })}
                 </Td>

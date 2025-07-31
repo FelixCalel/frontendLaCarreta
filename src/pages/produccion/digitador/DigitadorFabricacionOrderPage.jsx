@@ -20,7 +20,13 @@ const DigitadorFabricacionOrdersPage = () => {
   const { data: groups = [], isLoading, error } = useGetPedidosAgrupadosQuery();
 
   const base = useMemo(
-    () => groups.filter((g) => g.items.some((it) => it.etapaId === 2)),
+    () =>
+      groups
+        .map((g) => ({
+          ...g,
+          items: g.items.filter((it) => it.etapaId === 2),
+        }))
+        .filter((g) => g.items.length > 0),
     [groups]
   );
 

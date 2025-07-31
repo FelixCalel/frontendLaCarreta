@@ -14,8 +14,8 @@ const FilterPanelFabricacion = ({
   onTermChange,
   estado,
   onEstadoChange,
-  mesa,
-  onMesaChange,
+  // mesa,
+  // onMesaChange,
 }) => {
   const bg = useColorModeValue("white", "gray.700");
   const border = useColorModeValue("gray.300", "gray.600");
@@ -55,7 +55,7 @@ const FilterPanelFabricacion = ({
         <option value="Completado">Completado</option>
       </Select>
 
-      <Select
+      {/* <Select
         {...common}
         placeholder="Filtrar por Mesa"
         value={mesa}
@@ -65,7 +65,7 @@ const FilterPanelFabricacion = ({
         <option value="A">Mesa A</option>
         <option value="B">Mesa B</option>
         <option value="C">Mesa C</option>
-      </Select>
+      </Select> */}
     </Flex>
   );
 };

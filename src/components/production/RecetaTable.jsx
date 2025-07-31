@@ -29,24 +29,32 @@ export const RecetaTable = ({ pedidoId, receta, isLoading }) => {
   const hoverBg = useColorModeValue("gray.100", "gray.600");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
-  const [baseValues, setBaseValues] = useState({});
+  const [, setBaseValues] = useState({});
   const [stateValues, setStateValues] = useState({});
+  const [realValues, setRealValues] = useState({});
 
   useEffect(() => {
     const b = {};
+    const rVals = {};
     const s = {};
     receta.forEach((r) => {
       b[r.id] = r.cantidad_base != null ? String(r.cantidad_base) : "";
+      rVals[r.id] = r.cantidad_real != null ? String(r.cantidad_real) : "";
       s[r.id] = !!r.state;
     });
     setBaseValues(b);
+    setRealValues(rVals);
     setStateValues(s);
   }, [receta]);
 
   const updateField = async (id, field, raw) => {
     const data = {};
-    data[field] =
-      field === "cantidad_base" ? (raw === "" ? null : Number(raw)) : raw;
+    const numeric = ["cantidad_base", "cantidad_real"];
+    data[field] = numeric.includes(field)
+      ? raw === ""
+        ? null
+        : Number(raw)
+      : raw;
     try {
       await updateLinea({ id, pedidoId, data }).unwrap();
     } catch {
@@ -87,6 +95,9 @@ export const RecetaTable = ({ pedidoId, receta, isLoading }) => {
               <Th w="60px">No.</Th>
               <Th>Descripción</Th>
               <Th w="100px" isNumeric>
+                Cant. real
+              </Th>
+              <Th w="100px" isNumeric>
                 Cant. base
               </Th>
               <Th w="100px" isNumeric>
@@ -126,19 +137,22 @@ export const RecetaTable = ({ pedidoId, receta, isLoading }) => {
                     borderRadius="sm"
                     _hover={{ borderColor: "green.400" }}
                     type="number"
-                    value={baseValues[r.id]}
+                    value={realValues[r.id]}
                     onChange={(e) =>
-                      setBaseValues((prev) => ({
+                      setRealValues((prev) => ({
                         ...prev,
                         [r.id]: e.target.value,
                       }))
                     }
                     onBlur={(e) =>
-                      updateField(r.id, "cantidad_base", e.target.value)
+                      updateField(r.id, "cantidad_real", e.target.value)
                     }
                     textAlign="center"
                     focusBorderColor="green.400"
                   />
+                </Td>
+                <Td isNumeric>
+                  <Text textAlign="center">{r.cantidad_base}</Text>
                 </Td>
                 <Td isNumeric>
                   <Text textAlign="center">{r.cantidad_requerida}</Text>
