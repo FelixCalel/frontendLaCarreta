@@ -53,7 +53,6 @@ const FabricacionPage = () => {
     [groups, pedidoId]
   );
 
-  // FabricacionPage.jsx
   const { data: receta = [], isLoading: cargandoReceta } =
     useGetRecetaByPedidoQuery(pedidoId);
 
@@ -125,6 +124,7 @@ const FabricacionPage = () => {
 
     const detalleIds = filtered.map((o) => o.id_detallePedido);
     const pedidoId = Number(filtered[0]?.pedidoId ?? 0);
+
     const nuevaEtapaId = 3;
 
     try {
