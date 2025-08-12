@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 interface IWebSocketContext {
   socket: WebSocket | null;
@@ -8,7 +14,13 @@ const WebSocketContext = createContext<IWebSocketContext>({ socket: null });
 
 export const useWebSocket = () => useContext(WebSocketContext);
 
-const createWebSocket = (url: string, onMessage: (event: MessageEvent) => void, onOpen: () => void, onClose: () => void, onError: (event: Event) => void): WebSocket => {
+const createWebSocket = (
+  url: string,
+  onMessage: (event: MessageEvent) => void,
+  onOpen: () => void,
+  onClose: () => void,
+  onError: (event: Event) => void
+): WebSocket => {
   const ws = new WebSocket(url);
   ws.onopen = () => {
     //console.log("Conectado al servidor WebSocket");
@@ -22,7 +34,9 @@ const createWebSocket = (url: string, onMessage: (event: MessageEvent) => void, 
   return ws;
 };
 
-export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const wsUrl = import.meta.env.VITE_API_URL;
 
@@ -34,7 +48,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ws = createWebSocket(
         wsUrl,
         (event) => {
-          //onsole.log("Mensaje recibido:", event.data);
+          //console.log("Mensaje recibido:", event.data);
         },
         () => {
           setSocket(ws);

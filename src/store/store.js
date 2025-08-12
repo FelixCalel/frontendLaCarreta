@@ -20,6 +20,7 @@ import comprasSlice from "./Compras/compraSlice.js";
 import proveedorReducer from "./Proveedor/proveedorSlice.js";
 import asignacionAMSlice from "./asignacionAM/asignacionAMSlice.js";
 import { pedidoProduccionApi } from "../services/pedidoProductionApi.ts";
+import { qaApi } from "../services/controlCalidadAPI.ts";
 
 export const store = configureStore({
   reducer: {
@@ -44,7 +45,11 @@ export const store = configureStore({
     proveedores: proveedorReducer,
     AsignacionAreaMesa: asignacionAMSlice,
     [pedidoProduccionApi.reducerPath]: pedidoProduccionApi.reducer,
+    [qaApi.redurerPath]: qaApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(pedidoProduccionApi.middleware),
+    getDefaultMiddleware().concat(
+      pedidoProduccionApi.middleware,
+      qaApi.middleware
+    ),
 });
