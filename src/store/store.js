@@ -45,7 +45,7 @@ export const store = configureStore({
     proveedores: proveedorReducer,
     AsignacionAreaMesa: asignacionAMSlice,
     [pedidoProduccionApi.reducerPath]: pedidoProduccionApi.reducer,
-    [qaApi.redurerPath]: qaApi.reducer,
+    [qaApi.reducerPath]: qaApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(

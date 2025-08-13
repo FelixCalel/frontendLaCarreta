@@ -31,7 +31,13 @@ export const qaApi = createApi({
                     loteId: params?.loteId,
                 },
             }),
-            transformResponse: (resp: OkList<QaAgrupadoPorPedido[]>) => resp.data,
+            transformResponse: (resp: unknown) => {
+                if (Array.isArray(resp)) {
+                    return resp as QaAgrupadoPorPedido[];
+                }
+                const r = resp as OkList<QaAgrupadoPorPedido[]>;
+                return r.data ?? [];
+            },
             providesTags: (result) =>
                 result
                     ? [
