@@ -1,5 +1,14 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { QaPedido, CreateQaDto, UpdateQaDto, AutoSeedResult } from '../models/controlCalidad.ts';
+import type {
+    QaPedido,
+    CreateQaDto,
+    UpdateQaDto,
+    AutoSeedResult,
+    Muestreo,
+    UpdateMuestreoDto,
+    QaAgrupadoPorPedido,
+    GetQaGroupedParams
+} from '../models/controlCalidad';
 
 type OkList<T> = { ok: boolean; data: T };
 type OkOne<T> = { ok: boolean; data: T };
@@ -9,8 +18,28 @@ export const qaApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: import.meta.env.VITE_API_URL,
     }),
-    tagTypes: ['QaPedido'],
+    tagTypes: ['QaPedido', 'Muestreo', 'QaGrouped'],
     endpoints: (builder) => ({
+
+        getQaAgrupados: builder.query<QaAgrupadoPorPedido[], GetQaGroupedParams | void>({
+            query: (params) => ({
+                url: '/qa/agrupados',
+                params: {
+                    includeLote: params?.includeLote,
+                    includeProveedor: params?.includeProveedor,
+                    proveedorId: params?.proveedorId,
+                    loteId: params?.loteId,
+                },
+            }),
+            transformResponse: (resp: OkList<QaAgrupadoPorPedido[]>) => resp.data,
+            providesTags: (result) =>
+                result
+                    ? [
+                        ...result.map(g => ({ type: 'QaGrouped' as const, id: g.pedidoId })),
+                        { type: 'QaGrouped', id: 'LIST' },
+                    ]
+                    : [{ type: 'QaGrouped', id: 'LIST' }],
+        }),
 
         getQaList: builder.query<QaPedido[], void>({
             query: () => '/qa',
@@ -37,7 +66,9 @@ export const qaApi = createApi({
                 body,
             }),
             transformResponse: (resp: OkOne<QaPedido>) => resp.data,
-            invalidatesTags: [{ type: 'QaPedido', id: 'LIST' }],
+            invalidatesTags: [
+                { type: 'QaPedido', id: 'LIST' },
+                { type: 'QaGrouped', id: 'LIST' },],
         }),
 
         updateQa: builder.mutation<QaPedido, { id: number; data: UpdateQaDto }>({
@@ -50,6 +81,7 @@ export const qaApi = createApi({
             invalidatesTags: (_res, _err, { id }) => [
                 { type: 'QaPedido', id },
                 { type: 'QaPedido', id: 'LIST' },
+                { type: 'QaGrouped', id: 'LIST' },
             ],
         }),
 
@@ -63,6 +95,7 @@ export const qaApi = createApi({
             invalidatesTags: (_res, _err, { id }) => [
                 { type: 'QaPedido', id },
                 { type: 'QaPedido', id: 'LIST' },
+                { type: 'QaGrouped', id: 'LIST' },
             ],
         }),
 
@@ -84,10 +117,30 @@ export const qaApi = createApi({
             invalidatesTags: [{ type: 'QaPedido', id: 'LIST' }],
         }),
 
+        getMuestreoById: builder.query<Muestreo, number>({
+            query: (id) => `/muestreo/${id}`,
+            transformResponse: (resp: OkOne<Muestreo>) => resp.data,
+            providesTags: (_res, _err, id) => [{ type: 'Muestreo', id }],
+        }),
+
+        updateMuestreo: builder.mutation<Muestreo, { id: number; data: UpdateMuestreoDto }>({
+            query: ({ id, data }) => ({
+                url: `/muestreo/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            transformResponse: (resp: OkOne<Muestreo>) => resp.data,
+            invalidatesTags: (_res, _err, { id }) => [
+                { type: 'Muestreo', id },
+
+            ],
+        }),
+
     }),
 });
 
 export const {
+    useGetQaAgrupadosQuery,
     useGetQaListQuery,
     useGetQaByIdQuery,
     useCreateQaMutation,
@@ -95,4 +148,6 @@ export const {
     useDeleteQaMutation,
     useAutoSeedAllQaMutation,
     useAutoSeedOneQaMutation,
+    useGetMuestreoByIdQuery,
+    useUpdateMuestreoMutation,
 } = qaApi;
