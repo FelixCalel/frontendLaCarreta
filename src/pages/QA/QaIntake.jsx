@@ -8,14 +8,13 @@ import {
   HStack,
   Spacer,
   Button,
-  Grid,
-  GridItem,
   useColorModeValue,
+  useDisclosure,
 } from "@chakra-ui/react";
-import useQaIntakeForm from "../../hooks/QA/useQaAggregated";
+import useQaIntakeForm from "../../hooks/QA/useQaIntakeForm";
 import ProviderSelect from "../../components/QA/ProviderSelect";
 import QaProductTable from "../../components/QA/QaProductTable";
-import MuestreoPanel from "../../components/QA/MuestreoPanel";
+import MuestreoModal from "../../components/QA/MuestreoModal";
 import QaFinalizeModal from "../../components/QA/QaFinalizeModal";
 
 export default function QaIntake() {
@@ -29,14 +28,15 @@ export default function QaIntake() {
     ptmq,
     setPtmq,
     selectedQa,
-    openMuestreo,
-    closeMuestreo,
+    selectMuestreo,
+    clearSelection,
     onSaveMuestreo,
     savingMuestreo,
     onFinalize,
   } = useQaIntakeForm(pedidoId);
 
   const [finalizing, setFinalizing] = useState(false);
+  const muestreoModal = useDisclosure();
 
   const pageBg = useColorModeValue("gray.50", "gray.900");
   const panelBg = useColorModeValue("white", "gray.800");
@@ -53,8 +53,7 @@ export default function QaIntake() {
           </Heading>
           <Spacer />
           <Text fontSize="sm" opacity={0.8}>
-            {pedido.pais} · {pedido.trazabilidad_Prod || "—"}
-            {pedido.lote ? ` · Lote ${pedido.lote}` : ""}
+            {pedido.pais} · {pedido.trazabilidad || "—"}
           </Text>
         </HStack>
 
@@ -62,7 +61,7 @@ export default function QaIntake() {
           <ProviderSelect
             value={provider}
             onChange={setProvider}
-            placeholder={pedido.proveedor || "Proveedor…"}
+            placeholder={"Proveedor…"}
           />
           <HStack>
             <input
@@ -80,25 +79,31 @@ export default function QaIntake() {
           </Button>
         </HStack>
 
-        <Grid
-          templateColumns={{ base: "1fr", lg: "1fr 380px" }}
-          gap={6}
-          alignItems="start"
-        >
-          <GridItem bg={panelBg} rounded="xl" p={4} shadow="sm">
-            <QaProductTable items={items} onMuestreoClick={openMuestreo} />
-          </GridItem>
-
-          <GridItem bg={panelBg} rounded="xl" p={4} shadow="sm">
-            <MuestreoPanel
-              selected={selectedQa}
-              onClose={closeMuestreo}
-              onSave={onSaveMuestreo}
-              saving={savingMuestreo}
-            />
-          </GridItem>
-        </Grid>
+        <Box bg={panelBg} rounded="xl" p={4} shadow="sm">
+          <QaProductTable
+            items={items}
+            onMuestreoClick={(qaId, muestreoId) => {
+              selectMuestreo(qaId, muestreoId);
+              muestreoModal.onOpen();
+            }}
+          />
+        </Box>
       </Container>
+
+      <MuestreoModal
+        isOpen={muestreoModal.isOpen}
+        onClose={() => {
+          muestreoModal.onClose();
+          clearSelection();
+        }}
+        selected={selectedQa}
+        onSave={async (muestreoId, form) => {
+          await onSaveMuestreo(muestreoId, form);
+          muestreoModal.onClose();
+          clearSelection();
+        }}
+        saving={savingMuestreo}
+      />
 
       <QaFinalizeModal
         open={finalizing}

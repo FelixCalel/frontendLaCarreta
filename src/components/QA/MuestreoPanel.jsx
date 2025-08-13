@@ -2,7 +2,6 @@ import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import {
   Box,
-  Heading,
   HStack,
   VStack,
   Checkbox,
@@ -16,7 +15,7 @@ import {
   useColorModeValue,
   Text,
 } from "@chakra-ui/react";
-import { useGetMuestreoByIdQuery } from "../../services/qaApi";
+import { useGetMuestreoByIdQuery } from "../../services/controlCalidadAPI";
 
 const defaultState = {
   transporte_inocuidad: false,
@@ -31,7 +30,7 @@ const defaultState = {
   desicion: "PENDIENTE",
 };
 
-export default function MuestreoPanel({ selected, onClose, onSave, saving }) {
+export default function MuestreoPanel({ selected, onSave, saving }) {
   const muestreoId = selected?.muestreoId;
   const { data, isFetching } = useGetMuestreoByIdQuery(muestreoId, {
     skip: !muestreoId,
@@ -49,12 +48,7 @@ export default function MuestreoPanel({ selected, onClose, onSave, saving }) {
 
   return (
     <Box>
-      <HStack justify="space-between" mb={3}>
-        <Heading size="sm">Muestreo</Heading>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          Cerrar
-        </Button>
-      </HStack>
+      <HStack justify="space-between" mb={3}></HStack>
 
       {!selected && (
         <Text opacity={0.7}>Selecciona un producto para muestrear.</Text>

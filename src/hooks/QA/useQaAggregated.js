@@ -18,7 +18,7 @@ export default function useQaAggregated() {
     if (search?.trim()) {
       const s = search.toLowerCase();
       rows = rows.filter((p) =>
-        [p.tienda, p.pais, p.trazabilidad_Prod, p.proveedor]
+        [p.tienda, p.pais, p.trazabilidad, p.proveedor]
           .filter(Boolean)
           .some((v) => String(v).toLowerCase().includes(s))
       );
@@ -36,16 +36,24 @@ export default function useQaAggregated() {
     return rows;
   }, [data, search, date]);
 
-  const recibidos = filtered;
-  const pendientesQA = filtered.filter(() => true);
-  const listosSAP = filtered.filter(() => false);
+  const lotesRecibidos = filtered.filter((p) =>
+    p.items.some((it) => it.estado === true)
+  );
+
+  const pendientesQA = filtered.filter((p) =>
+    p.items.some((it) => it.estado === false)
+  );
+
+  const listosSAP = filtered.filter((p) =>
+    p.items.some((it) => it.enviadoASap === true)
+  );
 
   return {
     search,
     setSearch,
     date,
     setDate,
-    recibidos,
+    recibidos: lotesRecibidos,
     pendientesQA,
     listosSAP,
     isLoading,

@@ -31,6 +31,7 @@ import { digitadorDetalleOrden } from "./detalleDigitadorOrden";
 import { digitadorFabricacionOrden } from "./digitadorFabricacionOrden";
 import { fabricacionDetailOrder } from "./FabricacionDetails";
 import { QApaginaPedido } from "./QA";
+import { QApaginaDetails } from "./QADetails";
 
 export const AppRouter = () => {
   const dispatch = useDispatch();
@@ -72,6 +73,7 @@ export const AppRouter = () => {
     { path: "/despacho/*", rutaId: 25, component: productionOrdenDetails },
     { path: "/digitador/*", rutaId: 26, component: digitadorOrden },
     { path: "/detalle/*", rutaId: 27, component: digitadorDetalleOrden },
+
     {
       path: "/fabricacion/*",
       rutaId: 28,
@@ -82,8 +84,8 @@ export const AppRouter = () => {
       rutaId: 29,
       component: fabricacionDetailOrder,
     },
-
     { path: "/aseguramiento/*", rutaId: 30, component: QApaginaPedido },
+    { path: "/qa/*", rutaId: 31, component: QApaginaDetails },
   ];
 
   useEffect(() => {

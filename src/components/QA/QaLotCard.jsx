@@ -9,12 +9,14 @@ import {
 } from "@chakra-ui/react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const MotionBox = motion(Box);
 
-export default function QaLotCard({ data, onOpen }) {
+export default function QaLotCard({ data }) {
   const bg = useColorModeValue("white", "gray.800");
   const border = useColorModeValue("gray.200", "gray.700");
+  const nav = useNavigate();
 
   return (
     <MotionBox
@@ -33,7 +35,7 @@ export default function QaLotCard({ data, onOpen }) {
           size="sm"
           colorScheme="green"
           rightIcon={<ExternalLinkIcon />}
-          onClick={onOpen}
+          onClick={() => nav(`/qa/agrupados/${data.pedidoId}`, { state: data })}
         >
           Abrir
         </Button>
@@ -57,7 +59,7 @@ export default function QaLotCard({ data, onOpen }) {
     </MotionBox>
   );
 }
+
 QaLotCard.propTypes = {
   data: PropTypes.object.isRequired,
-  onOpen: PropTypes.func.isRequired,
 };

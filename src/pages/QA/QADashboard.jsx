@@ -35,14 +35,14 @@ export default function QADashboard() {
   const bg = useColorModeValue("gray.50", "gray.900");
 
   return (
-    <Box w="full" minH="100vh" bg={bg} py={{ base: 4, md: 10 }}>
+    <Box w="full" minH="100vh" bg={bg} py={{ base: 2, md: 2 }}>
       <Container maxW="7xl">
         <MotionBox
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
         >
-          <Heading size="lg" textAlign="center" mb={6} letterSpacing="wide">
+          <Heading size="lg" textAlign="center" mb={2} letterSpacing="wide">
             Dashboard de Calidad (QA)
           </Heading>
         </MotionBox>
@@ -57,7 +57,7 @@ export default function QADashboard() {
             spacing={4}
             maxW="5xl"
             mx="auto"
-            mb={8}
+            mb={3}
           >
             <QaSearchBar value={search} onChange={setSearch} />
             <QaDateFilter value={date} onChange={setDate} />
@@ -81,7 +81,7 @@ export default function QADashboard() {
           </SimpleGrid>
         </MotionBox>
 
-        <Stack spacing={8} mt={10}>
+        <Stack spacing={2} mt={2}>
           <Divider />
           <SimpleGrid
             columns={{ base: 1, md: 3 }}
