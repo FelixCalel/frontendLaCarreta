@@ -25,11 +25,8 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const ref = useRef();
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = localStorage.getItem("roleId");
-  //const pedidos = useSelector((state) => state.pedidos.data || []);
   const [locallyHidden, setLocallyHidden] = useState(new Set());
-  const pedidosRuta = useSelector(
-    selectPedidosEntrantesPorRuta([2, 5]) // 2 = pendiente, 5 = exportado
-  );
+  const pedidosRuta = useSelector(selectPedidosEntrantesPorRuta([2, 5]));
   const pedidos = useSelector((state) => state.pedidos.data || []);
 
   const basePedidos = roleId === "3" ? pedidosRuta : pedidos;
@@ -37,7 +34,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     .filter((p) => p.isActive)
     .filter((p) =>
       roleId === "3"
-        ? true // ya filtrado por ruta arriba
+        ? true
         : p.usuarioId === usuarioId && [3, 4, 5].includes(p.estadoId)
     )
     .filter((pedido) => roleId === "3" || pedido.usuarioId === usuarioId)

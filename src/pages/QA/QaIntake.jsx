@@ -38,6 +38,7 @@ export default function QaIntake() {
     onSaveMuestreo,
     savingMuestreo,
     onFinalize,
+    onEditQa,
   } = useQaIntakeForm(pedidoId);
 
   const [finalizing, setFinalizing] = useState(false);
@@ -96,6 +97,7 @@ export default function QaIntake() {
         <Box bg={panelBg} rounded="xl" p={4} shadow="sm">
           <QaProductTable
             items={items}
+            onEditQa={onEditQa}
             onMuestreoClick={(qaId, muestreoId) => {
               selectMuestreo(qaId, muestreoId);
               muestreoModal.onOpen();

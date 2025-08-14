@@ -1,26 +1,15 @@
 import { useMemo, useState, useCallback } from "react";
-import { useDispatch } from "react-redux";
 import {
   useGetQaAgrupadosQuery,
   useUpdateMuestreoMutation,
-  qaApi,
+  useUpdateQaMutation,
 } from "../../services/controlCalidadAPI";
 
 export default function useQaIntakeForm(pedidoId) {
-  const dispatch = useDispatch();
-
-  const {
-    data = [],
-    isLoading,
-    refetch,
-  } = useGetQaAgrupadosQuery(undefined, {
-    refetchOnFocus: true,
-    refetchOnReconnect: true,
-    refetchOnMountOrArgChange: true,
-  });
-
+  const { data = [], isLoading, refetch } = useGetQaAgrupadosQuery();
   const [updateMuestreo, { isLoading: savingMuestreo }] =
     useUpdateMuestreoMutation();
+  const [updateQa] = useUpdateQaMutation();
 
   const pedido = useMemo(
     () => data.find((p) => Number(p.pedidoId) === Number(pedidoId)),
@@ -28,13 +17,12 @@ export default function useQaIntakeForm(pedidoId) {
   );
 
   const items = pedido?.items ?? [];
-
   const [provider, setProvider] = useState(null);
   const [ptmq, setPtmq] = useState(false);
   const [selectedQa, setSelectedQa] = useState(null);
 
   const selectMuestreo = useCallback((qaId, muestreoId) => {
-    setSelectedQa({ qaId, muestreoId: muestreoId ?? null });
+    setSelectedQa({ qaId, muestreoId });
   }, []);
 
   const clearSelection = useCallback(() => setSelectedQa(null), []);
@@ -58,33 +46,34 @@ export default function useQaIntakeForm(pedidoId) {
       };
 
       await updateMuestreo({ id: Number(muestreoId), data: payload }).unwrap();
-
-      dispatch(
-        qaApi.util.updateQueryData("getQaAgrupados", undefined, (draft) => {
-          const group = draft?.find(
-            (g) => Number(g.pedidoId) === Number(pedidoId)
-          );
-          if (!group || !Array.isArray(group.items)) return;
-
-          const it = group.items.find(
-            (x) => Number(x.muestreoId) === Number(muestreoId)
-          );
-          if (it) {
-            it.muestreoDecision = payload.desicion;
-            it.updatedAt = new Date().toISOString();
-          }
-        })
-      );
-
-      dispatch(
-        qaApi.util.invalidateTags([
-          { type: "QaGrouped", id: "LIST" },
-          { type: "QaPedido", id: "LIST" },
-        ])
-      );
       await refetch();
     },
-    [updateMuestreo, dispatch, refetch, pedidoId]
+    [updateMuestreo, refetch]
+  );
+
+  const onEditQa = useCallback(
+    async (qaId, partial) => {
+      const usuarioId = Number(localStorage.getItem("usuarioId") || 0);
+
+      const payload = {};
+      if (partial.caracteristicas !== undefined)
+        payload.caracteristicas = String(partial.caracteristicas);
+      if (partial.cantidad !== undefined)
+        payload.cantidad = Number(partial.cantidad) || 0;
+      if (
+        partial.id_unidadMedida !== undefined &&
+        partial.id_unidadMedida !== null
+      )
+        payload.id_unidadMedida = Number(partial.id_unidadMedida);
+      if (partial.observaciones !== undefined)
+        payload.observaciones = partial.observaciones ?? null;
+
+      payload.updatedBy = usuarioId || 0;
+
+      await updateQa({ id: Number(qaId), data: payload }).unwrap();
+      await refetch();
+    },
+    [updateQa, refetch]
   );
 
   const onFinalize = useCallback(() => {
@@ -106,6 +95,7 @@ export default function useQaIntakeForm(pedidoId) {
     clearSelection,
     onSaveMuestreo,
     savingMuestreo,
+    onEditQa,
     onFinalize,
   };
 }
