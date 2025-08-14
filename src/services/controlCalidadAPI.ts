@@ -138,6 +138,8 @@ export const qaApi = createApi({
             transformResponse: (resp: OkOne<Muestreo>) => resp.data,
             invalidatesTags: (_res, _err, { id }) => [
                 { type: 'Muestreo', id },
+                { type: 'QaGrouped', id: 'LIST' },
+                { type: 'QaPedido', id: 'LIST' },
 
             ],
         }),

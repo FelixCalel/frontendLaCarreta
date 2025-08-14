@@ -1,11 +1,24 @@
 import { useMemo, useState, useCallback } from "react";
+import { useDispatch } from "react-redux";
 import {
   useGetQaAgrupadosQuery,
   useUpdateMuestreoMutation,
+  qaApi,
 } from "../../services/controlCalidadAPI";
 
 export default function useQaIntakeForm(pedidoId) {
-  const { data = [], isLoading, refetch } = useGetQaAgrupadosQuery();
+  const dispatch = useDispatch();
+
+  const {
+    data = [],
+    isLoading,
+    refetch,
+  } = useGetQaAgrupadosQuery(undefined, {
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMountOrArgChange: true,
+  });
+
   const [updateMuestreo, { isLoading: savingMuestreo }] =
     useUpdateMuestreoMutation();
 
@@ -15,12 +28,13 @@ export default function useQaIntakeForm(pedidoId) {
   );
 
   const items = pedido?.items ?? [];
+
   const [provider, setProvider] = useState(null);
   const [ptmq, setPtmq] = useState(false);
   const [selectedQa, setSelectedQa] = useState(null);
 
   const selectMuestreo = useCallback((qaId, muestreoId) => {
-    setSelectedQa({ qaId, muestreoId });
+    setSelectedQa({ qaId, muestreoId: muestreoId ?? null });
   }, []);
 
   const clearSelection = useCallback(() => setSelectedQa(null), []);
@@ -39,14 +53,38 @@ export default function useQaIntakeForm(pedidoId) {
         resultado: String(form.resultado ?? ""),
         brix_promedio: Number(form.brix_promedio ?? 0),
         temperatura: String(form.temperatura ?? "-"),
-        desicion: String(form.desicion ?? "PENDIENTE"),
+        desicion: String(form.desicion ?? ""),
         updatedBy: usuarioId || 0,
       };
 
       await updateMuestreo({ id: Number(muestreoId), data: payload }).unwrap();
+
+      dispatch(
+        qaApi.util.updateQueryData("getQaAgrupados", undefined, (draft) => {
+          const group = draft?.find(
+            (g) => Number(g.pedidoId) === Number(pedidoId)
+          );
+          if (!group || !Array.isArray(group.items)) return;
+
+          const it = group.items.find(
+            (x) => Number(x.muestreoId) === Number(muestreoId)
+          );
+          if (it) {
+            it.muestreoDecision = payload.desicion;
+            it.updatedAt = new Date().toISOString();
+          }
+        })
+      );
+
+      dispatch(
+        qaApi.util.invalidateTags([
+          { type: "QaGrouped", id: "LIST" },
+          { type: "QaPedido", id: "LIST" },
+        ])
+      );
       await refetch();
     },
-    [updateMuestreo, refetch]
+    [updateMuestreo, dispatch, refetch, pedidoId]
   );
 
   const onFinalize = useCallback(() => {

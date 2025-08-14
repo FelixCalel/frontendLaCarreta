@@ -18,6 +18,17 @@ export default function QaLotCard({ data }) {
   const border = useColorModeValue("gray.200", "gray.700");
   const nav = useNavigate();
 
+  const traz = (data.trazabilidad ?? "").toString().trim();
+
+  const lotesTxt = data.lotes?.length
+    ? ` · Lote${data.lotes.length > 1 ? "s" : ""}: ${data.lotes
+        .map((l) => l.tarima ?? l.id)
+        .join(", ")}`
+    : "";
+  const provTxt = data.proveedores?.length
+    ? ` · Prov.: ${data.proveedores.map((p) => p.nombre).join(", ")}`
+    : "";
+
   return (
     <MotionBox
       bg={bg}
@@ -45,12 +56,10 @@ export default function QaLotCard({ data }) {
         {data.tienda} · {data.pais}
       </Text>
 
-      <Text fontSize="xs" mt={1} opacity={0.7} noOfLines={2}>
-        {data.trazabilidad_Prod
-          ? `Trazab.: ${data.trazabilidad_Prod}`
-          : "Trazab.: —"}
-        {data.lote ? ` · Lote ${data.lote}` : ""}
-        {data.proveedor ? ` · Prov. ${data.proveedor}` : ""}
+      <Text fontSize="xs" mt={1} opacity={0.8} noOfLines={2} fontFamily="mono">
+        Trazab.: {traz || "—"}
+        {lotesTxt}
+        {provTxt}
       </Text>
 
       <Badge mt={2} variant="subtle" colorScheme="green">

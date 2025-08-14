@@ -1,10 +1,20 @@
 import { useMemo, useState } from "react";
 import { useGetQaAgrupadosQuery } from "../../services/controlCalidadAPI";
 
+const DEC = {
+  PENDIENTE: "PENDIENTE",
+  APROBADO: "APROBADO",
+  RECHAZADO: "RECHAZADO",
+};
+
+const norm = (d) => {
+  const v = (d ?? "").trim().toUpperCase();
+  return v === "" ? null : v;
+};
+
 export default function useQaAggregated() {
   const [search, setSearch] = useState("");
   const [date, setDate] = useState(null);
-
   const {
     data = [],
     isLoading,
@@ -18,7 +28,7 @@ export default function useQaAggregated() {
     if (search?.trim()) {
       const s = search.toLowerCase();
       rows = rows.filter((p) =>
-        [p.tienda, p.pais, p.trazabilidad, p.proveedor]
+        [p.tienda, p.pais, p.trazabilidad]
           .filter(Boolean)
           .some((v) => String(v).toLowerCase().includes(s))
       );
@@ -28,7 +38,13 @@ export default function useQaAggregated() {
       rows = rows
         .map((p) => ({
           ...p,
-          items: p.items.filter((it) => it.createdAt?.slice(0, 10) === date),
+          items: p.items.filter((it) => {
+            const d =
+              typeof it.createdAt === "string"
+                ? it.createdAt
+                : new Date(it.createdAt).toISOString();
+            return d.slice(0, 10) === date;
+          }),
         }))
         .filter((p) => p.items.length > 0);
     }
@@ -36,16 +52,40 @@ export default function useQaAggregated() {
     return rows;
   }, [data, search, date]);
 
-  const lotesRecibidos = filtered.filter((p) =>
-    p.items.some((it) => it.estado === true)
+  const listosSAP = useMemo(
+    () =>
+      filtered.filter(
+        (p) =>
+          p.items.length > 0 &&
+          p.items.every((it) => norm(it.muestreoDecision) === DEC.APROBADO)
+      ),
+    [filtered]
+  );
+  const listosIds = useMemo(
+    () => new Set(listosSAP.map((p) => p.pedidoId)),
+    [listosSAP]
   );
 
-  const pendientesQA = filtered.filter((p) =>
-    p.items.some((it) => it.estado === false)
+  const recibidos = useMemo(
+    () =>
+      filtered.filter(
+        (p) =>
+          p.items.length > 0 &&
+          p.items.every((it) => norm(it.muestreoDecision) == null)
+      ),
+    [filtered]
+  );
+  const recibIds = useMemo(
+    () => new Set(recibidos.map((p) => p.pedidoId)),
+    [recibidos]
   );
 
-  const listosSAP = filtered.filter((p) =>
-    p.items.some((it) => it.enviadoASap === true)
+  const pendientesQA = useMemo(
+    () =>
+      filtered.filter(
+        (p) => !listosIds.has(p.pedidoId) && !recibIds.has(p.pedidoId)
+      ),
+    [filtered, listosIds, recibIds]
   );
 
   return {
@@ -53,7 +93,7 @@ export default function useQaAggregated() {
     setSearch,
     date,
     setDate,
-    recibidos: lotesRecibidos,
+    recibidos,
     pendientesQA,
     listosSAP,
     isLoading,

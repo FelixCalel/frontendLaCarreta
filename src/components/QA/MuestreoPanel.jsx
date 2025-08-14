@@ -26,8 +26,8 @@ const defaultState = {
   porcentaje: 0,
   resultado: "",
   brix_promedio: 0,
-  temperatura: "-",
-  desicion: "PENDIENTE",
+  temperatura: "",
+  desicion: "",
 };
 
 export default function MuestreoPanel({ selected, onSave, saving }) {
@@ -130,7 +130,8 @@ export default function MuestreoPanel({ selected, onSave, saving }) {
                     Decisión
                   </Text>
                   <Select
-                    value={form.desicion}
+                    placeholder="- Sin Decisión -"
+                    value={form.desicion ?? ""}
                     onChange={(e) => set("desicion", e.target.value)}
                   >
                     <option value="PENDIENTE">PENDIENTE</option>

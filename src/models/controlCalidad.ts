@@ -2,13 +2,11 @@ export interface QaPedido {
     id: number;
     pedidoProduccionId: number;
     loteId: number;
-
     caracteristicas: string;
     cantidad: number;
     id_unidadMedida: number;
     observaciones?: string | null;
     estado: boolean;
-
     muestreoId?: number | null;
     createdBy: number;
     updatedBy: number;
@@ -86,6 +84,8 @@ export interface UpdateMuestreoDto {
 
 export interface QaItemEnPedido {
     qaId: number;
+    muestreoId?: number | null;
+    muestreoDecision?: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
     loteId: number;
     tarima: number | null;
     cantidad: number;

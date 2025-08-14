@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   Container,
@@ -11,6 +11,7 @@ import {
   useColorModeValue,
   useDisclosure,
 } from "@chakra-ui/react";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 import useQaIntakeForm from "../../hooks/QA/useQaIntakeForm";
 import ProviderSelect from "../../components/QA/ProviderSelect";
 import QaProductTable from "../../components/QA/QaProductTable";
@@ -19,6 +20,10 @@ import QaFinalizeModal from "../../components/QA/QaFinalizeModal";
 
 export default function QaIntake() {
   const { pedidoId } = useParams();
+  const nav = useNavigate();
+  const { state } = useLocation();
+  const backTo = state?.from || "/aseguramiento/calidad";
+
   const {
     isLoading,
     pedido,
@@ -37,7 +42,6 @@ export default function QaIntake() {
 
   const [finalizing, setFinalizing] = useState(false);
   const muestreoModal = useDisclosure();
-
   const pageBg = useColorModeValue("gray.50", "gray.900");
   const panelBg = useColorModeValue("white", "gray.800");
 
@@ -47,11 +51,21 @@ export default function QaIntake() {
   return (
     <Box minH="100vh" bg={pageBg} py={{ base: 4, md: 8 }}>
       <Container maxW="7xl">
-        <HStack mb={6} align="baseline">
-          <Heading size="lg">
-            Tarima Entrante / Muestreo — Pedido #{pedido.pedidoId}
-          </Heading>
-          <Spacer />
+        <HStack mb={4} justify="space-between" align="center">
+          <HStack spacing={4}>
+            <Button
+              onClick={() => nav(backTo)}
+              leftIcon={<ArrowBackIcon />}
+              variant="ghost"
+              colorScheme="gray"
+            >
+              Volver
+            </Button>
+            <Heading size="lg">
+              Tarima Entrante / Muestreo — Pedido #{pedido.pedidoId}
+            </Heading>
+          </HStack>
+
           <Text fontSize="sm" opacity={0.8}>
             {pedido.pais} · {pedido.trazabilidad || "—"}
           </Text>
@@ -61,7 +75,7 @@ export default function QaIntake() {
           <ProviderSelect
             value={provider}
             onChange={setProvider}
-            placeholder={"Proveedor…"}
+            placeholder={pedido.proveedor || "Proveedor…"}
           />
           <HStack>
             <input
