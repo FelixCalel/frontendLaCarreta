@@ -30,8 +30,8 @@ export default function QaIntake() {
     items,
     provider,
     setProvider,
-    ptmq,
-    setPtmq,
+    //ptmq,
+    //setPtmq,
     selectedQa,
     selectMuestreo,
     clearSelection,
@@ -78,7 +78,7 @@ export default function QaIntake() {
             onChange={setProvider}
             placeholder={pedido.proveedor || "Proveedor…"}
           />
-          <HStack>
+          {/* <HStack>
             <input
               id="ptmq"
               type="checkbox"
@@ -87,7 +87,7 @@ export default function QaIntake() {
               style={{ width: 18, height: 18, accentColor: "#38A169" }}
             />
             <label htmlFor="ptmq">¿Es PTMQ?</label>
-          </HStack>
+          </HStack> */}
           <Spacer />
           <Button colorScheme="green" onClick={() => setFinalizing(true)}>
             Finalizar

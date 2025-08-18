@@ -47,12 +47,13 @@ export default function QaProductTable({ items, onMuestreoClick, onEditQa }) {
     setEditingId(row.qaId);
     setDraft({
       caracteristicas: row.caracteristicas ?? "",
-      cantidad: Number(row.cantidad ?? 0),
-      id_unidadMedida: "",
+      cantidad: Number.isFinite(Number(row.cantidad))
+        ? Number(row.cantidad)
+        : 0,
+      id_unidadMedida: row.id_unidadMedida ?? "",
       observaciones: row.observaciones ?? "",
     });
   };
-
   const cancelEdit = () => {
     setEditingId(null);
     setDraft({
@@ -139,16 +140,25 @@ export default function QaProductTable({ items, onMuestreoClick, onEditQa }) {
                     <NumberInput
                       size={inputSize}
                       min={0}
-                      value={draft.cantidad}
+                      value={
+                        Number.isFinite(Number(draft.cantidad))
+                          ? draft.cantidad
+                          : 0
+                      }
                       onChange={(_, v) =>
-                        setDraft((d) => ({ ...d, cantidad: v ?? 0 }))
+                        setDraft((d) => ({
+                          ...d,
+                          cantidad: Number.isFinite(v) ? v : 0,
+                        }))
                       }
                       maxW="110px"
                     >
                       <NumberInputField />
                     </NumberInput>
-                  ) : (
+                  ) : Number.isFinite(Number(row.cantidad)) ? (
                     row.cantidad
+                  ) : (
+                    0
                   )}
                 </Td>
 

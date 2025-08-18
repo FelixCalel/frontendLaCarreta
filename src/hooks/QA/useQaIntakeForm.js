@@ -7,6 +7,7 @@ import {
 
 export default function useQaIntakeForm(pedidoId) {
   const { data = [], isLoading, refetch } = useGetQaAgrupadosQuery();
+
   const [updateMuestreo, { isLoading: savingMuestreo }] =
     useUpdateMuestreoMutation();
   const [updateQa] = useUpdateQaMutation();
@@ -15,8 +16,8 @@ export default function useQaIntakeForm(pedidoId) {
     () => data.find((p) => Number(p.pedidoId) === Number(pedidoId)),
     [data, pedidoId]
   );
-
   const items = pedido?.items ?? [];
+
   const [provider, setProvider] = useState(null);
   const [ptmq, setPtmq] = useState(false);
   const [selectedQa, setSelectedQa] = useState(null);
@@ -52,25 +53,30 @@ export default function useQaIntakeForm(pedidoId) {
   );
 
   const onEditQa = useCallback(
-    async (qaId, partial) => {
+    async (qaId, patch) => {
       const usuarioId = Number(localStorage.getItem("usuarioId") || 0);
 
-      const payload = {};
-      if (partial.caracteristicas !== undefined)
-        payload.caracteristicas = String(partial.caracteristicas);
-      if (partial.cantidad !== undefined)
-        payload.cantidad = Number(partial.cantidad) || 0;
-      if (
-        partial.id_unidadMedida !== undefined &&
-        partial.id_unidadMedida !== null
-      )
-        payload.id_unidadMedida = Number(partial.id_unidadMedida);
-      if (partial.observaciones !== undefined)
-        payload.observaciones = partial.observaciones ?? null;
+      const allowed = [
+        "caracteristicas",
+        "cantidad",
+        "id_unidadMedida",
+        "observaciones",
+        "estado",
+        "muestreoId",
+      ];
+      const data = {};
+      for (const k of allowed) {
+        if (patch[k] !== undefined) data[k] = patch[k];
+      }
 
-      payload.updatedBy = usuarioId || 0;
+      if (data.cantidad != null) data.cantidad = Number(data.cantidad);
+      if (data.id_unidadMedida != null)
+        data.id_unidadMedida = Number(data.id_unidadMedida);
+      if (data.estado != null) data.estado = Boolean(data.estado);
 
-      await updateQa({ id: Number(qaId), data: payload }).unwrap();
+      data.updatedBy = usuarioId || 0;
+
+      await updateQa({ id: Number(qaId), data }).unwrap();
       await refetch();
     },
     [updateQa, refetch]
