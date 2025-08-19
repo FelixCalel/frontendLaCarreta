@@ -20,84 +20,99 @@ const PedidosCardList = ({ pedidos, roleId, onVerDetalles }) => {
 
   return (
     <VStack spacing={4} align="stretch">
-      {pedidos.map((pedido) => (
-        <Box
-          key={pedido.id}
-          p={4}
-          borderWidth="1px"
-          borderColor={cardBorderColor}
-          rounded="lg"
-          bg={cardBg}
-          shadow="md"
-          transition="all 0.2s"
-          _hover={{
-            shadow: "lg",
-            transform: "scale(1.02)",
-            bg: hoverBg,
-          }}
-        >
-          <HStack justifyContent="space-between" alignItems="center" mb={2}>
-            <Text fontWeight="bold" fontSize="lg" color={headingColor}>
-              Pedido ID: {pedido.id}
-            </Text>
-            <Badge
-              colorScheme={
-                pedido.estadoId === 2
-                  ? "yellow"
-                  : pedido.estadoId === 3
-                  ? "green"
-                  : pedido.estadoId === 5
-                  ? "blue"
-                  : "red"
-              }
-              fontSize="sm"
-              px={3}
-              py={1}
-              rounded="full"
-            >
-              {pedido.estadoId === 2
-                ? "Pendiente"
-                : pedido.estadoId === 3
-                ? "Aprobado"
-                : pedido.estadoId === 5
-                ? "Exportado"
-                : "Cancelado"}
-            </Badge>
-          </HStack>
+      {pedidos.map((pedido) => {
+        const showDocIds = roleId === 3 && pedido.estadoId === 5;
 
-          <Text color={textColor} fontSize="sm">
-            <strong>Deudor:</strong>{" "}
-            {`${pedido.nombreCorrelativo} - ${pedido.nombreDeu || "N/A"}`}
-          </Text>
-
-          <Text color={textColor} fontSize="sm">
-            <strong>Tienda:</strong> {pedido.nombreTienda || "N/A"}
-          </Text>
-
-          {roleId === 1 || roleId === 3 ? (
-            <Text color={textColor} fontSize="sm">
-              <strong>Usuario:</strong> {pedido.nombreUsuario || "N/A"}
-            </Text>
-          ) : null}
-
-          <Text color={textColor} fontSize="sm">
-            <strong>Fecha:</strong>{" "}
-            {format(new Date(pedido.creadoEl), "dd MMM yyyy, HH:mm", {
-              locale: es,
-            })}
-          </Text>
-
-          <Button
-            mt={3}
-            colorScheme="blue"
-            size="sm"
-            onClick={() => onVerDetalles(pedido)}
-            fontSize="sm"
+        return (
+          <Box
+            key={pedido.id}
+            p={4}
+            borderWidth="1px"
+            borderColor={cardBorderColor}
+            rounded="lg"
+            bg={cardBg}
+            shadow="md"
+            transition="all 0.2s"
+            _hover={{
+              shadow: "lg",
+              transform: "scale(1.02)",
+              bg: hoverBg,
+            }}
           >
-            Ver Detalles
-          </Button>
-        </Box>
-      ))}
+            <HStack justifyContent="space-between" alignItems="center" mb={2}>
+              <Text fontWeight="bold" fontSize="lg" color={headingColor}>
+                Pedido ID: {pedido.id}
+              </Text>
+              <Badge
+                colorScheme={
+                  pedido.estadoId === 2
+                    ? "yellow"
+                    : pedido.estadoId === 3
+                    ? "green"
+                    : pedido.estadoId === 5
+                    ? "blue"
+                    : "red"
+                }
+                fontSize="sm"
+                px={3}
+                py={1}
+                rounded="full"
+              >
+                {pedido.estadoId === 2
+                  ? "Pendiente"
+                  : pedido.estadoId === 3
+                  ? "Aprobado"
+                  : pedido.estadoId === 5
+                  ? "Exportado"
+                  : "Cancelado"}
+              </Badge>
+            </HStack>
+
+            <Text color={textColor} fontSize="sm">
+              <strong>Deudor:</strong>{" "}
+              {`${pedido.nombreCorrelativo} - ${pedido.nombreDeu || "N/A"}`}
+            </Text>
+
+            <Text color={textColor} fontSize="sm">
+              <strong>Tienda:</strong> {pedido.nombreTienda || "N/A"}
+            </Text>
+
+            {showDocIds && (
+              <>
+                <Text color={textColor} fontSize="sm">
+                  <strong>DocNum:</strong> {pedido.docNum ?? "—"}
+                </Text>
+                <Text color={textColor} fontSize="sm">
+                  <strong>DocEntry:</strong> {pedido.docEntry ?? "—"}
+                </Text>
+              </>
+            )}
+
+            {(roleId === 1 || roleId === 3) && (
+              <Text color={textColor} fontSize="sm">
+                <strong>Usuario:</strong> {pedido.nombreUsuario || "N/A"}
+              </Text>
+            )}
+
+            <Text color={textColor} fontSize="sm">
+              <strong>Fecha:</strong>{" "}
+              {format(new Date(pedido.creadoEl), "dd MMM yyyy, HH:mm", {
+                locale: es,
+              })}
+            </Text>
+
+            <Button
+              mt={3}
+              colorScheme="blue"
+              size="sm"
+              onClick={() => onVerDetalles(pedido)}
+              fontSize="sm"
+            >
+              Ver Detalles
+            </Button>
+          </Box>
+        );
+      })}
     </VStack>
   );
 };
@@ -110,8 +125,13 @@ PedidosCardList.propTypes = {
       nombreDeu: PropTypes.string,
       nombreTienda: PropTypes.string,
       estadoId: PropTypes.number.isRequired,
-      creadoEl: PropTypes.string.isRequired,
+      creadoEl: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.instanceOf(Date),
+      ]).isRequired,
       nombreUsuario: PropTypes.string,
+      docNum: PropTypes.number,
+      docEntry: PropTypes.number,
     })
   ).isRequired,
   roleId: PropTypes.number.isRequired,
