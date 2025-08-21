@@ -11,6 +11,7 @@ import {
   FormLabel,
   Textarea,
   Input,
+  useToast,
 } from "@chakra-ui/react";
 import { useRef } from "react";
 
@@ -28,6 +29,21 @@ const ConfirmDialog = ({
   setFecha,
 }) => {
   const cancelRef = useRef();
+  const toast = useToast();
+
+  const handleConfirmClick = () => {
+    if (!fecha || !comentario.trim()) {
+      toast({
+        title: "Campos requeridos",
+        description: "Por favor, completa la fecha de entrega y el comentario.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    onConfirm({ comentario, fecha });
+  };
 
   return (
     <AlertDialog
@@ -43,7 +59,7 @@ const ConfirmDialog = ({
           <AlertDialogBody>
             {confirmMessage}
             <FormControl mt={4} isRequired>
-              <FormLabel>Fecha del pedido</FormLabel>
+              <FormLabel>Fecha de entrega</FormLabel>
               <Input
                 type="date"
                 min={new Date().toISOString().split("T")[0]}
@@ -51,7 +67,7 @@ const ConfirmDialog = ({
                 onChange={(e) => setFecha(e.target.value)}
               />
             </FormControl>
-            <FormControl mt={4}>
+            <FormControl mt={4} isRequired>
               <FormLabel>Comentario </FormLabel>
               <Textarea
                 value={comentario}
@@ -67,7 +83,7 @@ const ConfirmDialog = ({
             </Button>
             <Button
               colorScheme="green"
-              onClick={() => onConfirm({ comentario, fecha })}
+              onClick={handleConfirmClick}
               ml={3}
               isLoading={isLoading}
             >
