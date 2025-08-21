@@ -127,7 +127,6 @@ const ConsolidadoTable = ({ data, status = "succeeded", error }) => {
                         <Text fontWeight="bold" mb={2}>
                           Detalles de ítems
                         </Text>
-
                         <Table size="sm" variant="simple">
                           <Thead>
                             <Tr>
