@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
   AlertDialog,
@@ -19,17 +19,34 @@ const ApproveOrderDialog = ({
   onClose,
   onConfirm,
   selectedPedidos,
+  fechaOrdenDB,
+  comentarioDB,
 }) => {
-  const [orderDate, setOrderDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [orderDate, setOrderDate] = useState("");
   const [comentario, setComentario] = useState("");
 
+  useEffect(() => {
+    if (isOpen) {
+      console.log("Fecha Orden:", fechaOrdenDB);
+      console.log("Comentario:", comentarioDB);
+
+      setOrderDate(
+        fechaOrdenDB
+          ? new Date(fechaOrdenDB).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0]
+      );
+      setComentario(comentarioDB || "");
+    }
+  }, [isOpen, fechaOrdenDB, comentarioDB]);
+
   const handleConfirm = () => {
-    const [year, month, day] = orderDate.split("-");
-    const fechaFormateada = `${day}/${month}/${year}`;
-    console.log("Fecha formateada a enviar:", fechaFormateada);
-    onConfirm({ fechaOrden: fechaFormateada, comentario });
+    console.log("Fecha a enviar:", orderDate);
+    console.log("Comentario a enviar:", comentario);
+    onConfirm({
+      fechaOrden: orderDate,
+      comentario: comentario,
+    });
+
     onClose();
   };
 
@@ -83,6 +100,8 @@ ApproveOrderDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
   selectedPedidos: PropTypes.array.isRequired,
+  fechaOrdenDB: PropTypes.string,
+  comentarioDB: PropTypes.string,
 };
 
 export default ApproveOrderDialog;

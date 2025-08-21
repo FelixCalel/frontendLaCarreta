@@ -48,6 +48,7 @@ const EntrantesPage = () => {
   const [selectedPedidos, setSelectedPedidos] = useState([]);
   const [detallesPedido, setDetallesPedido] = useState([]);
   const [selectedPedido, setSelectedPedido] = useState(null);
+  const [pedidoParaAprobar, setPedidoParaAprobar] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -130,6 +131,7 @@ const EntrantesPage = () => {
   const handleConfirmApprove = async ({ fechaOrden, comentario }) => {
     setIsApproving(true);
     try {
+      // Actualiza la fecha y el comentario del pedido
       for (const pedidoId of selectedPedidos) {
         await dispatch(
           actualizarFechaOrden({
@@ -138,10 +140,11 @@ const EntrantesPage = () => {
             comentario,
           })
         ).unwrap();
+
         await dispatch(
           togglePedidoStatus({
             id: pedidoId,
-            estadoId: 3,
+            estadoId: 3, // Cambia el estado del pedido
           })
         ).unwrap();
 
@@ -153,9 +156,9 @@ const EntrantesPage = () => {
         }
       }
 
-      await dispatch(tablaPedidos());
+      await dispatch(tablaPedidos()); // Actualiza la lista de pedidos
 
-      setSelectedPedidos([]);
+      setSelectedPedidos([]); // Resetea la selección de pedidos
       toast({
         title: "Pedidos aprobados",
         status: "success",
@@ -173,7 +176,7 @@ const EntrantesPage = () => {
       });
     } finally {
       setIsApproving(false);
-      onApproveClose();
+      onApproveClose(); // Cierra el modal
     }
   };
 
@@ -240,20 +243,14 @@ const EntrantesPage = () => {
 
       const pedido = pedidos.find((p) => p.id === pedidoId);
 
-      if (!pedido) {
-        console.error(`No se encontró el pedido con ID ${pedidoId}`);
-        toast({
-          title: "Error",
-          description: `No se encontró el pedido con ID ${pedidoId}.`,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
+      if (pedido) {
+        console.log("Pedido Seleccionado:", pedido); // Verifica que el pedido tiene los datos esperados
 
-      setSelectedPedido(pedido);
-      setIsModalOpen(true);
+        setSelectedPedido(pedido);
+        setIsModalOpen(true);
+      } else {
+        console.error(`No se encontró el pedido con ID ${pedidoId}`);
+      }
     } catch (error) {
       console.error(
         `Error al obtener los detalles del pedido ${pedidoId}:`,
@@ -279,6 +276,15 @@ const EntrantesPage = () => {
     setDetallesPedido([]);
   };
 
+  const handleOpenApproveDialog = () => {
+    if (selectedPedidos.length > 0) {
+      const primerPedidoId = selectedPedidos[0];
+      const pedido = pedidos.find((p) => p.id === primerPedidoId);
+      setPedidoParaAprobar(pedido);
+    }
+    onApproveOpen();
+  };
+
   return (
     <Box p={6} boxShadow="xl" bg={bgColor} color={textColor} rounded="lg">
       <Flex justify="space-between" mb={3}>
@@ -289,7 +295,7 @@ const EntrantesPage = () => {
           <Button
             colorScheme="green"
             mr={4}
-            onClick={onApproveOpen}
+            onClick={handleOpenApproveDialog}
             isDisabled={
               selectedPedidos.length === 0 || isLoading || isApproving
             }
@@ -310,7 +316,10 @@ const EntrantesPage = () => {
             onClose={handleCloseApproveDialog}
             onConfirm={handleConfirmApprove}
             selectedPedidos={selectedPedidos}
+            fechaOrdenDB={pedidoParaAprobar?.fechaOrdenDisplay}
+            comentarioDB={pedidoParaAprobar?.comentarioDisplay}
           />
+
           <AlertDialog isOpen={isCancelOpen} onClose={onCancelClose} isCentered>
             <AlertDialogOverlay>
               <AlertDialogContent>
