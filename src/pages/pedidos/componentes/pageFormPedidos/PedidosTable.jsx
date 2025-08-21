@@ -49,13 +49,16 @@ const PedidosTable = ({
           }}
         >
           <Stack direction="row" justifyContent="space-between">
-            <Text fontWeight="bold">Pedido ID: {pedido.id}</Text>
+            {/* <Text fontWeight="bold">Pedido ID: {pedido.id}</Text> */}
+            <Text fontWeight="bold">
+              Tienda: {pedido.nombreTienda || "N/A"}
+            </Text>
             <Badge colorScheme={pedido.estadoId === 1 ? "green" : "gray"}>
               {pedido.estadoId === 1 ? "Creado" : "Realizado"}
             </Badge>
           </Stack>
           <Text>
-            <strong>Ciudad:</strong> {pedido.nombreCiudad || "N/A"}
+            {/* <strong>Ciudad:</strong> {pedido.nombreCiudad || "N/A"} */}
           </Text>
           <HStack spacing={3} mt={2}>
             <Tooltip label="Ver Detalles" hasArrow>

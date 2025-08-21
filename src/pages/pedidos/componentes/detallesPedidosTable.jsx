@@ -427,12 +427,12 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                     <HStack justifyContent="space-between" spacing={2}>
                       <Box flex="1">
                         <Text fontWeight="bold" fontSize="sm">
-                          Producto: {producto.nombreProducto || "N/A"}
+                          {producto.nombreProducto || "N/A"}
                         </Text>
-                        <Text fontSize="xs" color={subtextColor}>
+                        {/* <Text fontSize="xs" color={subtextColor}>
                           Cantidad Máxima:{" "}
                           {producto.cantidadDisponible || "N/A"}
-                        </Text>
+                        </Text> */}
                         <CantidadInput
                           value={producto.cantidad}
                           onChange={(e) =>

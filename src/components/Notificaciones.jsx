@@ -12,12 +12,15 @@ import {
 } from "@chakra-ui/react";
 import { FiBell } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { tablaPedidos, updatePedidoActivacion } from "../store/Pedidos/thunks";
-import { selectPedidosEntrantesPorRuta } from "../pages/pedidos/pedidosEntrantes/componentes/pedidosPorRuta";
+import { selectPedidosEntrantesPorRuta } from "../pages/pedidos/pedidosEntrantes/componentes/rutaSelectors";
 import { tablaTienda } from "../store/Tienda/thunks";
+
+const ESTADOS_PEDIDO_RUTA = [2, 5];
+const ESTADOS_NOTIFICACION_USUARIO = [3, 4, 5];
 
 export default function Notifications({ isOpen, onToggle, onClose }) {
   const navigate = useNavigate();
@@ -26,20 +29,31 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = localStorage.getItem("roleId");
   const [locallyHidden, setLocallyHidden] = useState(new Set());
-  const pedidosRuta = useSelector(selectPedidosEntrantesPorRuta([2, 5]));
+
+  const selectPedidosRutaParaNotif = useMemo(
+    () => selectPedidosEntrantesPorRuta(ESTADOS_PEDIDO_RUTA),
+    []
+  );
+  const pedidosRuta = useSelector(selectPedidosRutaParaNotif);
   const pedidos = useSelector((state) => state.pedidos.data || []);
 
-  const basePedidos = roleId === "3" ? pedidosRuta : pedidos;
-  const notificaciones = basePedidos
-    .filter((p) => p.isActive)
-    .filter((p) =>
-      roleId === "3"
-        ? true
-        : p.usuarioId === usuarioId && [3, 4, 5].includes(p.estadoId)
-    )
-    .filter((pedido) => roleId === "3" || pedido.usuarioId === usuarioId)
-    .filter((p) => !locallyHidden.has(p.id))
-    .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl));
+  const notificaciones = useMemo(() => {
+    const basePedidos = roleId === "3" ? pedidosRuta : pedidos;
+    return basePedidos
+      .filter((p) => {
+        if (!p.isActive || locallyHidden.has(p.id)) {
+          return false;
+        }
+        if (roleId === "3") {
+          return true;
+        }
+        return (
+          p.usuarioId === usuarioId &&
+          ESTADOS_NOTIFICACION_USUARIO.includes(p.estadoId)
+        );
+      })
+      .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl));
+  }, [pedidos, pedidosRuta, roleId, usuarioId, locallyHidden]);
 
   useEffect(() => {
     dispatch(tablaTienda());
