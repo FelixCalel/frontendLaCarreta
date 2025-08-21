@@ -43,7 +43,7 @@ const ApproveOrderDialog = ({
     console.log("Fecha a enviar:", orderDate);
     console.log("Comentario a enviar:", comentario);
     onConfirm({
-      fechaOrden: orderDate,
+      fechaOrden: orderDate ? new Date(orderDate + "T00:00:00") : null,
       comentario: comentario,
     });
 

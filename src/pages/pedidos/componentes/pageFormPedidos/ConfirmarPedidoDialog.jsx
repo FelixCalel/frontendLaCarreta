@@ -42,7 +42,7 @@ const ConfirmDialog = ({
       });
       return;
     }
-    onConfirm({ comentario, fecha });
+    onConfirm({ comentario, fecha: new Date(fecha + "T00:00:00") });
   };
 
   return (

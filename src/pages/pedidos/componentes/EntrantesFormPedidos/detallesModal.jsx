@@ -132,7 +132,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
                 </Tbody>
               </Table>
             </Box>
-
+            {/* 
             <Divider borderColor={borderColor} />
 
             <Flex align="center" gap={2}>
@@ -155,7 +155,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
                   {pedido.comentario?.trim() || "— sin comentario —"}
                 </Text>
               </Box>
-            </Flex>
+            </Flex> */}
           </VStack>
         </ModalBody>
 
