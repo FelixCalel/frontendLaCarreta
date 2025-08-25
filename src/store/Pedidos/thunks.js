@@ -57,7 +57,7 @@ export const updatePedido = createAsyncThunk(
 export const togglePedidoStatus = createAsyncThunk(
   "pedidos/togglePedidoStatus",
   async (
-    { id, estadoId, comentarioDisplay, fechaOrdenDisplay },
+    { id, estadoId, comentarioDisplay, fechaOrdenDisplay, comentario },
     { rejectWithValue }
   ) => {
     try {
@@ -75,6 +75,7 @@ export const togglePedidoStatus = createAsyncThunk(
       const body = {
         estadoId,
         comentarioDisplay: comentarioDisplay ?? "",
+        comentario: comentario ?? "",
         fechaOrdenDisplay: toYMD(fechaOrdenDisplay),
       };
 
@@ -84,7 +85,7 @@ export const togglePedidoStatus = createAsyncThunk(
         `${BASE_URL}/form/pedidos/actualizar-estado/${id}`,
         body
       );
-      return data; // tu backend devuelve { message: ... }
+      return data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }

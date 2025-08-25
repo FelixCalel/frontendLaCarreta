@@ -131,17 +131,15 @@ const EntrantesPage = () => {
   const handleConfirmApprove = async ({ fechaOrden, comentario }) => {
     setIsApproving(true);
     try {
-      // Convertir la fecha a formato dd/MM/yyyy
       const fechaOrdenFormateada = new Date(fechaOrden).toLocaleDateString(
         "en-GB"
-      ); // UK tiene formato dd/MM/yyyy
+      );
 
-      // Actualiza la fecha y el comentario del pedido con la fecha formateada
       for (const pedidoId of selectedPedidos) {
         await dispatch(
           actualizarFechaOrden({
             pedidoId,
-            fechaOrden: fechaOrdenFormateada, // Usamos la fecha formateada
+            fechaOrden: fechaOrdenFormateada,
             comentario,
           })
         ).unwrap();
@@ -149,10 +147,13 @@ const EntrantesPage = () => {
         await dispatch(
           togglePedidoStatus({
             id: pedidoId,
-            estadoId: 3, // Cambia el estado del pedido
+            estadoId: 3,
+            comentarioDisplay: comentario,
+            fechaOrdenDisplay: fechaOrdenFormateada,
           })
         ).unwrap();
 
+        await dispatch(tablaPedidos());
         const pedido = pedidos.find((p) => p.id === pedidoId);
         if (pedido && !pedido.isActive) {
           await dispatch(
@@ -161,8 +162,8 @@ const EntrantesPage = () => {
         }
       }
 
-      onApproveClose(); // Cierra el modal de aprobación
-      setSelectedPedidos([]); // Limpia la selección de pedidos
+      onApproveClose();
+      setSelectedPedidos([]);
       toast({
         title: "Pedidos aprobados",
         status: "success",
