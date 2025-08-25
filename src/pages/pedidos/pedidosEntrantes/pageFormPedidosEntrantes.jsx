@@ -186,25 +186,22 @@ const EntrantesPage = () => {
 
   const handleCancelarPedidos = async (comentario) => {
     setIsLoading(true);
-
     try {
       for (const pedidoId of selectedPedidos) {
-        await dispatch(
-          togglePedidoStatus({ id: pedidoId, estadoId: 4 })
-        ).unwrap();
+        const pedidoActual = pedidos.find((p) => p.id === pedidoId);
 
         await dispatch(
           togglePedidoStatus({
             id: pedidoId,
             estadoId: 4,
             comentario: comentario.trim(),
-            fechaOrden: null,
+            comentarioDisplay: pedidoActual?.comentarioDisplay,
+            fechaOrdenDisplay: pedidoActual?.fechaOrdenDisplay,
           })
         ).unwrap();
       }
 
       setSelectedPedidos([]);
-
       toast({
         title: "Pedidos cancelados",
         description:
