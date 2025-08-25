@@ -575,6 +575,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             >
               <HStack spacing={2} justifyContent="space-between">
                 <ProductoSelector
+                  deudorId={Number(deudorId)}
                   onSelect={(
                     productoId,
                     nombreProducto,

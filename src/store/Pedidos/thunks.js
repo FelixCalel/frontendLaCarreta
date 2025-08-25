@@ -56,18 +56,38 @@ export const updatePedido = createAsyncThunk(
 
 export const togglePedidoStatus = createAsyncThunk(
   "pedidos/togglePedidoStatus",
-  async ({
-    id,
-    estadoId,
-    comentarioDisplay,
-    fechaOrdenDisplay,
-    comentario,
-  }) => {
-    const response = await axios.patch(
-      `${BASE_URL}/form/pedidos/actualizar-estado/${id}`,
-      { estadoId, comentarioDisplay, fechaOrdenDisplay, comentario }
-    );
-    return response.data;
+  async (
+    { id, estadoId, comentarioDisplay, fechaOrdenDisplay },
+    { rejectWithValue }
+  ) => {
+    try {
+      const toYMD = (v) => {
+        if (!v) return undefined;
+        if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+        const d = new Date(v);
+        if (isNaN(d.getTime())) return undefined;
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
+
+      const body = {
+        estadoId,
+        comentarioDisplay: comentarioDisplay ?? "",
+        fechaOrdenDisplay: toYMD(fechaOrdenDisplay),
+      };
+
+      Object.keys(body).forEach((k) => body[k] === undefined && delete body[k]);
+
+      const { data } = await axios.patch(
+        `${BASE_URL}/form/pedidos/actualizar-estado/${id}`,
+        body
+      );
+      return data; // tu backend devuelve { message: ... }
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
   }
 );
 

@@ -260,6 +260,17 @@ const PageFormPedidos = () => {
     //window.location.reload(true);
   };
 
+  const toYMD = (v) => {
+    if (!v) return undefined;
+    if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return undefined;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
   const handleRealizarPedido = async ({ comentario, fecha }) => {
     try {
       const detalles = await dispatch(
@@ -280,8 +291,8 @@ const PageFormPedidos = () => {
         togglePedidoStatus({
           id: selectedPedidoId,
           estadoId: 2,
-          fechaOrdenDisplay: fecha,
-          comentarioDisplay: comentario,
+          comentarioDisplay: comentario || "",
+          fechaOrdenDisplay: toYMD(fecha),
         })
       ).unwrap();
 

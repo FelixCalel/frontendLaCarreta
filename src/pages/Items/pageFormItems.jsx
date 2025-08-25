@@ -1,4 +1,3 @@
-// src/pages/Items/PageItems.jsx
 import { useEffect, useState, memo, useCallback } from "react";
 import PropTypes from "prop-types";
 import {
@@ -23,7 +22,7 @@ import {
   actualizarDeudorProducto,
 } from "../../store/items/thunks";
 import { tablaDeudores } from "../../store/Deus/thunks";
-import { updateLocalState } from "../../store/items/itemSlice";
+import { patchItem } from "../../store/items/itemSlice";
 import Pagination from "../../components/pagination";
 import DeudorSelector from "./components/DeudorSelector";
 
@@ -56,7 +55,7 @@ const ItemRow = memo(
           <DeudorSelector
             initialValue={initialLabel}
             onSelect={(deuId) => handleDeudorChange(item.id, deuId)}
-            width={{ base: "220px", md: "320px" }}
+            width={{ base: "120px", md: "220px" }}
           />
         </Td>
       </Tr>
@@ -119,26 +118,27 @@ const PageItems = () => {
 
   const handleStatusChange = useCallback(
     (id, estaActivo) => {
-      const updatedItems = items.map((item) =>
-        item.id === id ? { ...item, estaActivo } : item
-      );
-      dispatch(updateLocalState(updatedItems));
-      dispatch(actualizarStatusProducto({ id, estaActivo }));
+      dispatch(patchItem({ id, changes: { estaActivo } }));
+      dispatch(actualizarStatusProducto({ id, estaActivo }))
+        .unwrap()
+        .catch(() => {
+          dispatch(patchItem({ id, changes: { estaActivo: !estaActivo } }));
+        });
     },
-    [dispatch, items]
+    [dispatch]
   );
 
   const handleDeudorChange = useCallback(
     (id, deuId) => {
-      const deudorSeleccionado =
-        deudoresDisponibles.find((d) => d.id === deuId) || null;
-      const updatedItems = items.map((item) =>
-        item.id === id ? { ...item, deuId, deudor: deudorSeleccionado } : item
-      );
-      dispatch(updateLocalState(updatedItems));
-      dispatch(actualizarDeudorProducto({ id, deuId }));
+      dispatch(patchItem({ id, changes: { deuId } }));
+
+      dispatch(actualizarDeudorProducto({ id, deuId }))
+        .unwrap()
+        .catch(() => {
+          dispatch(patchItem({ id, changes: { deuId: null } }));
+        });
     },
-    [dispatch, items, deudoresDisponibles]
+    [dispatch]
   );
 
   if (status === "loading") {
@@ -170,7 +170,13 @@ const PageItems = () => {
   }
 
   return (
-    <Box padding="20px" maxWidth="1200px" margin="10 auto">
+    <Box
+      w="100%"
+      maxW={{ base: "100%", lg: "1280px", xl: "1360px" }}
+      mx="auto"
+      px={{ base: 2, md: 4 }}
+      py={2}
+    >
       <Flex justify="space-between" mb="20px" alignItems="center">
         <Text fontSize="2xl" fontWeight="bold" color="blue.600">
           Gestión de Items
@@ -192,7 +198,9 @@ const PageItems = () => {
         rounded="md"
         shadow="lg"
         border={`1px solid ${borderColor}`}
-        overflow="hidden"
+        overflowY="visible"
+        overflowX="auto"
+        position="relative"
       >
         <Thead bg="blue.600">
           <Tr>

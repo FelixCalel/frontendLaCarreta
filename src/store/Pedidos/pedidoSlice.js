@@ -56,14 +56,22 @@ const pedidoSlice = createSlice({
         state.data.sort((a, b) => a.id - b.id);
       })
       .addCase(togglePedidoStatus.fulfilled, (state, action) => {
-        const index = state.data.findIndex(
-          (pedido) => pedido.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.data[index].estaActivo = action.payload.estaActivo;
+        const { id, estadoId, comentarioDisplay, fechaOrdenDisplay } =
+          action.meta.arg;
+        const idx = state.data.findIndex((p) => p.id === id);
+        if (idx !== -1) {
+          state.data[idx] = {
+            ...state.data[idx],
+            estadoId,
+            comentarioDisplay:
+              comentarioDisplay ?? state.data[idx].comentarioDisplay,
+            fechaOrdenDisplay:
+              fechaOrdenDisplay ?? state.data[idx].fechaOrdenDisplay,
+          };
         }
         state.data.sort((a, b) => a.id - b.id);
       })
+
       .addCase(tablaPedidosConDetalles.fulfilled, (state, action) => {
         state.pedidosConDetalles = action.payload;
       })

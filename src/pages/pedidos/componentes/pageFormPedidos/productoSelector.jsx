@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import {
   Flex,
@@ -21,15 +21,16 @@ import { tablaItems } from "../../../../store/items/thunks";
 
 const CHUNK_SIZE = 20;
 
-const ProductoSelector = ({ onSelect, reset }) => {
+const ProductoSelector = ({ deudorId, onSelect, reset }) => {
   const dispatch = useDispatch();
 
   const [inputValue, setInputValue] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [error, setError] = useState("");
   const [renderItems, setRenderItems] = useState([]);
-  const itemsAll = useSelector((state) => state.items.items);
   const [visibleItems, setVisibleItems] = useState([]);
+  const itemsAll = useSelector((state) => state.items.items);
+
   const listBg = useColorModeValue("white", "gray.800");
   const listBorderColor = useColorModeValue("gray.200", "gray.600");
   const itemHoverBg = useColorModeValue("gray.100", "gray.600");
@@ -38,59 +39,59 @@ const ProductoSelector = ({ onSelect, reset }) => {
     dispatch(tablaItems());
   }, [dispatch]);
 
+  const sourceItems = useMemo(() => {
+    const dId = Number(deudorId) || null;
+    if (!dId) return [];
+    const getDeuId = (it) => it.deuId ?? it.deudor?.id ?? null;
+
+    return (itemsAll || [])
+      .filter((it) => getDeuId(it) === dId)
+      .filter((it) => Boolean(it.estaActivo));
+  }, [itemsAll, deudorId]);
+
   useEffect(() => {
-    if (itemsAll.length > 0) {
-      const firstChunk = itemsAll.slice(0, CHUNK_SIZE);
-      setVisibleItems(firstChunk);
+    if (sourceItems.length > 0) {
+      setVisibleItems(sourceItems.slice(0, CHUNK_SIZE));
     } else {
       setVisibleItems([]);
     }
-  }, [itemsAll]);
+  }, [sourceItems]);
+
+  useEffect(() => {
+    setInputValue("");
+    setSelectedItem(null);
+    setError("");
+  }, [reset, deudorId]);
+
+  useEffect(() => {
+    const term = inputValue.trim().toLowerCase();
+    if (term === "") {
+      setRenderItems(visibleItems);
+      return;
+    }
+    const matches = sourceItems.filter(
+      (it) =>
+        it.nombre.toLowerCase().includes(term) ||
+        it.codigo.toLowerCase().includes(term)
+    );
+    setRenderItems(matches.slice(0, 200));
+  }, [inputValue, sourceItems, visibleItems]);
 
   const handleSelectItem = (item) => {
     setInputValue(item.nombre);
     setSelectedItem(item);
     onSelect(item.id, item.nombre, item.cantidadDisponible, item.codigo);
 
-    if (item.cantidadDisponible === 0) {
-      setError("Cantidad disponible: 0");
-    } else {
-      setError("");
-    }
+    setError(item.cantidadDisponible === 0 ? "Cantidad disponible: 0" : "");
   };
 
-  useEffect(() => {
-    const term = inputValue.trim().toLowerCase();
-
-    if (term === "") {
-      setRenderItems(visibleItems);
-      return;
-    }
-
-    const matches = itemsAll.filter(
-      (it) =>
-        it.nombre.toLowerCase().includes(term) ||
-        it.codigo.toLowerCase().includes(term)
-    );
-
-    setRenderItems(matches.slice(0, 200));
-  }, [inputValue, itemsAll, visibleItems]);
-
-  const handleInputChange = (e) => {
-    setInputValue(e.target.value);
-  };
+  const handleInputChange = (e) => setInputValue(e.target.value);
 
   const handleClearInput = () => {
     setInputValue("");
     setSelectedItem(null);
     setError("");
   };
-
-  useEffect(() => {
-    if (reset) {
-      handleClearInput();
-    }
-  }, [reset]);
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
@@ -100,15 +101,16 @@ const ProductoSelector = ({ onSelect, reset }) => {
   };
 
   const loadMoreItems = () => {
-    if (visibleItems.length < itemsAll.length) {
+    if (visibleItems.length < sourceItems.length) {
       const newLength = Math.min(
         visibleItems.length + CHUNK_SIZE,
-        itemsAll.length
+        sourceItems.length
       );
-      const moreItems = itemsAll.slice(0, newLength);
-      setVisibleItems(moreItems);
+      setVisibleItems(sourceItems.slice(0, newLength));
     }
   };
+
+  const disabled = !deudorId;
 
   return (
     <Flex pt="2" justify="start" align="center" w="full" flexDir="column">
@@ -118,12 +120,17 @@ const ProductoSelector = ({ onSelect, reset }) => {
             <AutoComplete openOnFocus>
               <AutoCompleteInput
                 variant="outline"
-                placeholder="Seleccione un item"
+                placeholder={
+                  disabled
+                    ? "Seleccione un deudor primero"
+                    : "Seleccione un item"
+                }
                 value={inputValue}
                 onChange={handleInputChange}
                 size="sm"
                 w={{ base: "full", md: "480px" }}
                 position="relative"
+                isDisabled={disabled}
               />
               <AutoCompleteList
                 onScroll={handleScroll}
@@ -143,21 +150,28 @@ const ProductoSelector = ({ onSelect, reset }) => {
                 overflowX="hidden"
                 w="full"
               >
-                {renderItems.map((item) => (
-                  <AutoCompleteItem
-                    key={`option-${item.id}`}
-                    value={`${item.codigo} - ${item.nombre}`}
-                    textTransform="capitalize"
-                    onClick={() => handleSelectItem(item)}
-                    _hover={{ bg: itemHoverBg }}
-                    sx={{
-                      whiteSpace: "normal",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    <Text fontSize="sm">{item.nombre}</Text>
-                  </AutoCompleteItem>
-                ))}
+                {renderItems.length === 0 ? (
+                  <Box px={3} py={2}>
+                    <Text fontSize="sm" color="gray.500">
+                      {disabled
+                        ? "Seleccione un deudor para ver sus items."
+                        : "Sin resultados para este deudor."}
+                    </Text>
+                  </Box>
+                ) : (
+                  renderItems.map((item) => (
+                    <AutoCompleteItem
+                      key={`option-${item.id}`}
+                      value={`${item.codigo} - ${item.nombre}`}
+                      textTransform="capitalize"
+                      onClick={() => handleSelectItem(item)}
+                      _hover={{ bg: itemHoverBg }}
+                      sx={{ whiteSpace: "normal", wordBreak: "break-word" }}
+                    >
+                      <Text fontSize="sm">{item.nombre}</Text>
+                    </AutoCompleteItem>
+                  ))
+                )}
               </AutoCompleteList>
             </AutoComplete>
           </Box>
@@ -168,6 +182,7 @@ const ProductoSelector = ({ onSelect, reset }) => {
             onClick={handleClearInput}
             colorScheme="red"
             variant="outline"
+            isDisabled={disabled}
           />
         </HStack>
       </FormControl>
@@ -182,6 +197,7 @@ const ProductoSelector = ({ onSelect, reset }) => {
 };
 
 ProductoSelector.propTypes = {
+  deudorId: PropTypes.number.isRequired,
   onSelect: PropTypes.func.isRequired,
   reset: PropTypes.bool.isRequired,
 };

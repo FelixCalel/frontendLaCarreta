@@ -19,7 +19,7 @@ import {
   AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
 
-const CHUNK_SIZE = 30;
+const CHUNK_SIZE = 10;
 
 const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
   const deudoresAll = useSelector((state) => state.deudores.deudores || []);
@@ -52,7 +52,7 @@ const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
-    if (scrollTop + clientHeight >= scrollHeight - 8) {
+    if (scrollTop + clientHeight >= scrollHeight - 4) {
       if (visibleCount < baseItems.length) {
         setVisibleCount((c) => Math.min(c + CHUNK_SIZE, baseItems.length));
       }
@@ -63,11 +63,13 @@ const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
     setInputValue("");
   };
 
+  const inputW = width || { base: "180px", md: "240px" };
+
   return (
     <Flex justify="start" align="center" w="full">
       <FormControl>
         <HStack spacing={2} w="full" align="center" position="relative">
-          <Box position="relative">
+          <Box position="relative" w={inputW}>
             <AutoComplete openOnFocus>
               <AutoCompleteInput
                 variant="outline"
@@ -78,7 +80,7 @@ const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
                   setInputValue(e.target.value);
                 }}
                 size="sm"
-                w={width || { base: "220px", md: "320px" }}
+                w={inputW}
                 position="relative"
               />
               <AutoCompleteList
@@ -92,7 +94,7 @@ const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
                 borderWidth="1px"
                 borderRadius="md"
                 boxShadow="md"
-                minW="260px"
+                minW="160px"
                 maxW="calc(100vw - 20px)"
                 maxHeight="50vh"
                 overflowY="auto"
