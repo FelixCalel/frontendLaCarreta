@@ -11,3 +11,23 @@ export const tablaItems = createAsyncThunk(
     return response.data;
   }
 );
+
+export const actualizarStatusProducto = createAsyncThunk(
+  "items/updateStatusProducto",
+  async ({ id, estaActivo }) => {
+    const response = await axios.put(`${BASE_URL}/items/status/${id}`, {
+      estaActivo,
+    });
+    return response.data;
+  }
+);
+
+export const actualizarDeudorProducto = createAsyncThunk(
+  "items/updateDeudorProducto",
+  async ({ id, deuId }) => {
+    const response = await axios.put(`${BASE_URL}/items/deudor/${id}`, {
+      deuId,
+    });
+    return response.data;
+  }
+);

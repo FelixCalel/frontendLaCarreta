@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+// src/pages/Items/PageItems.jsx
+import { useEffect, useState, memo, useCallback } from "react";
+import PropTypes from "prop-types";
 import {
   Box,
   Spinner,
@@ -12,44 +14,141 @@ import {
   useColorModeValue,
   Flex,
   Input,
+  Switch,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { tablaItems } from "../../store/items/thunks";
+import {
+  tablaItems,
+  actualizarStatusProducto,
+  actualizarDeudorProducto,
+} from "../../store/items/thunks";
+import { tablaDeudores } from "../../store/Deus/thunks";
+import { updateLocalState } from "../../store/items/itemSlice";
 import Pagination from "../../components/pagination";
+import DeudorSelector from "./components/DeudorSelector";
+
+const ItemRow = memo(
+  ({ item, handleStatusChange, handleDeudorChange, deudoresDisponibles }) => {
+    const rowHoverBg = useColorModeValue("blue.50", "blue.900");
+    const currentDeudor =
+      item?.deudor ||
+      deudoresDisponibles?.find((d) => d.id === item.deuId) ||
+      null;
+    const initialLabel = currentDeudor
+      ? `${currentDeudor.correlativo} - ${currentDeudor.nombre}`
+      : "";
+
+    return (
+      <Tr _hover={{ backgroundColor: rowHoverBg }}>
+        <Td>{item.id}</Td>
+        <Td fontWeight="bold">{item.nombre}</Td>
+        <Td>{item.codigo}</Td>
+        <Td>{item.codigoAlmacen}</Td>
+        <Td>{item.cantidadDisponible}</Td>
+        <Td>
+          <Switch
+            isChecked={item.estaActivo}
+            onChange={() => handleStatusChange(item.id, !item.estaActivo)}
+            colorScheme="teal"
+          />
+        </Td>
+        <Td>
+          <DeudorSelector
+            initialValue={initialLabel}
+            onSelect={(deuId) => handleDeudorChange(item.id, deuId)}
+            width={{ base: "220px", md: "320px" }}
+          />
+        </Td>
+      </Tr>
+    );
+  }
+);
+
+ItemRow.propTypes = {
+  item: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    nombre: PropTypes.string.isRequired,
+    codigo: PropTypes.string,
+    codigoAlmacen: PropTypes.string,
+    cantidadDisponible: PropTypes.number,
+    estaActivo: PropTypes.bool,
+    deuId: PropTypes.number,
+    deudor: PropTypes.shape({
+      id: PropTypes.number,
+      correlativo: PropTypes.string,
+      nombre: PropTypes.string,
+    }),
+  }).isRequired,
+  handleStatusChange: PropTypes.func.isRequired,
+  handleDeudorChange: PropTypes.func.isRequired,
+  deudoresDisponibles: PropTypes.array.isRequired,
+};
+
+ItemRow.displayName = "ItemRow";
 
 const PageItems = () => {
   const dispatch = useDispatch();
   const { items, status, error } = useSelector((state) => state.items);
+  const { deudores: deudoresDisponibles } = useSelector(
+    (state) => state.deudores
+  );
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para el campo de búsqueda
+  const [searchTerm, setSearchTerm] = useState("");
   const itemsPerPage = 15;
 
   useEffect(() => {
-    if (status === "idle") {
-      dispatch(tablaItems());
-    }
-  }, [dispatch, status]);
+    dispatch(tablaItems());
+    dispatch(tablaDeudores());
+  }, [dispatch]);
 
-  // Filtro por nombre o código
-  const filteredData = items?.filter(
-    (item) =>
-      item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.codigo.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filteredData =
+    items?.filter(
+      (item) =>
+        item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
-  // Paginación
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
   const tableBg = useColorModeValue("white", "gray.800");
-  const rowHoverBg = useColorModeValue("blue.50", "blue.900");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+
+  const handleStatusChange = useCallback(
+    (id, estaActivo) => {
+      const updatedItems = items.map((item) =>
+        item.id === id ? { ...item, estaActivo } : item
+      );
+      dispatch(updateLocalState(updatedItems));
+      dispatch(actualizarStatusProducto({ id, estaActivo }));
+    },
+    [dispatch, items]
+  );
+
+  const handleDeudorChange = useCallback(
+    (id, deuId) => {
+      const deudorSeleccionado =
+        deudoresDisponibles.find((d) => d.id === deuId) || null;
+      const updatedItems = items.map((item) =>
+        item.id === id ? { ...item, deuId, deudor: deudorSeleccionado } : item
+      );
+      dispatch(updateLocalState(updatedItems));
+      dispatch(actualizarDeudorProducto({ id, deuId }));
+    },
+    [dispatch, items, deudoresDisponibles]
+  );
 
   if (status === "loading") {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Spinner size="xl" />
       </Box>
     );
@@ -57,7 +156,12 @@ const PageItems = () => {
 
   if (status === "failed") {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Text fontSize="2xl" color="red.500">
           Error al cargar los datos: {error}
         </Text>
@@ -67,7 +171,6 @@ const PageItems = () => {
 
   return (
     <Box padding="20px" maxWidth="1200px" margin="10 auto">
-      {/* Barra de búsqueda */}
       <Flex justify="space-between" mb="20px" alignItems="center">
         <Text fontSize="2xl" fontWeight="bold" color="blue.600">
           Gestión de Items
@@ -83,7 +186,6 @@ const PageItems = () => {
         </Flex>
       </Flex>
 
-      {/* Tabla */}
       <Table
         variant="simple"
         bg={tableBg}
@@ -99,31 +201,23 @@ const PageItems = () => {
             <Th color="white">Código</Th>
             <Th color="white">Código Almacén</Th>
             <Th color="white">Cantidad Disponible</Th>
-            <Th color="white">Estado</Th> {/* Nueva columna para el estado */}
+            <Th color="white">Estado</Th>
+            <Th color="white">Deudor</Th>
           </Tr>
         </Thead>
         <Tbody>
-          {paginatedData.map((item, index) => (
-            <Tr
+          {paginatedData.map((item) => (
+            <ItemRow
               key={item.id}
-              _hover={{
-                backgroundColor: rowHoverBg,
-                transform: "scale(1.02)",
-                transition: "all 0.2s ease-in-out",
-              }}
-            >
-              <Td>{index + 1 + (currentPage - 1) * itemsPerPage}</Td>
-              <Td fontWeight="bold">{item.nombre}</Td>
-              <Td>{item.codigo}</Td>
-              <Td>{item.codigoAlmacen}</Td>
-              <Td>{item.cantidadDisponible}</Td>
-              <Td>{item.estaActivo ? "Activo" : "Inactivo"}</Td> {/* Muestra el estado */}
-            </Tr>
+              item={item}
+              handleStatusChange={handleStatusChange}
+              handleDeudorChange={handleDeudorChange}
+              deudoresDisponibles={deudoresDisponibles}
+            />
           ))}
         </Tbody>
       </Table>
 
-      {/* Paginación */}
       <Pagination
         currentPage={currentPage}
         totalItems={filteredData.length || 0}
