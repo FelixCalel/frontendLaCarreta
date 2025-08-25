@@ -245,7 +245,7 @@ const EntrantesPage = () => {
       const pedido = pedidos.find((p) => p.id === pedidoId);
 
       if (pedido) {
-        console.log("Pedido Seleccionado:", pedido); // Verifica que el pedido tiene los datos esperados
+        console.log("Pedido Seleccionado:", pedido);
 
         setSelectedPedido(pedido);
         setIsModalOpen(true);
