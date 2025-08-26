@@ -33,8 +33,6 @@ import { tablaTienda } from "../../../store/Tienda/thunks";
 import { useSearch } from "../../../components/component/SearchContext";
 import CancelOrderDialog from "./componentes/CancelOrderDialog";
 
-//import { format } from "date-fns";
-
 const EntrantesPage = () => {
   const { query, setSuggestions } = useSearch();
   const [lista, setLista] = useState([]);
