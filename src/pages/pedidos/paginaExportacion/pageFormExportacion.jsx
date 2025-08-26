@@ -113,51 +113,51 @@ const AprobadosPage = () => {
       isClosable: true,
     });
 
-  const handleExportConsolidadoFormato1 = async () => {
-    const ok = await pedirConfirmacion("f1");
-    if (!ok) return;
+  // const handleExportConsolidadoFormato1 = async () => {
+  //   const ok = await pedirConfirmacion("f1");
+  //   if (!ok) return;
 
-    if (!pedidosAprobados.length) {
-      sinPedidosToast();
-      return;
-    }
+  //   if (!pedidosAprobados.length) {
+  //     sinPedidosToast();
+  //     return;
+  //   }
 
-    setIsExporting(true);
-    try {
-      const sapResult = await dispatch(exportarPedidoSap()).unwrap();
-      if (sapResult.error) {
-        toast({
-          title: "Error al exportar a SAP",
-          description: sapResult.error,
-          status: "error",
-        });
-        return;
-      }
+  //   setIsExporting(true);
+  //   try {
+  //     const sapResult = await dispatch(exportarPedidoSap()).unwrap();
+  //     if (sapResult.error) {
+  //       toast({
+  //         title: "Error al exportar a SAP",
+  //         description: sapResult.error,
+  //         status: "error",
+  //       });
+  //       return;
+  //     }
 
-      const pedidosConDetalles = await cargarDetallesPedidos(pedidosAprobados);
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Consolidado");
-      const agrupado = agruparPedidosPorDeudor(pedidosConDetalles);
-      await addPedidosToWorksheetFormato1(worksheet, agrupado);
-      await descargarWorkbook(workbook, "pedidos_formato1.xlsx");
+  //     const pedidosConDetalles = await cargarDetallesPedidos(pedidosAprobados);
+  //     const workbook = new ExcelJS.Workbook();
+  //     const worksheet = workbook.addWorksheet("Consolidado");
+  //     const agrupado = agruparPedidosPorDeudor(pedidosConDetalles);
+  //     await addPedidosToWorksheetFormato1(worksheet, agrupado);
+  //     await descargarWorkbook(workbook, "pedidos_formato1.xlsx");
 
-      await actualizarEstadoPedidosExportados(pedidosAprobados);
-      toast({
-        title: "Exportación completada",
-        description: "SAP y Excel OK.",
-        status: "success",
-      });
-    } catch (err) {
-      console.error("Error exportando:", err);
-      toast({
-        title: "Error inesperado",
-        description: err.message,
-        status: "error",
-      });
-    } finally {
-      setIsExporting(false);
-    }
-  };
+  //     await actualizarEstadoPedidosExportados(pedidosAprobados);
+  //     toast({
+  //       title: "Exportación completada",
+  //       description: "SAP y Excel OK.",
+  //       status: "success",
+  //     });
+  //   } catch (err) {
+  //     console.error("Error exportando:", err);
+  //     toast({
+  //       title: "Error inesperado",
+  //       description: err.message,
+  //       status: "error",
+  //     });
+  //   } finally {
+  //     setIsExporting(false);
+  //   }
+  // };
 
   const handleExportConsolidadoFormato2 = async () => {
     if (pedidosAprobados.length === 0) {
@@ -248,70 +248,70 @@ const AprobadosPage = () => {
     return new Date(yyyy, mm - 1, dd);
   };
 
-  async function addPedidosToWorksheetFormato1(worksheet, pedidosPorDeudor) {
-    worksheet.mergeCells("A1:G1");
-    const titleCell = worksheet.getCell("A1");
-    titleCell.value = "PEDIDOS CONSOLIDADOS - FORMATO 1";
-    titleCell.font = { bold: true, size: 16 };
-    titleCell.alignment = { horizontal: "center", vertical: "middle" };
-    worksheet.addRow([]);
-    worksheet.columns = [
-      { header: "Pedido ID", key: "pedidoId", width: 12 },
-      { header: "Tienda", key: "tienda", width: 25 },
-      { header: "Código", key: "codigo", width: 15 },
-      { header: "Producto", key: "producto", width: 30 },
-      { header: "Cantidad", key: "cantidad", width: 12 },
-      { header: "Deudor", key: "deudor", width: 20 },
-      { header: "Pedido Consolidado", key: "fechaEntrega", width: 15 },
-    ];
+  // async function addPedidosToWorksheetFormato1(worksheet, pedidosPorDeudor) {
+  //   worksheet.mergeCells("A1:G1");
+  //   const titleCell = worksheet.getCell("A1");
+  //   titleCell.value = "PEDIDOS CONSOLIDADOS - FORMATO 1";
+  //   titleCell.font = { bold: true, size: 16 };
+  //   titleCell.alignment = { horizontal: "center", vertical: "middle" };
+  //   worksheet.addRow([]);
+  //   worksheet.columns = [
+  //     { header: "Pedido ID", key: "pedidoId", width: 12 },
+  //     { header: "Tienda", key: "tienda", width: 25 },
+  //     { header: "Código", key: "codigo", width: 15 },
+  //     { header: "Producto", key: "producto", width: 30 },
+  //     { header: "Cantidad", key: "cantidad", width: 12 },
+  //     { header: "Deudor", key: "deudor", width: 20 },
+  //     { header: "Pedido Consolidado", key: "fechaEntrega", width: 15 },
+  //   ];
 
-    const headerRowIndex = worksheet.addRow([
-      "Pedido ID",
-      "Tienda",
-      "Código",
-      "Producto",
-      "Cantidad",
-      "Deudor",
-      "Fecha Orden",
-    ]).number;
-    const headerRow = worksheet.getRow(headerRowIndex);
-    headerRow.font = { bold: true };
-    headerRow.alignment = { horizontal: "center", vertical: "middle" };
+  //   const headerRowIndex = worksheet.addRow([
+  //     "Pedido ID",
+  //     "Tienda",
+  //     "Código",
+  //     "Producto",
+  //     "Cantidad",
+  //     "Deudor",
+  //     "Fecha Orden",
+  //   ]).number;
+  //   const headerRow = worksheet.getRow(headerRowIndex);
+  //   headerRow.font = { bold: true };
+  //   headerRow.alignment = { horizontal: "center", vertical: "middle" };
 
-    for (const deudor of Object.keys(pedidosPorDeudor)) {
-      const { pedidos } = pedidosPorDeudor[deudor];
-      for (const pedido of pedidos) {
-        const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
-        const fechaEntrega = isoToDMY(pedido.fechaOrden);
+  //   for (const deudor of Object.keys(pedidosPorDeudor)) {
+  //     const { pedidos } = pedidosPorDeudor[deudor];
+  //     for (const pedido of pedidos) {
+  //       const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
+  //       const fechaEntrega = isoToDMY(pedido.fechaOrden);
 
-        for (const detalle of detalles) {
-          worksheet.addRow({
-            pedidoId: `P-${pedido.id}`,
-            tienda: pedido.nombreTienda || "Sin tienda",
-            codigo: detalle.codigo || "Sin código",
-            producto: detalle.nombreProducto || "",
-            cantidad: detalle.cantidad || 0,
-            deudor: `${pedido.nombreCorrelativo || ""}${
-              pedido.nombreCorrelativo ? " - " : ""
-            }${pedido.nombreDeu || ""}`,
-            fechaEntrega,
-          });
-        }
-      }
-    }
+  //       for (const detalle of detalles) {
+  //         worksheet.addRow({
+  //           pedidoId: `P-${pedido.id}`,
+  //           tienda: pedido.nombreTienda || "Sin tienda",
+  //           codigo: detalle.codigo || "Sin código",
+  //           producto: detalle.nombreProducto || "",
+  //           cantidad: detalle.cantidad || 0,
+  //           deudor: `${pedido.nombreCorrelativo || ""}${
+  //             pedido.nombreCorrelativo ? " - " : ""
+  //           }${pedido.nombreDeu || ""}`,
+  //           fechaEntrega,
+  //         });
+  //       }
+  //     }
+  //   }
 
-    worksheet.columns.forEach((col) => {
-      let maxLength = col.header.length;
-      col.eachCell?.((cell) => {
-        const cellValue = cell.value || "";
-        const valueLength = cellValue.toString().length;
-        if (valueLength > maxLength) {
-          maxLength = valueLength;
-        }
-      });
-      col.width = Math.max(col.width, maxLength + 2);
-    });
-  }
+  //   worksheet.columns.forEach((col) => {
+  //     let maxLength = col.header.length;
+  //     col.eachCell?.((cell) => {
+  //       const cellValue = cell.value || "";
+  //       const valueLength = cellValue.toString().length;
+  //       if (valueLength > maxLength) {
+  //         maxLength = valueLength;
+  //       }
+  //     });
+  //     col.width = Math.max(col.width, maxLength + 2);
+  //   });
+  // }
 
   async function addPedidosToWorksheetFormato2(worksheet, pedidosPorDeudor) {
     worksheet.columns = [
@@ -436,15 +436,15 @@ const AprobadosPage = () => {
   return (
     <Box p={6} boxShadow="xl" bg={bgColor} color={textColor} rounded="lg">
       <Flex justify="flex-start" mb={6} gap={4}>
-        <Button
+        {/* <Button
           colorScheme="blue"
           onClick={handleExportConsolidadoFormato1}
           isLoading={isExporting}
           loadingText="Exportando..."
           disabled={pedidosAprobados.length === 0}
         >
-          Exportar Formato 1
-        </Button>
+          Exportar a SAP formato
+        </Button> */}
 
         <Button
           colorScheme="teal"
@@ -453,7 +453,7 @@ const AprobadosPage = () => {
           loadingText="Exportando..."
           disabled={pedidosAprobados.length === 0}
         >
-          Exportar Formato 2
+          Exportar a SAP
         </Button>
       </Flex>
       <ConfirmExportDialog
