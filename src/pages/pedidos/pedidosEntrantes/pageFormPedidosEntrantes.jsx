@@ -32,7 +32,7 @@ import { selectPedidosEntrantesPorRuta } from "./componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 import { useSearch } from "../../../components/component/SearchContext";
 import CancelOrderDialog from "./componentes/CancelOrderDialog";
-
+//cambio
 const EntrantesPage = () => {
   const { query, setSuggestions } = useSearch();
   const [lista, setLista] = useState([]);
