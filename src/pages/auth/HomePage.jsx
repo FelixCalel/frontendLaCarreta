@@ -122,7 +122,7 @@ const HomePage = () => {
               >
                 <VStack align="stretch" spacing={2}>
                   <Heading fontSize={{ base: "2xl", md: "3xl" }}>
-                    Bienvenuti {nombreUsuario}
+                    Bienvenido {nombreUsuario}
                     {rolNombre !== "Sin rol" && (
                       <Badge
                         ml={2}
