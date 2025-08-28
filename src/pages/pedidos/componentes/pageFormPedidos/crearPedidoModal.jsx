@@ -121,6 +121,7 @@ const PedidoModal = ({
       isCentered
       motionPreset="slideInBottom"
       size={{ base: "sm", md: "md", lg: "lg" }}
+      scrollBehavior="inside"
     >
       <ModalOverlay />
       <ModalContent
@@ -130,6 +131,7 @@ const PedidoModal = ({
         maxW={{ base: "95%", md: "600px" }}
         p={4}
         overflow="hidden"
+        marginTop={{ base: "55px", md: "40px" }}
       >
         <ModalHeader
           fontSize={{ base: "lg", md: "2xl" }}

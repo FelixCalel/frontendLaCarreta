@@ -429,10 +429,10 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                         <Text fontWeight="bold" fontSize="sm">
                           {producto.nombreProducto || "N/A"}
                         </Text>
-                        {/* <Text fontSize="xs" color={subtextColor}>
+                        <Text fontSize="xs" color={subtextColor}>
                           Cantidad Máxima:{" "}
                           {producto.cantidadDisponible || "N/A"}
-                        </Text> */}
+                        </Text>
                         <CantidadInput
                           value={producto.cantidad}
                           onChange={(e) =>
@@ -454,7 +454,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                               producto.cantidad
                             );
                           }}
-                          placeholder="Cantidad"
+                          placeholder="0"
                           size="sm"
                           width="60px"
                           maxWidth="60px"
