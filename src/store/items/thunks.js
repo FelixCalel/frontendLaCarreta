@@ -25,9 +25,32 @@ export const actualizarStatusProducto = createAsyncThunk(
 export const actualizarDeudorProducto = createAsyncThunk(
   "items/updateDeudorProducto",
   async ({ id, deuId }) => {
-    const response = await axios.put(`${BASE_URL}/items/deudor/${id}`, {
-      deuId,
+    const response = await axios.put(`${BASE_URL}/items/deudores/${id}`, {
+      deudorIds: deuId ? [deuId] : [],
     });
+    return response.data;
+  }
+);
+
+export const addDeudoresItem = createAsyncThunk(
+  "items/addDeudoresItem",
+  async ({ itemId, deudorIds }) => {
+    const response = await axios.post(`${BASE_URL}/items/deudores/${itemId}`, {
+      deudorIds,
+    });
+    return response.data;
+  }
+);
+
+export const removeDeudoresItem = createAsyncThunk(
+  "items/removeDeudoresItem",
+  async ({ itemId, deudorIds }) => {
+    const response = await axios.delete(
+      `${BASE_URL}/items/deudores/${itemId}`,
+      {
+        data: { deudorIds },
+      }
+    );
     return response.data;
   }
 );

@@ -122,13 +122,17 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {detalles.map((it) => (
-                    <Tr key={it.id} _hover={{ bg: rowHoverBg }}>
-                      <Td>{it.codigo}</Td>
-                      <Td>{it.nombreProducto}</Td>
-                      <Td isNumeric>{it.cantidad}</Td>
-                    </Tr>
-                  ))}
+                  {detalles
+                    .sort((a, b) =>
+                      a.nombreProducto.localeCompare(b.nombreProducto)
+                    )
+                    .map((it) => (
+                      <Tr key={it.id} _hover={{ bg: rowHoverBg }}>
+                        <Td>{it.codigo}</Td>
+                        <Td>{it.nombreProducto}</Td>
+                        <Td isNumeric>{it.cantidad}</Td>
+                      </Tr>
+                    ))}
                 </Tbody>
               </Table>
             </Box>

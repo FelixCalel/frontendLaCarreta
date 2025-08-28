@@ -1,16 +1,15 @@
-// src/pages/Items/components/DeudorSelector.jsx
 import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import {
   Box,
   FormControl,
-  Flex,
   HStack,
   Text,
-  IconButton,
   useColorModeValue,
+  InputGroup,
+  InputRightElement,
+  CloseButton,
 } from "@chakra-ui/react";
-import { CloseIcon } from "@chakra-ui/icons";
 import { useSelector } from "react-redux";
 import {
   AutoComplete,
@@ -23,10 +22,8 @@ const CHUNK_SIZE = 10;
 
 const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
   const deudoresAll = useSelector((state) => state.deudores.deudores || []);
-
   const [inputValue, setInputValue] = useState(initialValue);
   const [renderItems, setRenderItems] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(CHUNK_SIZE);
 
   const listBg = useColorModeValue("white", "gray.800");
   const listBorderColor = useColorModeValue("gray.200", "gray.600");
@@ -47,90 +44,80 @@ const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
   }, [inputValue, deudoresAll]);
 
   useEffect(() => {
-    setRenderItems(baseItems.slice(0, visibleCount));
-  }, [baseItems, visibleCount]);
+    setRenderItems(baseItems.slice(0, CHUNK_SIZE));
+  }, [baseItems]);
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
     if (scrollTop + clientHeight >= scrollHeight - 4) {
-      if (visibleCount < baseItems.length) {
-        setVisibleCount((c) => Math.min(c + CHUNK_SIZE, baseItems.length));
+      if (renderItems.length < baseItems.length) {
+        setRenderItems(baseItems.slice(0, renderItems.length + CHUNK_SIZE));
       }
     }
   };
 
-  const handleClearInput = () => {
+  const inputW = width || { base: "180px", md: "240px" };
+
+  const handleSelectDeudor = (deuId) => {
+    onSelect(deuId);
     setInputValue("");
   };
 
-  const inputW = width || { base: "180px", md: "240px" };
-
   return (
-    <Flex justify="start" align="center" w="full">
-      <FormControl>
-        <HStack spacing={2} w="full" align="center" position="relative">
-          <Box position="relative" w={inputW}>
-            <AutoComplete openOnFocus>
+    <FormControl>
+      <HStack spacing={2} w="full" align="center" position="relative">
+        <Box position="relative" w={inputW}>
+          <AutoComplete openOnFocus>
+            <InputGroup size="xs">
               <AutoCompleteInput
                 variant="outline"
-                placeholder="Seleccione un deudor"
+                placeholder="Buscar y agregar deudor..."
                 value={inputValue}
                 onChange={(e) => {
-                  setVisibleCount(CHUNK_SIZE);
                   setInputValue(e.target.value);
                 }}
-                size="sm"
-                w={inputW}
-                position="relative"
               />
-              <AutoCompleteList
-                onScroll={handleScroll}
-                position="relative"
-                top="100%"
-                left="0"
-                zIndex="popover"
-                bg={listBg}
-                borderColor={listBorderColor}
-                borderWidth="1px"
-                borderRadius="md"
-                boxShadow="md"
-                minW="160px"
-                maxW="calc(100vw - 20px)"
-                maxHeight="50vh"
-                overflowY="auto"
-                overflowX="hidden"
-                w="full"
-              >
-                {renderItems.map((d) => (
-                  <AutoCompleteItem
-                    key={`deu-${d.id}`}
-                    value={`${d.correlativo} - ${d.nombre}`}
-                    onClick={() => {
-                      onSelect(d.id);
-                      setInputValue(`${d.correlativo} - ${d.nombre}`);
-                    }}
-                    _hover={{ bg: itemHoverBg }}
-                    sx={{ whiteSpace: "normal", wordBreak: "break-word" }}
-                  >
-                    <Text fontSize="sm">
-                      <b>{d.correlativo}</b> — {d.nombre}
-                    </Text>
-                  </AutoCompleteItem>
-                ))}
-              </AutoCompleteList>
-            </AutoComplete>
-          </Box>
-          <IconButton
-            aria-label="Limpiar"
-            icon={<CloseIcon />}
-            size="sm"
-            onClick={handleClearInput}
-            colorScheme="gray"
-            variant="outline"
-          />
-        </HStack>
-      </FormControl>
-    </Flex>
+              {inputValue && (
+                <InputRightElement>
+                  <CloseButton size="md" onClick={() => setInputValue("")} />
+                </InputRightElement>
+              )}
+            </InputGroup>
+            <AutoCompleteList
+              onScroll={handleScroll}
+              bg={listBg}
+              borderColor={listBorderColor}
+              borderWidth="1px"
+              borderRadius="md"
+              boxShadow="md"
+              maxW="calc(100vw - 20px)"
+              maxHeight="50vh"
+              overflowY="auto"
+            >
+              {renderItems.map((d) => (
+                <AutoCompleteItem
+                  key={`deu-${d.id}`}
+                  value={`${d.correlativo} - ${d.nombre}`}
+                  onClick={() => handleSelectDeudor(d.id)}
+                  _hover={{ bg: itemHoverBg }}
+                >
+                  <Text fontSize="md">
+                    <b>{d.correlativo}</b> — {d.nombre}
+                  </Text>
+                </AutoCompleteItem>
+              ))}
+              {renderItems.length === 0 && inputValue.trim() && (
+                <Box p={2}>
+                  <Text fontSize="md" color="gray.500" align="center">
+                    No se encontraron resultados
+                  </Text>
+                </Box>
+              )}
+            </AutoCompleteList>
+          </AutoComplete>
+        </Box>
+      </HStack>
+    </FormControl>
   );
 };
 

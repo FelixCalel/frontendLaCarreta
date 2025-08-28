@@ -3,6 +3,8 @@ import {
   tablaItems,
   actualizarStatusProducto,
   actualizarDeudorProducto,
+  addDeudoresItem,
+  removeDeudoresItem,
 } from "./thunks";
 
 const initialState = {
@@ -69,6 +71,20 @@ const itemsSlice = createSlice({
       })
       .addCase(actualizarDeudorProducto.rejected, (state, action) => {
         state.error = action.error?.message || "Error al actualizar deudor";
+      })
+      .addCase(addDeudoresItem.fulfilled, (state, action) => {
+        const updatedItem = action.payload;
+        const idx = state.items.findIndex((it) => it.id === updatedItem.id);
+        if (idx !== -1) {
+          state.items[idx] = updatedItem;
+        }
+      })
+      .addCase(removeDeudoresItem.fulfilled, (state, action) => {
+        const updatedItem = action.payload;
+        const idx = state.items.findIndex((it) => it.id === updatedItem.id);
+        if (idx !== -1) {
+          state.items[idx] = updatedItem;
+        }
       });
   },
 });

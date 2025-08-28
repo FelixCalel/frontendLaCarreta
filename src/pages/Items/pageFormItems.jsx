@@ -1,4 +1,4 @@
-import { useEffect, useState, memo, useCallback } from "react";
+import { useEffect, useState, useCallback, memo } from "react";
 import PropTypes from "prop-types";
 import {
   Box,
@@ -14,12 +14,17 @@ import {
   Flex,
   Input,
   Switch,
+  Badge,
+  Tooltip,
+  IconButton,
 } from "@chakra-ui/react";
+import { CloseIcon } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
   tablaItems,
   actualizarStatusProducto,
-  actualizarDeudorProducto,
+  addDeudoresItem,
+  removeDeudoresItem,
 } from "../../store/items/thunks";
 import { tablaDeudores } from "../../store/Deus/thunks";
 import { patchItem } from "../../store/items/itemSlice";
@@ -27,15 +32,8 @@ import Pagination from "../../components/pagination";
 import DeudorSelector from "./components/DeudorSelector";
 
 const ItemRow = memo(
-  ({ item, handleStatusChange, handleDeudorChange, deudoresDisponibles }) => {
+  ({ item, handleStatusChange, handleAddDeudor, handleRemoveDeudor }) => {
     const rowHoverBg = useColorModeValue("blue.50", "blue.900");
-    const currentDeudor =
-      item?.deudor ||
-      deudoresDisponibles?.find((d) => d.id === item.deuId) ||
-      null;
-    const initialLabel = currentDeudor
-      ? `${currentDeudor.correlativo} - ${currentDeudor.nombre}`
-      : "";
 
     return (
       <Tr _hover={{ backgroundColor: rowHoverBg }}>
@@ -52,11 +50,51 @@ const ItemRow = memo(
           />
         </Td>
         <Td>
-          <DeudorSelector
-            initialValue={initialLabel}
-            onSelect={(deuId) => handleDeudorChange(item.id, deuId)}
-            width={{ base: "120px", md: "220px" }}
-          />
+          <Flex direction="column" gap={2}>
+            <DeudorSelector
+              onSelect={(deuId) => {
+                if (!item.deudores.some((d) => d.id === deuId)) {
+                  handleAddDeudor(item.id, deuId);
+                }
+              }}
+              onRemove={() => {}}
+              width={{ base: "150px", md: "220px" }}
+            />
+            <Flex wrap="wrap" gap={1}>
+              {item.deudores &&
+                item.deudores.map((deudor) => (
+                  <Tooltip
+                    label={deudor.nombre}
+                    aria-label={deudor.nombre}
+                    key={deudor.id}
+                  >
+                    <Badge
+                      variant="solid"
+                      colorScheme="teal"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      p={1}
+                      cursor="pointer"
+                      maxW="300px"
+                      fontSize="sm"
+                    >
+                      <Text isTruncated maxW="250px" fontSize="xs">
+                        {deudor.correlativo} - {deudor.nombre}
+                      </Text>
+                      <IconButton
+                        aria-label="Eliminar deudor"
+                        icon={<CloseIcon />}
+                        size="xs"
+                        ml={0}
+                        colorScheme="red"
+                        onClick={() => handleRemoveDeudor(item.id, deudor.id)}
+                      />
+                    </Badge>
+                  </Tooltip>
+                ))}
+            </Flex>
+          </Flex>
         </Td>
       </Tr>
     );
@@ -71,16 +109,17 @@ ItemRow.propTypes = {
     codigoAlmacen: PropTypes.string,
     cantidadDisponible: PropTypes.number,
     estaActivo: PropTypes.bool,
-    deuId: PropTypes.number,
-    deudor: PropTypes.shape({
-      id: PropTypes.number,
-      correlativo: PropTypes.string,
-      nombre: PropTypes.string,
-    }),
+    deudores: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.number,
+        correlativo: PropTypes.string,
+        nombre: PropTypes.string,
+      })
+    ),
   }).isRequired,
   handleStatusChange: PropTypes.func.isRequired,
-  handleDeudorChange: PropTypes.func.isRequired,
-  deudoresDisponibles: PropTypes.array.isRequired,
+  handleAddDeudor: PropTypes.func.isRequired,
+  handleRemoveDeudor: PropTypes.func.isRequired,
 };
 
 ItemRow.displayName = "ItemRow";
@@ -105,7 +144,8 @@ const PageItems = () => {
     items?.filter(
       (item) =>
         item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+        (item.codigo &&
+          item.codigo.toLowerCase().includes(searchTerm.toLowerCase()))
     ) || [];
 
   const paginatedData = filteredData.slice(
@@ -128,17 +168,45 @@ const PageItems = () => {
     [dispatch]
   );
 
-  const handleDeudorChange = useCallback(
-    (id, deuId) => {
-      dispatch(patchItem({ id, changes: { deuId } }));
+  const handleAddDeudor = useCallback(
+    (itemId, deudorId) => {
+      const item = items.find((i) => i.id === itemId);
+      const originalDeudores = item ? item.deudores : [];
+      const newDeudor = deudoresDisponibles.find((d) => d.id === deudorId);
 
-      dispatch(actualizarDeudorProducto({ id, deuId }))
+      if (newDeudor) {
+        const newDeudores = [...originalDeudores, newDeudor];
+        dispatch(patchItem({ id: itemId, changes: { deudores: newDeudores } }));
+      }
+
+      dispatch(addDeudoresItem({ itemId, deudorIds: [deudorId] }))
         .unwrap()
         .catch(() => {
-          dispatch(patchItem({ id, changes: { deuId: null } }));
+          dispatch(
+            patchItem({ id: itemId, changes: { deudores: originalDeudores } })
+          );
         });
     },
-    [dispatch]
+    [dispatch, items, deudoresDisponibles]
+  );
+
+  const handleRemoveDeudor = useCallback(
+    (itemId, deudorId) => {
+      const item = items.find((i) => i.id === itemId);
+      const originalDeudores = item ? item.deudores : [];
+
+      const newDeudores = originalDeudores.filter((d) => d.id !== deudorId);
+      dispatch(patchItem({ id: itemId, changes: { deudores: newDeudores } }));
+
+      dispatch(removeDeudoresItem({ itemId, deudorIds: [deudorId] }))
+        .unwrap()
+        .catch(() => {
+          dispatch(
+            patchItem({ id: itemId, changes: { deudores: originalDeudores } })
+          );
+        });
+    },
+    [dispatch, items]
   );
 
   if (status === "loading") {
@@ -219,8 +287,8 @@ const PageItems = () => {
               key={item.id}
               item={item}
               handleStatusChange={handleStatusChange}
-              handleDeudorChange={handleDeudorChange}
-              deudoresDisponibles={deudoresDisponibles}
+              handleAddDeudor={handleAddDeudor}
+              handleRemoveDeudor={handleRemoveDeudor}
             />
           ))}
         </Tbody>
