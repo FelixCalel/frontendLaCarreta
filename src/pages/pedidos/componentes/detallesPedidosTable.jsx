@@ -406,7 +406,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             textAlign="center"
             color={headingColor}
           >
-            Detalles del Pedido
+            Detalles del Pedidooo
           </Heading>
           {productos.length > 0 ? (
             isMobile ? (

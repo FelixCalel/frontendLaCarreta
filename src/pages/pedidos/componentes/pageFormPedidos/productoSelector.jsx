@@ -42,10 +42,16 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
   const sourceItems = useMemo(() => {
     const dId = Number(deudorId) || null;
     if (!dId) return [];
-    const getDeuId = (it) => it.deuId ?? it.deudor?.id ?? null;
 
     return (itemsAll || [])
-      .filter((it) => getDeuId(it) === dId)
+      .filter((it) => {
+        // Handle both single deudor (deuId, deudor.id) and multiple deudores (deudores array)
+        if (it.deudores && it.deudores.length > 0) {
+          return it.deudores.some(d => d.id === dId);
+        }
+        const singleDeudorId = it.deuId ?? it.deudor?.id ?? null;
+        return singleDeudorId === dId;
+      })
       .filter((it) => Boolean(it.estaActivo));
   }, [itemsAll, deudorId]);
 
