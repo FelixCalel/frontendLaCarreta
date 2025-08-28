@@ -118,7 +118,6 @@ const HomePage = () => {
                 borderColor={cardBorder}
                 borderRadius="lg"
                 p={{ base: 4, md: 4 }}
-                //boxShadow="md"
               >
                 <VStack align="stretch" spacing={2}>
                   <Heading fontSize={{ base: "2xl", md: "3xl" }}>
