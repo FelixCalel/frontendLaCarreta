@@ -55,7 +55,12 @@ const itemsSlice = createSlice({
         const payload = action.payload || {};
         const idx = state.items.findIndex((it) => it.id === payload.id);
         if (idx !== -1) {
-          state.items[idx] = { ...state.items[idx], ...payload };
+          const existingItem = state.items[idx];
+          state.items[idx] = {
+            ...existingItem,
+            ...payload,
+            deudores: (payload.deudores && payload.deudores.length > 0) ? payload.deudores : existingItem.deudores,
+          };
         }
       })
       .addCase(actualizarStatusProducto.rejected, (state, action) => {
