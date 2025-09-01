@@ -164,7 +164,7 @@ export const FabricacionRow = ({ order }) => {
 
               <FabricacionDetailsTable details={order.details || []} />
 
-              <Box mt={4}>
+              <Box mt={-14}>
                 <Text
                   fontSize="sm"
                   fontWeight="semibold"
