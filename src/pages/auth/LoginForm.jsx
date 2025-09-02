@@ -38,7 +38,7 @@ const float = keyframes`
 `;
 
 const AnimatedBackground = () => {
-  const icons = ["🍍", "🍎", "🛒", "🛍️", "🥦", "🥖", "🧀", "🍇"];
+  const icons = ["🍍", "🍎", "🥑", "🥬", "🥦", "🥖", "🍌", "🍇", "🍓", "🍑"];
   const bg = useColorModeValue("teal.50", "gray.900");
 
   return (
@@ -100,6 +100,8 @@ const BrandingPanel = ({ ...props }) => (
     </Stack>
   </Flex>
 );
+
+// ...existing code...
 
 export const LoginForm = () => {
   const actualUsuario = useSelector((state) => state.auth);
@@ -195,77 +197,47 @@ export const LoginForm = () => {
   };
 
   return (
-    <Stack direction={{ base: "column", md: "row" }} minH={"100vh"}>
-      <BrandingPanel display={{ base: "none", md: "flex" }} />
-      <Flex
-        p={8}
-        flex={1}
-        align={"center"}
-        justify={"center"}
-        bg={useColorModeValue("gray.50", "gray.800")}
+    <Box position="relative" minH="100vh" w="100vw" overflow="hidden">
+      <AnimatedBackground />
+      <Stack
+        direction={{ base: "column", md: "row" }}
+        minH="100vh"
+        position="relative"
+        zIndex={1}
       >
-        <Stack
-          spacing={4}
-          w={"full"}
-          maxW={"md"}
-          rounded={"xl"}
-          boxShadow={"lg"}
-          p={8}
-          sx={{
-            "@media (max-width: 48em)": {
-              bg: "white",
-              color: useColorModeValue("gray.800", "white"),
-            },
-            "@media (min-width: 48em)": {
-              bg: useColorModeValue("white", "gray.700"),
-              color: useColorModeValue("gray.800", "white"),
-            },
-          }}
-        >
-          <Stack align={"center"}>
-            <Icon
-              as={FaShoppingCart}
-              w={12}
-              h={12}
-              color={{
-                base: useColorModeValue("teal.500", "teal.300"),
-                md: useColorModeValue("teal.500", "teal.300"),
-              }}
-            />
-            <Heading fontSize={"2xl"}>Inicia Sesión en tu Cuenta</Heading>
-          </Stack>
-          <form onSubmit={handleSubmit}>
-            <Stack spacing={4}>
-              <FormControl id="email" isRequired>
-                <FormLabel>Correo electrónico</FormLabel>
-                <Input
-                  type="email"
-                  placeholder="tu-correo@ejemplo.com"
-                  value={correo}
-                  onChange={(e) => setCorreo(e.target.value)}
-                  size="lg"
-                  rounded="md"
-                  bg={{ base: "white", md: "inherit" }}
-                  _placeholder={{ color: { base: "gray.600", md: "gray.500" } }}
-                  borderColor={{
-                    base: useColorModeValue("gray.400", "inherit"),
-                    md: "inherit",
-                  }}
-                  _hover={{ borderColor: { base: "teal.200", md: "inherit" } }}
-                  _focus={{
-                    borderColor: "teal.200",
-                    boxShadow: `0 0 0 1px var(--chakra-colors-teal-200)`,
-                  }}
-                />
-              </FormControl>
-              <FormControl id="password" isRequired>
-                <FormLabel>Contraseña</FormLabel>
-                <InputGroup>
+        <BrandingPanel display={{ base: "none", md: "flex" }} />
+        <Flex p={8} flex={1} align="center" justify="center" bg="transparent">
+          <Stack
+            spacing={4}
+            w="full"
+            maxW="md"
+            rounded="xl"
+            boxShadow="lg"
+            p={8}
+            bg={useColorModeValue("white", "gray.700")}
+            color={useColorModeValue("gray.800", "white")}
+          >
+            <Stack align="center">
+              <Icon
+                as={FaShoppingCart}
+                w={12}
+                h={12}
+                color={{
+                  base: useColorModeValue("teal.500", "teal.300"),
+                  md: useColorModeValue("teal.500", "teal.300"),
+                }}
+              />
+              <Heading fontSize="2xl">Inicia Sesión en tu Cuenta</Heading>
+            </Stack>
+            <form onSubmit={handleSubmit}>
+              <Stack spacing={4}>
+                <FormControl id="email" isRequired>
+                  <FormLabel>Correo electrónico</FormLabel>
                   <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Tu contraseña"
-                    value={contrasena}
-                    onChange={(e) => setContrasena(e.target.value)}
+                    type="email"
+                    placeholder="tu-correo@ejemplo.com"
+                    value={correo}
+                    onChange={(e) => setCorreo(e.target.value)}
                     size="lg"
                     rounded="md"
                     bg={{ base: "white", md: "inherit" }}
@@ -284,68 +256,96 @@ export const LoginForm = () => {
                       boxShadow: `0 0 0 1px var(--chakra-colors-teal-200)`,
                     }}
                   />
-                  <InputRightElement width="4.5rem">
-                    <Button
-                      h="1.75rem"
-                      size="sm"
-                      onClick={() => setShowPassword(!showPassword)}
-                      variant="ghost"
-                      _hover={{ bg: "whiteAlpha.300" }}
-                    >
-                      {showPassword ? <ViewOffIcon /> : <ViewIcon />}
-                    </Button>
-                  </InputRightElement>
-                </InputGroup>
-              </FormControl>
+                </FormControl>
+                <FormControl id="password" isRequired>
+                  <FormLabel>Contraseña</FormLabel>
+                  <InputGroup>
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Tu contraseña"
+                      value={contrasena}
+                      onChange={(e) => setContrasena(e.target.value)}
+                      size="lg"
+                      rounded="md"
+                      bg={{ base: "white", md: "inherit" }}
+                      _placeholder={{
+                        color: { base: "gray.600", md: "gray.500" },
+                      }}
+                      borderColor={{
+                        base: useColorModeValue("gray.400", "inherit"),
+                        md: "inherit",
+                      }}
+                      _hover={{
+                        borderColor: { base: "teal.200", md: "inherit" },
+                      }}
+                      _focus={{
+                        borderColor: "teal.200",
+                        boxShadow: `0 0 0 1px var(--chakra-colors-teal-200)`,
+                      }}
+                    />
+                    <InputRightElement width="4.5rem">
+                      <Button
+                        h="1.75rem"
+                        size="sm"
+                        onClick={() => setShowPassword(!showPassword)}
+                        variant="ghost"
+                        _hover={{ bg: "whiteAlpha.300" }}
+                      >
+                        {showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                      </Button>
+                    </InputRightElement>
+                  </InputGroup>
+                </FormControl>
 
-              {error && (
-                <Alert status="error" rounded="md" bg="red.500" color="white">
-                  <AlertIcon color="white" />
-                  {error}
-                </Alert>
-              )}
+                {error && (
+                  <Alert status="error" rounded="md" bg="red.500" color="white">
+                    <AlertIcon color="white" />
+                    {error}
+                  </Alert>
+                )}
 
-              <Stack spacing={6} pt={2}>
-                <Button
-                  type="submit"
-                  bg={"green.400"}
-                  color={"white"}
-                  size="lg"
-                  isLoading={isLoading}
-                  _hover={{ bg: "green.500" }}
+                <Stack spacing={6} pt={2}>
+                  <Button
+                    type="submit"
+                    bg={"green.400"}
+                    color={"white"}
+                    size="lg"
+                    isLoading={isLoading}
+                    _hover={{ bg: "green.500" }}
+                  >
+                    Iniciar Sesión
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/auth/registro")}
+                    borderColor={{
+                      base: useColorModeValue("green.500", "inherit"),
+                      md: "inherit",
+                    }}
+                    _hover={{ bg: "whiteAlpha.300" }}
+                    color={{
+                      base: useColorModeValue("gray.800", "inherit"),
+                      md: "inherit",
+                    }}
+                  >
+                    Crear Cuenta Nueva
+                  </Button>
+                </Stack>
+
+                <Link
+                  color={{ base: "teal.200", md: "teal.500" }}
+                  textAlign="center"
+                  onClick={() => navigate("/auth/recuperar_clave")}
+                  fontWeight="medium"
+                  mt={2}
                 >
-                  Iniciar Sesión
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("/auth/registro")}
-                  borderColor={{
-                    base: useColorModeValue("green.500", "inherit"),
-                    md: "inherit",
-                  }}
-                  _hover={{ bg: "whiteAlpha.300" }}
-                  color={{
-                    base: useColorModeValue("gray.800", "inherit"),
-                    md: "inherit",
-                  }}
-                >
-                  Crear Cuenta Nueva
-                </Button>
+                  ¿Olvidaste tu contraseña?
+                </Link>
               </Stack>
-
-              <Link
-                color={{ base: "teal.200", md: "teal.500" }}
-                textAlign="center"
-                onClick={() => navigate("/auth/recuperar_clave")}
-                fontWeight="medium"
-                mt={2}
-              >
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </Stack>
-          </form>
-        </Stack>
-      </Flex>
-    </Stack>
+            </form>
+          </Stack>
+        </Flex>
+      </Stack>
+    </Box>
   );
 };
