@@ -58,6 +58,3 @@ ConfirmPasswordField.propTypes = {
   onChange: PropTypes.func.isRequired,
   error: PropTypes.string,
 };
-ConfirmPasswordField.defaultProps = {
-  error: "",
-};

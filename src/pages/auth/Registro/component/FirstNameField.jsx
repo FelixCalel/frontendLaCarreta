@@ -29,7 +29,3 @@ FirstNameField.propTypes = {
   onChange: PropTypes.func.isRequired,
   error: PropTypes.string,
 };
-
-FirstNameField.defaultProps = {
-  error: "",
-};

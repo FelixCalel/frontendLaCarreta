@@ -1,7 +1,7 @@
 import { Alert, AlertIcon } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 
-export default function ErrorAlerts({ errors }) {
+export default function ErrorAlerts({ errors = {} }) {
   if (!errors || Object.keys(errors).length === 0) return null;
 
   return (
@@ -24,8 +24,4 @@ export default function ErrorAlerts({ errors }) {
 
 ErrorAlerts.propTypes = {
   errors: PropTypes.objectOf(PropTypes.string),
-};
-
-ErrorAlerts.defaultProps = {
-  errors: {},
 };

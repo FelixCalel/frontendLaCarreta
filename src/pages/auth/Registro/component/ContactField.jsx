@@ -64,7 +64,3 @@ ContactField.propTypes = {
   onChange: PropTypes.func.isRequired,
   error: PropTypes.string,
 };
-
-ContactField.defaultProps = {
-  error: "",
-};

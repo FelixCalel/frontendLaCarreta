@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { Select, FormControl, FormLabel, Text } from "@chakra-ui/react";
 import { tablaPais } from "../../../../store/pais/thunks";
 
-export default function PaisSelector({ value, onPaisChange, error }) {
+export default function PaisSelector({ value = "", onPaisChange, error = "" }) {
   const dispatch = useDispatch();
   const { data: paises, status } = useSelector((state) => state.paises);
 
@@ -47,9 +47,4 @@ PaisSelector.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onPaisChange: PropTypes.func.isRequired,
   error: PropTypes.string,
-};
-
-PaisSelector.defaultProps = {
-  value: "",
-  error: "",
 };

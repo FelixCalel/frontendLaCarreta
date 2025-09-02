@@ -61,7 +61,3 @@ PasswordField.propTypes = {
   onChange: PropTypes.func.isRequired,
   error: PropTypes.string,
 };
-
-PasswordField.defaultProps = {
-  error: "",
-};
