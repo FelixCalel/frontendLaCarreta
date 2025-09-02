@@ -185,7 +185,7 @@ export const copiarDetallesUltimoPedido = createAsyncThunk(
       return data;
     } catch (err) {
       if (err.response && err.response.data) {
-        return rejectWithValue(err.response.data);
+        return rejectWithValue(err.response.data.error || 'Error al copiar el pedido');
       }
       return rejectWithValue(err.message || "Error desconocido");
     }

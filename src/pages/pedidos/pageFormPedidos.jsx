@@ -100,6 +100,20 @@ const PageFormPedidos = () => {
     dispatch(tablaPedidos());
   }, [dispatch]);
 
+  useEffect(() => {
+    const message = sessionStorage.getItem('showToastAfterReload');
+    if (message) {
+      toast({
+        title: "Información",
+        description: message,
+        status: "info",
+        duration: 5000,
+        isClosable: true,
+      });
+      sessionStorage.removeItem('showToastAfterReload');
+    }
+  }, [toast]);
+
   const validateFields = () => {
     const formErrors = {};
     if (!currentPedido.ciudadId)
@@ -150,15 +164,21 @@ const PageFormPedidos = () => {
 
       onClose();
     } catch (error) {
-      console.error("Error al copiar pedido:", error);
-      toast({
-        title: "Error",
-        description:
-          error?.message || error || "No se pudo copiar el último pedido.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      const errorMessage = typeof error === 'string' ? error : (error?.message || "Error desconocido");
+      console.error("Error al copiar pedido:", errorMessage);
+
+      if (errorMessage.includes("No existe un pedido aprobado anterior")) {
+        sessionStorage.setItem('showToastAfterReload', 'No se encontró un pedido anterior para esta tienda.');
+        window.location.reload();
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage || "No se pudo copiar el último pedido.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
   };
 
