@@ -49,7 +49,6 @@ const PedidosTable = ({
           }}
         >
           <Stack direction="row" justifyContent="space-between">
-            {/* <Text fontWeight="bold">Pedido ID: {pedido.id}</Text> */}
             <Text fontWeight="bold">
               Tienda: {pedido.nombreTienda || "N/A"}
             </Text>
@@ -58,7 +57,6 @@ const PedidosTable = ({
             </Badge>
           </Stack>
           <Text>
-            {/* <strong>Ciudad:</strong> {pedido.nombreCiudad || "N/A"} */}
           </Text>
           <HStack spacing={3} mt={2}>
             <Tooltip label="Ver Detalles" hasArrow>
@@ -218,4 +216,4 @@ PedidosTable.propTypes = {
   showRealizarPedidoConfirmation: PropTypes.func.isRequired,
 };
 
-export default PedidosTable;
+export default React.memo(PedidosTable);

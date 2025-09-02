@@ -1,3 +1,4 @@
+import React from 'react';
 import PropTypes from "prop-types";
 import {
   AlertDialog,
@@ -110,4 +111,4 @@ ConfirmDialog.propTypes = {
   setFecha: PropTypes.func.isRequired,
 };
 
-export default ConfirmDialog;
+export default React.memo(ConfirmDialog);
