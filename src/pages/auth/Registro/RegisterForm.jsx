@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -56,9 +56,33 @@ const float = keyframes`
   100% { transform: translateY(-120vh); opacity: 0; }
 `;
 
-const AnimatedBackground = () => {
-  const icons = ["🍍", "🍎", "🛒", "🛍️", "🥦", "🥖", "🧀", "🍇"];
+const AnimatedBackground = React.memo(() => {
+  const icons = React.useMemo(
+    () => ["🍍", "🍎", "🛒", "🛍️", "🥦", "🥖", "🧀", "🍇"],
+    []
+  );
   const bg = useColorModeValue("green.50", "gray.900");
+
+  const animatedElements = React.useMemo(() => {
+    return Array.from({ length: 15 }).map((_, index) => {
+      const duration = Math.random() * 15 + 10;
+      const delay = Math.random() * 15;
+      const animation = `${float} ${duration}s linear ${delay}s infinite`;
+      return (
+        <Text
+          key={index}
+          position="absolute"
+          bottom="-20%"
+          left={`${Math.random() * 95}%`}
+          fontSize={`${Math.random() * 1.5 + 0.75}rem`}
+          animation={animation}
+          opacity={0}
+        >
+          {icons[Math.floor(Math.random() * icons.length)]}
+        </Text>
+      );
+    });
+  }, [icons]);
 
   return (
     <Box
@@ -71,29 +95,14 @@ const AnimatedBackground = () => {
       bg={bg}
       zIndex={0}
     >
-      {Array.from({ length: 15 }).map((_, index) => {
-        const duration = Math.random() * 15 + 10;
-        const delay = Math.random() * 15;
-        const animation = `${float} ${duration}s linear ${delay}s infinite`;
-        return (
-          <Text
-            key={index}
-            position="absolute"
-            bottom="-20%"
-            left={`${Math.random() * 95}%`}
-            fontSize={`${Math.random() * 1.5 + 0.75}rem`}
-            animation={animation}
-            opacity={0}
-          >
-            {icons[Math.floor(Math.random() * icons.length)]}
-          </Text>
-        );
-      })}
+      {animatedElements}
     </Box>
   );
-};
+});
 
-const BrandingPanel = ({ ...props }) => (
+AnimatedBackground.displayName = "AnimatedBackground";
+
+const BrandingPanel = React.memo(({ ...props }) => (
   <Flex
     flex={1}
     align={"center"}
@@ -118,7 +127,9 @@ const BrandingPanel = ({ ...props }) => (
       </Text>
     </Stack>
   </Flex>
-);
+));
+
+BrandingPanel.displayName = "BrandingPanel";
 
 const RegisterForm = () => {
   const navigate = useNavigate();

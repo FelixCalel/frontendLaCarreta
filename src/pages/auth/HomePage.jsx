@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MenuPrincipalD from "../../components/MenuPrincipalD";
@@ -73,7 +73,6 @@ const HomePage = () => {
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [rolNombre, setRolNombre] = useState("Sin rol");
   const [roleId, setRoleId] = useState(null);
-  const [tipIndex, setTipIndex] = useState(0);
 
   const navigate = useNavigate();
 
@@ -87,12 +86,9 @@ const HomePage = () => {
       setRolNombre(roleMap[roleIdLS]);
       setRoleId(roleIdLS);
     }
-    const id = setInterval(
-      () => setTipIndex((i) => (i + 1) % tips.length),
-      12000
-    );
-    return () => clearInterval(id);
   }, []);
+
+  const tipsMemo = useMemo(() => tips, []); // Memorizar los tips
 
   const pageBg = useColorModeValue("gray.50", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
@@ -154,7 +150,6 @@ const HomePage = () => {
                   borderColor={cardBorder}
                   borderRadius="lg"
                   p={{ base: 4, md: 4 }}
-                  //boxShadow="md"
                   display="flex"
                   flexDirection="column"
                   justifyContent="space-between"
@@ -175,7 +170,7 @@ const HomePage = () => {
 
                     <HStack fontSize="xs" color="gray.500">
                       <Icon as={FaRegLightbulb} />
-                      <span>{tips[tipIndex]}</span>
+                      <span>{tipsMemo[0]}</span>
                     </HStack>
                   </VStack>
 

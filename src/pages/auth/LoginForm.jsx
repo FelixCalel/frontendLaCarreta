@@ -1,5 +1,5 @@
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
 import {
   Alert,
   AlertIcon,
@@ -17,7 +17,6 @@ import {
   Text,
   useColorModeValue,
   keyframes,
-  Icon,
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +25,6 @@ import { login as loginAuth } from "../../store/auth/authSlice";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../middleware/firebase-config";
 import { fetchCurrentUser } from "../../store/auth/thunks";
-import { FaShoppingCart } from "react-icons/fa";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -37,9 +35,35 @@ const float = keyframes`
   100% { transform: translateY(-120vh); opacity: 0; }
 `;
 
-const AnimatedBackground = () => {
-  const icons = ["🍍", "🍎", "🥑", "🥬", "🥦", "🥖", "🍌", "🍇", "🍓", "🍑"];
+const AnimatedBackground = React.memo(() => {
+  const icons = React.useMemo(
+    () => ["🍍", "🍎", "🥑", "🥬", "🥦", "🥖", "🍌", "🍓"],
+    []
+  );
   const bg = useColorModeValue("teal.50", "gray.900");
+
+  const animatedElements = React.useMemo(() => {
+    return Array.from({ length: 15 }).map((_, index) => {
+      const duration = Math.random() * 15 + 10;
+      const delay = Math.random() * 10;
+      const animation = `${float} ${duration}s linear ${delay}s infinite`;
+      return (
+        <Text
+          key={index}
+          position="absolute"
+          bottom="-20%"
+          left={`${Math.random() * 95}%`}
+          fontSize={`${Math.random() * 1.5 + 0.75}rem`}
+          animation={animation}
+          opacity={0}
+          zIndex={0}
+          willChange="transform, opacity"
+        >
+          {icons[Math.floor(Math.random() * icons.length)]}
+        </Text>
+      );
+    });
+  }, [icons]); // Dependencia corregida
 
   return (
     <Box
@@ -52,30 +76,14 @@ const AnimatedBackground = () => {
       bg={bg}
       zIndex={0}
     >
-      {Array.from({ length: 15 }).map((_, index) => {
-        const duration = Math.random() * 15 + 10;
-        const delay = Math.random() * 15;
-        const animation = `${float} ${duration}s linear ${delay}s infinite`;
-        return (
-          <Text
-            key={index}
-            position="absolute"
-            bottom="-20%"
-            left={`${Math.random() * 95}%`}
-            fontSize={`${Math.random() * 1.5 + 0.75}rem`}
-            animation={animation}
-            opacity={0}
-            zIndex={0}
-          >
-            {icons[Math.floor(Math.random() * icons.length)]}
-          </Text>
-        );
-      })}
+      {animatedElements}
     </Box>
   );
-};
+});
 
-const BrandingPanel = ({ ...props }) => (
+AnimatedBackground.displayName = "AnimatedBackground";
+
+const BrandingPanel = React.memo(({ ...props }) => (
   <Flex
     flex={1}
     align={"center"}
@@ -99,9 +107,9 @@ const BrandingPanel = ({ ...props }) => (
       </Text>
     </Stack>
   </Flex>
-);
+));
 
-// ...existing code...
+BrandingPanel.displayName = "BrandingPanel";
 
 export const LoginForm = () => {
   const actualUsuario = useSelector((state) => state.auth);
@@ -218,15 +226,6 @@ export const LoginForm = () => {
             color={useColorModeValue("gray.800", "white")}
           >
             <Stack align="center">
-              <Icon
-                as={FaShoppingCart}
-                w={12}
-                h={12}
-                color={{
-                  base: useColorModeValue("teal.500", "teal.300"),
-                  md: useColorModeValue("teal.500", "teal.300"),
-                }}
-              />
               <Heading fontSize="2xl">Inicia Sesión en tu Cuenta</Heading>
             </Stack>
             <form onSubmit={handleSubmit}>
@@ -240,20 +239,21 @@ export const LoginForm = () => {
                     onChange={(e) => setCorreo(e.target.value)}
                     size="lg"
                     rounded="md"
-                    bg={{ base: "white", md: "inherit" }}
+                    bg={useColorModeValue("white", "gray.800")}
+                    color={useColorModeValue("gray.800", "white")}
                     _placeholder={{
-                      color: { base: "gray.600", md: "gray.500" },
+                      color: useColorModeValue("gray.600", "gray.400"),
                     }}
-                    borderColor={{
-                      base: useColorModeValue("gray.400", "inherit"),
-                      md: "inherit",
-                    }}
+                    borderColor={useColorModeValue("gray.400", "gray.600")}
                     _hover={{
-                      borderColor: { base: "teal.200", md: "inherit" },
+                      borderColor: useColorModeValue("teal.200", "teal.400"),
                     }}
                     _focus={{
-                      borderColor: "teal.200",
-                      boxShadow: `0 0 0 1px var(--chakra-colors-teal-200)`,
+                      borderColor: useColorModeValue("teal.200", "teal.500"),
+                      boxShadow: `0 0 0 1px ${useColorModeValue(
+                        "teal.200",
+                        "teal.500"
+                      )}`,
                     }}
                   />
                 </FormControl>
@@ -267,20 +267,21 @@ export const LoginForm = () => {
                       onChange={(e) => setContrasena(e.target.value)}
                       size="lg"
                       rounded="md"
-                      bg={{ base: "white", md: "inherit" }}
+                      bg={useColorModeValue("white", "gray.800")}
+                      color={useColorModeValue("gray.800", "white")}
                       _placeholder={{
-                        color: { base: "gray.600", md: "gray.500" },
+                        color: useColorModeValue("gray.600", "gray.400"),
                       }}
-                      borderColor={{
-                        base: useColorModeValue("gray.400", "inherit"),
-                        md: "inherit",
-                      }}
+                      borderColor={useColorModeValue("gray.400", "gray.600")}
                       _hover={{
-                        borderColor: { base: "teal.200", md: "inherit" },
+                        borderColor: useColorModeValue("teal.200", "teal.400"),
                       }}
                       _focus={{
-                        borderColor: "teal.200",
-                        boxShadow: `0 0 0 1px var(--chakra-colors-teal-200)`,
+                        borderColor: useColorModeValue("teal.200", "teal.500"),
+                        boxShadow: `0 0 0 1px ${useColorModeValue(
+                          "teal.200",
+                          "teal.500"
+                        )}`,
                       }}
                     />
                     <InputRightElement width="4.5rem">
