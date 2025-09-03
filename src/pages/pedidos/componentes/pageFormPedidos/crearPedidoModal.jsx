@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import {
@@ -117,24 +117,24 @@ const PedidoModal = ({
       isOpen={isOpen}
       onClose={onClose}
       isCentered
-      motionPreset='slideInBottom'
+      motionPreset="slideInBottom"
       size={{ base: "sm", md: "md", lg: "lg" }}
-      scrollBehavior='inside'
+      scrollBehavior="inside"
     >
       <ModalOverlay />
       <ModalContent
-        borderRadius='lg'
-        boxShadow='xl'
+        borderRadius="lg"
+        boxShadow="xl"
         bg={modalBg}
         maxW={{ base: "95%", md: "600px" }}
-        p={4}
-        overflow='hidden'
-        marginTop={{ base: "55px", md: "40px" }}
+        p={2}
+        overflow="hidden"
+        marginTop={{ base: "20px", md: "40px" }}
       >
         <ModalHeader
           fontSize={{ base: "lg", md: "2xl" }}
-          fontWeight='bold'
-          textAlign='center'
+          fontWeight="bold"
+          textAlign="center"
           color={headingColor}
         >
           {isPedidoFinalizado ? "Agregar Productos" : "Agregar Pedido"}
@@ -146,13 +146,13 @@ const PedidoModal = ({
               <Grid
                 templateColumns={{ base: "1fr", md: "1fr 1fr" }}
                 gap={4}
-                w='full'
+                w="full"
               >
                 <GridItem>
                   <FormControl isDisabled={isTienda2Disabled}>
                     <FormLabel
-                      fontSize='sm'
-                      fontWeight='bold'
+                      fontSize="sm"
+                      fontWeight="bold"
                       color={labelColor}
                     >
                       <HStack>
@@ -173,8 +173,8 @@ const PedidoModal = ({
                 <GridItem>
                   <FormControl isDisabled={isTienda1Disabled}>
                     <FormLabel
-                      fontSize='sm'
-                      fontWeight='bold'
+                      fontSize="sm"
+                      fontWeight="bold"
                       color={labelColor}
                     >
                       <HStack>
@@ -194,7 +194,7 @@ const PedidoModal = ({
                 </GridItem>
               </Grid>
               <FormControl>
-                <FormLabel fontSize='sm' fontWeight='bold' color={labelColor}>
+                <FormLabel fontSize="sm" fontWeight="bold" color={labelColor}>
                   <HStack>
                     <Icon as={MdOutlinePerson} color={personIconColor} />
                     <Text>Deu de la tienda</Text>
@@ -209,10 +209,10 @@ const PedidoModal = ({
           ) : (
             <Box>
               <Text
-                fontSize='md'
-                fontWeight='medium'
+                fontSize="md"
+                fontWeight="medium"
                 mb={3}
-                textAlign='center'
+                textAlign="center"
                 color={textSubColor}
               >
                 Agregue productos al pedido:
@@ -221,10 +221,10 @@ const PedidoModal = ({
           )}
         </ModalBody>
 
-        <ModalFooter justifyContent='center'>
-          <HStack spacing={4} wrap='wrap' justify='center'>
+        <ModalFooter justifyContent="center">
+          <HStack spacing={4} wrap="wrap" justify="center">
             <Button
-              colorScheme='blue'
+              colorScheme="blue"
               onClick={() => {
                 const tiendaSeleccionada =
                   currentPedido.tiendaId || currentPedido.tiendaId2;
@@ -240,18 +240,18 @@ const PedidoModal = ({
                   });
                 }
               }}
-              size='sm'
+              size="sm"
               px={3}
               py={2}
-              fontSize='sm'
-              width='auto'
-              variant='outline'
+              fontSize="sm"
+              width="auto"
+              variant="outline"
             >
               Copiar Último Pedido
             </Button>
             <Button
-              variant='outline'
-              size='sm'
+              variant="outline"
+              size="sm"
               onClick={() => {
                 onClose();
                 resetForm();
@@ -263,11 +263,11 @@ const PedidoModal = ({
               Cancelar
             </Button>
             <Button
-              colorScheme='teal'
-              size='sm'
+              colorScheme="teal"
+              size="sm"
               onClick={handleSubmit}
               isLoading={isLoading}
-              spinner={<Spinner size='xs' color='white' />}
+              spinner={<Spinner size="xs" color="white" />}
               px={4}
               py={2}
             >

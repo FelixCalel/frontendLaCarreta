@@ -297,14 +297,14 @@ const RegisterForm = () => {
         zIndex={1}
       >
         <BrandingPanel display={{ base: "none", md: "flex" }} />
-        <Flex p={4} flex={1} align={"center"} justify={"center"}>
+        <Flex p={1} flex={1} align={"center"} justify={"center"}>
           <Stack spacing={4} w={"full"} maxW={"md"}>
             <Stack
               spacing={4}
               bg={useColorModeValue("white", "gray.700")}
               rounded={"xl"}
               boxShadow={"lg"}
-              p={6}
+              p={4}
             >
               <Heading fontSize={"2xl"} textAlign="center">
                 Crea tu Cuenta

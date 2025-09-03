@@ -214,14 +214,14 @@ export const LoginForm = () => {
         zIndex={1}
       >
         <BrandingPanel display={{ base: "none", md: "flex" }} />
-        <Flex p={8} flex={1} align="center" justify="center" bg="transparent">
+        <Flex p={1} flex={1} align="center" justify="center" bg="transparent">
           <Stack
             spacing={4}
             w="full"
             maxW="md"
             rounded="xl"
             boxShadow="lg"
-            p={8}
+            p={6}
             bg={useColorModeValue("white", "gray.700")}
             color={useColorModeValue("gray.800", "white")}
           >
