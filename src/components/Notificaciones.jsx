@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { FiBell } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { tablaPedidos, updatePedidoActivacion } from "../store/Pedidos/thunks";
@@ -29,6 +29,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = localStorage.getItem("roleId");
   const [locallyHidden, setLocallyHidden] = useState(new Set());
+  const [visibleNotifications, setVisibleNotifications] = useState(10); // Número inicial de notificaciones visibles
 
   const selectPedidosRutaParaNotif = useMemo(
     () => selectPedidosEntrantesPorRuta(ESTADOS_PEDIDO_RUTA),
@@ -80,6 +81,17 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     dispatch(updatePedidoActivacion({ id: pedidoId, isActive: false }));
   };
 
+  const loadMoreNotifications = useCallback(() => {
+    setVisibleNotifications((prev) => prev + 10); // Incrementar el número de notificaciones visibles
+  }, []);
+
+  const handleScroll = (event) => {
+    const { scrollTop, scrollHeight, clientHeight } = event.target;
+    if (scrollTop + clientHeight >= scrollHeight - 10) {
+      loadMoreNotifications();
+    }
+  };
+
   const containerBg = useColorModeValue("white", "gray.700");
   const containerTxt = useColorModeValue("gray.700", "gray.200");
   const borderColor = useColorModeValue("gray.200", "gray.600");
@@ -128,9 +140,12 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
           zIndex="1000"
           border="1px solid"
           borderColor={borderColor}
+          maxH="400px" // Altura máxima del contenedor
+          overflowY="auto" // Habilitar desplazamiento vertical
+          onScroll={handleScroll} // Manejar el evento de desplazamiento
         >
-          {notificaciones.length > 0 ? (
-            notificaciones.map((pedido) => (
+          {notificaciones.slice(0, visibleNotifications).length > 0 ? (
+            notificaciones.slice(0, visibleNotifications).map((pedido) => (
               <HStack
                 key={pedido.id}
                 justify="space-between"
