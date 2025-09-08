@@ -9,6 +9,7 @@ import {
   Button,
   Icon,
   useColorModeValue,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import { CheckCircleIcon } from "@chakra-ui/icons";
 import {
@@ -17,6 +18,7 @@ import {
 } from "../../services/pedidoProductionApi";
 import { FilterPanel } from "../../components/production/FilterPanel";
 import { OrdersTable } from "../../components/production/OrdersTable";
+import { ConsolidatedOrdersView } from "../../components/production/ConsolidatedOrdersView";
 
 const ProductionOrdersPage = () => {
   const [countryFilter, setCountryFilter] = useState("");
@@ -26,6 +28,7 @@ const ProductionOrdersPage = () => {
   const [selectedPedidoId, setSelectedPedidoId] = useState(null);
   const [syncReady, setSyncReady] = useState(false);
   const [procesarEstado5] = useProcesarEstado5Mutation();
+  const [viewMode, setViewMode] = useState("byOrder"); // 'byOrder' or 'consolidated'
 
   useEffect(() => {
     procesarEstado5(undefined).finally(() => setSyncReady(true));
@@ -47,7 +50,13 @@ const ProductionOrdersPage = () => {
           pedidoId: g.pedidoId,
           tienda: g.tienda,
           pais: g.pais,
-          items: g.items.filter((i) => i.etapaId === 1),
+          items: g.items
+            .filter((i) => i.etapaId === 1)
+            .map((item) => ({
+              ...item,
+              pedidoId: g.pedidoId,
+              tienda: g.tienda,
+            })),
         }))
         .filter((g) => g.items.length > 0),
     [agrupados]
@@ -112,6 +121,36 @@ const ProductionOrdersPage = () => {
       .sort((a, b) => a.pedidoId - b.pedidoId);
   }, [mesaGroups, itemFilter, countryFilter, clientFilter, stateFilter]);
 
+  const consolidatedItems = useMemo(() => {
+    if (viewMode !== "consolidated") return [];
+
+    const allFilteredItems = filteredGroups.flatMap((g) => g.items);
+    const itemsMap = new Map();
+
+    allFilteredItems.forEach((item) => {
+      const key = item.productoNombre;
+      if (itemsMap.has(key)) {
+        const existing = itemsMap.get(key);
+        existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
+        existing.cantidad += Number(item.cantidad ?? 0);
+        existing.originalItems.push(item);
+      } else {
+        itemsMap.set(key, {
+          ...item,
+          cantidadUnidad: Number(item.cantidadUnidad ?? 0),
+          cantidad: Number(item.cantidad ?? 0),
+          originalItems: [item],
+        });
+      }
+    });
+
+    return Array.from(itemsMap.values()).sort((a, b) =>
+      a.productoNombre.localeCompare(b.productoNombre, undefined, {
+        sensitivity: "base",
+      })
+    );
+  }, [filteredGroups, viewMode]);
+
   if (isLoading || !syncReady) {
     return (
       <Box textAlign="center" py={20}>
@@ -129,10 +168,26 @@ const ProductionOrdersPage = () => {
 
   if (selectedPedidoId === null) {
     return (
-      <Box p={6}>
+      <Box p={0}>
         <Heading size="lg" mb={4} textAlign="center">
-          Mesa
+          {viewMode === "byOrder" ? "Mesa" : "Pedidos Consolidados"}
         </Heading>
+        <Flex justify="center" mb={4}>
+          <ButtonGroup isAttached variant="outline">
+            <Button
+              onClick={() => setViewMode("byOrder")}
+              isActive={viewMode === "byOrder"}
+            >
+              Por Pedido
+            </Button>
+            <Button
+              onClick={() => setViewMode("consolidated")}
+              isActive={viewMode === "consolidated"}
+            >
+              Consolidado
+            </Button>
+          </ButtonGroup>
+        </Flex>
         <FilterPanel
           countryFilter={countryFilter}
           onCountryChange={setCountryFilter}
@@ -143,52 +198,56 @@ const ProductionOrdersPage = () => {
           countries={countries}
           clients={clients}
         />
-        <SimpleGrid columns={[1, 2, 3, 4]} spacing={6} mt={6}>
-          {filteredGroups.map((g) => {
-            const doneCount = g.items.filter((i) => i.completo).length;
-            const allDone = doneCount === g.items.length;
-            return (
-              <Box
-                key={g.pedidoId}
-                position="relative"
-                p={4}
-                bg={cardBg}
-                border="1px solid"
-                borderColor={cardBorder}
-                borderRadius="md"
-                cursor="pointer"
-                _hover={{ shadow: "md" }}
-                onClick={() => setSelectedPedidoId(g.pedidoId)}
-              >
-                <Icon
-                  as={CheckCircleIcon}
-                  position="absolute"
-                  top="4px"
-                  right="4px"
-                  boxSize={6}
-                  color={allDone ? "green.400" : "yellow.400"}
-                />
-                <Text fontWeight="bold">Pedido #{g.pedidoId}</Text>
-                <Text fontSize="sm">{g.tienda}</Text>
-                <Text fontSize="sm" color="gray.500">
-                  {g.pais}
-                </Text>
+        {viewMode === "byOrder" ? (
+          <SimpleGrid columns={[1, 2, 3, 4]} spacing={6} mt={6}>
+            {filteredGroups.map((g) => {
+              const doneCount = g.items.filter((i) => i.completo).length;
+              const allDone = doneCount === g.items.length;
+              return (
                 <Box
-                  mt={2}
-                  px={2}
-                  py={1}
-                  bg="green.500"
-                  color="white"
-                  fontSize="xs"
-                  borderRadius="sm"
-                  display="inline-block"
+                  key={g.pedidoId}
+                  position="relative"
+                  p={4}
+                  bg={cardBg}
+                  border="1px solid"
+                  borderColor={cardBorder}
+                  borderRadius="md"
+                  cursor="pointer"
+                  _hover={{ shadow: "md" }}
+                  onClick={() => setSelectedPedidoId(g.pedidoId)}
                 >
-                  {g.items.length} ÍTEM{g.items.length > 1 ? "S" : ""}
+                  <Icon
+                    as={CheckCircleIcon}
+                    position="absolute"
+                    top="4px"
+                    right="4px"
+                    boxSize={6}
+                    color={allDone ? "green.400" : "yellow.400"}
+                  />
+                  <Text fontWeight="bold">Pedido #{g.pedidoId}</Text>
+                  <Text fontSize="sm">{g.tienda}</Text>
+                  <Text fontSize="sm" color="gray.500">
+                    {g.pais}
+                  </Text>
+                  <Box
+                    mt={2}
+                    px={2}
+                    py={1}
+                    bg="green.500"
+                    color="white"
+                    fontSize="xs"
+                    borderRadius="sm"
+                    display="inline-block"
+                  >
+                    {g.items.length} ÍTEM{g.items.length > 1 ? "S" : ""}
+                  </Box>
                 </Box>
-              </Box>
-            );
-          })}
-        </SimpleGrid>
+              );
+            })}
+          </SimpleGrid>
+        ) : (
+          <ConsolidatedOrdersView data={consolidatedItems} />
+        )}
       </Box>
     );
   }

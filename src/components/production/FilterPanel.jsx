@@ -2,11 +2,11 @@ import { Flex, Select, Box, useColorModeValue } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 
 export const FilterPanel = ({
-  countryFilter,
+  countryFilter = "",
   onCountryChange,
-  clientFilter,
+  clientFilter = "",
   onClientChange,
-  stateFilter,
+  stateFilter = "",
   onStateChange,
   countries,
   clients,
@@ -87,8 +87,4 @@ FilterPanel.propTypes = {
   clients: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
-FilterPanel.defaultProps = {
-  countryFilter: "",
-  clientFilter: "",
-  stateFilter: "",
-};
+

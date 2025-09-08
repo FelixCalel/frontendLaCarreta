@@ -44,7 +44,7 @@ const FIELD_SPECS = {
   trazabilidad_Prod: { w: "70px", type: "text" },
 };
 
-export const OrderRow = ({ order, isExpanded, onToggle }) => {
+export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
   const shouldFetch = isExpanded;
   const recetaArg = shouldFetch ? order.id : skipToken;
 
@@ -202,6 +202,7 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
         bg={stripeColor}
         _hover={{ bg: hoverBg }}
         transition="background 0.2s"
+        sx={sx}
       >
         <Td px={2} py={2}>
           <IconButton
@@ -343,4 +344,7 @@ OrderRow.propTypes = {
   }).isRequired,
   isExpanded: PropTypes.bool.isRequired,
   onToggle: PropTypes.func.isRequired,
+  sx: PropTypes.object,
 };
+
+

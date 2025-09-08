@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { OrderRow } from "./OrderRow";
 
-export const OrdersTable = ({ data }) => {
+export const OrdersTable = ({ data = [] }) => {
   const [expandedRows, setExpandedRows] = useState({});
   const toggleRow = (id) =>
     setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -30,7 +30,7 @@ export const OrdersTable = ({ data }) => {
       fontSize="md"
       p={2}
     >
-      <Table variant="simple" size="md" tableLayout="fixed" w="100%">
+      <Table variant="simple" size="md" tablelayout="fixed" w="100%">
         <Thead bg={headerBg} position="sticky" top={0} zIndex={1}>
           <Tr>
             <Th w="36px" px={2} />
@@ -65,8 +65,4 @@ export const OrdersTable = ({ data }) => {
 
 OrdersTable.propTypes = {
   data: PropTypes.arrayOf(PropTypes.object).isRequired,
-};
-
-OrdersTable.defaultProps = {
-  data: [],
 };
