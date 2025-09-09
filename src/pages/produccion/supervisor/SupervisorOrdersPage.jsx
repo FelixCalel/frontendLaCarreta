@@ -22,7 +22,7 @@ import { ConsolidatedOrdersView } from "../../../components/production/Consolida
 
 const SupervisorOrdersPage = () => {
   const [countryFilter, setCountryFilter] = useState("");
-  const [itemFilter, setItemFilter] = useState("");
+  const [itemFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
   const [selectedPedidoId, setSelectedPedidoId] = useState(null);
@@ -177,7 +177,7 @@ const SupervisorOrdersPage = () => {
 
   if (selectedPedidoId === null) {
     return (
-      <Box p={6}>
+      <Box p={2}>
         <Heading size="lg" mb={4} textAlign="center">
           {viewMode === "byOrder"
             ? "Pedidos de Supervisor"
