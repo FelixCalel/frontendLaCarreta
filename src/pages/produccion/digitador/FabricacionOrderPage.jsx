@@ -210,6 +210,7 @@ const FabricacionPage = () => {
             <Th>Unidad de medida</Th>
             <Th>Cantidad</Th>
             <Th>No. Trazabilidad</Th>
+            <Th>Rechazo</Th>
           </Tr>
         </Thead>
         <Tbody>

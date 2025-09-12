@@ -11,16 +11,21 @@ import {
   Text,
   Input,
   useColorModeValue,
+  Button,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { ChevronRightIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import {
   useGetDetallesYProduccionQuery,
   useUpdatePedidoProduccionMutation,
   useGetRecetaByPedidoQuery,
+  useCreateRechazoMutation,
+  useUpdateRechazoMutation,
 } from "../../services/pedidoProductionApi";
 import { OrderDetailsTable } from "./OrderDetailsTable";
 import { RecetaTable } from "./RecetaTable";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { RechazoModal } from "../modals/RechazoModal";
 
 const FIELD_LABELS = {
   mpUtilizada: "MP Utilizada",
@@ -28,7 +33,6 @@ const FIELD_LABELS = {
   mp2da: "MP 2da.",
   mp3ra: "MP 3ra.",
   mpSobrante: "MP Sobrante",
-  rechazo: "Rechazo",
   basura: "Basura",
   trazabilidad_Prod: "Trazabilidad",
 };
@@ -39,12 +43,12 @@ const FIELD_SPECS = {
   mp2da: { w: "70px", type: "number" },
   mp3ra: { w: "70px", type: "number" },
   mpSobrante: { w: "70px", type: "number" },
-  rechazo: { w: "70px", type: "number" },
   basura: { w: "70px", type: "number" },
   trazabilidad_Prod: { w: "70px", type: "text" },
 };
 
 export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const shouldFetch = isExpanded;
   const recetaArg = shouldFetch ? order.id : skipToken;
 
@@ -59,10 +63,12 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
   } = useGetRecetaByPedidoQuery(recetaArg);
   const hasReceta = receta.length > 0;
   const [updatePedido] = useUpdatePedidoProduccionMutation();
+  const [createRechazo, { isLoading: isCreatingRechazo }] = useCreateRechazoMutation();
+  const [updateRechazo, { isLoading: isUpdatingRechazo }] = useUpdateRechazoMutation();
   const [isPTMQ, setIsPTMQ] = useState(order.ptmq ?? false);
   const [cantidadLocal, setCantidadLocal] = useState(order.cantidad || 0);
   const [faltanteLocal, setFaltanteLocal] = useState(
-    (order.cantidadUnidad ?? 0) - (order.cantidad || 0)
+    (Number(order.cantidadUnidad) ?? 0) - (order.cantidad || 0)
   );
   const {
     data: details = [],
@@ -75,7 +81,6 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
     mp2da: order.mp2da ?? 0,
     mp3ra: order.mp3ra ?? 0,
     mpSobrante: order.mpSobrante ?? 0,
-    rechazo: order.rechazo ?? 0,
     basura: order.basura ?? 0,
     trazabilidad_Prod: order.trazabilidad_Prod ?? "",
   });
@@ -132,7 +137,6 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
       mp2da: order.mp2da ?? "",
       mp3ra: order.mp3ra ?? "",
       mpSobrante: order.mpSobrante ?? "",
-      rechazo: order.rechazo ?? "",
       basura: order.basura ?? "",
       trazabilidad_Prod: order.trazabilidad_Prod ?? "",
     });
@@ -142,13 +146,12 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
     order.mp2da,
     order.mp3ra,
     order.mpSobrante,
-    order.rechazo,
     order.basura,
     order.trazabilidad_Prod,
   ]);
 
   const handleCantidadChange = (raw) => {
-    const maximo = order.cantidadUnidad ?? 0;
+    const maximo = Number(order.cantidadUnidad) ?? 0;
     const nueva = Math.min(Math.max(0, raw), maximo);
     const nuevoFalt = maximo - nueva;
 
@@ -190,6 +193,20 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
 
   const handleCompletoChange = (checked) => {
     updatePedido({ id: order.id, data: { completo: checked } }).unwrap();
+  };
+
+  const handleSaveRechazo = async (formData) => {
+    try {
+      if (order.rechazo) {
+        await updateRechazo({ id: order.rechazo, data: formData }).unwrap();
+      } else {
+        await createRechazo({ ...formData, id_pedidoProd: order.id }).unwrap();
+      }
+      onClose(); // Close the modal on successful save
+    } catch (err) {
+      console.error("Failed to save rechazo:", err);
+      // Optionally, handle error state in the UI
+    }
   };
 
   const stripeColor = useColorModeValue("gray.50", "gray.800");
@@ -285,6 +302,10 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
                     </Box>
                   );
                 })}
+                <Box flex="0 0 auto" whiteSpace="nowrap">
+                    <Text fontWeight="semibold" mb={1}>Rechazo:</Text>
+                    <Button size="xs" h="26px" onClick={onOpen}>Gestionar</Button>
+                </Box>
               </Flex>
 
               <OrderDetailsTable
@@ -303,6 +324,7 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
               )}
             </Box>
           </Collapse>
+          {isOpen && <RechazoModal isOpen={isOpen} onClose={onClose} pedidoProduccionId={order.id} onSave={handleSaveRechazo} isLoading={isCreatingRechazo || isUpdatingRechazo} />}
         </Td>
       </Tr>
     </>

@@ -105,3 +105,19 @@ export type UpdateRecetaLineaDto = Partial<Pick<
     RecetaLinea,
     'descripcion' | 'cantidad_base' | 'cantidad_requerida' | 'nombre_unidad' | 'id_almacen' | 'state'
 >>;
+
+export interface Rechazo {
+    id: number;
+    fechaRechazo: string; // Dates are strings in JSON
+    cantidadRechazada: number;
+    comentario: string | null;
+    usuarioId: number;
+    trazabilidad: string | null;
+    usuario?: {
+        nombre: string;
+        apellido: string;
+    };
+}
+
+export type CreateRechazoDto = Omit<Rechazo, 'id' | 'usuario'>;
+export type UpdateRechazoDto = Partial<CreateRechazoDto>;

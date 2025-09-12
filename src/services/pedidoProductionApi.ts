@@ -12,6 +12,9 @@ import type {
     AvanzarMultiEtapaDetallePayload,
     RecetaLinea,
     UpdateRecetaLineaDto,
+    Rechazo,
+    CreateRechazoDto,
+    UpdateRechazoDto,
 } from '../models/pedidoProduction'
 
 export const pedidoProduccionApi = createApi({
@@ -19,7 +22,7 @@ export const pedidoProduccionApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: import.meta.env.VITE_API_URL,
     }),
-    tagTypes: ['PedidoProduccion', 'DetalleProduccion', 'PedidoAgrupado', 'RecetaPedido'],
+    tagTypes: ['PedidoProduccion', 'DetalleProduccion', 'PedidoAgrupado', 'RecetaPedido', 'Rechazo'],
     endpoints: (builder) => ({
 
         getPedidoProduccionMetadata: builder.query<Metadata[], void>({
@@ -144,6 +147,49 @@ export const pedidoProduccionApi = createApi({
             }),
             invalidatesTags: [{ type: 'PedidoAgrupado', id: 'LIST' }],
         }),
+
+        getRechazos: builder.query<Rechazo[], void>({
+            query: () => '/rechazo',
+            providesTags: (result) =>
+                result
+                    ? [
+                        ...result.map(({ id }) => ({ type: 'Rechazo' as const, id })),
+                        { type: 'Rechazo', id: 'LIST' },
+                    ]
+                    : [{ type: 'Rechazo', id: 'LIST' }],
+        }),
+
+        getRechazoById: builder.query<Rechazo, number>({
+            query: (id) => `/rechazo/${id}`,
+            providesTags: (_res, _err, id) => [{ type: 'Rechazo', id }],
+        }),
+
+        createRechazo: builder.mutation<Rechazo, CreateRechazoDto>({
+            query: (data) => ({
+                url: '/rechazo',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { id_pedidoProd }) => [
+                { type: 'Rechazo', id: 'LIST' },
+                { type: 'PedidoProduccion', id: 'LIST' },
+                { type: 'PedidoProduccion', id: id_pedidoProd }
+            ],
+        }),
+
+        updateRechazo: builder.mutation<Rechazo, { id: number; data: UpdateRechazoDto }>({
+            query: ({ id, data }) => ({
+                url: `/rechazo/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: (_res, _err, { id }) => [{ type: 'Rechazo', id }],
+        }),
+
+        getRechazoByPedidoProduccionId: builder.query<Rechazo, number>({
+            query: (id) => `/pedidoProduccion/${id}/rechazo`,
+            providesTags: (_res, _err, id) => [{ type: 'PedidoProduccion', id }],
+        }),
     }),
 })
 
@@ -160,4 +206,9 @@ export const {
     useGetRecetaByPedidoQuery,
     useUpdateRecetaLineaMutation,
     useProcesarEstado5Mutation,
+    useGetRechazosQuery,
+    useGetRechazoByIdQuery,
+    useCreateRechazoMutation,
+    useUpdateRechazoMutation,
+    useGetRechazoByPedidoProduccionIdQuery,
 } = pedidoProduccionApi

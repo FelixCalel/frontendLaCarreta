@@ -56,6 +56,7 @@ const ProductionOrdersPage = () => {
               ...item,
               pedidoId: g.pedidoId,
               tienda: g.tienda,
+              cantidadUnidad: Number(item.cantidadUnidad) || 0,
             })),
         }))
         .filter((g) => g.items.length > 0),
