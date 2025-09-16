@@ -18,7 +18,7 @@ import {
 } from "@chakra-ui/react";
 import { useUpdateRecetaLineaMutation } from "../../services/pedidoProductionApi";
 
-export const RecetaTable = ({ pedidoId, receta, isLoading }) => {
+export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
   const [updateLinea] = useUpdateRecetaLineaMutation();
   const toast = useToast();
 
@@ -82,7 +82,7 @@ export const RecetaTable = ({ pedidoId, receta, isLoading }) => {
       overflow="hidden"
     >
       <TableContainer maxH="360px" overflowY="auto">
-        <Table size="sm" variant="striped" tableLayout="fixed">
+        <Table size="sm" variant="striped" sx={{ tableLayout: "fixed" }}>
           <Thead
             bg={headBg}
             color={headColor}
@@ -137,7 +137,7 @@ export const RecetaTable = ({ pedidoId, receta, isLoading }) => {
                     borderRadius="sm"
                     _hover={{ borderColor: "green.400" }}
                     type="number"
-                    value={realValues[r.id]}
+                    value={realValues[r.id] ?? ''}
                     onChange={(e) =>
                       setRealValues((prev) => ({
                         ...prev,
@@ -188,8 +188,4 @@ RecetaTable.propTypes = {
     })
   ).isRequired,
   isLoading: PropTypes.bool,
-};
-
-RecetaTable.defaultProps = {
-  isLoading: false,
 };

@@ -23,6 +23,9 @@ export interface PedidoProduccion {
     trazabilidad_Prod: string | null
     trazabilidad_Dig: string | null
     mpUtilizada: number | null
+    mp1ra: number | null
+    mp2da: number | null
+    mp3ra: number | null
     mpSobrante: number | null
     rechazoId: number | null
     basura: number | null
@@ -121,3 +124,5 @@ export interface Rechazo {
 
 export type CreateRechazoDto = Omit<Rechazo, 'id' | 'usuario'> & { id_pedidoProd: number };
 export type UpdateRechazoDto = Partial<CreateRechazoDto>;
+
+

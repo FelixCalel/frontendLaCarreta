@@ -31,7 +31,22 @@ const SupervisorOrdersPage = () => {
   const [viewMode, setViewMode] = useState("byOrder");
 
   useEffect(() => {
-    procesarEstado5(undefined).finally(() => setSyncReady(true));
+    const runProcess = async () => {
+      try {
+        const result = await procesarEstado5(undefined).unwrap();
+        if (result && result.procesados === 0) {
+          console.log("No hay pedidos en estado 5 para procesar.");
+        }
+      } catch (error) {
+        // El error 400 del backend ya no debería ocurrir para este caso,
+        // pero mantenemos el catch para otros posibles errores (red, etc.)
+        console.error("Error al intentar procesar el estado 5:", error);
+      } finally {
+        setSyncReady(true);
+      }
+    };
+
+    runProcess();
   }, [procesarEstado5]);
 
   const {

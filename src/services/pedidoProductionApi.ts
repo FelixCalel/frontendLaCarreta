@@ -16,6 +16,7 @@ import type {
     CreateRechazoDto,
     UpdateRechazoDto,
 } from '../models/pedidoProduction'
+import { parseNumericFields } from '../utils/data-parser';
 
 export const pedidoProduccionApi = createApi({
     reducerPath: 'pedidoProduccionApi',
@@ -75,6 +76,12 @@ export const pedidoProduccionApi = createApi({
                         { type: 'PedidoAgrupado', id: 'LIST' },
                     ]
                     : [{ type: 'PedidoAgrupado', id: 'LIST' }],
+            transformResponse: (response: PedidoAgrupado[]) => {
+                return response.map(agrupado => ({
+                    ...agrupado,
+                    items: agrupado.items.map(parseNumericFields)
+                }));
+            }
         }),
 
         avanzarEtapa: builder.mutation<{ message: string }, AvanzarEtapaPayload>({
