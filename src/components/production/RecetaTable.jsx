@@ -57,6 +57,11 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
       : raw;
     try {
       await updateLinea({ id, pedidoId, data }).unwrap();
+      toast({
+        status: "success",
+        duration: 1500,
+        description: "Campo actualizado",
+      });
     } catch {
       toast({
         status: "error",
@@ -80,6 +85,7 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
       borderColor={borderColor}
       borderRadius="md"
       overflow="hidden"
+      mt={4}
     >
       <TableContainer maxH="360px" overflowY="auto">
         <Table size="sm" variant="striped" sx={{ tableLayout: "fixed" }}>
@@ -91,20 +97,20 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
             zIndex={1}
           >
             <Tr>
-              <Th w="40px" />
-              <Th w="60px">No.</Th>
-              <Th>Descripción</Th>
-              <Th w="100px" isNumeric>
+              <Th w="40px" px={2} />
+              <Th w="150px" px={4} textTransform="uppercase" fontWeight="bold">No.</Th>
+              <Th px={4} textTransform="uppercase" fontWeight="bold">Descripción</Th>
+              <Th w="110px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>
                 Cant. real
               </Th>
-              <Th w="100px" isNumeric>
+              <Th w="110px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>
                 Cant. base
               </Th>
-              <Th w="100px" isNumeric>
+              <Th w="110px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>
                 Ctd. req.
               </Th>
-              <Th w="100px">Unidad</Th>
-              <Th>Almacén</Th>
+              <Th w="100px" px={4} textTransform="uppercase" fontWeight="bold">Unidad</Th>
+              <Th w="120px" px={4} textTransform="uppercase" fontWeight="bold">Almacén</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -114,7 +120,7 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
                 bg={idx % 2 === 0 ? "transparent" : stripeBg}
                 _hover={{ bg: hoverBg }}
               >
-                <Td textAlign="center">
+                <Td px={2} textAlign="center">
                   <Checkbox
                     isChecked={stateValues[r.id]}
                     onChange={(e) => {
@@ -126,11 +132,11 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
                     colorScheme="green"
                   />
                 </Td>
-                <Td>{r.item}</Td>
-                <Td>{r.descripcion || "-"}</Td>
-                <Td isNumeric>
+                <Td px={4}>{r.item}</Td>
+                <Td px={4}>{r.descripcion || "-"}</Td>
+                <Td px={4} isNumeric>
                   <Input
-                    size="xs"
+                    size="sm"
                     variant="outline"
                     borderWidth="1px"
                     borderColor={inputBorderColor}
@@ -151,16 +157,16 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
                     focusBorderColor="green.400"
                   />
                 </Td>
-                <Td isNumeric>
+                <Td px={4} isNumeric>
                   <Text textAlign="center">{r.cantidad_base}</Text>
                 </Td>
-                <Td isNumeric>
+                <Td px={4} isNumeric>
                   <Text textAlign="center">{r.cantidad_requerida}</Text>
                 </Td>
-                <Td>
+                <Td px={4}>
                   <Text textAlign="center">{r.nombre_unidad}</Text>
                 </Td>
-                <Td>{r.almacen_name || r.id_almacen}</Td>
+                <Td px={4}>{r.almacen_name || r.id_almacen}</Td>
               </Tr>
             ))}
           </Tbody>

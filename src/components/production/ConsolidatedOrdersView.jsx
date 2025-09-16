@@ -80,7 +80,12 @@ export const ConsolidatedOrdersView = ({ data }) => {
 
   const confirmSendToSap = () => {
     // Lógica para enviar a SAP
-    console.log("Enviando a SAP:", Array.from(selectedItems), "Comentario:", comment);
+    console.log(
+      "Enviando a SAP:",
+      Array.from(selectedItems),
+      "Comentario:",
+      comment
+    );
     toast({
       title: "Enviado a SAP",
       description: `${selectedItems.size} items han sido enviados a SAP.`,
@@ -174,7 +179,7 @@ export const ConsolidatedOrdersView = ({ data }) => {
                 Detalles Pedidos
               </Th>
               <Th px={2}>Solic. ventas</Th>
-              <Th px={2}>Completar</Th>
+              <Th px={2}>Completado</Th>
               <Th px={2}>Cantidad Procesada</Th>
               <Th px={2}>Faltante</Th>
             </Tr>
@@ -182,8 +187,9 @@ export const ConsolidatedOrdersView = ({ data }) => {
           <Tbody>
             {data.map((item) => {
               const isProductExpanded = !!expandedState[item.productoNombre];
-              const isComplete =
-                item.cantidad >= item.cantidadUnidad && item.cantidadUnidad > 0;
+              const allSubItemsComplete =
+                item.originalItems.length > 0 &&
+                item.originalItems.every((order) => order.completo);
               const uniqueClients = new Set(
                 item.originalItems.map((i) => i.tienda)
               ).size;
@@ -243,7 +249,7 @@ export const ConsolidatedOrdersView = ({ data }) => {
                       {item.cantidadUnidad}
                     </Td>
                     <Td px={2} py={2} textAlign="center">
-                      {isComplete ? "Sí" : "No"}
+                      {allSubItemsComplete ? "Si" : "No"}
                     </Td>
                     <Td px={2} py={2} textAlign="center">
                       {item.cantidad}

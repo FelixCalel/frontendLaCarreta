@@ -54,14 +54,12 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
   const shouldFetch = isExpanded;
   const recetaArg = shouldFetch ? order.id : skipToken;
 
-  //console.log("[OrderRow] getRecetaByPedido arg =>", recetaArg);
   const {
     data: receta = [],
     isFetching: loadingReceta,
     isSuccess,
     isError,
     error,
-    requestId,
   } = useGetRecetaByPedidoQuery(recetaArg);
   const hasReceta = receta.length > 0;
   const [updatePedido] = useUpdatePedidoProduccionMutation();
@@ -90,14 +88,6 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
     basura: Number(order.basura) ?? 0,
     trazabilidad_Prod: order.trazabilidad_Prod ?? "",
   });
-
-  useEffect(() => {
-    if (loadingReceta) {
-      // console.log("[OrderRow] FETCHING /receta/pedido/", order.id, {
-      //   requestId,
-      // });
-    }
-  }, [loadingReceta, order.id, requestId]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -158,26 +148,6 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
     order.trazabilidad_Prod,
   ]);
 
-  const handleCantidadChange = (raw) => {
-    const maximo = Number(order.cantidadUnidad) ?? 0;
-    const nueva = Math.min(Math.max(0, raw), maximo);
-    const nuevoFalt = maximo - nueva;
-
-    setCantidadLocal(nueva);
-    setFaltanteLocal(nuevoFalt);
-
-    updatePedido({
-      id: order.id,
-      data: { cantidad: nueva, faltante: nuevoFalt },
-    })
-      .unwrap()
-      .catch(() => {
-        const revert = Number(order.cantidad) || 0;
-        setCantidadLocal(revert);
-        setFaltanteLocal((Number(order.cantidadUnidad) ?? 0) - revert);
-      });
-  };
-
   const handleFieldChange = (field, raw) => {
     const isText = field === "trazabilidad_Prod";
     let value = isText ? raw : Number(raw);
@@ -206,15 +176,29 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
             duration: 4000,
             isClosable: true,
           });
-          return; // Detiene la función y no guarda el valor inválido
+          return; 
         }
       }
     }
 
     setProdFields((prev) => ({ ...prev, [field]: value }));
+
+    const updateData = { [field]: value };
+
+    if (field === 'mpUtilizada') {
+      const nuevaCantidad = value;
+      const nuevoFaltante = (Number(order.cantidadUnidad) ?? 0) - nuevaCantidad;
+      
+      setCantidadLocal(nuevaCantidad);
+      setFaltanteLocal(nuevoFaltante);
+      
+      updateData.cantidad = nuevaCantidad;
+      updateData.faltante = nuevoFaltante;
+    }
+
     updatePedido({
       id: order.id,
-      data: { [field]: value },
+      data: updateData,
     })
       .unwrap()
       .catch(() => {
@@ -222,6 +206,11 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
           ...prev,
           [field]: order[field] ?? (isText ? "" : 0),
         }));
+        if (field === 'mpUtilizada') {
+            const revertCantidad = Number(order.cantidad) || 0;
+            setCantidadLocal(revertCantidad);
+            setFaltanteLocal((Number(order.cantidadUnidad) ?? 0) - revertCantidad);
+        }
       });
   };
 
@@ -232,20 +221,17 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
   const handleSaveRechazo = async ({ formData, existingRechazo }) => {
     try {
       if (existingRechazo) {
-        // We have an existing rechazo, so update it
         await updateRechazo({
           id: existingRechazo.id,
           data: formData,
           id_pedidoProd: order.id,
         }).unwrap();
       } else {
-        // No existing rechazo, so create a new one
         await createRechazo({ ...formData, id_pedidoProd: order.id }).unwrap();
       }
-      onClose(); // Close the modal on successful save
+      onClose();
     } catch (err) {
       console.error("Failed to save rechazo:", err);
-      // Optionally, handle error state in the UI
     }
   };
 
@@ -290,15 +276,7 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
           />
         </Td>
         <Td px={2} py={2} textAlign="center">
-          <Input
-            size="sm"
-            type="number"
-            min={0}
-            max={order.cantidadUnidad ?? 0}
-            value={cantidadLocal}
-            onChange={(e) => handleCantidadChange(Number(e.target.value))}
-            w="60px"
-          />
+           <Text>{cantidadLocal}</Text>
         </Td>
         <Td px={2} py={2} textAlign="center">
           {faltanteLocal}
@@ -361,12 +339,18 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
                 isPTMQ={isPTMQ}
                 onTogglePTMQ={handlePTMQToggle}
               />
-              {hasReceta && (
+              {hasReceta ? (
                 <RecetaTable
                   pedidoId={order.id}
                   receta={receta}
                   isLoading={loadingReceta}
                 />
+              ) : (
+                <Box py={4} textAlign="center" mt={4}>
+                  <Text color="gray.500" fontSize="sm">
+                    No hay una receta definida para este producto.
+                  </Text>
+                </Box>
               )}
             </Box>
           </Collapse>

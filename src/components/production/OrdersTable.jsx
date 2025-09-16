@@ -38,7 +38,7 @@ export const OrdersTable = ({ data = [] }) => {
             <Th px={2}>País</Th>
             <Th px={2}>Cliente</Th>
             <Th px={2}>Solic. ventas</Th>
-            <Th px={2}>Completar</Th>
+            <Th px={2}>Completado</Th>
             <Th px={2}>Cantidad Procesada</Th>
             <Th px={2}>Faltante</Th>
           </Tr>
