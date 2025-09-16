@@ -173,22 +173,31 @@ export const pedidoProduccionApi = createApi({
             invalidatesTags: (result, error, { id_pedidoProd }) => [
                 { type: 'Rechazo', id: 'LIST' },
                 { type: 'PedidoProduccion', id: 'LIST' },
-                { type: 'PedidoProduccion', id: id_pedidoProd }
+                { type: 'PedidoProduccion', id: id_pedidoProd },
+                { type: 'PedidoAgrupado', id: 'LIST' },
             ],
         }),
 
-        updateRechazo: builder.mutation<Rechazo, { id: number; data: UpdateRechazoDto }>({
+        updateRechazo: builder.mutation<Rechazo, { id: number; data: UpdateRechazoDto; id_pedidoProd: number }>({
             query: ({ id, data }) => ({
                 url: `/rechazo/${id}`,
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: (_res, _err, { id }) => [{ type: 'Rechazo', id }],
+            invalidatesTags: (result, error, { id, id_pedidoProd }) => [
+                { type: 'Rechazo', id },
+                { type: 'PedidoProduccion', id: id_pedidoProd },
+                { type: 'PedidoAgrupado', id: 'LIST' },
+                { type: 'Rechazo', id: 'LIST' }
+            ],
         }),
 
         getRechazoByPedidoProduccionId: builder.query<Rechazo, number>({
             query: (id) => `/pedidoProduccion/${id}/rechazo`,
-            providesTags: (_res, _err, id) => [{ type: 'PedidoProduccion', id }],
+            providesTags: (result, error, id) =>
+                result
+                    ? [{ type: 'Rechazo', id: result.id }, { type: 'PedidoProduccion', id }]
+                    : [{ type: 'PedidoProduccion', id }],
         }),
     }),
 })

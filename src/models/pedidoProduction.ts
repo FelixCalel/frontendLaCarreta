@@ -24,7 +24,7 @@ export interface PedidoProduccion {
     trazabilidad_Dig: string | null
     mpUtilizada: number | null
     mpSobrante: number | null
-    rechazo: number | null
+    rechazoId: number | null
     basura: number | null
     detergente: number | null
     Desinfectante: number | null
@@ -119,5 +119,5 @@ export interface Rechazo {
     };
 }
 
-export type CreateRechazoDto = Omit<Rechazo, 'id' | 'usuario'>;
+export type CreateRechazoDto = Omit<Rechazo, 'id' | 'usuario'> & { id_pedidoProd: number };
 export type UpdateRechazoDto = Partial<CreateRechazoDto>;

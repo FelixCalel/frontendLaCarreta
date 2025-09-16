@@ -29,7 +29,15 @@ export const RechazoModal = ({ isOpen, onClose, pedidoProduccionId, onSave, isLo
     });
     const [error, setError] = useState(null);
 
-    const { data: rechazoData, isFetching } = useGetRechazoByPedidoProduccionIdQuery(pedidoProduccionId, { skip: !pedidoProduccionId });
+    const { data: rechazoData, isFetching, refetch } = useGetRechazoByPedidoProduccionIdQuery(pedidoProduccionId, { skip: !pedidoProduccionId });
+
+    const initialFormData = {
+        fechaRechazo: '',
+        cantidadRechazada: '',
+        comentario: '',
+        trazabilidad: '',
+        usuarioId: 1, // TODO: Get from logged in user
+    };
 
     useEffect(() => {
         console.log("[RechazoModal] rechazoData changed:", rechazoData);
@@ -41,8 +49,10 @@ export const RechazoModal = ({ isOpen, onClose, pedidoProduccionId, onSave, isLo
                 trazabilidad: rechazoData.trazabilidad || '',
                 usuarioId: rechazoData.usuarioId,
             });
+        } else {
+            setFormData(initialFormData);
         }
-    }, [rechazoData]);
+    }, [rechazoData, isOpen]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -53,7 +63,14 @@ export const RechazoModal = ({ isOpen, onClose, pedidoProduccionId, onSave, isLo
             return;
         }
 
-        onSave(formData);
+        try {
+            // Pass both form data and the existing rechazo data (if any)
+            await onSave({ formData, existingRechazo: rechazoData });
+            refetch(); // Refetch data after save
+        } catch (error) {
+            console.error("Failed to save:", error)
+            setError('Failed to save rechazo.');
+        }
     };
 
     const handleChange = (e) => {

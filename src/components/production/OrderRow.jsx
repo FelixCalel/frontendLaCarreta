@@ -195,11 +195,13 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
     updatePedido({ id: order.id, data: { completo: checked } }).unwrap();
   };
 
-  const handleSaveRechazo = async (formData) => {
+  const handleSaveRechazo = async ({ formData, existingRechazo }) => {
     try {
-      if (order.rechazo) {
-        await updateRechazo({ id: order.rechazo, data: formData }).unwrap();
+      if (existingRechazo) {
+        // We have an existing rechazo, so update it
+        await updateRechazo({ id: existingRechazo.id, data: formData, id_pedidoProd: order.id }).unwrap();
       } else {
+        // No existing rechazo, so create a new one
         await createRechazo({ ...formData, id_pedidoProd: order.id }).unwrap();
       }
       onClose(); // Close the modal on successful save
@@ -346,7 +348,7 @@ OrderRow.propTypes = {
     mp2da: PropTypes.number,
     mp3ra: PropTypes.number,
     mpSobrante: PropTypes.number,
-    rechazo: PropTypes.number,
+    rechazoId: PropTypes.number,
     basura: PropTypes.number,
     trazabilidad_Prod: PropTypes.string,
     ptmq: PropTypes.bool,
