@@ -101,6 +101,8 @@ export const ConsolidatedOrdersView = ({ data }) => {
   const headerBg = useColorModeValue("gray.100", "gray.700");
   const summaryRowBg = useColorModeValue("gray.50", "gray.900");
   const summaryRowHoverBg = useColorModeValue("gray.200", "gray.700");
+  const summaryRowBorderColor = useColorModeValue("gray.200", "gray.700");
+  const detailsTextColor = useColorModeValue("gray.600", "gray.400");
   const childRowOptions = {
     bg: useColorModeValue("white", "gray.800"),
     _hover: {
@@ -123,18 +125,19 @@ export const ConsolidatedOrdersView = ({ data }) => {
           onClick={handleSendToSap}
           disabled={selectedItems.size === 0}
         >
-          Enviar a SAP ({selectedItems.size})
+          Confirmar ({selectedItems.size})
         </Button>
       </Flex>
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Confirmar Envío a SAP</ModalHeader>
+          <ModalHeader>Confirmar Envío a Digitador</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Text mb={4}>
-              Se enviarán {selectedItems.size} items a SAP. ¿Desea continuar?
+              Se enviarán {selectedItems.size} items al Digitador. ¿Desea
+              continuar?
             </Text>
             <Textarea
               placeholder="Agregar un comentario (opcional)"
@@ -202,7 +205,7 @@ export const ConsolidatedOrdersView = ({ data }) => {
                     _hover={{ bg: summaryRowHoverBg }}
                     fontWeight="bold"
                     borderBottom="2px solid"
-                    borderColor={useColorModeValue("gray.200", "gray.700")}
+                    borderColor={summaryRowBorderColor}
                   >
                     <Td px={2} py={2}>
                       <Checkbox
@@ -235,7 +238,7 @@ export const ConsolidatedOrdersView = ({ data }) => {
                       px={2}
                       py={2}
                       colSpan={2}
-                      color={useColorModeValue("gray.600", "gray.400")}
+                      color={detailsTextColor}
                       fontSize="sm"
                       onClick={() => toggleExpansion(item.productoNombre)}
                       cursor="pointer"
