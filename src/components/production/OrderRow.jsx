@@ -361,6 +361,7 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
               pedidoProduccionId={order.id}
               onSave={handleSaveRechazo}
               isLoading={isCreatingRechazo || isUpdatingRechazo}
+              trazabilidadPadre={prodFields.trazabilidad_Prod}
             />
           )}
         </Td>
