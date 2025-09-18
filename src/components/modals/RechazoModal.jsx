@@ -140,7 +140,7 @@ export const RechazoModal = ({
                 />
               </FormControl>
               <FormControl mb={3}>
-                <FormLabel>Trazabilidad</FormLabel>
+                <FormLabel>Trazabilidad:</FormLabel>
                 <Input
                   name="trazabilidad"
                   value={formData.trazabilidad}

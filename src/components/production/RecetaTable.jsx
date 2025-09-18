@@ -32,29 +32,54 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
   const [, setBaseValues] = useState({});
   const [stateValues, setStateValues] = useState({});
   const [realValues, setRealValues] = useState({});
+  const [mpUtilizadaValues, setMpUtilizadaValues] = useState({});
+  const [mp1raValues, setMp1raValues] = useState({});
+  const [mp2daValues, setMp2daValues] = useState({});
+  const [mp3raValues, setMp3raValues] = useState({});
 
   useEffect(() => {
     const b = {};
     const rVals = {};
     const s = {};
+    const mpUtilizadaVals = {};
+    const mp1raVals = {};
+    const mp2daVals = {};
+    const mp3raVals = {};
     receta.forEach((r) => {
       b[r.id] = r.cantidad_base != null ? String(r.cantidad_base) : "";
       rVals[r.id] = r.cantidad_real != null ? String(r.cantidad_real) : "";
       s[r.id] = !!r.state;
+      mpUtilizadaVals[r.id] =
+        r.mpUtilizada != null ? String(r.mpUtilizada) : "";
+      mp1raVals[r.id] = r.mp1ra != null ? String(r.mp1ra) : "";
+      mp2daVals[r.id] = r.mp2da != null ? String(r.mp2da) : "";
+      mp3raVals[r.id] = r.mp3ra != null ? String(r.mp3ra) : "";
     });
     setBaseValues(b);
     setRealValues(rVals);
     setStateValues(s);
+    setMpUtilizadaValues(mpUtilizadaVals);
+    setMp1raValues(mp1raVals);
+    setMp2daValues(mp2daVals);
+    setMp3raValues(mp3raVals);
   }, [receta]);
 
   const updateField = async (id, field, raw) => {
     const data = {};
-    const numeric = ["cantidad_base", "cantidad_real"];
+    const numeric = [
+      "cantidad_base",
+      "cantidad_real",
+      "mpUtilizada",
+      "mp1ra",
+      "mp2da",
+      "mp3ra",
+    ];
     data[field] = numeric.includes(field)
       ? raw === ""
         ? null
         : Number(raw)
       : raw;
+    console.log("Updating field:", { id, pedidoId, data }); // Log data being sent
     try {
       await updateLinea({ id, pedidoId, data }).unwrap();
       toast({
@@ -98,19 +123,17 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
           >
             <Tr>
               <Th w="40px" px={2} />
-              <Th w="150px" px={4} textTransform="uppercase" fontWeight="bold">No.</Th>
-              <Th px={4} textTransform="uppercase" fontWeight="bold">Descripción</Th>
-              <Th w="110px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>
-                Cant. real
-              </Th>
-              <Th w="110px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>
-                Cant. base
-              </Th>
-              <Th w="110px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>
-                Ctd. req.
-              </Th>
-              <Th w="100px" px={4} textTransform="uppercase" fontWeight="bold">Unidad</Th>
-              <Th w="120px" px={4} textTransform="uppercase" fontWeight="bold">Almacén</Th>
+              <Th w="80px" px={4} textTransform="uppercase" fontWeight="bold">No.</Th>
+              <Th minW="250px" px={4} textTransform="uppercase" fontWeight="bold">Descripción</Th>
+              <Th w="80px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>MP Utilizada</Th>
+              <Th w="80px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>MP 1ra</Th>
+              <Th w="80px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>MP 2da</Th>
+              <Th w="80px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>MP 3ra</Th>
+              <Th w="80px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>Cant. real</Th>
+              <Th w="80px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>Cant. base</Th>
+              <Th w="80px" px={4} textTransform="uppercase" fontWeight="bold" isNumeric>Ctd. req.</Th>
+              <Th w="80px" px={4} textTransform="uppercase" fontWeight="bold">Unidad</Th>
+              <Th w="100px" px={4} textTransform="uppercase" fontWeight="bold">Almacén</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -143,7 +166,93 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
                     borderRadius="sm"
                     _hover={{ borderColor: "green.400" }}
                     type="number"
-                    value={realValues[r.id] ?? ''}
+                    value={mpUtilizadaValues[r.id] ?? ""}
+                    onChange={(e) =>
+                      setMpUtilizadaValues((prev) => ({
+                        ...prev,
+                        [r.id]: e.target.value,
+                      }))
+                    }
+                    onBlur={(e) =>
+                      updateField(r.id, "mpUtilizada", e.target.value)
+                    }
+                    textAlign="center"
+                    focusBorderColor="green.400"
+                  />
+                </Td>
+                <Td px={4} isNumeric>
+                  <Input
+                    size="sm"
+                    variant="outline"
+                    borderWidth="1px"
+                    borderColor={inputBorderColor}
+                    borderRadius="sm"
+                    _hover={{ borderColor: "green.400" }}
+                    type="number"
+                    value={mp1raValues[r.id] ?? ""}
+                    onChange={(e) =>
+                      setMp1raValues((prev) => ({
+                        ...prev,
+                        [r.id]: e.target.value,
+                      }))
+                    }
+                    onBlur={(e) => updateField(r.id, "mp1ra", e.target.value)}
+                    textAlign="center"
+                    focusBorderColor="green.400"
+                  />
+                </Td>
+                <Td px={4} isNumeric>
+                  <Input
+                    size="sm"
+                    variant="outline"
+                    borderWidth="1px"
+                    borderColor={inputBorderColor}
+                    borderRadius="sm"
+                    _hover={{ borderColor: "green.400" }}
+                    type="number"
+                    value={mp2daValues[r.id] ?? ""}
+                    onChange={(e) =>
+                      setMp2daValues((prev) => ({
+                        ...prev,
+                        [r.id]: e.target.value,
+                      }))
+                    }
+                    onBlur={(e) => updateField(r.id, "mp2da", e.target.value)}
+                    textAlign="center"
+                    focusBorderColor="green.400"
+                  />
+                </Td>
+                <Td px={4} isNumeric>
+                  <Input
+                    size="sm"
+                    variant="outline"
+                    borderWidth="1px"
+                    borderColor={inputBorderColor}
+                    borderRadius="sm"
+                    _hover={{ borderColor: "green.400" }}
+                    type="number"
+                    value={mp3raValues[r.id] ?? ""}
+                    onChange={(e) =>
+                      setMp3raValues((prev) => ({
+                        ...prev,
+                        [r.id]: e.target.value,
+                      }))
+                    }
+                    onBlur={(e) => updateField(r.id, "mp3ra", e.target.value)}
+                    textAlign="center"
+                    focusBorderColor="green.400"
+                  />
+                </Td>
+                <Td px={4} isNumeric>
+                  <Input
+                    size="sm"
+                    variant="outline"
+                    borderWidth="1px"
+                    borderColor={inputBorderColor}
+                    borderRadius="sm"
+                    _hover={{ borderColor: "green.400" }}
+                    type="number"
+                    value={realValues[r.id] ?? ""}
                     onChange={(e) =>
                       setRealValues((prev) => ({
                         ...prev,
@@ -183,6 +292,10 @@ RecetaTable.propTypes = {
       id: PropTypes.number.isRequired,
       item: PropTypes.string.isRequired,
       descripcion: PropTypes.string,
+      mpUtilizada: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      mp1ra: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      mp2da: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      mp3ra: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       cantidad_base: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       cantidad_requerida: PropTypes.oneOfType([
         PropTypes.number,
