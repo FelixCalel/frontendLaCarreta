@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import {
   Tr,
@@ -239,6 +239,17 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
   const hoverBg = useColorModeValue("gray.200", "gray.600");
   const panelBg = useColorModeValue("gray.50", "gray.800");
 
+  const memoizedRecetaTable = useMemo(
+    () => (
+      <RecetaTable
+        pedidoId={order.id}
+        receta={receta}
+        isLoading={loadingReceta}
+      />
+    ),
+    [order.id, receta, loadingReceta]
+  );
+
   return (
     <>
       <Tr
@@ -340,11 +351,7 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
                 onTogglePTMQ={handlePTMQToggle}
               />
               {hasReceta ? (
-                <RecetaTable
-                  pedidoId={order.id}
-                  receta={receta}
-                  isLoading={loadingReceta}
-                />
+                memoizedRecetaTable
               ) : (
                 <Box py={4} textAlign="center" mt={4}>
                   <Text color="gray.500" fontSize="sm">
