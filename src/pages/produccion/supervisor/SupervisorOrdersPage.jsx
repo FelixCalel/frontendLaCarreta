@@ -19,9 +19,13 @@ import {
 import { FilterPanel } from "../../../components/production/FilterPanel";
 import { OrdersTable } from "../../../components/production/OrdersTable";
 import { ConsolidatedOrdersView } from "../../../components/production/ConsolidatedOrdersView";
-import SincronizarRecetas from "../../../components/production/SincronizarRecetas";
+import BotonSincronizarReceta from "../../../components/empresa/BotonSincronizarReceta";
+import { useSelector, useDispatch } from "react-redux";
+import { tablaEmpresa, tablaPais } from "../../../store/Empresa/thunks";
 
 const SupervisorOrdersPage = () => {
+  const dispatch = useDispatch();
+  const { data: empresas, paises } = useSelector((state) => state.empresas);
   const [countryFilter, setCountryFilter] = useState("");
   const [itemFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
@@ -30,6 +34,18 @@ const SupervisorOrdersPage = () => {
   const [syncReady, setSyncReady] = useState(false);
   const [procesarEstado5] = useProcesarEstado5Mutation();
   const [viewMode, setViewMode] = useState("byOrder");
+
+  useEffect(() => {
+    dispatch(tablaEmpresa());
+    dispatch(tablaPais());
+  }, [dispatch]);
+
+  const empresaActiva = useMemo(() => {
+    if (!countryFilter || !empresas || !paises) return null;
+    const paisSeleccionado = paises.find((p) => p.nombre === countryFilter);
+    if (!paisSeleccionado) return null;
+    return empresas.find((e) => e.paisId === paisSeleccionado.id);
+  }, [countryFilter, empresas, paises]);
 
   useEffect(() => {
     const runProcess = async () => {
@@ -194,12 +210,13 @@ const SupervisorOrdersPage = () => {
   if (selectedPedidoId === null) {
     return (
       <Box p={2}>
-        <Heading size="lg" mb={4} textAlign="center">
-          {viewMode === "byOrder"
-            ? "Pedidos de Supervisor"
-            : "Consolidado de Supervisor"}
-        </Heading>
-        <SincronizarRecetas country={countryFilter} />
+        <Flex justifyContent="space-between" alignItems="center" mb={4}>
+          <Heading size="lg" flex="1" textAlign="center">
+            {viewMode === "byOrder"
+              ? "Pedidos de Supervisor"
+              : "Consolidado de Supervisor"}
+          </Heading>
+        </Flex>
         <Flex justify="center" mb={4}>
           <ButtonGroup isAttached variant="outline">
             <Button
@@ -214,6 +231,10 @@ const SupervisorOrdersPage = () => {
             >
               Consolidado
             </Button>
+            <BotonSincronizarReceta
+              empresa={empresaActiva}
+              ultimaSincronizacionRecetas={empresaActiva?.ultimaSincronizacionRecetas}
+            />
           </ButtonGroup>
         </Flex>
         <FilterPanel
