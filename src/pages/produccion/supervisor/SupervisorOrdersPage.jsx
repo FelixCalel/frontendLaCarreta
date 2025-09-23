@@ -19,6 +19,7 @@ import {
 import { FilterPanel } from "../../../components/production/FilterPanel";
 import { OrdersTable } from "../../../components/production/OrdersTable";
 import { ConsolidatedOrdersView } from "../../../components/production/ConsolidatedOrdersView";
+import SincronizarRecetas from "../../../components/production/SincronizarRecetas";
 
 const SupervisorOrdersPage = () => {
   const [countryFilter, setCountryFilter] = useState("");
@@ -198,6 +199,7 @@ const SupervisorOrdersPage = () => {
             ? "Pedidos de Supervisor"
             : "Consolidado de Supervisor"}
         </Heading>
+        <SincronizarRecetas country={countryFilter} />
         <Flex justify="center" mb={4}>
           <ButtonGroup isAttached variant="outline">
             <Button
