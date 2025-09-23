@@ -22,10 +22,12 @@ import { ConsolidatedOrdersView } from "../../../components/production/Consolida
 import BotonSincronizarReceta from "../../../components/empresa/BotonSincronizarReceta";
 import { useSelector, useDispatch } from "react-redux";
 import { tablaEmpresa, tablaPais } from "../../../store/Empresa/thunks";
+import { selectRecetasState } from "../../../store/Empresa";
 
 const SupervisorOrdersPage = () => {
   const dispatch = useDispatch();
   const { data: empresas, paises } = useSelector((state) => state.empresas);
+  const { lastSync } = useSelector(selectRecetasState);
   const [countryFilter, setCountryFilter] = useState("");
   const [itemFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
@@ -235,6 +237,11 @@ const SupervisorOrdersPage = () => {
               empresa={empresaActiva}
               ultimaSincronizacionRecetas={empresaActiva?.ultimaSincronizacionRecetas}
             />
+            {lastSync && (
+              <Text fontSize="sm" color="gray.500" ml={2}>
+                Última sincronización: {new Date(lastSync).toLocaleString()}
+              </Text>
+            )}
           </ButtonGroup>
         </Flex>
         <FilterPanel

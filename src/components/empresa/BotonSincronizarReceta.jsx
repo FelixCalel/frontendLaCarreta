@@ -17,10 +17,12 @@ import {
   Tooltip,
   useDisclosure,
   useToast,
+  Text,
 } from "@chakra-ui/react";
 import { FaSyncAlt } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { importarRecetas } from "../../store/Empresa/thunks";
+import { selectRecetasState } from "../../store/Empresa"; // Importar selectRecetasState
 import PropTypes from "prop-types";
 
 // Esta función auxiliar también la movemos aquí
@@ -37,6 +39,7 @@ const BotonSincronizarReceta = ({ empresa }) => {
   const [warehousesReceta, setWarehousesReceta] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const { data: allEmpresas } = useSelector((state) => state.empresas);
+  const { lastSync } = useSelector(selectRecetasState);
 
   const handleSyncReceta = async () => {
     const empresaToUse = empresa || (allEmpresas && allEmpresas[0]);
@@ -108,6 +111,11 @@ const BotonSincronizarReceta = ({ empresa }) => {
           <ModalHeader>Sincronizar Recetas</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
+            {lastSync && (
+              <Text fontSize="sm" color="gray.500" mb={4}>
+                Última sincronización: {new Date(lastSync).toLocaleString()}
+              </Text>
+            )}
             <FormControl>
               <FormLabel>Almacenes para receta (separados por coma)</FormLabel>
               <Input
