@@ -20,6 +20,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import {
   useGetRecetaByPedidoQuery,
   useUpdatePedidoProduccionMutation,
+  useGetAlmacenesQuery,
 } from "../../../services/pedidoProductionApi";
 import { FabricacionDetailsTable } from "./FabricacionDetailsTable";
 import { RecetaTable } from "../RecetaTable";
@@ -44,7 +45,7 @@ export const FabricacionRow = ({ order }) => {
   const panelBorder = useColorModeValue("gray.200", "gray.600");
   const titleColor = useColorModeValue("gray.600", "gray.300");
 
-  const recetaArg = isExpanded ? order.id : skipToken;
+  const recetaArg = isExpanded ? { pedidoId: order.id } : skipToken;
   const { data: receta = [], isLoading: loadingReceta } =
     useGetRecetaByPedidoQuery(recetaArg);
 

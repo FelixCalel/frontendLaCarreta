@@ -15,6 +15,7 @@ import {
   useColorModeValue,
   useToast,
   Text,
+  Select,
 } from "@chakra-ui/react";
 import { useDispatch } from "react-redux";
 import {
@@ -66,6 +67,7 @@ const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
   inputBorderColor,
   handleLocalChange,
   updateField,
+  almacenes,
 }) {
   return (
     <Tr bg={idx % 2 === 0 ? "transparent" : stripeBg} _hover={{ bg: hoverBg }}>
@@ -108,7 +110,20 @@ const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
       <Td px={4}>
         <Text textAlign="center">{r.nombre_unidad}</Text>
       </Td>
-      <Td px={4}>{r.almacen_name || r.id_almacen}</Td>
+      <Td px={4}>
+        <Select
+          size="sm"
+          value={r.id_almacen}
+          onChange={(e) => updateField(r.id, "id_almacen", e.target.value)}
+          isDisabled={!almacenes.length}
+        >
+          {almacenes.map((almacen) => (
+            <option key={almacen.id} value={almacen.id}>
+              {almacen.name}
+            </option>
+          ))}
+        </Select>
+      </Td>
     </Tr>
   );
 });
@@ -121,10 +136,11 @@ MemoizedRecetaRow.propTypes = {
   inputBorderColor: PropTypes.string.isRequired,
   handleLocalChange: PropTypes.func.isRequired,
   updateField: PropTypes.func.isRequired,
+  almacenes: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 MemoizedRecetaRow.displayName = "MemoizedRecetaRow";
 
-export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
+export const RecetaTable = ({ pedidoId, receta, isLoading = false, almacenes = [] }) => {
   const [updateLinea] = useUpdateRecetaLineaMutation();
   const toast = useToast();
   const dispatch = useDispatch();
@@ -319,7 +335,7 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
                 Unidad
               </Th>
               <Th
-                w="100px"
+                w="150px"
                 px={4}
                 textTransform="uppercase"
                 fontWeight="bold"
@@ -340,6 +356,7 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false }) => {
                 inputBorderColor={inputBorderColor}
                 handleLocalChange={handleLocalChange}
                 updateField={updateField}
+                almacenes={almacenes}
               />
             ))}
           </Tbody>
@@ -368,7 +385,9 @@ RecetaTable.propTypes = {
       nombre_unidad: PropTypes.string,
       almacen_name: PropTypes.string,
       state: PropTypes.bool,
+      id_almacen: PropTypes.number,
     })
   ).isRequired,
   isLoading: PropTypes.bool,
+  almacenes: PropTypes.arrayOf(PropTypes.object).isRequired,
 };

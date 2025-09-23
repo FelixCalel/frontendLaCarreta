@@ -29,8 +29,19 @@ export const pedidoProduccionApi = createApi({
     "PedidoAgrupado",
     "RecetaPedido",
     "Rechazo",
+    "Almacen",
   ],
   endpoints: (builder) => ({
+    getAlmacenes: builder.query<ProdAlmacen[], void>({
+      query: () => "/api/almacen",
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "Almacen" as const, id })),
+              { type: "Almacen", id: "LIST" },
+            ]
+          : [{ type: "Almacen", id: "LIST" }],
+    }),
     getPedidoProduccionMetadata: builder.query<Metadata[], void>({
       query: () => "/pedidoProduccion/metadata",
     }),
@@ -139,9 +150,15 @@ export const pedidoProduccionApi = createApi({
       ],
     }),
 
-    getRecetaByPedido: builder.query<RecetaLinea[], number>({
-      query: (pedidoId) => `/receta/pedido/${pedidoId}`,
-      providesTags: (_res, _err, pedidoId) => [
+    getRecetaByPedido: builder.query<RecetaLinea[], { pedidoId: number; id_almacen?: number }>({
+      query: ({ pedidoId, id_almacen }) => {
+        let url = `/receta/pedido/${pedidoId}`;
+        if (id_almacen) {
+          url += `?id_almacen=${id_almacen}`;
+        }
+        return url;
+      },
+      providesTags: (_res, _err, { pedidoId }) => [
         { type: "RecetaPedido", id: pedidoId },
       ],
     }),
@@ -251,4 +268,5 @@ export const {
   useCreateRechazoMutation,
   useUpdateRechazoMutation,
   useGetRechazoByPedidoProduccionIdQuery,
+  useGetAlmacenesQuery,
 } = pedidoProduccionApi;

@@ -22,6 +22,7 @@ import {
   useGetRecetaByPedidoQuery,
   useCreateRechazoMutation,
   useUpdateRechazoMutation,
+  useGetAlmacenesQuery,
 } from "../../services/pedidoProductionApi";
 import { OrderDetailsTable } from "./OrderDetailsTable";
 import { RecetaTable } from "./RecetaTable";
@@ -52,7 +53,10 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const shouldFetch = isExpanded;
-  const recetaArg = shouldFetch ? order.id : skipToken;
+
+  const { data: almacenes = [], isLoading: loadingAlmacenes } = useGetAlmacenesQuery();
+
+  const recetaArg = shouldFetch ? { pedidoId: order.id } : skipToken;
 
   const {
     data: receta = [],
@@ -176,7 +180,7 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
             duration: 4000,
             isClosable: true,
           });
-          return; 
+          return;
         }
       }
     }
@@ -185,13 +189,13 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
 
     const updateData = { [field]: value };
 
-    if (field === 'mpUtilizada') {
+    if (field === "mpUtilizada") {
       const nuevaCantidad = value;
       const nuevoFaltante = (Number(order.cantidadUnidad) ?? 0) - nuevaCantidad;
-      
+
       setCantidadLocal(nuevaCantidad);
       setFaltanteLocal(nuevoFaltante);
-      
+
       updateData.cantidad = nuevaCantidad;
       updateData.faltante = nuevoFaltante;
     }
@@ -206,10 +210,12 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
           ...prev,
           [field]: order[field] ?? (isText ? "" : 0),
         }));
-        if (field === 'mpUtilizada') {
-            const revertCantidad = Number(order.cantidad) || 0;
-            setCantidadLocal(revertCantidad);
-            setFaltanteLocal((Number(order.cantidadUnidad) ?? 0) - revertCantidad);
+        if (field === "mpUtilizada") {
+          const revertCantidad = Number(order.cantidad) || 0;
+          setCantidadLocal(revertCantidad);
+          setFaltanteLocal(
+            (Number(order.cantidadUnidad) ?? 0) - revertCantidad
+          );
         }
       });
   };
@@ -245,9 +251,10 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
         pedidoId={order.id}
         receta={receta}
         isLoading={loadingReceta}
+        almacenes={almacenes}
       />
     ),
-    [order.id, receta, loadingReceta]
+    [order.id, receta, loadingReceta, almacenes]
   );
 
   return (
@@ -287,7 +294,7 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
           />
         </Td>
         <Td px={2} py={2} textAlign="center">
-           <Text>{cantidadLocal}</Text>
+          <Text>{cantidadLocal}</Text>
         </Td>
         <Td px={2} py={2} textAlign="center">
           {faltanteLocal}

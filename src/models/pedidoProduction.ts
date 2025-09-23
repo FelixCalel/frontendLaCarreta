@@ -92,6 +92,7 @@ export interface RecetaLinea {
   id: number;
   item: string;
   id_almacen: number;
+  almacen?: { id: number; name: string };
   descripcion?: string | null;
   cantidad_base: number;
   cantidad_requerida: number;
@@ -132,3 +133,14 @@ export type CreateRechazoDto = Omit<Rechazo, "id" | "usuario"> & {
   id_pedidoProd: number;
 };
 export type UpdateRechazoDto = Partial<CreateRechazoDto>;
+
+export interface ProdAlmacen {
+  id: number;
+  name: string;
+  create_at: string;
+  update_at: string;
+  create_by: number;
+  update_by?: number;
+  state: boolean;
+  descripcion?: string;
+}

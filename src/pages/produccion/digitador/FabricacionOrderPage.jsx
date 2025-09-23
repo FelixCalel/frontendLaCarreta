@@ -31,6 +31,7 @@ import {
   useAvanzarEtapaMutation,
   useAvanzarMultiEtapaDetalleMutation,
   useGetRecetaByPedidoQuery,
+  useGetAlmacenesQuery,
 } from "../../../services/pedidoProductionApi";
 import FilterPanelFabricacion from "../../../components/production/fabricacion/FilterPanelFabricacion";
 import { FabricacionRow } from "../../../components/production/fabricacion/FabricacionRow";
@@ -54,7 +55,7 @@ const FabricacionPage = () => {
   );
 
   const { data: receta = [], isLoading: cargandoReceta } =
-    useGetRecetaByPedidoQuery(pedidoId);
+    useGetRecetaByPedidoQuery({ pedidoId });
 
   const baseItems = useMemo(
     () => (group?.items ?? []).filter((it) => it.etapaId === 2),
