@@ -10,8 +10,9 @@ import {
   Icon,
   useColorModeValue,
   ButtonGroup,
+  Tooltip,
 } from "@chakra-ui/react";
-import { CheckCircleIcon } from "@chakra-ui/icons";
+import { CheckCircleIcon, ViewIcon, HamburgerIcon } from "@chakra-ui/icons";
 import {
   useGetPedidosAgrupadosQuery,
   useProcesarEstado5Mutation,
@@ -184,38 +185,60 @@ const ProductionOrdersPage = () => {
 
   if (selectedPedidoId === null) {
     return (
-      <Box p={0}>
+      <Box p={0} m={0}>
         <Heading size="lg" mb={4} textAlign="center">
           {viewMode === "byOrder" ? "Mesa" : "Pedidos Consolidados"}
         </Heading>
-        <Flex justify="center" mb={4}>
+        <Flex
+          direction={{ base: "column", lg: "row" }}
+          justifyContent="space-between"
+          alignItems={{ base: "center", lg: "baseline" }}
+          mb={4}
+          gap={4}
+        >
+          {/* Left: View Mode Buttons */}
           <ButtonGroup isAttached variant="outline">
-            <Button
-              onClick={() => setViewMode("byOrder")}
-              isActive={viewMode === "byOrder"}
+            <Tooltip label="Ver pedidos individuales" placement="top">
+              <Button
+                onClick={() => setViewMode("byOrder")}
+                isActive={viewMode === "byOrder"}
+                leftIcon={<ViewIcon />}
+                aria-label="Ver por pedido"
+              >
+                Por Pedido
+              </Button>
+            </Tooltip>
+            <Tooltip
+              label="Ver resumen de productos consolidados"
+              placement="top"
             >
-              Por Pedido
-            </Button>
-            <Button
-              onClick={() => setViewMode("consolidated")}
-              isActive={viewMode === "consolidated"}
-            >
-              Consolidado
-            </Button>
+              <Button
+                onClick={() => setViewMode("consolidated")}
+                isActive={viewMode === "consolidated"}
+                leftIcon={<HamburgerIcon />}
+                aria-label="Ver consolidado"
+              >
+                Consolidado
+              </Button>
+            </Tooltip>
           </ButtonGroup>
+
+          {/* Right: Filters */}
+          <Box w={{ base: "100%", lg: "auto" }}>
+            <FilterPanel
+              countryFilter={countryFilter}
+              onCountryChange={setCountryFilter}
+              clientFilter={clientFilter}
+              onClientChange={setClientFilter}
+              stateFilter={stateFilter}
+              onStateChange={setStateFilter}
+              countries={countries}
+              clients={clients}
+            />
+          </Box>
         </Flex>
-        <FilterPanel
-          countryFilter={countryFilter}
-          onCountryChange={setCountryFilter}
-          clientFilter={clientFilter}
-          onClientChange={setClientFilter}
-          stateFilter={stateFilter}
-          onStateChange={setStateFilter}
-          countries={countries}
-          clients={clients}
-        />
         {viewMode === "byOrder" ? (
-          <SimpleGrid columns={[1, 2, 3, 4]} spacing={6} mt={6}>
+          <SimpleGrid columns={[1, 2, 3, 4, 5]} spacing={6} mt={6}>
             {filteredGroups.map((g) => {
               const doneCount = g.items.filter((i) => i.completo).length;
               const allDone = doneCount === g.items.length;

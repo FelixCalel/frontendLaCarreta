@@ -10,8 +10,14 @@ import {
   Icon,
   useColorModeValue,
   ButtonGroup,
+  Tooltip,
 } from "@chakra-ui/react";
-import { CheckCircleIcon } from "@chakra-ui/icons";
+import {
+  CheckCircleIcon,
+  ViewIcon,
+  HamburgerIcon,
+  RepeatClockIcon,
+} from "@chakra-ui/icons";
 import {
   useGetPedidosAgrupadosQuery,
   useProcesarEstado5Mutation,
@@ -219,41 +225,88 @@ const SupervisorOrdersPage = () => {
               : "Consolidado de Supervisor"}
           </Heading>
         </Flex>
-        <Flex justify="center" mb={4}>
-          <ButtonGroup isAttached variant="outline">
-            <Button
-              onClick={() => setViewMode("byOrder")}
-              isActive={viewMode === "byOrder"}
-            >
-              Por Pedido
-            </Button>
-            <Button
-              onClick={() => setViewMode("consolidated")}
-              isActive={viewMode === "consolidated"}
-            >
-              Consolidado
-            </Button>
-            <BotonSincronizarReceta
-              empresa={empresaActiva}
-              ultimaSincronizacionRecetas={empresaActiva?.ultimaSincronizacionRecetas}
+        <Flex
+          direction={{ base: "column", lg: "row" }}
+          justifyContent={{ lg: "space-between" }}
+          alignItems="center"
+          mb={0}
+          gap={0}
+        >
+          {/* Left: View Mode & Sync */}
+          <Flex
+            alignItems="center"
+            gap={4}
+            w={{ base: "100%", lg: "auto" }}
+            justifyContent={{ base: "space-between", lg: "flex-start" }}
+          >
+            <ButtonGroup isAttached variant="outline">
+              <Tooltip label="Ver pedidos individuales" placement="top">
+                <Button
+                  onClick={() => setViewMode("byOrder")}
+                  isActive={viewMode === "byOrder"}
+                  leftIcon={<ViewIcon />}
+                  aria-label="Ver por pedido"
+                >
+                  Pedido
+                </Button>
+              </Tooltip>
+              <Tooltip
+                label="Ver resumen de productos consolidados"
+                placement="top"
+              >
+                <Button
+                  onClick={() => setViewMode("consolidated")}
+                  isActive={viewMode === "consolidated"}
+                  leftIcon={<HamburgerIcon />}
+                  aria-label="Ver consolidado"
+                >
+                  Consolidado
+                </Button>
+              </Tooltip>
+            </ButtonGroup>
+
+            <Flex alignItems="center" gap={2}>
+              <Tooltip
+                label="Sincronizar información de producción"
+                placement="top"
+              >
+                <Box>
+                  <BotonSincronizarReceta
+                    empresa={empresaActiva}
+                    ultimaSincronizacionRecetas={
+                      empresaActiva?.ultimaSincronizacionRecetas
+                    }
+                    leftIcon={<RepeatClockIcon />}
+                  />
+                </Box>
+              </Tooltip>
+              {lastSync && (
+                <Text
+                  fontSize="xs"
+                  color="gray.500"
+                  whiteSpace="nowrap"
+                  display={{ base: "none", xl: "block" }}
+                >
+                  Últ. sinc.: {new Date(lastSync).toLocaleString()}
+                </Text>
+              )}
+            </Flex>
+          </Flex>
+
+          {/* Right: Filters */}
+          <Box w={{ base: "100%", lg: "auto" }}>
+            <FilterPanel
+              countryFilter={countryFilter}
+              onCountryChange={setCountryFilter}
+              clientFilter={clientFilter}
+              onClientChange={setClientFilter}
+              stateFilter={stateFilter}
+              onStateChange={setStateFilter}
+              countries={countries}
+              clients={clients}
             />
-            {lastSync && (
-              <Text fontSize="sm" color="gray.500" ml={2}>
-                Última sincronización: {new Date(lastSync).toLocaleString()}
-              </Text>
-            )}
-          </ButtonGroup>
+          </Box>
         </Flex>
-        <FilterPanel
-          countryFilter={countryFilter}
-          onCountryChange={setCountryFilter}
-          clientFilter={clientFilter}
-          onClientChange={setClientFilter}
-          stateFilter={stateFilter}
-          onStateChange={setStateFilter}
-          countries={countries}
-          clients={clients}
-        />
         {viewMode === "byOrder" ? (
           <SimpleGrid columns={[1, 2, 3, 4]} spacing={6} mt={6}>
             {filteredGroups.map((g) => {

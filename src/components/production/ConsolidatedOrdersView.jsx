@@ -119,16 +119,6 @@ export const ConsolidatedOrdersView = ({ data }) => {
 
   return (
     <>
-      <Flex justify="flex-end" mb={4}>
-        <Button
-          colorScheme="blue"
-          onClick={handleSendToSap}
-          disabled={selectedItems.size === 0}
-        >
-          Confirmar ({selectedItems.size})
-        </Button>
-      </Flex>
-
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -278,6 +268,16 @@ export const ConsolidatedOrdersView = ({ data }) => {
           </Tbody>
         </Table>
       </TableContainer>
+
+      <Flex justify="flex-end" mt={4}>
+        <Button
+          colorScheme="blue"
+          onClick={handleSendToSap}
+          disabled={selectedItems.size === 0}
+        >
+          Confirmar ({selectedItems.size})
+        </Button>
+      </Flex>
     </>
   );
 };
