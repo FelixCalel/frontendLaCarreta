@@ -115,7 +115,18 @@ export const AppRouter = () => {
     verificarAccesos();
   }, [dispatch, usuarioId, roleId]);
 
-  const rolesPermitidosAdmin = ["1", "2", "3", "4", "5", "6", "9"];
+  const rolesPermitidosAdmin = [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+  ];
 
   if (loading) {
     return <CheckingAuth />;
