@@ -22,6 +22,7 @@ import {
   Checkbox,
   useDisclosure,
   useToast,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
@@ -43,6 +44,10 @@ const FabricacionPage = () => {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { data: groups = [], isLoading, error } = useGetPedidosAgrupadosQuery();
+
+  const headBg = useColorModeValue("gray.50", "gray.800");
+  const tableBorder = useColorModeValue("gray.200", "gray.700");
+  const modalBg = useColorModeValue("white", "gray.700");
 
   const [avanzarEtapa, { isLoading: sendingPedido }] =
     useAvanzarEtapaMutation();
@@ -197,9 +202,9 @@ const FabricacionPage = () => {
         variant="simple"
         size="sm"
         border="1px solid"
-        borderColor="gray.200"
+        borderColor={tableBorder}
       >
-        <Thead>
+        <Thead bg={headBg}>
           <Tr>
             <Th />
             <Th>ITEM</Th>
@@ -257,7 +262,7 @@ const FabricacionPage = () => {
 
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent bg={modalBg}>
           <ModalHeader>Cargar a SAP</ModalHeader>
           <ModalCloseButton />
           <ModalBody>

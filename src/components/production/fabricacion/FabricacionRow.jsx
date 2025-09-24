@@ -49,6 +49,8 @@ export const FabricacionRow = ({ order }) => {
   const { data: receta = [], isLoading: loadingReceta } =
     useGetRecetaByPedidoQuery(recetaArg);
 
+  const { data: almacenes = [] } = useGetAlmacenesQuery();
+
   useEffect(() => {
     setCant(order.cantidad ?? 0);
     setDesp(order.despacho ?? 0);
@@ -188,7 +190,7 @@ export const FabricacionRow = ({ order }) => {
                     <Spinner size="sm" />
                   </Center>
                 ) : receta.length ? (
-                  <RecetaTable pedidoId={order.id} receta={receta} />
+                  <RecetaTable pedidoId={order.id} receta={receta} almacenes={almacenes} />
                 ) : (
                   <Center py={2}>
                     <Text

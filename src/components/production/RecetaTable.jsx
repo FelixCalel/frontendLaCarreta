@@ -69,6 +69,8 @@ const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
   updateField,
   almacenes,
 }) {
+  const optionBg = useColorModeValue("white", "gray.700");
+
   return (
     <Tr bg={idx % 2 === 0 ? "transparent" : stripeBg} _hover={{ bg: hoverBg }}>
       <Td px={2} textAlign="center">
@@ -116,6 +118,12 @@ const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
           value={r.id_almacen}
           onChange={(e) => updateField(r.id, "id_almacen", e.target.value)}
           isDisabled={!almacenes.length}
+          bg={optionBg}
+          sx={{
+            "& option": {
+              bg: optionBg,
+            },
+          }}
         >
           {almacenes.map((almacen) => (
             <option key={almacen.id} value={almacen.id}>
