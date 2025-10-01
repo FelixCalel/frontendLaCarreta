@@ -29,6 +29,7 @@ import BotonSincronizarReceta from "../../../components/empresa/BotonSincronizar
 import { useSelector, useDispatch } from "react-redux";
 import { tablaEmpresa, tablaPais } from "../../../store/Empresa/thunks";
 import { selectRecetasState } from "../../../store/Empresa";
+import AcceptOrderButton from "../../../components/production/AcceptOrderButton";
 
 const SupervisorOrdersPage = () => {
   const dispatch = useDispatch();
@@ -63,8 +64,6 @@ const SupervisorOrdersPage = () => {
           console.log("No hay pedidos en estado 5 para procesar.");
         }
       } catch (error) {
-        // El error 400 del backend ya no debería ocurrir para este caso,
-        // pero mantenemos el catch para otros posibles errores (red, etc.)
         console.error("Error al intentar procesar el estado 5:", error);
       } finally {
         setSyncReady(true);
@@ -364,18 +363,27 @@ const SupervisorOrdersPage = () => {
   const selectedGroup = filteredGroups.find(
     (g) => g.pedidoId === selectedPedidoId
   );
+
   if (!selectedGroup) {
     setSelectedPedidoId(null);
     return null;
   }
+
   return (
     <Box p={6}>
       <Flex mb={4} align="center" justify="space-between">
         <Button onClick={() => setSelectedPedidoId(null)}>← Volver</Button>
-        <Heading size="md">
-          Pedido #{selectedGroup.pedidoId} – {selectedGroup.tienda}
-        </Heading>
-        <Box />
+        <Box flex="1" display="flex" justifyContent="center">
+          <Heading size="md">
+            Pedido #{selectedGroup.pedidoId} – {selectedGroup.tienda}
+          </Heading>
+        </Box>
+        <Box>
+          <AcceptOrderButton
+            order={selectedGroup}
+            onSuccess={() => setSelectedPedidoId(null)}
+          />
+        </Box>
       </Flex>
       <OrdersTable data={selectedGroup.items} />
     </Box>
