@@ -89,9 +89,9 @@ const AprobadosPage = () => {
     try {
       await Promise.all(
         pedidos.map(async (pedido) => {
-          await dispatch(
-            togglePedidoStatus({ id: pedido.id, estadoId: 5 })
-          ).unwrap();
+          // await dispatch(
+          //   togglePedidoStatus({ id: pedido.id, estadoId: 5 })
+          // ).unwrap();
 
           await dispatch(
             updatePedidoActivacion({ id: pedido.id, isActive: true })
@@ -192,7 +192,7 @@ const AprobadosPage = () => {
       await actualizarEstadoPedidosExportados(pedidosAprobados);
       toast({
         title: "Exportación completada",
-        description: "SAP y Excel (Formato 2) generados correctamente.",
+        description: "SAP y Excel generados correctamente.",
         status: "success",
         duration: 3000,
         isClosable: true,
