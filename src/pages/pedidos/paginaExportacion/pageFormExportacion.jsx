@@ -33,6 +33,8 @@ const AprobadosPage = () => {
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [detallesPedido, setDetallesPedido] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedPedidosToRevert, setSelectedPedidosToRevert] = useState([]);
+  const [isReverting, setIsReverting] = useState(false);
   const toast = useToast();
   const pedidos = useSelector((state) => state.pedidos.data);
   const selectAprobadosPorRuta = useMemo(
@@ -94,13 +96,13 @@ const AprobadosPage = () => {
           // ).unwrap();
 
           await dispatch(
-            updatePedidoActivacion({ id: pedido.id, isActive: true })
+            updatePedidoActivacion({ id: pedido.id, isActive: false })
           ).unwrap();
         })
       );
-      console.log("Pedidos exportados y activados correctamente.");
+      console.log("Pedidos exportados y desactivados correctamente.");
     } catch (error) {
-      console.error("Error al exportar y activar pedidos:", error);
+      console.error("Error al exportar y desactivar pedidos:", error);
     }
   };
 
@@ -395,6 +397,109 @@ const AprobadosPage = () => {
     });
   }
 
+  const handleTogglePedidoSelection = (pedidoId) => {
+    setSelectedPedidosToRevert((prev) => {
+      if (prev.includes(pedidoId)) {
+        return prev.filter((id) => id !== pedidoId);
+      } else {
+        return [...prev, pedidoId];
+      }
+    });
+  };
+
+  const handleSelectAllPedidos = (selectAll) => {
+    if (selectAll) {
+      setSelectedPedidosToRevert(pedidosAprobados.map((p) => p.id));
+    } else {
+      setSelectedPedidosToRevert([]);
+    }
+  };
+
+  const handleRevertPedidosToEstado2 = async () => {
+    if (selectedPedidosToRevert.length === 0) {
+      toast({
+        title: "Sin selección",
+        description:
+          "Selecciona al menos un pedido para regresar al estado anterior.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setIsReverting(true);
+    try {
+      const results = await Promise.allSettled(
+        selectedPedidosToRevert.map((pedidoId) => {
+          // Encontrar el pedido completo para preservar sus datos
+          const pedidoCompleto = pedidosAprobados.find(
+            (p) => p.id === pedidoId
+          );
+
+          return dispatch(
+            togglePedidoStatus({
+              id: pedidoId,
+              estadoId: 2,
+              // Preservar los campos existentes del pedido
+              comentario: pedidoCompleto?.comentario || "",
+              comentarioDisplay: pedidoCompleto?.comentarioDisplay || "",
+              fechaOrdenDisplay:
+                pedidoCompleto?.fechaOrdenDisplay || pedidoCompleto?.fechaOrden,
+            })
+          ).unwrap();
+        })
+      );
+
+      const successful = results.filter(
+        (result) => result.status === "fulfilled"
+      ).length;
+      const failed = results.filter(
+        (result) => result.status === "rejected"
+      ).length;
+
+      if (successful > 0) {
+        toast({
+          title: "Operación completada",
+          description: `${successful} pedido(s) regresado(s) al estado anterior exitosamente.${
+            failed > 0 ? ` ${failed} pedido(s) fallaron.` : ""
+          }`,
+          status:
+            successful === selectedPedidosToRevert.length
+              ? "success"
+              : "warning",
+          duration: 4000,
+          isClosable: true,
+        });
+
+        // Limpiar selección después del éxito
+        setSelectedPedidosToRevert([]);
+
+        // Recargar pedidos para refrescar la vista
+        await dispatch(tablaPedidos());
+      } else {
+        toast({
+          title: "Error",
+          description: "No se pudo regresar ningún pedido al estado anterior.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error al regresar pedidos al estado 2:", error);
+      toast({
+        title: "Error inesperado",
+        description: "Ocurrió un error al intentar regresar los pedidos.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsReverting(false);
+    }
+  };
+
   const handleVerDetalles = async (pedidoId) => {
     try {
       const detalles = await dispatch(
@@ -435,17 +540,7 @@ const AprobadosPage = () => {
 
   return (
     <Box p={6} boxShadow="xl" bg={bgColor} color={textColor} rounded="lg">
-      <Flex justify="flex-start" mb={6} gap={4}>
-        {/* <Button
-          colorScheme="blue"
-          onClick={handleExportConsolidadoFormato1}
-          isLoading={isExporting}
-          loadingText="Exportando..."
-          disabled={pedidosAprobados.length === 0}
-        >
-          Exportar a SAP formato
-        </Button> */}
-
+      <Flex justify="space-between" mb={6} align="center">
         <Button
           colorScheme="teal"
           onClick={handleExportConsolidadoFormato2}
@@ -454,6 +549,17 @@ const AprobadosPage = () => {
           disabled={pedidosAprobados.length === 0}
         >
           Exportar a SAP
+        </Button>
+
+        <Button
+          colorScheme="orange"
+          onClick={handleRevertPedidosToEstado2}
+          isLoading={isReverting}
+          loadingText="Procesando..."
+          disabled={selectedPedidosToRevert.length === 0}
+        >
+          Regresar seleccionados al estado anterior (
+          {selectedPedidosToRevert.length})
         </Button>
       </Flex>
       <ConfirmExportDialog
@@ -474,6 +580,9 @@ const AprobadosPage = () => {
       <AprobadosTable
         pedidosAprobados={pedidosAprobados}
         handleVerDetalles={handleVerDetalles}
+        selectedPedidosToRevert={selectedPedidosToRevert}
+        onTogglePedidoSelection={handleTogglePedidoSelection}
+        onSelectAllPedidos={handleSelectAllPedidos}
       />
 
       <DetallesModal
