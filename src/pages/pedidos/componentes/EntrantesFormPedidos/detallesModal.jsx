@@ -1,4 +1,14 @@
 import PropTypes from "prop-types";
+import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { useToast } from "@chakra-ui/react";
+import ProductoSelector from "../../componentes/pageFormPedidos/productoSelector";
+import {
+  addNewDetalleOrden,
+  updateDetalleOrden,
+  deleteDetalleOrden,
+  getDetalleOrdenByPedidoId,
+} from "../../../../store/Pedidos/DetallePedidos/thunks";
 import {
   Modal,
   ModalOverlay,
@@ -26,17 +36,143 @@ import {
 import { FaCalendarAlt, FaCommentDots, FaBoxOpen } from "react-icons/fa";
 
 const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
+  const dispatch = useDispatch();
+  const toast = useToast();
+
+  // Estado para nuevo producto
+  const [newProducto, setNewProducto] = useState({
+    productoId: null,
+    nombreProducto: "",
+    cantidad: "",
+    cantidadDisponible: 0,
+    codigo: "",
+    precio: 0,
+  });
+  const [cantidadAgregar, setCantidadAgregar] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resetFields, setResetFields] = useState(false);
+  const [detallesLocal, setDetallesLocal] = useState(detalles);
+  const [editCantidad, setEditCantidad] = useState({});
+
+  // Sincronizar detalles locales cuando cambian los detalles externos
+  useEffect(() => {
+    setDetallesLocal(detalles);
+  }, [detalles]);
+
+  // Handlers CRUD
+  const handleAddProducto = async () => {
+    if (!newProducto.productoId || !cantidadAgregar || cantidadAgregar <= 0) {
+      toast({
+        title: "Completa los datos del producto y cantidad",
+        status: "warning",
+      });
+      return;
+    }
+    setLoading(true);
+    try {
+      await dispatch(
+        addNewDetalleOrden({
+          pedidoId: pedido.id,
+          productoId: newProducto.productoId,
+          cantidad: Number(cantidadAgregar),
+          precio: newProducto.precio,
+          codigo: newProducto.codigo,
+          nombreProducto: newProducto.nombreProducto,
+          cantidadDisponible: newProducto.cantidadDisponible,
+          deudorId: pedido.deudorId,
+          tiendaId: pedido.tiendaId,
+        })
+      ).unwrap();
+      toast({ title: "Producto agregado", status: "success" });
+      setNewProducto({
+        productoId: null,
+        nombreProducto: "",
+        cantidad: "",
+        cantidadDisponible: 0,
+        codigo: "",
+        precio: 0,
+      });
+      setCantidadAgregar("");
+      setResetFields(true);
+      setTimeout(() => setResetFields(false), 200);
+      // Recargar detalles dinámicamente
+      const nuevosDetalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedido.id)
+      ).unwrap();
+      setDetallesLocal(nuevosDetalles);
+    } catch (err) {
+      toast({
+        title: "Error al agregar",
+        description: err?.message || "",
+        status: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCantidadChange = async (detalleId, cantidad) => {
+    setEditCantidad((prev) => ({ ...prev, [detalleId]: cantidad }));
+  };
+
+  // Confirmar edición de cantidad (Enter o blur)
+  const handleCantidadConfirm = async (detalleId) => {
+    const cantidad = Number(editCantidad[detalleId]);
+    if (!cantidad || cantidad <= 0) return;
+    setLoading(true);
+    try {
+      await dispatch(
+        updateDetalleOrden({
+          id: detalleId,
+          pedidoId: pedido.id,
+          cantidad,
+        })
+      ).unwrap();
+      toast({ title: "Cantidad actualizada", status: "success" });
+      // Recargar detalles dinámicamente
+      const nuevosDetalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedido.id)
+      ).unwrap();
+      setDetallesLocal(nuevosDetalles);
+      setEditCantidad((prev) => ({ ...prev, [detalleId]: undefined }));
+    } catch (err) {
+      toast({
+        title: "Error al actualizar",
+        description: err?.message || "",
+        status: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveProducto = async (detalleId) => {
+    setLoading(true);
+    try {
+      await dispatch(deleteDetalleOrden(detalleId)).unwrap();
+      toast({ title: "Producto eliminado", status: "info" });
+      // Recargar detalles dinámicamente
+      const nuevosDetalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedido.id)
+      ).unwrap();
+      setDetallesLocal(nuevosDetalles);
+    } catch (err) {
+      toast({
+        title: "Error al eliminar",
+        description: err?.message || "",
+        status: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   const bg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
-  const rowHoverBg = useColorModeValue("gray.50", "gray.700");
   const commentTextC = useColorModeValue("gray.700", "gray.300");
   const badgeBgDisplay = useColorModeValue("purple.500", "purple.400");
-  const badgeBgUser = useColorModeValue("teal.600", "teal.500");
+  const bgPurple = useColorModeValue("#F3E8FF", "#6B21A8");
 
   if (!pedido) return null;
-
-  const [y, m, d] = pedido.fechaOrden.slice(0, 10).split("-");
-  const fechaUser = `${d}/${m}/${y}`;
 
   let fechaDisplay = null;
   if (pedido.fechaOrdenDisplay) {
@@ -81,7 +217,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
                   border="1px solid"
                   borderColor={borderColor}
                   borderRadius="md"
-                  bg={useColorModeValue("purple.50", "purple.900")}
+                  bg={bgPurple}
                   direction="column"
                   gap={2}
                 >
@@ -109,57 +245,114 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
               </>
             ) : null}
 
-            <Box>
-              <Text fontSize="lg" fontWeight="semibold" mb={2}>
-                Productos
-              </Text>
-              <Table variant="simple" size="sm">
-                <Thead bg={borderColor}>
-                  <Tr>
-                    <Th>Código</Th>
-                    <Th>Producto</Th>
-                    <Th isNumeric>Cantidad</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {detalles
-                    .sort((a, b) =>
-                      a.nombreProducto.localeCompare(b.nombreProducto)
-                    )
-                    .map((it) => (
-                      <Tr key={it.id} _hover={{ bg: rowHoverBg }}>
-                        <Td>{it.codigo}</Td>
-                        <Td>{it.nombreProducto}</Td>
-                        <Td isNumeric>{it.cantidad}</Td>
-                      </Tr>
-                    ))}
-                </Tbody>
-              </Table>
-            </Box>
-            {/* 
-            <Divider borderColor={borderColor} />
-
-            <Flex align="center" gap={2}>
-              <Badge colorScheme="teal" bg={badgeBgUser}>
-                Entrega
-              </Badge>
-              <Icon as={FaCalendarAlt} />
-              <Text fontWeight="bold">{fechaUser}</Text>
+            {/* Sección para agregar producto */}
+            <Flex
+              direction={{ base: "column", md: "row" }}
+              gap={3}
+              align="center"
+              mb={2}
+            >
+              <Box minW={{ base: "100%", md: "350px" }}>
+                <ProductoSelector
+                  deudorId={pedido.deudorId}
+                  onSelect={(
+                    productoId,
+                    nombreProducto,
+                    cantidadDisponible,
+                    codigo
+                  ) => {
+                    setNewProducto((prev) => ({
+                      ...prev,
+                      productoId,
+                      nombreProducto,
+                      cantidadDisponible,
+                      codigo,
+                    }));
+                  }}
+                  reset={resetFields}
+                />
+              </Box>
+              <Box minW={{ base: "100%", md: "120px" }}>
+                <input
+                  type="number"
+                  min={1}
+                  max={newProducto.cantidadDisponible || undefined}
+                  value={cantidadAgregar}
+                  onChange={(e) => setCantidadAgregar(e.target.value)}
+                  placeholder="Cantidad"
+                  style={{
+                    width: "100%",
+                    padding: "6px",
+                    borderRadius: "6px",
+                    border: "1px solid #ccc",
+                  }}
+                  disabled={!newProducto.productoId}
+                />
+              </Box>
+              <Button
+                colorScheme="teal"
+                onClick={handleAddProducto}
+                isLoading={loading}
+                disabled={!newProducto.productoId || !cantidadAgregar}
+              >
+                Agregar producto
+              </Button>
             </Flex>
 
-            <Divider borderColor={borderColor} />
-
-            <Flex align="flex-start" gap={2}>
-              <Icon as={FaCommentDots} color="orange.400" />
-              <Box>
-                <Text fontWeight="semibold" mb={1}>
-                  Comentario
-                </Text>
-                <Text color={commentTextC}>
-                  {pedido.comentario?.trim() || "— sin comentario —"}
-                </Text>
-              </Box>
-            </Flex> */}
+            {/* Lista editable de productos */}
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  <Th>Código</Th>
+                  <Th>Producto</Th>
+                  <Th>Cantidad</Th>
+                  <Th>Acciones</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {detallesLocal.map((producto) => (
+                  <Tr key={producto.id}>
+                    <Td>{producto.codigo || "Sin código"}</Td>
+                    <Td>{producto.nombreProducto}</Td>
+                    <Td>
+                      <input
+                        type="number"
+                        min={1}
+                        value={
+                          editCantidad[producto.id] !== undefined
+                            ? editCantidad[producto.id]
+                            : producto.cantidad
+                        }
+                        onChange={(e) =>
+                          handleCantidadChange(producto.id, e.target.value)
+                        }
+                        onBlur={() => handleCantidadConfirm(producto.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter")
+                            handleCantidadConfirm(producto.id);
+                        }}
+                        style={{
+                          width: "70px",
+                          padding: "4px",
+                          borderRadius: "6px",
+                          border: "1px solid #ccc",
+                        }}
+                      />
+                    </Td>
+                    <Td>
+                      <Button
+                        colorScheme="red"
+                        size="xs"
+                        onClick={() => handleRemoveProducto(producto.id)}
+                        isLoading={loading}
+                      >
+                        Eliminar
+                      </Button>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
           </VStack>
         </ModalBody>
 

@@ -32,13 +32,29 @@ export const tablaDetalleOrden = createAsyncThunk(
 
 export const addNewDetalleOrden = createAsyncThunk(
   "detalleOrden/addNewDetalleOrden",
-  async (newDetalleOrden) => {
-    console.log("Aca se crea un detalle:", newDetalleOrden);
-    const response = await axios.post(
-      `${BASE_URL}/detalle/pedido/create`,
-      newDetalleOrden
-    );
-    return response.data;
+  async (newDetalleOrden, thunkAPI) => {
+    try {
+      const usuarioId = localStorage.getItem("usuarioId");
+      let token = localStorage.getItem("access_token");
+      if (!token) token = sessionStorage.getItem("access_token");
+      console.log("Token usado en addNewDetalleOrden:", token);
+      const response = await axios.post(
+        `${BASE_URL}/detalle/pedido/create`,
+        {
+          ...newDetalleOrden,
+          createdBy: usuarioId ? Number(usuarioId) : null,
+          updatedBy: usuarioId ? Number(usuarioId) : null,
+        },
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
+      );
+      return response.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
   }
 );
 
@@ -62,12 +78,34 @@ export const deleteDetalleOrden = createAsyncThunk(
 
 export const updateDetalleOrden = createAsyncThunk(
   "detalleOrden/updateDetalleOrden",
-  async ({ id, pedidoId, cantidad }) => {
-    const response = await axios.put(
-      `${BASE_URL}/detalle/pedido/actualizar/${pedidoId}/${id}`,
-      { cantidad }
-    );
-    return response.data;
+  async ({ id, pedidoId, cantidad }, thunkAPI) => {
+    try {
+      const usuarioId = localStorage.getItem("usuarioId");
+      let token = localStorage.getItem("access_token");
+      if (!token) token = sessionStorage.getItem("access_token");
+      console.log("Token usado en updateDetalleOrden:", token);
+      console.log("UsuarioId:", usuarioId);
+      console.log("Todos los valores en localStorage:", {
+        access_token: localStorage.getItem("access_token"),
+        usuarioId: localStorage.getItem("usuarioId"),
+        nombreUsuario: localStorage.getItem("nombreUsuario"),
+      });
+      const response = await axios.put(
+        `${BASE_URL}/detalle/pedido/actualizar/${pedidoId}/${id}`,
+        {
+          cantidad: Number(cantidad),
+          updatedBy: usuarioId ? Number(usuarioId) : null,
+        },
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
+      );
+      return response.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
   }
 );
 
@@ -185,7 +223,9 @@ export const copiarDetallesUltimoPedido = createAsyncThunk(
       return data;
     } catch (err) {
       if (err.response && err.response.data) {
-        return rejectWithValue(err.response.data.error || 'Error al copiar el pedido');
+        return rejectWithValue(
+          err.response.data.error || "Error al copiar el pedido"
+        );
       }
       return rejectWithValue(err.message || "Error desconocido");
     }

@@ -14,7 +14,7 @@ export const loadAllowedRoutes = () => {
         return;
       }
 
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("access_token");
       const headers = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
 

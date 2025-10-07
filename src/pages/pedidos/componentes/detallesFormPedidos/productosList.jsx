@@ -1,4 +1,13 @@
-import { Table, Thead, Tbody, Tr, Th, Td, IconButton, Tooltip } from "@chakra-ui/react";
+import {
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  IconButton,
+  Tooltip,
+} from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import CantidadInput from "../pageFormPedidos/cantidadInput";
 import PropTypes from "prop-types";
@@ -10,7 +19,6 @@ const ProductosList = ({ productos, onRemove, onCantidadChange }) => {
         <Tr>
           <Th>Código</Th>
           <Th>Producto</Th>
-          <Th>Cantidad Máxima</Th>
           <Th>Cantidad</Th>
           <Th>Acciones</Th>
         </Tr>
@@ -20,12 +28,14 @@ const ProductosList = ({ productos, onRemove, onCantidadChange }) => {
           <Tr key={producto.detallePedidoId}>
             <Td>{producto.codigo || "Sin código"}</Td>
             <Td>{producto.nombreProducto}</Td>
-            <Td>{producto.cantidadDisponible}</Td>
             <Td>
               <CantidadInput
                 value={producto.cantidad}
                 onChange={(e) =>
-                  onCantidadChange(producto.detallePedidoId, parseFloat(e.target.value) || 0)
+                  onCantidadChange(
+                    producto.detallePedidoId,
+                    parseFloat(e.target.value) || 0
+                  )
                 }
                 placeholder="Cantidad"
                 size="sm"

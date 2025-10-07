@@ -170,29 +170,57 @@ export const LoginForm = () => {
           return;
         }
 
-        localStorage.setItem("token", token);
-        localStorage.setItem("nombreUsuario", nombre);
-        localStorage.setItem("correoUsuario", correoUsuario);
-        localStorage.setItem("usuarioId", usuarioId);
-        localStorage.setItem("roleId", roleId);
-        localStorage.setItem("paisId", paisId);
+        // Intercambiar token de Firebase por JWT del backend
+        console.log("Enviando token de Firebase para intercambio:", token);
+        try {
+          const tokenExchangeResp = await axios.post(
+            `${BASE_URL}/usuarios/exchange-token`,
+            {
+              firebaseToken: token,
+            }
+          );
 
-        dispatch(
-          loginAuth({
-            uid: user.uid,
-            email: correoUsuario,
-            displayName: nombre,
-            token,
-            roleId,
-            paisId,
-            rutas: resp.data.usuario.rutas?.map((r) => r.id) ?? [],
-            rutasFull: resp.data.usuario.rutas,
-            id: usuarioId,
-          })
-        );
-        await dispatch(fetchCurrentUser());
-        navigate("/auth/home", { replace: true });
-        window.location.reload();
+          const { access_token } = tokenExchangeResp.data;
+          console.log("JWT del backend recibido:", access_token);
+
+          if (!access_token) {
+            throw new Error("No se recibió access_token del backend");
+          }
+
+          localStorage.setItem("access_token", access_token);
+          console.log("Token guardado en localStorage:", access_token);
+          console.log(
+            "Verificación localStorage access_token:",
+            localStorage.getItem("access_token")
+          );
+          localStorage.setItem("nombreUsuario", nombre);
+          localStorage.setItem("correoUsuario", correoUsuario);
+          localStorage.setItem("usuarioId", usuarioId);
+          localStorage.setItem("roleId", roleId);
+          localStorage.setItem("paisId", paisId);
+
+          dispatch(
+            loginAuth({
+              uid: user.uid,
+              email: correoUsuario,
+              displayName: nombre,
+              token: access_token,
+              roleId,
+              paisId,
+              rutas: resp.data.usuario.rutas?.map((r) => r.id) ?? [],
+              rutasFull: resp.data.usuario.rutas,
+              id: usuarioId,
+            })
+          );
+          await dispatch(fetchCurrentUser());
+          navigate("/auth/home", { replace: true });
+          window.location.reload();
+        } catch (tokenError) {
+          console.error("Error al intercambiar token:", tokenError);
+          setError("Error al obtener token de autenticación.");
+          setIsLoading(false);
+          return;
+        }
       } else {
         setError("Error al obtener datos del usuario.");
       }

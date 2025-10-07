@@ -5,7 +5,7 @@ const initialState = {
   uid: null,
   email: null,
   displayName: null,
-  token: localStorage.getItem("token") || null,
+  token: localStorage.getItem("access_token") || null,
   roleId: localStorage.getItem("roleId") || null,
   paisId: localStorage.getItem("paisId") || null,
   rutas: [],
