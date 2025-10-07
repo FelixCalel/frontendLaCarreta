@@ -34,8 +34,14 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { FaCalendarAlt, FaCommentDots, FaBoxOpen } from "react-icons/fa";
+import { useLocation } from "react-router-dom";
+import PedidoInfoDisplay from "./PedidoInfoDisplay";
+import AgregarProductoBar from "./AgregarProductoBar";
+import DetallesProductosTable from "./DetallesProductosTable";
 
 const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
+  const location = useLocation();
+  const isEditable = location.pathname === "/pedidos/entrantes";
   const dispatch = useDispatch();
   const toast = useToast();
 
@@ -64,6 +70,19 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
     if (!newProducto.productoId || !cantidadAgregar || cantidadAgregar <= 0) {
       toast({
         title: "Completa los datos del producto y cantidad",
+        status: "warning",
+      });
+      return;
+    }
+    // Validación frontend: producto ya agregado
+    const yaAgregado = detallesLocal.some(
+      (detalle) => detalle.productoId === newProducto.productoId
+    );
+    if (yaAgregado) {
+      toast({
+        title: "Producto ya agregado",
+        description:
+          "Este producto ya está en el pedido. No puedes agregarlo dos veces.",
         status: "warning",
       });
       return;
@@ -101,16 +120,25 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
       ).unwrap();
       setDetallesLocal(nuevosDetalles);
     } catch (err) {
-      toast({
-        title: "Error al agregar",
-        description: err?.message || "",
-        status: "error",
-      });
+      const errorMsg = err?.message || err?.error || "";
+      if (errorMsg.includes("ya está agregado al pedido")) {
+        toast({
+          title: "Producto ya agregado",
+          description:
+            "Este producto ya está en el pedido. No puedes agregarlo dos veces.",
+          status: "warning",
+        });
+      } else {
+        toast({
+          title: "Error al agregar",
+          description: errorMsg || "Producto ya agregado",
+          status: "error",
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
-
   const handleCantidadChange = async (detalleId, cantidad) => {
     setEditCantidad((prev) => ({ ...prev, [detalleId]: cantidad }));
   };
@@ -206,156 +234,37 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
           </Flex>
         </ModalHeader>
         <ModalCloseButton />
-
         <ModalBody>
-          <VStack spacing={5} align="stretch">
-            {pedido.comentarioDisplay || pedido.fechaOrdenDisplay ? (
-              <>
-                <Flex
-                  px={4}
-                  py={2}
-                  border="1px solid"
-                  borderColor={borderColor}
-                  borderRadius="md"
-                  bg={bgPurple}
-                  direction="column"
-                  gap={2}
-                >
-                  <Flex align="center" gap={2}>
-                    <Badge colorScheme="purple" bg={badgeBgDisplay}>
-                      Display
-                    </Badge>
-                    {fechaDisplay && (
-                      <>
-                        <Icon as={FaCalendarAlt} />
-                        <Text fontSize="sm">{fechaDisplay}</Text>
-                      </>
-                    )}
-                  </Flex>
-                  {pedido.comentarioDisplay && (
-                    <Flex align="flex-start" gap={2}>
-                      <Icon as={FaCommentDots} />
-                      <Text fontSize="sm" color={commentTextC}>
-                        {pedido.comentarioDisplay.trim()}
-                      </Text>
-                    </Flex>
-                  )}
-                </Flex>
-                <Divider borderColor={borderColor} />
-              </>
-            ) : null}
-
-            {/* Sección para agregar producto */}
-            <Flex
-              direction={{ base: "column", md: "row" }}
-              gap={3}
-              align="center"
-              mb={2}
-            >
-              <Box minW={{ base: "100%", md: "350px" }}>
-                <ProductoSelector
-                  deudorId={pedido.deudorId}
-                  onSelect={(
-                    productoId,
-                    nombreProducto,
-                    cantidadDisponible,
-                    codigo
-                  ) => {
-                    setNewProducto((prev) => ({
-                      ...prev,
-                      productoId,
-                      nombreProducto,
-                      cantidadDisponible,
-                      codigo,
-                    }));
-                  }}
-                  reset={resetFields}
-                />
-              </Box>
-              <Box minW={{ base: "100%", md: "120px" }}>
-                <input
-                  type="number"
-                  min={1}
-                  max={newProducto.cantidadDisponible || undefined}
-                  value={cantidadAgregar}
-                  onChange={(e) => setCantidadAgregar(e.target.value)}
-                  placeholder="Cantidad"
-                  style={{
-                    width: "100%",
-                    padding: "6px",
-                    borderRadius: "6px",
-                    border: "1px solid #ccc",
-                  }}
-                  disabled={!newProducto.productoId}
-                />
-              </Box>
-              <Button
-                colorScheme="teal"
-                onClick={handleAddProducto}
-                isLoading={loading}
-                disabled={!newProducto.productoId || !cantidadAgregar}
-              >
-                Agregar producto
-              </Button>
-            </Flex>
-
-            {/* Lista editable de productos */}
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Código</Th>
-                  <Th>Producto</Th>
-                  <Th>Cantidad</Th>
-                  <Th>Acciones</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {detallesLocal.map((producto) => (
-                  <Tr key={producto.id}>
-                    <Td>{producto.codigo || "Sin código"}</Td>
-                    <Td>{producto.nombreProducto}</Td>
-                    <Td>
-                      <input
-                        type="number"
-                        min={1}
-                        value={
-                          editCantidad[producto.id] !== undefined
-                            ? editCantidad[producto.id]
-                            : producto.cantidad
-                        }
-                        onChange={(e) =>
-                          handleCantidadChange(producto.id, e.target.value)
-                        }
-                        onBlur={() => handleCantidadConfirm(producto.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter")
-                            handleCantidadConfirm(producto.id);
-                        }}
-                        style={{
-                          width: "70px",
-                          padding: "4px",
-                          borderRadius: "6px",
-                          border: "1px solid #ccc",
-                        }}
-                      />
-                    </Td>
-                    <Td>
-                      <Button
-                        colorScheme="red"
-                        size="xs"
-                        onClick={() => handleRemoveProducto(producto.id)}
-                        isLoading={loading}
-                      >
-                        Eliminar
-                      </Button>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
+          <VStack spacing={0} align="stretch">
+            <PedidoInfoDisplay pedido={pedido} />
+            {isEditable && (
+              <AgregarProductoBar
+                newProducto={{ ...newProducto, deudorId: pedido.deudorId }}
+                setNewProducto={setNewProducto}
+                cantidadAgregar={cantidadAgregar}
+                setCantidadAgregar={setCantidadAgregar}
+                handleAddProducto={handleAddProducto}
+                loading={loading}
+                resetFields={resetFields}
+              />
+            )}
+            <DetallesProductosTable
+              detallesLocal={detallesLocal}
+              editCantidad={editCantidad}
+              handleCantidadChange={
+                isEditable ? handleCantidadChange : () => {}
+              }
+              handleCantidadConfirm={
+                isEditable ? handleCantidadConfirm : () => {}
+              }
+              handleRemoveProducto={
+                isEditable ? handleRemoveProducto : () => {}
+              }
+              loading={loading}
+              isEditable={isEditable}
+            />
           </VStack>
         </ModalBody>
-
         <ModalFooter>
           <Button onClick={onClose} colorScheme="green" variant="outline">
             Cerrar
@@ -383,6 +292,8 @@ DetallesModal.propTypes = {
     comentario: PropTypes.string,
     fechaOrdenDisplay: PropTypes.string,
     comentarioDisplay: PropTypes.string,
+    deudorId: PropTypes.number,
+    tiendaId: PropTypes.number,
   }),
 };
 

@@ -47,7 +47,7 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
       .filter((it) => {
         // Handle both single deudor (deuId, deudor.id) and multiple deudores (deudores array)
         if (it.deudores && it.deudores.length > 0) {
-          return it.deudores.some(d => d.id === dId);
+          return it.deudores.some((d) => d.id === dId);
         }
         const singleDeudorId = it.deuId ?? it.deudor?.id ?? null;
         return singleDeudorId === dId;
@@ -119,10 +119,20 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
   const disabled = !deudorId;
 
   return (
-    <Flex pt="2" justify="start" align="center" w="full" flexDir="column">
-      <FormControl>
-        <HStack spacing={2} w="full" align="center" position="relative">
-          <Box position="relative">
+    <Flex
+      pt="2"
+      justify="start"
+      align="center"
+      w="auto"
+      maxW={{ base: "100%", sm: "240px", md: "320px" }}
+      flexDir="column"
+    >
+      <FormControl w="100%">
+        <HStack spacing={2} w="100%" align="center" position="relative">
+          <Box
+            position="relative"
+            w={{ base: "100%", sm: "220px", md: "280px" }}
+          >
             <AutoComplete openOnFocus>
               <AutoCompleteInput
                 variant="outline"
@@ -134,7 +144,7 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
                 value={inputValue}
                 onChange={handleInputChange}
                 size="sm"
-                w={{ base: "full", md: "480px" }}
+                w={{ base: "100%", sm: "220px", md: "280px" }}
                 position="relative"
                 isDisabled={disabled}
               />
@@ -149,12 +159,12 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
                 borderWidth="1px"
                 borderRadius="md"
                 boxShadow="md"
-                minW="300px"
-                maxW="calc(100vw - 20px)"
+                minW="180px"
+                maxW="320px"
                 maxHeight="50vh"
                 overflowY="auto"
                 overflowX="hidden"
-                w="full"
+                w="100%"
               >
                 {renderItems.length === 0 ? (
                   <Box px={3} py={2}>
