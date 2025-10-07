@@ -58,7 +58,7 @@ export default function ConfirmExportDialog({
                 <Text as="span" fontWeight="bold">
                   {pedidosCount}
                 </Text>{" "}
-                pedido(s) se generará el Excel ({textoFormato}).
+                pedido(s) se generará el Excel.
               </Text>
               <Text>¿Quieres continuar?</Text>
             </VStack>
