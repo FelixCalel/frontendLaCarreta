@@ -118,20 +118,25 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
 
   const disabled = !deudorId;
 
+  // Detecta si es móvil
+  const isMobile = window.innerWidth <= 768;
+
   return (
     <Flex
       pt="2"
       justify="start"
       align="center"
       w="auto"
-      maxW={{ base: "100%", sm: "240px", md: "320px" }}
+      maxW={isMobile ? "100%" : "300px"}
       flexDir="column"
     >
       <FormControl w="100%">
         <HStack spacing={2} w="100%" align="center" position="relative">
           <Box
             position="relative"
-            w={{ base: "100%", sm: "220px", md: "280px" }}
+            w={isMobile ? "260px" : "300px"}
+            minW={isMobile ? "220px" : "300px"}
+            maxW={isMobile ? "100%" : "300px"}
           >
             <AutoComplete openOnFocus>
               <AutoCompleteInput
@@ -143,8 +148,10 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
                 }
                 value={inputValue}
                 onChange={handleInputChange}
-                size="sm"
-                w={{ base: "100%", sm: "220px", md: "280px" }}
+                size={isMobile ? "md" : "lg"}
+                w={isMobile ? "260px" : "300px"}
+                fontSize={isMobile ? "1.1rem" : "1.15rem"}
+                height={isMobile ? "44px" : "48px"}
                 position="relative"
                 isDisabled={disabled}
               />
@@ -159,12 +166,12 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
                 borderWidth="1px"
                 borderRadius="md"
                 boxShadow="md"
-                minW="180px"
-                maxW="320px"
+                minW={isMobile ? "220px" : "300px"}
+                maxW={isMobile ? "100%" : "300px"}
                 maxHeight="50vh"
                 overflowY="auto"
                 overflowX="hidden"
-                w="100%"
+                w={isMobile ? "260px" : "300px"}
               >
                 {renderItems.length === 0 ? (
                   <Box px={3} py={2}>
@@ -194,7 +201,7 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
           <IconButton
             aria-label="Limpiar campo"
             icon={<CloseIcon />}
-            size="sm"
+            size={isMobile ? "md" : "sm"}
             onClick={handleClearInput}
             colorScheme="red"
             variant="outline"
