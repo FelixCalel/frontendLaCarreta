@@ -173,14 +173,37 @@ export const LoginForm = () => {
         // Intercambiar token de Firebase por JWT del backend
         console.log("Enviando token de Firebase para intercambio:", token);
         try {
-          const tokenExchangeResp = await axios.post(
-            `${BASE_URL}/usuarios/exchange-token`,
-            {
-              firebaseToken: token,
-            }
-          );
+          // Primer intento: endpoint de usuarios (entorno local/dev)
+          let access_token = null;
+          let refresh_token = null;
 
-          const { access_token, refresh_token } = tokenExchangeResp.data;
+          try {
+            const tokenExchangeResp = await axios.post(
+              `${BASE_URL}/usuarios/exchange-token`,
+              {
+                firebaseToken: token,
+              }
+            );
+            access_token = tokenExchangeResp?.data?.access_token ?? null;
+            refresh_token = tokenExchangeResp?.data?.refresh_token ?? null;
+          } catch (e) {
+            // Fallback: algunos entornos exponen /login/firebase
+            const status = e?.response?.status;
+            if (status === 404 || status === 401 || status === 405) {
+              const fbResp = await axios.post(`${BASE_URL}/login/firebase`, {
+                idToken: token,
+              });
+              access_token =
+                fbResp?.data?.accessToken ?? fbResp?.data?.access_token ?? null;
+              refresh_token =
+                fbResp?.data?.refreshToken ??
+                fbResp?.data?.refresh_token ??
+                null;
+            } else {
+              throw e;
+            }
+          }
+
           console.log("JWT del backend recibido:", access_token);
 
           if (!access_token) {
