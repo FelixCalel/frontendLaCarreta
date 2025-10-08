@@ -220,7 +220,12 @@ export const LoginForm = () => {
           // Ya no forzamos recarga: el interceptor de axios adjunta el token dinámicamente
         } catch (tokenError) {
           console.error("Error al intercambiar token:", tokenError);
-          setError("Error al obtener token de autenticación.");
+          const msg =
+            tokenError?.response?.data?.message ||
+            tokenError?.response?.data?.error ||
+            tokenError?.message ||
+            "Error al obtener token de autenticación.";
+          setError(msg);
           setIsLoading(false);
           return;
         }
@@ -229,7 +234,12 @@ export const LoginForm = () => {
       }
     } catch (err) {
       console.error("Error al iniciar sesión:", err);
-      setError("Error al iniciar sesión. Verifica tus credenciales.");
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Error al iniciar sesión. Verifica tus credenciales.";
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
