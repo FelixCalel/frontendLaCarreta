@@ -149,7 +149,8 @@ export const LoginForm = () => {
         return;
       }
 
-      const token = await user.getIdToken();
+      // Forzar refresh del ID token para evitar "auth/id-token-expired" en servidores con reloj estricto
+      let token = await user.getIdToken(true);
       const resp = await axios.post(`${BASE_URL}/usuarios/datos`, {
         correo: user.email,
       });
@@ -173,34 +174,48 @@ export const LoginForm = () => {
         // Intercambiar token de Firebase por JWT del backend
         console.log("Enviando token de Firebase para intercambio:", token);
         try {
-          // Primer intento: endpoint de usuarios (entorno local/dev)
-          let access_token = null;
-          let refresh_token = null;
-
-          try {
-            const tokenExchangeResp = await axios.post(
-              `${BASE_URL}/usuarios/exchange-token`,
-              {
-                firebaseToken: token,
+          // Helper para hacer intercambio con fallback
+          const doExchange = async (idToken) => {
+            let access_token = null;
+            let refresh_token = null;
+            try {
+              const tokenExchangeResp = await axios.post(
+                `${BASE_URL}/usuarios/exchange-token`,
+                { firebaseToken: idToken }
+              );
+              access_token = tokenExchangeResp?.data?.access_token ?? null;
+              refresh_token = tokenExchangeResp?.data?.refresh_token ?? null;
+            } catch (e1) {
+              const status = e1?.response?.status;
+              if (status === 404 || status === 401 || status === 405) {
+                const fbResp = await axios.post(`${BASE_URL}/login/firebase`, {
+                  idToken: idToken,
+                });
+                access_token =
+                  fbResp?.data?.accessToken ??
+                  fbResp?.data?.access_token ??
+                  null;
+                refresh_token =
+                  fbResp?.data?.refreshToken ??
+                  fbResp?.data?.refresh_token ??
+                  null;
+              } else {
+                throw e1;
               }
-            );
-            access_token = tokenExchangeResp?.data?.access_token ?? null;
-            refresh_token = tokenExchangeResp?.data?.refresh_token ?? null;
-          } catch (e) {
-            // Fallback: algunos entornos exponen /login/firebase
-            const status = e?.response?.status;
-            if (status === 404 || status === 401 || status === 405) {
-              const fbResp = await axios.post(`${BASE_URL}/login/firebase`, {
-                idToken: token,
-              });
-              access_token =
-                fbResp?.data?.accessToken ?? fbResp?.data?.access_token ?? null;
-              refresh_token =
-                fbResp?.data?.refreshToken ??
-                fbResp?.data?.refresh_token ??
-                null;
-            } else {
-              throw e;
+            }
+            return { access_token, refresh_token };
+          };
+
+          // Primer intento con el token ya refrescado
+          let { access_token, refresh_token } = await doExchange(token);
+
+          // Si aún así da 401 (posible skew de reloj), forzar refresh y reintentar una vez
+          if (!access_token) {
+            try {
+              token = await user.getIdToken(true);
+              ({ access_token, refresh_token } = await doExchange(token));
+            } catch (e2) {
+              throw e2;
             }
           }
 
