@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import {
   Tr,
@@ -11,16 +11,23 @@ import {
   Text,
   Input,
   useColorModeValue,
+  Button,
+  useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
 import { ChevronRightIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import {
   useGetDetallesYProduccionQuery,
   useUpdatePedidoProduccionMutation,
   useGetRecetaByPedidoQuery,
+  useCreateRechazoMutation,
+  useUpdateRechazoMutation,
+  useGetAlmacenesQuery,
 } from "../../services/pedidoProductionApi";
 import { OrderDetailsTable } from "./OrderDetailsTable";
 import { RecetaTable } from "./RecetaTable";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { RechazoModal } from "../modals/RechazoModal";
 
 const FIELD_LABELS = {
   mpUtilizada: "MP Utilizada",
@@ -28,7 +35,6 @@ const FIELD_LABELS = {
   mp2da: "MP 2da.",
   mp3ra: "MP 3ra.",
   mpSobrante: "MP Sobrante",
-  rechazo: "Rechazo",
   basura: "Basura",
   trazabilidad_Prod: "Trazabilidad",
 };
@@ -39,30 +45,38 @@ const FIELD_SPECS = {
   mp2da: { w: "70px", type: "number" },
   mp3ra: { w: "70px", type: "number" },
   mpSobrante: { w: "70px", type: "number" },
-  rechazo: { w: "70px", type: "number" },
   basura: { w: "70px", type: "number" },
   trazabilidad_Prod: { w: "70px", type: "text" },
 };
 
-export const OrderRow = ({ order, isExpanded, onToggle }) => {
+export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
   const shouldFetch = isExpanded;
-  const recetaArg = shouldFetch ? order.id : skipToken;
 
-  console.log("[OrderRow] getRecetaByPedido arg =>", recetaArg);
+  const { data: almacenes = [], isLoading: loadingAlmacenes } = useGetAlmacenesQuery();
+
+  const recetaArg = shouldFetch ? { pedidoId: order.id } : skipToken;
+
   const {
     data: receta = [],
     isFetching: loadingReceta,
     isSuccess,
     isError,
     error,
-    requestId,
   } = useGetRecetaByPedidoQuery(recetaArg);
   const hasReceta = receta.length > 0;
   const [updatePedido] = useUpdatePedidoProduccionMutation();
+  const [createRechazo, { isLoading: isCreatingRechazo }] =
+    useCreateRechazoMutation();
+  const [updateRechazo, { isLoading: isUpdatingRechazo }] =
+    useUpdateRechazoMutation();
   const [isPTMQ, setIsPTMQ] = useState(order.ptmq ?? false);
-  const [cantidadLocal, setCantidadLocal] = useState(order.cantidad || 0);
+  const [cantidadLocal, setCantidadLocal] = useState(
+    Number(order.cantidad) || 0
+  );
   const [faltanteLocal, setFaltanteLocal] = useState(
-    (order.cantidadUnidad ?? 0) - (order.cantidad || 0)
+    (Number(order.cantidadUnidad) ?? 0) - (Number(order.cantidad) || 0)
   );
   const {
     data: details = [],
@@ -70,23 +84,14 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
     refetch: refetchDetalles,
   } = useGetDetallesYProduccionQuery(shouldFetch ? order.id : skipToken);
   const [prodFields, setProdFields] = useState({
-    mpUtilizada: order.mpUtilizada ?? 0,
-    mp1ra: order.mp1ra ?? 0,
-    mp2da: order.mp2da ?? 0,
-    mp3ra: order.mp3ra ?? 0,
-    mpSobrante: order.mpSobrante ?? 0,
-    rechazo: order.rechazo ?? 0,
-    basura: order.basura ?? 0,
+    mpUtilizada: Number(order.mpUtilizada) ?? 0,
+    mp1ra: Number(order.mp1ra) ?? 0,
+    mp2da: Number(order.mp2da) ?? 0,
+    mp3ra: Number(order.mp3ra) ?? 0,
+    mpSobrante: Number(order.mpSobrante) ?? 0,
+    basura: Number(order.basura) ?? 0,
     trazabilidad_Prod: order.trazabilidad_Prod ?? "",
   });
-
-  useEffect(() => {
-    if (loadingReceta) {
-      console.log("[OrderRow] FETCHING /receta/pedido/", order.id, {
-        requestId,
-      });
-    }
-  }, [loadingReceta, order.id, requestId]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -98,8 +103,10 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
   }, [isSuccess, isError, receta, error]);
 
   useEffect(() => {
-    setCantidadLocal(order.cantidad || 0);
-    setFaltanteLocal((order.cantidadUnidad ?? 0) - (order.cantidad || 0));
+    setCantidadLocal(Number(order.cantidad) || 0);
+    setFaltanteLocal(
+      (Number(order.cantidadUnidad) ?? 0) - (Number(order.cantidad) || 0)
+    );
   }, [order.cantidad, order.cantidadUnidad]);
 
   useEffect(() => setIsPTMQ(order.ptmq), [order.ptmq]);
@@ -127,13 +134,12 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
 
   useEffect(() => {
     setProdFields({
-      mpUtilizada: order.mpUtilizada ?? "",
-      mp1ra: order.mp1ra ?? "",
-      mp2da: order.mp2da ?? "",
-      mp3ra: order.mp3ra ?? "",
-      mpSobrante: order.mpSobrante ?? "",
-      rechazo: order.rechazo ?? "",
-      basura: order.basura ?? "",
+      mpUtilizada: Number(order.mpUtilizada) ?? 0,
+      mp1ra: Number(order.mp1ra) ?? 0,
+      mp2da: Number(order.mp2da) ?? 0,
+      mp3ra: Number(order.mp3ra) ?? 0,
+      mpSobrante: Number(order.mpSobrante) ?? 0,
+      basura: Number(order.basura) ?? 0,
       trazabilidad_Prod: order.trazabilidad_Prod ?? "",
     });
   }, [
@@ -142,42 +148,61 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
     order.mp2da,
     order.mp3ra,
     order.mpSobrante,
-    order.rechazo,
     order.basura,
     order.trazabilidad_Prod,
   ]);
 
-  const handleCantidadChange = (raw) => {
-    const maximo = order.cantidadUnidad ?? 0;
-    const nueva = Math.min(Math.max(0, raw), maximo);
-    const nuevoFalt = maximo - nueva;
-
-    setCantidadLocal(nueva);
-    setFaltanteLocal(nuevoFalt);
-
-    updatePedido({
-      id: order.id,
-      data: { cantidad: nueva, faltante: nuevoFalt },
-    })
-      .unwrap()
-      .catch(() => {
-        const revert = order.cantidad || 0;
-        setCantidadLocal(revert);
-        setFaltanteLocal((order.cantidadUnidad ?? 0) - revert);
-      });
-  };
-
   const handleFieldChange = (field, raw) => {
     const isText = field === "trazabilidad_Prod";
     let value = isText ? raw : Number(raw);
+
+    const fieldsToValidate = [
+      "mpUtilizada",
+      "mp1ra",
+      "mp2da",
+      "mp3ra",
+      "mpSobrante",
+      "basura",
+    ];
+
     if (!isText) {
-      if (isNaN(value) || value < 0) value = 0;
+      if (isNaN(value) || value < 0) {
+        value = 0;
+      }
+
+      if (fieldsToValidate.includes(field)) {
+        const maxAllowed = Number(order.cantidadUnidad) ?? 0;
+        if (value > maxAllowed) {
+          toast({
+            title: "Valor inválido",
+            description: `El valor no puede ser mayor que "Solic. Ventas" (${maxAllowed}).`,
+            status: "error",
+            duration: 4000,
+            isClosable: true,
+          });
+          return;
+        }
+      }
     }
 
     setProdFields((prev) => ({ ...prev, [field]: value }));
+
+    const updateData = { [field]: value };
+
+    if (field === "mpUtilizada") {
+      const nuevaCantidad = value;
+      const nuevoFaltante = (Number(order.cantidadUnidad) ?? 0) - nuevaCantidad;
+
+      setCantidadLocal(nuevaCantidad);
+      setFaltanteLocal(nuevoFaltante);
+
+      updateData.cantidad = nuevaCantidad;
+      updateData.faltante = nuevoFaltante;
+    }
+
     updatePedido({
       id: order.id,
-      data: { [field]: value },
+      data: updateData,
     })
       .unwrap()
       .catch(() => {
@@ -185,6 +210,13 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
           ...prev,
           [field]: order[field] ?? (isText ? "" : 0),
         }));
+        if (field === "mpUtilizada") {
+          const revertCantidad = Number(order.cantidad) || 0;
+          setCantidadLocal(revertCantidad);
+          setFaltanteLocal(
+            (Number(order.cantidadUnidad) ?? 0) - revertCantidad
+          );
+        }
       });
   };
 
@@ -192,9 +224,38 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
     updatePedido({ id: order.id, data: { completo: checked } }).unwrap();
   };
 
+  const handleSaveRechazo = async ({ formData, existingRechazo }) => {
+    try {
+      if (existingRechazo) {
+        await updateRechazo({
+          id: existingRechazo.id,
+          data: formData,
+          id_pedidoProd: order.id,
+        }).unwrap();
+      } else {
+        await createRechazo({ ...formData, id_pedidoProd: order.id }).unwrap();
+      }
+      onClose();
+    } catch (err) {
+      console.error("Failed to save rechazo:", err);
+    }
+  };
+
   const stripeColor = useColorModeValue("gray.50", "gray.800");
   const hoverBg = useColorModeValue("gray.200", "gray.600");
   const panelBg = useColorModeValue("gray.50", "gray.800");
+
+  const memoizedRecetaTable = useMemo(
+    () => (
+      <RecetaTable
+        pedidoId={order.id}
+        receta={receta}
+        isLoading={loadingReceta}
+        almacenes={almacenes}
+      />
+    ),
+    [order.id, receta, loadingReceta, almacenes]
+  );
 
   return (
     <>
@@ -202,6 +263,7 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
         bg={stripeColor}
         _hover={{ bg: hoverBg }}
         transition="background 0.2s"
+        sx={sx}
       >
         <Td px={2} py={2}>
           <IconButton
@@ -232,15 +294,7 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
           />
         </Td>
         <Td px={2} py={2} textAlign="center">
-          <Input
-            size="sm"
-            type="number"
-            min={0}
-            max={order.cantidadUnidad ?? 0}
-            value={cantidadLocal}
-            onChange={(e) => handleCantidadChange(Number(e.target.value))}
-            w="60px"
-          />
+          <Text>{cantidadLocal}</Text>
         </Td>
         <Td px={2} py={2} textAlign="center">
           {faltanteLocal}
@@ -265,7 +319,6 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
                     w: "80px",
                     type: "number",
                   };
-                  const isTraz = field === "trazabilidad_Prod";
 
                   return (
                     <Box key={field} flex="0 0 auto" whiteSpace="nowrap">
@@ -278,25 +331,23 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
                         w={spec.w}
                         type={spec.type}
                         value={value}
-                        isReadOnly={isTraz}
-                        variant={isTraz ? "unstyled" : "outline"}
-                        focusBorderColor={isTraz ? "transparent" : "green.400"}
-                        _focus={
-                          isTraz
-                            ? { boxShadow: "none", borderColor: "transparent" }
-                            : {}
+                        onChange={(e) =>
+                          handleFieldChange(field, e.target.value)
                         }
-                        onChange={(e) => {
-                          if (isTraz) return;
-                          const raw = e.target.value;
-                          setProdFields((prev) => ({ ...prev, [field]: raw }));
-                          handleFieldChange(field, raw);
-                        }}
                         px={2}
+                        focusBorderColor="green.400"
                       />
                     </Box>
                   );
                 })}
+                <Box flex="0 0 auto" whiteSpace="nowrap">
+                  <Text fontWeight="semibold" mb={1}>
+                    Rechazo:
+                  </Text>
+                  <Button size="xs" h="26px" onClick={onOpen}>
+                    Gestionar
+                  </Button>
+                </Box>
               </Flex>
 
               <OrderDetailsTable
@@ -306,15 +357,27 @@ export const OrderRow = ({ order, isExpanded, onToggle }) => {
                 isPTMQ={isPTMQ}
                 onTogglePTMQ={handlePTMQToggle}
               />
-              {hasReceta && (
-                <RecetaTable
-                  pedidoId={order.id}
-                  receta={receta}
-                  isLoading={loadingReceta}
-                />
+              {hasReceta ? (
+                memoizedRecetaTable
+              ) : (
+                <Box py={4} textAlign="center" mt={4}>
+                  <Text color="gray.500" fontSize="sm">
+                    No hay una receta definida para este producto.
+                  </Text>
+                </Box>
               )}
             </Box>
           </Collapse>
+          {isOpen && (
+            <RechazoModal
+              isOpen={isOpen}
+              onClose={onClose}
+              pedidoProduccionId={order.id}
+              onSave={handleSaveRechazo}
+              isLoading={isCreatingRechazo || isUpdatingRechazo}
+              trazabilidadPadre={prodFields.trazabilidad_Prod}
+            />
+          )}
         </Td>
       </Tr>
     </>
@@ -336,11 +399,12 @@ OrderRow.propTypes = {
     mp2da: PropTypes.number,
     mp3ra: PropTypes.number,
     mpSobrante: PropTypes.number,
-    rechazo: PropTypes.number,
+    rechazoId: PropTypes.number,
     basura: PropTypes.number,
     trazabilidad_Prod: PropTypes.string,
     ptmq: PropTypes.bool,
   }).isRequired,
   isExpanded: PropTypes.bool.isRequired,
   onToggle: PropTypes.func.isRequired,
+  sx: PropTypes.object,
 };

@@ -6,7 +6,7 @@ export const AuthWrapper = ({ children }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("access_token");
     const nombre = localStorage.getItem("nombreUsuario");
     const correo = localStorage.getItem("correoUsuario");
 

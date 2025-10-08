@@ -7,18 +7,41 @@ import {
   Td,
   Button,
   Tooltip,
+  Checkbox,
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-const AprobadosTable = ({ pedidosAprobados, handleVerDetalles }) => {
-
+const AprobadosTable = ({
+  pedidosAprobados,
+  handleVerDetalles,
+  selectedPedidosToRevert = [],
+  onTogglePedidoSelection,
+  onSelectAllPedidos,
+}) => {
+  const isAllSelected =
+    pedidosAprobados.length > 0 &&
+    selectedPedidosToRevert.length === pedidosAprobados.length;
+  const isIndeterminate =
+    selectedPedidosToRevert.length > 0 &&
+    selectedPedidosToRevert.length < pedidosAprobados.length;
 
   return (
     <Table variant="striped" colorScheme="gray">
       <Thead>
         <Tr>
+          <Th>
+            <Checkbox
+              isChecked={isAllSelected}
+              isIndeterminate={isIndeterminate}
+              onChange={(e) =>
+                onSelectAllPedidos && onSelectAllPedidos(e.target.checked)
+              }
+            >
+              Regresar
+            </Checkbox>
+          </Th>
           <Th>ID</Th>
           <Th>Deudor</Th>
           <Th>Tienda</Th>
@@ -30,6 +53,15 @@ const AprobadosTable = ({ pedidosAprobados, handleVerDetalles }) => {
         {pedidosAprobados.length > 0 ? (
           pedidosAprobados.map((pedido) => (
             <Tr key={pedido.id}>
+              <Td>
+                <Checkbox
+                  isChecked={selectedPedidosToRevert.includes(pedido.id)}
+                  onChange={() =>
+                    onTogglePedidoSelection &&
+                    onTogglePedidoSelection(pedido.id)
+                  }
+                />
+              </Td>
               <Td>{pedido.id}</Td>
               <Td>{pedido.nombreDeu}</Td>
               <Td>{pedido.nombreTienda}</Td>
@@ -53,7 +85,7 @@ const AprobadosTable = ({ pedidosAprobados, handleVerDetalles }) => {
           ))
         ) : (
           <Tr>
-            <Td colSpan="5" align="center">
+            <Td colSpan="6" align="center">
               No hay pedidos aprobados.
             </Td>
           </Tr>
@@ -73,7 +105,9 @@ AprobadosTable.propTypes = {
     })
   ).isRequired,
   handleVerDetalles: PropTypes.func.isRequired,
-  currentPage: PropTypes.number.isRequired,
+  selectedPedidosToRevert: PropTypes.arrayOf(PropTypes.number),
+  onTogglePedidoSelection: PropTypes.func,
+  onSelectAllPedidos: PropTypes.func,
 };
 
 export default AprobadosTable;

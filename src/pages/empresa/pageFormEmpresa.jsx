@@ -51,6 +51,7 @@ import {
   sincronizarItems,
   importarRecetas,
 } from "../../store/Empresa/thunks";
+import BotonSincronizarReceta from "../../components/empresa/BotonSincronizarReceta";
 
 const MotionBox = motion(Box);
 
@@ -62,8 +63,7 @@ const PageFormEmpresa = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [warehouseModalOpen, setWarehouseModalOpen] = useState(false);
   const [warehouses, setWarehouses] = useState("");
-  const [recetaModalOpen, setRecetaModalOpen] = useState(false);
-  const [warehousesReceta, setWarehousesReceta] = useState("");
+  
   const [currentEmpresa, setCurrentEmpresa] = useState({
     id: "",
     nombre: "",
@@ -204,47 +204,7 @@ const PageFormEmpresa = () => {
     }
   };
 
-  const handleSyncReceta = async () => {
-    const emp = data.find((e) => e.id === currentEmpresa.id);
-    if (!emp) return;
-
-    const formattedWarehouses = buildWarehousesParam(warehousesReceta);
-    if (!formattedWarehouses) {
-      toast({ title: "Ingresa al menos un almacén", status: "warning" });
-      return;
-    }
-
-    setSyncDisabled((prev) => ({ ...prev, [`receta-${emp.id}`]: true }));
-    toast({ title: "Sincronizando recetas…", status: "info", duration: 15000 });
-
-    try {
-      const result = await dispatch(
-        importarRecetas({
-          dbsap: emp.baseDatos,
-          ipsap: emp.ipBaseDatos,
-          warehouses: formattedWarehouses,
-        })
-      );
-      if (result.error) throw result.error;
-
-      toast({
-        title: "Recetas sincronizadas",
-        status: "success",
-        duration: 5000,
-      });
-    } catch (e) {
-      toast({
-        title: "Error al sincronizar recetas",
-        status: "error",
-        duration: 5000,
-      });
-    } finally {
-      setTimeout(() => {
-        setSyncDisabled((prev) => ({ ...prev, [`receta-${emp.id}`]: false }));
-      }, 5000);
-      setRecetaModalOpen(false);
-    }
-  };
+  
 
   const handleSyncWithWarehouses = async () => {
     const empresa = data.find((emp) => emp.id === currentEmpresa.id);
@@ -502,19 +462,7 @@ const PageFormEmpresa = () => {
                     isDisabled={syncDisabled[empresa.id]}
                   />
                 </Tooltip>
-                <Tooltip label="Sincronizar Recetas">
-                  <IconButton
-                    icon={<FaSyncAlt />}
-                    onClick={() => {
-                      setCurrentEmpresa(empresa);
-                      setRecetaModalOpen(true);
-                    }}
-                    variant="outline"
-                    colorScheme="purple"
-                    isDisabled={syncDisabled[`receta-${empresa.id}`]}
-                    isLoading={syncDisabled[`receta-${empresa.id}`]}
-                  />
-                </Tooltip>
+                <BotonSincronizarReceta empresa={empresa} />
               </Stack>
             </VStack>
           </MotionBox>
@@ -669,36 +617,7 @@ const PageFormEmpresa = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      <Modal isOpen={recetaModalOpen} onClose={() => setRecetaModalOpen(false)}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Sincronizar Recetas</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl>
-              <FormLabel>Almacenes para receta (coma separado)</FormLabel>
-              <Input
-                placeholder="CA-0300, CA-0100, ..."
-                value={warehousesReceta}
-                onChange={(e) => setWarehousesReceta(e.target.value)}
-              />
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              colorScheme="purple"
-              mr={3}
-              onClick={handleSyncReceta}
-              isDisabled={syncDisabled[`receta-${currentEmpresa.id}`]}
-            >
-              Sincronizar Recetas
-            </Button>
-            <Button variant="ghost" onClick={() => setRecetaModalOpen(false)}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      
       <AlertDialog
         isOpen={isDeleteOpen}
         leastDestructiveRef={cancelRef}

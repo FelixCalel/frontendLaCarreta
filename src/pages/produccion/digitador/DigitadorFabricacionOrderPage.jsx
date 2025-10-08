@@ -10,11 +10,15 @@ import {
   InputLeftElement,
   Select,
   useColorModeValue,
+  ButtonGroup,
+  Button,
+  Heading,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { FaFileUpload } from "react-icons/fa";
 import { useGetPedidosAgrupadosQuery } from "../../../services/pedidoProductionApi";
 import { GroupCardGrid } from "../../../components/production/digitador/FabricacionCardGrid";
+import { ConsolidatedOrdersView } from "../../../components/production/ConsolidatedOrdersView";
 
 const DigitadorFabricacionOrdersPage = () => {
   const { data: groups = [], isLoading, error } = useGetPedidosAgrupadosQuery();
@@ -24,7 +28,22 @@ const DigitadorFabricacionOrdersPage = () => {
       groups
         .map((g) => ({
           ...g,
-          items: g.items.filter((it) => it.etapaId === 2),
+          items: g.items
+            .filter((it) => it.etapaId === 2)
+            .map((item) => ({
+              ...item,
+              // Ensure all numeric fields are numbers
+              cantidadUnidad: Number(item.cantidadUnidad ?? 0),
+              cantidad: Number(item.cantidad ?? 0),
+              faltante: Number(item.faltante ?? 0),
+              mpUtilizada: Number(item.mpUtilizada ?? 0),
+              mp1ra: Number(item.mp1ra ?? 0),
+              mp2da: Number(item.mp2da ?? 0),
+              mp3ra: Number(item.mp3ra ?? 0),
+              mpSobrante: Number(item.mpSobrante ?? 0),
+              rechazo: Number(item.rechazo ?? 0),
+              basura: Number(item.basura ?? 0),
+            })),
         }))
         .filter((g) => g.items.length > 0),
     [groups]
@@ -33,6 +52,7 @@ const DigitadorFabricacionOrdersPage = () => {
   const [term, setTerm] = useState("");
   const [date, setDate] = useState("");
   const [status, setStatus] = useState("");
+  const [viewMode, setViewMode] = useState("byOrder");
   const bgColor = useColorModeValue("white", "gray.800");
 
   const filtered = useMemo(
@@ -48,6 +68,36 @@ const DigitadorFabricacionOrdersPage = () => {
       }),
     [base, term, date, status]
   );
+
+  const consolidatedItems = useMemo(() => {
+    if (viewMode !== "consolidated") return [];
+
+    const allFilteredItems = filtered.flatMap((g) => g.items);
+    const itemsMap = new Map();
+
+    allFilteredItems.forEach((item) => {
+      const key = item.productoNombre;
+      if (itemsMap.has(key)) {
+        const existing = itemsMap.get(key);
+        existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
+        existing.cantidad += Number(item.cantidad ?? 0);
+        existing.originalItems.push(item);
+      } else {
+        itemsMap.set(key, {
+          ...item,
+          cantidadUnidad: Number(item.cantidadUnidad ?? 0),
+          cantidad: Number(item.cantidad ?? 0),
+          originalItems: [item],
+        });
+      }
+    });
+
+    return Array.from(itemsMap.values()).sort((a, b) =>
+      a.productoNombre.localeCompare(b.productoNombre, undefined, {
+        sensitivity: "base",
+      })
+    );
+  }, [filtered, viewMode]);
 
   if (isLoading) {
     return (
@@ -66,7 +116,30 @@ const DigitadorFabricacionOrdersPage = () => {
   }
 
   return (
-    <Box p={4}>
+    <Box p={2}>
+      <Heading size="lg" mb={4} textAlign="center">
+        {viewMode === "byOrder"
+          ? "Orden de Fabricación"
+          : "Consolidado de Fabricación"}
+      </Heading>
+
+      <Flex justify="center" mb={4}>
+        <ButtonGroup isAttached variant="outline">
+          <Button
+            onClick={() => setViewMode("byOrder")}
+            isActive={viewMode === "byOrder"}
+          >
+            Por Pedido
+          </Button>
+          <Button
+            onClick={() => setViewMode("consolidated")}
+            isActive={viewMode === "consolidated"}
+          >
+            Consolidado
+          </Button>
+        </ButtonGroup>
+      </Flex>
+
       <Flex
         wrap="wrap"
         gap={4}
@@ -107,11 +180,15 @@ const DigitadorFabricacionOrdersPage = () => {
         </Select>
       </Flex>
 
-      <GroupCardGrid
-        groups={filtered}
-        IconComponent={FaFileUpload}
-        title="Orden de fabricación"
-      />
+      {viewMode === "byOrder" ? (
+        <GroupCardGrid
+          groups={filtered}
+          IconComponent={FaFileUpload}
+          title="Orden de fabricación"
+        />
+      ) : (
+        <ConsolidatedOrdersView data={consolidatedItems} />
+      )}
     </Box>
   );
 };

@@ -14,10 +14,10 @@ import {
 } from "@chakra-ui/react";
 
 export const OrderDetailsTable = ({
-  details,
+  details = [],
   isLoading,
-  showPTMQ,
-  isPTMQ,
+  showPTMQ = true,
+  isPTMQ = false,
   onTogglePTMQ,
 }) => {
   const cardBg = useColorModeValue("white", "gray.800");
@@ -129,9 +129,4 @@ OrderDetailsTable.propTypes = {
   onTogglePTMQ: PropTypes.func,
 };
 
-OrderDetailsTable.defaultProps = {
-  details: [],
-  showPTMQ: true,
-  isPTMQ: false,
-  onTogglePTMQ: undefined,
-};
+

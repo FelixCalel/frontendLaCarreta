@@ -1,163 +1,272 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type {
-    Metadata,
-    PedidoProduccion,
-    DetalleProduccion,
-    UpdatePedidoDto,
-    PedidoAgrupado,
-    AvanzarEtapaPayload,
-    AvanceOK,
-    AvanzarEtapaDetallePayload,
-    AvanceMultiplesOK,
-    AvanzarMultiEtapaDetallePayload,
-    RecetaLinea,
-    UpdateRecetaLineaDto,
-} from '../models/pedidoProduction'
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import {
+  Metadata,
+  PedidoProduccion,
+  DetalleProduccion,
+  UpdatePedidoDto,
+  PedidoAgrupado,
+  AvanzarEtapaPayload,
+  AvanceOK,
+  AvanzarEtapaDetallePayload,
+  AvanceMultiplesOK,
+  AvanzarMultiEtapaDetallePayload,
+  RecetaLinea,
+  UpdateRecetaLineaDto,
+  Rechazo,
+  CreateRechazoDto,
+  UpdateRechazoDto,
+} from "../models/pedidoProduction";
+import { parseNumericFields } from "../utils/data-parser";
 
 export const pedidoProduccionApi = createApi({
-    reducerPath: 'pedidoProduccionApi',
-    baseQuery: fetchBaseQuery({
-        baseUrl: import.meta.env.VITE_API_URL,
+  reducerPath: "pedidoProduccionApi",
+  baseQuery: fetchBaseQuery({
+    baseUrl: import.meta.env.VITE_API_URL,
+  }),
+  tagTypes: [
+    "PedidoProduccion",
+    "DetalleProduccion",
+    "PedidoAgrupado",
+    "RecetaPedido",
+    "Rechazo",
+    "Almacen",
+  ],
+  endpoints: (builder) => ({
+    getAlmacenes: builder.query<ProdAlmacen[], void>({
+      query: () => "/api/almacen",
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "Almacen" as const, id })),
+              { type: "Almacen", id: "LIST" },
+            ]
+          : [{ type: "Almacen", id: "LIST" }],
     }),
-    tagTypes: ['PedidoProduccion', 'DetalleProduccion', 'PedidoAgrupado', 'RecetaPedido'],
-    endpoints: (builder) => ({
-
-        getPedidoProduccionMetadata: builder.query<Metadata[], void>({
-            query: () => '/pedidoProduccion/metadata',
-        }),
-
-        getAllPedidosProduccion: builder.query<PedidoProduccion[], void>({
-            query: () => '/pedidoProduccion',
-            providesTags: (result) =>
-                result
-                    ? [
-                        ...result.map(({ id }) => ({ type: 'PedidoProduccion' as const, id })),
-                        { type: 'PedidoProduccion', id: 'LIST' },
-                    ]
-                    : [{ type: 'PedidoProduccion', id: 'LIST' }],
-        }),
-
-        getPedidoProduccionById: builder.query<PedidoProduccion, number>({
-            query: (id) => `/pedidoProduccion/${id}`,
-            providesTags: (_res, _err, id) => [{ type: 'PedidoProduccion', id }],
-        }),
-
-        getDetallesYProduccion: builder.query<DetalleProduccion[], number>({
-            query: (id) => `/pedidoProduccion/${id}/detalles`,
-            providesTags: (_res, _err, id) => [{ type: 'DetalleProduccion', id }],
-        }),
-        updatePedidoProduccion: builder.mutation<PedidoProduccion, { id: number; data: UpdatePedidoDto }>({
-            query: ({ id, data }) => ({
-                url: `/pedidoProduccion/${id}`,
-                method: 'PUT',
-                body: data,
-            }),
-            invalidatesTags: (_res, _err, { id }) => [
-                { type: 'PedidoProduccion', id },
-                // **muy importante**: invalida la lista de grupos
-                { type: 'PedidoAgrupado', id: 'LIST' },
-            ],
-        }),
-
-
-        getPedidosAgrupados: builder.query<PedidoAgrupado[], void>({
-            query: () => '/pedidoProduccion/agrupados',
-            providesTags: (result) =>
-                result
-                    ? [
-                        ...result.map(({ pedidoId }) => ({
-                            type: 'PedidoAgrupado' as const,
-                            id: pedidoId,
-                        })),
-                        { type: 'PedidoAgrupado', id: 'LIST' },
-                    ]
-                    : [{ type: 'PedidoAgrupado', id: 'LIST' }],
-        }),
-
-        avanzarEtapa: builder.mutation<{ message: string }, AvanzarEtapaPayload>({
-            query: (body) => ({
-                url: '/lineaTiempo/avanzar-etapa',
-                method: 'POST',
-                body,
-            }),
-            invalidatesTags: (_r, _e, { pedidoId }) => [
-                { type: 'PedidoAgrupado', id: pedidoId },
-                { type: 'PedidoProduccion', id: pedidoId },
-                { type: 'DetalleProduccion', id: pedidoId },
-                { type: 'RecetaPedido', id: pedidoId },
-            ],
-        }),
-
-        avanzarEtapaDetalle: builder.mutation<AvanceOK, AvanzarEtapaDetallePayload>({
-            query: (body) => ({
-                url: '/lineaTiempoDetalle/avanzar',
-                method: 'POST',
-                body,
-            }),
-            invalidatesTags: (_r, _e, { detalleOrdenId }) => [
-                { type: 'DetalleProduccion', id: detalleOrdenId },
-            ],
-        }),
-
-        avanzarMultiEtapaDetalle: builder.mutation<
-            AvanceMultiplesOK,
-            AvanzarMultiEtapaDetallePayload
-        >({
-            query: (body) => ({
-                url: '/lineaTiempoDetalle/avanzar-multiples',
-                method: 'POST',
-                body,
-            }),
-            invalidatesTags: (_r, _e, { detalleOrdenIds }) => [
-                ...detalleOrdenIds.map((id) => ({ type: 'DetalleProduccion' as const, id })),
-                { type: 'DetalleProduccion', id: 'LIST' },
-            ],
-        }),
-
-        getRecetaByPedido: builder.query<RecetaLinea[], number>({
-            query: (pedidoId) => `/receta/pedido/${pedidoId}`,
-            providesTags: (_res, _err, pedidoId) => [
-                { type: 'RecetaPedido', id: pedidoId },
-            ],
-        }),
-
-        updateRecetaLinea: builder.mutation<
-            RecetaLinea,
-            { id: number; data: UpdateRecetaLineaDto; pedidoId: number }
-        >({
-            query: ({ id, data }) => ({
-                url: `/receta/${id}`,
-                method: 'PUT',
-                body: data,
-            }),
-            invalidatesTags: (_res, _err, { pedidoId, id }) => [
-                { type: 'RecetaPedido', id: pedidoId },
-                { type: 'RecetaPedido', id: 'LIST' },
-            ],
-        }),
-
-        procesarEstado5: builder.mutation<{ procesados: number; errores: string[] }, void>({
-            query: () => ({
-                url: '/lineaTiempo/procesar-estado5',
-                method: 'POST',
-                body: {},
-            }),
-            invalidatesTags: [{ type: 'PedidoAgrupado', id: 'LIST' }],
-        }),
+    getPedidoProduccionMetadata: builder.query<Metadata[], void>({
+      query: () => "/pedidoProduccion/metadata",
     }),
-})
+
+    getAllPedidosProduccion: builder.query<PedidoProduccion[], void>({
+      query: () => "/pedidoProduccion",
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({
+                type: "PedidoProduccion" as const,
+                id,
+              })),
+              { type: "PedidoProduccion", id: "LIST" },
+            ]
+          : [{ type: "PedidoProduccion", id: "LIST" }],
+    }),
+
+    getPedidoProduccionById: builder.query<PedidoProduccion, number>({
+      query: (id) => `/pedidoProduccion/${id}`,
+      providesTags: (_res, _err, id) => [{ type: "PedidoProduccion", id }],
+    }),
+
+    getDetallesYProduccion: builder.query<DetalleProduccion[], number>({
+      query: (id) => `/pedidoProduccion/${id}/detalles`,
+      providesTags: (_res, _err, id) => [{ type: "DetalleProduccion", id }],
+    }),
+    updatePedidoProduccion: builder.mutation<
+      PedidoProduccion,
+      { id: number; data: UpdatePedidoDto }
+    >({
+      query: ({ id, data }) => ({
+        url: `/pedidoProduccion/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: (_res, _err, { id }) => [
+        { type: "PedidoProduccion", id },
+        // **muy importante**: invalida la lista de grupos
+        { type: "PedidoAgrupado", id: "LIST" },
+      ],
+    }),
+
+    getPedidosAgrupados: builder.query<PedidoAgrupado[], void>({
+      query: () => "/pedidoProduccion/agrupados",
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ pedidoId }) => ({
+                type: "PedidoAgrupado" as const,
+                id: pedidoId,
+              })),
+              { type: "PedidoAgrupado", id: "LIST" },
+            ]
+          : [{ type: "PedidoAgrupado", id: "LIST" }],
+      transformResponse: (response: PedidoAgrupado[]) => {
+        return response.map((agrupado) => ({
+          ...agrupado,
+          items: agrupado.items.map(parseNumericFields),
+        }));
+      },
+    }),
+
+    avanzarEtapa: builder.mutation<{ message: string }, AvanzarEtapaPayload>({
+      query: (body) => ({
+        url: "/lineaTiempo/avanzar-etapa",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_r, _e, { pedidoId }) => [
+        { type: "PedidoAgrupado", id: pedidoId },
+        { type: "PedidoProduccion", id: pedidoId },
+        { type: "DetalleProduccion", id: pedidoId },
+        { type: "RecetaPedido", id: pedidoId },
+      ],
+    }),
+
+    avanzarEtapaDetalle: builder.mutation<AvanceOK, AvanzarEtapaDetallePayload>(
+      {
+        query: (body) => ({
+          url: "/lineaTiempoDetalle/avanzar",
+          method: "POST",
+          body,
+        }),
+        invalidatesTags: (_r, _e, { detalleOrdenId }) => [
+          { type: "DetalleProduccion", id: detalleOrdenId },
+        ],
+      }
+    ),
+
+    avanzarMultiEtapaDetalle: builder.mutation<
+      AvanceMultiplesOK,
+      AvanzarMultiEtapaDetallePayload
+    >({
+      query: (body) => ({
+        url: "/lineaTiempoDetalle/avanzar-multiples",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_r, _e, { detalleOrdenIds }) => [
+        ...detalleOrdenIds.map((id) => ({
+          type: "DetalleProduccion" as const,
+          id,
+        })),
+        { type: "DetalleProduccion", id: "LIST" },
+      ],
+    }),
+
+    getRecetaByPedido: builder.query<RecetaLinea[], { pedidoId: number; id_almacen?: number }>({
+      query: ({ pedidoId, id_almacen }) => {
+        let url = `/receta/pedido/${pedidoId}`;
+        if (id_almacen) {
+          url += `?id_almacen=${id_almacen}`;
+        }
+        return url;
+      },
+      providesTags: (_res, _err, { pedidoId }) => [
+        { type: "RecetaPedido", id: pedidoId },
+      ],
+    }),
+
+    updateRecetaLinea: builder.mutation<
+      RecetaLinea,
+      { id: number; data: UpdateRecetaLineaDto; pedidoId: number }
+    >({
+      query: ({ id, data }) => ({
+        url: `/receta/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: (_res, _err, { pedidoId, id }) => [
+        { type: "RecetaPedido", id: pedidoId },
+        { type: "RecetaPedido", id: "LIST" },
+      ],
+    }),
+
+    procesarEstado5: builder.mutation<
+      { procesados: number; errores: string[] },
+      void
+    >({
+      query: () => ({
+        url: "/lineaTiempo/procesar-estado5",
+        method: "POST",
+        body: {},
+      }),
+      invalidatesTags: [{ type: "PedidoAgrupado", id: "LIST" }],
+    }),
+
+    getRechazos: builder.query<Rechazo[], void>({
+      query: () => "/rechazo",
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "Rechazo" as const, id })),
+              { type: "Rechazo", id: "LIST" },
+            ]
+          : [{ type: "Rechazo", id: "LIST" }],
+    }),
+
+    getRechazoById: builder.query<Rechazo, number>({
+      query: (id) => `/rechazo/${id}`,
+      providesTags: (_res, _err, id) => [{ type: "Rechazo", id }],
+    }),
+
+    createRechazo: builder.mutation<Rechazo, CreateRechazoDto>({
+      query: (data) => ({
+        url: "/rechazo",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id_pedidoProd }) => [
+        { type: "Rechazo", id: "LIST" },
+        { type: "PedidoProduccion", id: "LIST" },
+        { type: "PedidoProduccion", id: id_pedidoProd },
+        { type: "PedidoAgrupado", id: "LIST" },
+      ],
+    }),
+
+    updateRechazo: builder.mutation<
+      Rechazo,
+      { id: number; data: UpdateRechazoDto; id_pedidoProd: number }
+    >({
+      query: ({ id, data }) => ({
+        url: `/rechazo/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id, id_pedidoProd }) => [
+        { type: "Rechazo", id },
+        { type: "PedidoProduccion", id: id_pedidoProd },
+        { type: "PedidoAgrupado", id: "LIST" },
+        { type: "Rechazo", id: "LIST" },
+      ],
+    }),
+
+    getRechazoByPedidoProduccionId: builder.query<Rechazo, number>({
+      query: (id) => `/pedidoProduccion/${id}/rechazo`,
+      providesTags: (result, error, id) =>
+        result
+          ? [
+              { type: "Rechazo", id: result.id },
+              { type: "PedidoProduccion", id },
+            ]
+          : [{ type: "PedidoProduccion", id }],
+    }),
+  }),
+});
 
 export const {
-    useGetPedidoProduccionMetadataQuery,
-    useGetAllPedidosProduccionQuery,
-    useGetPedidoProduccionByIdQuery,
-    useGetDetallesYProduccionQuery,
-    useUpdatePedidoProduccionMutation,
-    useGetPedidosAgrupadosQuery,
-    useAvanzarEtapaMutation,
-    useAvanzarEtapaDetalleMutation,
-    useAvanzarMultiEtapaDetalleMutation,
-    useGetRecetaByPedidoQuery,
-    useUpdateRecetaLineaMutation,
-    useProcesarEstado5Mutation,
-} = pedidoProduccionApi
+  useGetPedidoProduccionMetadataQuery,
+  useGetAllPedidosProduccionQuery,
+  useGetPedidoProduccionByIdQuery,
+  useGetDetallesYProduccionQuery,
+  useUpdatePedidoProduccionMutation,
+  useGetPedidosAgrupadosQuery,
+  useAvanzarEtapaMutation,
+  useAvanzarEtapaDetalleMutation,
+  useAvanzarMultiEtapaDetalleMutation,
+  useGetRecetaByPedidoQuery,
+  useUpdateRecetaLineaMutation,
+  useProcesarEstado5Mutation,
+  useGetRechazosQuery,
+  useGetRechazoByIdQuery,
+  useCreateRechazoMutation,
+  useUpdateRechazoMutation,
+  useGetRechazoByPedidoProduccionIdQuery,
+  useGetAlmacenesQuery,
+} = pedidoProduccionApi;

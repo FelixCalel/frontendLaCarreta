@@ -16,6 +16,7 @@ import {
   Th,
   Td,
   useColorModeValue,
+  Flex,
 } from "@chakra-ui/react";
 import { DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
@@ -34,6 +35,7 @@ import PropTypes from "prop-types";
 const MotionBox = motion(Box);
 
 const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
+  const addBoxBgColor = useColorModeValue("gray.100", "gray.700");
   const dispatch = useDispatch();
   const toast = useToast();
   const [productos, setProductos] = useState([]);
@@ -406,7 +408,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             textAlign="center"
             color={headingColor}
           >
-            Detalles del Pedidooo
+            Detalles del Pedido
           </Heading>
           {productos.length > 0 ? (
             isMobile ? (
@@ -562,59 +564,78 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
 
           <Box mt={4}>
             <MotionBox
-              p={2}
+              p={1}
               boxShadow="sm"
               borderWidth="1px"
               rounded="md"
-              bg={addBoxBg}
-              w={{ base: "full", md: "680px" }}
-              mx={{ base: 0, md: "auto" }}
+              bg={addBoxBgColor}
+              w="100%"
+              maxW="460px"
+              mx="auto"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <HStack spacing={2} justifyContent="space-between">
-                <ProductoSelector
-                  deudorId={Number(deudorId)}
-                  onSelect={(
-                    productoId,
-                    nombreProducto,
-                    cantidadDisponible,
-                    codigo
-                  ) =>
-                    handleProductoChange(
+              <Flex
+                width="100%"
+                alignItems="center"
+                justifyContent="space-between"
+              >
+                <Box minW="120px" maxW="180px" mr="auto">
+                  <ProductoSelector
+                    deudorId={Number(deudorId)}
+                    onSelect={(
                       productoId,
                       nombreProducto,
                       cantidadDisponible,
                       codigo
-                    )
-                  }
-                  reset={resetFields}
-                />
-                <CantidadInput
-                  value={newProducto.cantidad}
-                  onChange={(e) =>
-                    setNewProducto({
-                      ...newProducto,
-                      // cantidad: parseFloat(e.target.value) || 0,
-                      cantidad:
-                        e.target.value === "" ? "" : parseFloat(e.target.value),
-                    })
-                  }
-                  placeholder="0"
-                  size="sm"
-                  width="60px"
-                  maxWidth="60px"
-                />
-                <Tooltip label="Agregar producto" hasArrow>
-                  <IconButton
-                    icon={<AddIcon />}
-                    colorScheme="teal"
-                    onClick={handleAddProducto}
-                    size="sm"
+                    ) =>
+                      handleProductoChange(
+                        productoId,
+                        nombreProducto,
+                        cantidadDisponible,
+                        codigo
+                      )
+                    }
+                    reset={resetFields}
                   />
-                </Tooltip>
-              </HStack>
+                </Box>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={1}
+                  minWidth="120px"
+                  justifyContent="flex-end"
+                  mr={2}
+                >
+                  <CantidadInput
+                    value={newProducto.cantidad}
+                    onChange={(e) =>
+                      setNewProducto({
+                        ...newProducto,
+                        cantidad:
+                          e.target.value === ""
+                            ? ""
+                            : parseFloat(e.target.value),
+                      })
+                    }
+                    placeholder="0"
+                    size="sm"
+                    width="50px"
+                    maxWidth="60px"
+                    style={{ margin: 0, padding: "2px", fontSize: "0.95rem" }}
+                  />
+                  <Tooltip label="Agregar producto" hasArrow>
+                    <IconButton
+                      icon={<AddIcon />}
+                      colorScheme="teal"
+                      onClick={handleAddProducto}
+                      size="sm"
+                      style={{ margin: 0, padding: "2px" }}
+                    />
+                  </Tooltip>
+                </Box>
+              </Flex>
             </MotionBox>
           </Box>
         </>

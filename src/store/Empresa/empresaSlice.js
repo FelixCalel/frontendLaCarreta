@@ -21,6 +21,7 @@ const empresaSlice = createSlice({
     recetas: {
       status: "idle",
       error: null,
+      lastSync: localStorage.getItem("lastSyncRecetas") || null,
       filasWS: 0,
       registrosInsertados: 0,
       errores: [],
@@ -85,8 +86,12 @@ const empresaSlice = createSlice({
       })
       .addCase(importarRecetas.fulfilled, (state, action) => {
         state.recetas.status = "succeeded";
+        const now = new Date().toISOString();
+        state.recetas.lastSync = now;
+        localStorage.setItem("lastSyncRecetas", now);
         state.recetas.filasWS = action.payload.filasWS;
-        state.recetas.registrosInsertados = action.payload.registrosInsertados;
+        state.recetas.registrosInsertados =
+          action.payload.registrosInsertados;
         state.recetas.errores = action.payload.errores;
       })
       .addCase(importarRecetas.rejected, (state, action) => {
@@ -95,5 +100,7 @@ const empresaSlice = createSlice({
       });
   },
 });
+
+export const selectRecetasState = (state) => state.empresas.recetas;
 
 export default empresaSlice.reducer;

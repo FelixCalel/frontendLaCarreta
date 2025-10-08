@@ -12,21 +12,26 @@ import {
   Center,
   Text,
   useColorModeValue,
+  Button,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { ChevronRightIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { skipToken } from "@reduxjs/toolkit/query";
 import {
   useGetRecetaByPedidoQuery,
   useUpdatePedidoProduccionMutation,
+  useGetAlmacenesQuery,
 } from "../../../services/pedidoProductionApi";
 import { FabricacionDetailsTable } from "./FabricacionDetailsTable";
 import { RecetaTable } from "../RecetaTable";
+import { RechazoModal } from "../../modals/RechazoModal";
 
 const clamp = (v, min, max) => Math.max(min, Math.min(v, max));
 const numOrEmpty = (v) => (v === null || v === undefined ? "" : v);
 
 export const FabricacionRow = ({ order }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const maxPedido = order.cantidadUnidad ?? 0;
   const [cant, setCant] = useState(order.cantidad ?? 0);
   const [desp, setDesp] = useState(order.despacho ?? 0);
@@ -40,9 +45,11 @@ export const FabricacionRow = ({ order }) => {
   const panelBorder = useColorModeValue("gray.200", "gray.600");
   const titleColor = useColorModeValue("gray.600", "gray.300");
 
-  const recetaArg = isExpanded ? order.id : skipToken;
+  const recetaArg = isExpanded ? { pedidoId: order.id } : skipToken;
   const { data: receta = [], isLoading: loadingReceta } =
     useGetRecetaByPedidoQuery(recetaArg);
+
+  const { data: almacenes = [] } = useGetAlmacenesQuery();
 
   useEffect(() => {
     setCant(order.cantidad ?? 0);
@@ -140,10 +147,14 @@ export const FabricacionRow = ({ order }) => {
         <Td px={2} py={1}>
           {order.trazabilidad_Prod ?? "-"}
         </Td>
+
+        <Td px={2} py={1}>
+            <Button size="xs" onClick={onOpen}>Rechazo</Button>
+        </Td>
       </Tr>
 
       <Tr>
-        <Td colSpan={10} p={0} border="none">
+        <Td colSpan={11} p={0} border="none">
           <Collapse in={isExpanded} animateOpacity>
             <Box
               bg={panelBg}
@@ -179,7 +190,7 @@ export const FabricacionRow = ({ order }) => {
                     <Spinner size="sm" />
                   </Center>
                 ) : receta.length ? (
-                  <RecetaTable pedidoId={order.id} receta={receta} />
+                  <RecetaTable pedidoId={order.id} receta={receta} almacenes={almacenes} />
                 ) : (
                   <Center py={2}>
                     <Text
@@ -195,6 +206,7 @@ export const FabricacionRow = ({ order }) => {
           </Collapse>
         </Td>
       </Tr>
+      {isOpen && <RechazoModal isOpen={isOpen} onClose={onClose} rechazoId={order.rechazo} />}
     </Fragment>
   );
 };
@@ -212,5 +224,6 @@ FabricacionRow.propTypes = {
     unidadMedida: PropTypes.string,
     trazabilidad_Prod: PropTypes.string,
     details: PropTypes.array,
+    rechazo: PropTypes.number,
   }).isRequired,
 };

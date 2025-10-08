@@ -47,7 +47,7 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
       .filter((it) => {
         // Handle both single deudor (deuId, deudor.id) and multiple deudores (deudores array)
         if (it.deudores && it.deudores.length > 0) {
-          return it.deudores.some(d => d.id === dId);
+          return it.deudores.some((d) => d.id === dId);
         }
         const singleDeudorId = it.deuId ?? it.deudor?.id ?? null;
         return singleDeudorId === dId;
@@ -118,11 +118,26 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
 
   const disabled = !deudorId;
 
+  // Detecta si es móvil
+  const isMobile = window.innerWidth <= 768;
+
   return (
-    <Flex pt="2" justify="start" align="center" w="full" flexDir="column">
-      <FormControl>
-        <HStack spacing={2} w="full" align="center" position="relative">
-          <Box position="relative">
+    <Flex
+      pt="2"
+      justify="start"
+      align="center"
+      w="auto"
+      maxW={isMobile ? "100%" : "300px"}
+      flexDir="column"
+    >
+      <FormControl w="100%">
+        <HStack spacing={2} w="100%" align="center" position="relative">
+          <Box
+            position="relative"
+            w={isMobile ? "260px" : "300px"}
+            minW={isMobile ? "220px" : "300px"}
+            maxW={isMobile ? "100%" : "300px"}
+          >
             <AutoComplete openOnFocus>
               <AutoCompleteInput
                 variant="outline"
@@ -133,8 +148,10 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
                 }
                 value={inputValue}
                 onChange={handleInputChange}
-                size="sm"
-                w={{ base: "full", md: "480px" }}
+                size={isMobile ? "md" : "lg"}
+                w={isMobile ? "260px" : "300px"}
+                fontSize={isMobile ? "1.1rem" : "1.15rem"}
+                height={isMobile ? "44px" : "48px"}
                 position="relative"
                 isDisabled={disabled}
               />
@@ -149,12 +166,12 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
                 borderWidth="1px"
                 borderRadius="md"
                 boxShadow="md"
-                minW="300px"
-                maxW="calc(100vw - 20px)"
+                minW={isMobile ? "220px" : "300px"}
+                maxW={isMobile ? "100%" : "300px"}
                 maxHeight="50vh"
                 overflowY="auto"
                 overflowX="hidden"
-                w="full"
+                w={isMobile ? "260px" : "300px"}
               >
                 {renderItems.length === 0 ? (
                   <Box px={3} py={2}>
@@ -184,7 +201,7 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
           <IconButton
             aria-label="Limpiar campo"
             icon={<CloseIcon />}
-            size="sm"
+            size={isMobile ? "md" : "sm"}
             onClick={handleClearInput}
             colorScheme="red"
             variant="outline"

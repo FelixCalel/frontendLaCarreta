@@ -1,4 +1,14 @@
 import PropTypes from "prop-types";
+import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { useToast } from "@chakra-ui/react";
+import ProductoSelector from "../../componentes/pageFormPedidos/productoSelector";
+import {
+  addNewDetalleOrden,
+  updateDetalleOrden,
+  deleteDetalleOrden,
+  getDetalleOrdenByPedidoId,
+} from "../../../../store/Pedidos/DetallePedidos/thunks";
 import {
   Modal,
   ModalOverlay,
@@ -7,36 +17,181 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Button,
-  Box,
   Text,
   Flex,
   Icon,
-  Divider,
-  Badge,
   useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
 import { FaCalendarAlt, FaCommentDots, FaBoxOpen } from "react-icons/fa";
+import { useLocation } from "react-router-dom";
+import PedidoInfoDisplay from "./PedidoInfoDisplay";
+import AgregarProductoBar from "./AgregarProductoBar";
+import DetallesProductosTable from "./DetallesProductosTable";
 
 const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
+  const location = useLocation();
+  const isEditable = location.pathname === "/pedidos/entrantes";
+  const dispatch = useDispatch();
+  const toast = useToast();
+
+  // Estado para nuevo producto
+  const [newProducto, setNewProducto] = useState({
+    productoId: null,
+    nombreProducto: "",
+    cantidad: "",
+    cantidadDisponible: 0,
+    codigo: "",
+    precio: 0,
+  });
+  const [cantidadAgregar, setCantidadAgregar] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resetFields, setResetFields] = useState(false);
+  const [detallesLocal, setDetallesLocal] = useState(detalles);
+  const [editCantidad, setEditCantidad] = useState({});
+
+  // Sincronizar detalles locales cuando cambian los detalles externos
+  useEffect(() => {
+    setDetallesLocal(detalles);
+  }, [detalles]);
+
+  // Handlers CRUD
+  const handleAddProducto = async () => {
+    if (!newProducto.productoId || !cantidadAgregar || cantidadAgregar <= 0) {
+      toast({
+        title: "Completa los datos del producto y cantidad",
+        status: "warning",
+      });
+      return;
+    }
+    // Validación frontend: producto ya agregado
+    const yaAgregado = detallesLocal.some(
+      (detalle) => detalle.productoId === newProducto.productoId
+    );
+    if (yaAgregado) {
+      toast({
+        title: "Producto ya agregado",
+        description:
+          "Este producto ya está en el pedido. No puedes agregarlo dos veces.",
+        status: "warning",
+      });
+      return;
+    }
+    setLoading(true);
+    try {
+      await dispatch(
+        addNewDetalleOrden({
+          pedidoId: pedido.id,
+          productoId: newProducto.productoId,
+          cantidad: Number(cantidadAgregar),
+          precio: newProducto.precio,
+          codigo: newProducto.codigo,
+          nombreProducto: newProducto.nombreProducto,
+          cantidadDisponible: newProducto.cantidadDisponible,
+          deudorId: pedido.deudorId,
+          tiendaId: pedido.tiendaId,
+        })
+      ).unwrap();
+      toast({ title: "Producto agregado", status: "success" });
+      setNewProducto({
+        productoId: null,
+        nombreProducto: "",
+        cantidad: "",
+        cantidadDisponible: 0,
+        codigo: "",
+        precio: 0,
+      });
+      setCantidadAgregar("");
+      setResetFields(true);
+      setTimeout(() => setResetFields(false), 200);
+      // Recargar detalles dinámicamente
+      const nuevosDetalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedido.id)
+      ).unwrap();
+      setDetallesLocal(nuevosDetalles);
+    } catch (err) {
+      const errorMsg = err?.message || err?.error || "";
+      if (errorMsg.includes("ya está agregado al pedido")) {
+        toast({
+          title: "Producto ya agregado",
+          description:
+            "Este producto ya está en el pedido. No puedes agregarlo dos veces.",
+          status: "warning",
+        });
+      } else {
+        toast({
+          title: "Error al agregar",
+          description: errorMsg || "Producto ya agregado",
+          status: "error",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleCantidadChange = async (detalleId, cantidad) => {
+    setEditCantidad((prev) => ({ ...prev, [detalleId]: cantidad }));
+  };
+
+  // Confirmar edición de cantidad (Enter o blur)
+  const handleCantidadConfirm = async (detalleId) => {
+    const cantidad = Number(editCantidad[detalleId]);
+    if (!cantidad || cantidad <= 0) return;
+    setLoading(true);
+    try {
+      await dispatch(
+        updateDetalleOrden({
+          id: detalleId,
+          pedidoId: pedido.id,
+          cantidad,
+        })
+      ).unwrap();
+      toast({ title: "Cantidad actualizada", status: "success" });
+      // Recargar detalles dinámicamente
+      const nuevosDetalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedido.id)
+      ).unwrap();
+      setDetallesLocal(nuevosDetalles);
+      setEditCantidad((prev) => ({ ...prev, [detalleId]: undefined }));
+    } catch (err) {
+      toast({
+        title: "Error al actualizar",
+        description: err?.message || "",
+        status: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveProducto = async (detalleId) => {
+    setLoading(true);
+    try {
+      await dispatch(deleteDetalleOrden(detalleId)).unwrap();
+      toast({ title: "Producto eliminado", status: "info" });
+      // Recargar detalles dinámicamente
+      const nuevosDetalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedido.id)
+      ).unwrap();
+      setDetallesLocal(nuevosDetalles);
+    } catch (err) {
+      toast({
+        title: "Error al eliminar",
+        description: err?.message || "",
+        status: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   const bg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
-  const rowHoverBg = useColorModeValue("gray.50", "gray.700");
   const commentTextC = useColorModeValue("gray.700", "gray.300");
   const badgeBgDisplay = useColorModeValue("purple.500", "purple.400");
-  const badgeBgUser = useColorModeValue("teal.600", "teal.500");
+  const bgPurple = useColorModeValue("#F3E8FF", "#6B21A8");
 
   if (!pedido) return null;
-
-  const [y, m, d] = pedido.fechaOrden.slice(0, 10).split("-");
-  const fechaUser = `${d}/${m}/${y}`;
 
   let fechaDisplay = null;
   if (pedido.fechaOrdenDisplay) {
@@ -70,99 +225,37 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
           </Flex>
         </ModalHeader>
         <ModalCloseButton />
-
         <ModalBody>
-          <VStack spacing={5} align="stretch">
-            {pedido.comentarioDisplay || pedido.fechaOrdenDisplay ? (
-              <>
-                <Flex
-                  px={4}
-                  py={2}
-                  border="1px solid"
-                  borderColor={borderColor}
-                  borderRadius="md"
-                  bg={useColorModeValue("purple.50", "purple.900")}
-                  direction="column"
-                  gap={2}
-                >
-                  <Flex align="center" gap={2}>
-                    <Badge colorScheme="purple" bg={badgeBgDisplay}>
-                      Display
-                    </Badge>
-                    {fechaDisplay && (
-                      <>
-                        <Icon as={FaCalendarAlt} />
-                        <Text fontSize="sm">{fechaDisplay}</Text>
-                      </>
-                    )}
-                  </Flex>
-                  {pedido.comentarioDisplay && (
-                    <Flex align="flex-start" gap={2}>
-                      <Icon as={FaCommentDots} />
-                      <Text fontSize="sm" color={commentTextC}>
-                        {pedido.comentarioDisplay.trim()}
-                      </Text>
-                    </Flex>
-                  )}
-                </Flex>
-                <Divider borderColor={borderColor} />
-              </>
-            ) : null}
-
-            <Box>
-              <Text fontSize="lg" fontWeight="semibold" mb={2}>
-                Productos
-              </Text>
-              <Table variant="simple" size="sm">
-                <Thead bg={borderColor}>
-                  <Tr>
-                    <Th>Código</Th>
-                    <Th>Producto</Th>
-                    <Th isNumeric>Cantidad</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {detalles
-                    .sort((a, b) =>
-                      a.nombreProducto.localeCompare(b.nombreProducto)
-                    )
-                    .map((it) => (
-                      <Tr key={it.id} _hover={{ bg: rowHoverBg }}>
-                        <Td>{it.codigo}</Td>
-                        <Td>{it.nombreProducto}</Td>
-                        <Td isNumeric>{it.cantidad}</Td>
-                      </Tr>
-                    ))}
-                </Tbody>
-              </Table>
-            </Box>
-            {/* 
-            <Divider borderColor={borderColor} />
-
-            <Flex align="center" gap={2}>
-              <Badge colorScheme="teal" bg={badgeBgUser}>
-                Entrega
-              </Badge>
-              <Icon as={FaCalendarAlt} />
-              <Text fontWeight="bold">{fechaUser}</Text>
-            </Flex>
-
-            <Divider borderColor={borderColor} />
-
-            <Flex align="flex-start" gap={2}>
-              <Icon as={FaCommentDots} color="orange.400" />
-              <Box>
-                <Text fontWeight="semibold" mb={1}>
-                  Comentario
-                </Text>
-                <Text color={commentTextC}>
-                  {pedido.comentario?.trim() || "— sin comentario —"}
-                </Text>
-              </Box>
-            </Flex> */}
+          <VStack spacing={0} align="stretch">
+            <PedidoInfoDisplay pedido={pedido} />
+            {isEditable && (
+              <AgregarProductoBar
+                newProducto={{ ...newProducto, deudorId: pedido.deudorId }}
+                setNewProducto={setNewProducto}
+                cantidadAgregar={cantidadAgregar}
+                setCantidadAgregar={setCantidadAgregar}
+                handleAddProducto={handleAddProducto}
+                loading={loading}
+                resetFields={resetFields}
+              />
+            )}
+            <DetallesProductosTable
+              detallesLocal={detallesLocal}
+              editCantidad={editCantidad}
+              handleCantidadChange={
+                isEditable ? handleCantidadChange : () => {}
+              }
+              handleCantidadConfirm={
+                isEditable ? handleCantidadConfirm : () => {}
+              }
+              handleRemoveProducto={
+                isEditable ? handleRemoveProducto : () => {}
+              }
+              loading={loading}
+              isEditable={isEditable}
+            />
           </VStack>
         </ModalBody>
-
         <ModalFooter>
           <Button onClick={onClose} colorScheme="green" variant="outline">
             Cerrar
@@ -190,6 +283,8 @@ DetallesModal.propTypes = {
     comentario: PropTypes.string,
     fechaOrdenDisplay: PropTypes.string,
     comentarioDisplay: PropTypes.string,
+    deudorId: PropTypes.number,
+    tiendaId: PropTypes.number,
   }),
 };
 

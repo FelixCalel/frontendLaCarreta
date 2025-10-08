@@ -22,6 +22,7 @@ import {
   Checkbox,
   useDisclosure,
   useToast,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +32,7 @@ import {
   useAvanzarEtapaMutation,
   useAvanzarMultiEtapaDetalleMutation,
   useGetRecetaByPedidoQuery,
+  useGetAlmacenesQuery,
 } from "../../../services/pedidoProductionApi";
 import FilterPanelFabricacion from "../../../components/production/fabricacion/FilterPanelFabricacion";
 import { FabricacionRow } from "../../../components/production/fabricacion/FabricacionRow";
@@ -43,6 +45,10 @@ const FabricacionPage = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { data: groups = [], isLoading, error } = useGetPedidosAgrupadosQuery();
 
+  const headBg = useColorModeValue("gray.50", "gray.800");
+  const tableBorder = useColorModeValue("gray.200", "gray.700");
+  const modalBg = useColorModeValue("white", "gray.700");
+
   const [avanzarEtapa, { isLoading: sendingPedido }] =
     useAvanzarEtapaMutation();
   const [avanzarMultiDetalle, { isLoading: sendingDetalles }] =
@@ -54,7 +60,7 @@ const FabricacionPage = () => {
   );
 
   const { data: receta = [], isLoading: cargandoReceta } =
-    useGetRecetaByPedidoQuery(pedidoId);
+    useGetRecetaByPedidoQuery({ pedidoId });
 
   const baseItems = useMemo(
     () => (group?.items ?? []).filter((it) => it.etapaId === 2),
@@ -196,9 +202,9 @@ const FabricacionPage = () => {
         variant="simple"
         size="sm"
         border="1px solid"
-        borderColor="gray.200"
+        borderColor={tableBorder}
       >
-        <Thead>
+        <Thead bg={headBg}>
           <Tr>
             <Th />
             <Th>ITEM</Th>
@@ -210,6 +216,7 @@ const FabricacionPage = () => {
             <Th>Unidad de medida</Th>
             <Th>Cantidad</Th>
             <Th>No. Trazabilidad</Th>
+            <Th>Rechazo</Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -255,7 +262,7 @@ const FabricacionPage = () => {
 
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent bg={modalBg}>
           <ModalHeader>Cargar a SAP</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
