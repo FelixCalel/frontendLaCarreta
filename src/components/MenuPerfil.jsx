@@ -44,7 +44,21 @@ export const MenuPerfil = () => {
   }, []);
 
   const onLogout = () => {
-    localStorage.clear();
+    // Eliminar sólo claves relevantes para no borrar otras preferencias de la app
+    const lsKeys = [
+      "access_token",
+      "refresh_token",
+      "usuarioId",
+      "roleId",
+      "nombreUsuario",
+      "correoUsuario",
+      "authSlice",
+      "userData",
+    ];
+    lsKeys.forEach((k) => localStorage.removeItem(k));
+    // Limpieza adicional en sessionStorage por si se usó como fallback
+    sessionStorage.removeItem("access_token");
+    sessionStorage.removeItem("refresh_token");
     dispatch(logout());
     navigate("/auth/login", { replace: true });
   };

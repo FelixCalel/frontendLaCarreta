@@ -35,9 +35,11 @@ export const addNewDetalleOrden = createAsyncThunk(
   async (newDetalleOrden, thunkAPI) => {
     try {
       const usuarioId = localStorage.getItem("usuarioId");
-      let token = localStorage.getItem("access_token");
-      if (!token) token = sessionStorage.getItem("access_token");
-      console.log("Token usado en addNewDetalleOrden:", token);
+      // Token lo inyecta el interceptor global; mantener logs útiles
+      const token =
+        localStorage.getItem("access_token") ||
+        sessionStorage.getItem("access_token");
+      console.log("Token presente en storage (addNewDetalleOrden):", !!token);
       const response = await axios.post(
         `${BASE_URL}/detalle/pedido/create`,
         {
@@ -45,11 +47,7 @@ export const addNewDetalleOrden = createAsyncThunk(
           createdBy: usuarioId ? Number(usuarioId) : null,
           updatedBy: usuarioId ? Number(usuarioId) : null,
         },
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-        }
+        {}
       );
       return response.data;
     } catch (err) {
@@ -81,9 +79,10 @@ export const updateDetalleOrden = createAsyncThunk(
   async ({ id, pedidoId, cantidad }, thunkAPI) => {
     try {
       const usuarioId = localStorage.getItem("usuarioId");
-      let token = localStorage.getItem("access_token");
-      if (!token) token = sessionStorage.getItem("access_token");
-      console.log("Token usado en updateDetalleOrden:", token);
+      const token =
+        localStorage.getItem("access_token") ||
+        sessionStorage.getItem("access_token");
+      console.log("Token presente en storage (updateDetalleOrden):", !!token);
       console.log("UsuarioId:", usuarioId);
       console.log("Todos los valores en localStorage:", {
         access_token: localStorage.getItem("access_token"),
@@ -96,11 +95,7 @@ export const updateDetalleOrden = createAsyncThunk(
           cantidad: Number(cantidad),
           updatedBy: usuarioId ? Number(usuarioId) : null,
         },
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-        }
+        {}
       );
       return response.data;
     } catch (err) {

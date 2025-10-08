@@ -180,7 +180,7 @@ export const LoginForm = () => {
             }
           );
 
-          const { access_token } = tokenExchangeResp.data;
+          const { access_token, refresh_token } = tokenExchangeResp.data;
           console.log("JWT del backend recibido:", access_token);
 
           if (!access_token) {
@@ -188,6 +188,9 @@ export const LoginForm = () => {
           }
 
           localStorage.setItem("access_token", access_token);
+          if (refresh_token) {
+            localStorage.setItem("refresh_token", refresh_token);
+          }
           console.log("Token guardado en localStorage:", access_token);
           console.log(
             "Verificación localStorage access_token:",
@@ -214,7 +217,7 @@ export const LoginForm = () => {
           );
           await dispatch(fetchCurrentUser());
           navigate("/auth/home", { replace: true });
-          window.location.reload();
+          // Ya no forzamos recarga: el interceptor de axios adjunta el token dinámicamente
         } catch (tokenError) {
           console.error("Error al intercambiar token:", tokenError);
           setError("Error al obtener token de autenticación.");

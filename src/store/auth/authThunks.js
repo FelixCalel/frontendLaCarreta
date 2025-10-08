@@ -14,13 +14,9 @@ export const loadAllowedRoutes = () => {
         return;
       }
 
-      const token = localStorage.getItem("access_token");
-      const headers = {};
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
+      // El interceptor global adjunta Authorization
       const { data } = await axios.get(
-        `${BASE_URL}/auth/permissions?roleId=${roleId}`,
-        { headers }
+        `${BASE_URL}/auth/permissions?roleId=${roleId}`
       );
 
       const routes = Array.isArray(data?.routes) ? data.routes : [];

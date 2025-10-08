@@ -162,6 +162,7 @@ export const fetchCurrentUser = createAsyncThunk(
   "auth/fetchCurrentUser",
   async (_, { rejectWithValue }) => {
     try {
+      // El interceptor adjunta Authorization de forma automática
       const { data } = await axios.get(`${BASE_URL}/usuarios/todos`);
       const usuarios = data.usuarios || data;
 
