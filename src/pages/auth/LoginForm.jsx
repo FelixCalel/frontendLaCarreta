@@ -240,7 +240,7 @@ export const LoginForm = () => {
           );
           await dispatch(fetchCurrentUser());
           navigate("/auth/home", { replace: true });
-          // Ya no forzamos recarga: el interceptor de axios adjunta el token dinámicamente
+          window.location.reload();
         } catch (tokenError) {
           console.error("Error al intercambiar token:", tokenError);
           const msg =
@@ -301,6 +301,7 @@ export const LoginForm = () => {
                     placeholder="tu-correo@ejemplo.com"
                     value={correo}
                     onChange={(e) => setCorreo(e.target.value)}
+                    autoComplete="email"
                     size="lg"
                     rounded="md"
                     bg={useColorModeValue("white", "gray.800")}
@@ -329,6 +330,7 @@ export const LoginForm = () => {
                       placeholder="Tu contraseña"
                       value={contrasena}
                       onChange={(e) => setContrasena(e.target.value)}
+                      autoComplete="current-password"
                       size="lg"
                       rounded="md"
                       bg={useColorModeValue("white", "gray.800")}
