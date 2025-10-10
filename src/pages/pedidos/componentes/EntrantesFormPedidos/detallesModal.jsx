@@ -2,7 +2,8 @@ import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useToast } from "@chakra-ui/react";
-import ProductoSelector from "../../componentes/pageFormPedidos/productoSelector";
+import { useModalAuthError } from "../../../../hooks/useAuthError";
+import { useTokenRefreshNotifier } from "../../../../hooks/useTokenRefreshNotifier";
 import {
   addNewDetalleOrden,
   updateDetalleOrden,
@@ -24,7 +25,7 @@ import {
   useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
-import { FaCalendarAlt, FaCommentDots, FaBoxOpen } from "react-icons/fa";
+import { FaBoxOpen } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
 import PedidoInfoDisplay from "./PedidoInfoDisplay";
 import AgregarProductoBar from "./AgregarProductoBar";
@@ -35,8 +36,10 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
   const isEditable = location.pathname === "/pedidos/entrantes";
   const dispatch = useDispatch();
   const toast = useToast();
+  const { handleAuthError } = useModalAuthError(onClose);
 
-  // Estado para nuevo producto
+  useTokenRefreshNotifier();
+
   const [newProducto, setNewProducto] = useState({
     productoId: null,
     nombreProducto: "",
@@ -51,12 +54,10 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
   const [detallesLocal, setDetallesLocal] = useState(detalles);
   const [editCantidad, setEditCantidad] = useState({});
 
-  // Sincronizar detalles locales cuando cambian los detalles externos
   useEffect(() => {
     setDetallesLocal(detalles);
   }, [detalles]);
 
-  // Handlers CRUD
   const handleAddProducto = async () => {
     if (!newProducto.productoId || !cantidadAgregar || cantidadAgregar <= 0) {
       toast({
@@ -65,7 +66,6 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
       });
       return;
     }
-    // Validación frontend: producto ya agregado
     const yaAgregado = detallesLocal.some(
       (detalle) => detalle.productoId === newProducto.productoId
     );
@@ -105,12 +105,15 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
       setCantidadAgregar("");
       setResetFields(true);
       setTimeout(() => setResetFields(false), 200);
-      // Recargar detalles dinámicamente
       const nuevosDetalles = await dispatch(
         getDetalleOrdenByPedidoId(pedido.id)
       ).unwrap();
       setDetallesLocal(nuevosDetalles);
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
+
       const errorMsg = err?.message || err?.error || "";
       if (errorMsg.includes("ya está agregado al pedido")) {
         toast({
@@ -134,7 +137,6 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
     setEditCantidad((prev) => ({ ...prev, [detalleId]: cantidad }));
   };
 
-  // Confirmar edición de cantidad (Enter o blur)
   const handleCantidadConfirm = async (detalleId) => {
     const cantidad = Number(editCantidad[detalleId]);
     if (!cantidad || cantidad <= 0) return;
@@ -148,16 +150,19 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
         })
       ).unwrap();
       toast({ title: "Cantidad actualizada", status: "success" });
-      // Recargar detalles dinámicamente
       const nuevosDetalles = await dispatch(
         getDetalleOrdenByPedidoId(pedido.id)
       ).unwrap();
       setDetallesLocal(nuevosDetalles);
       setEditCantidad((prev) => ({ ...prev, [detalleId]: undefined }));
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
+
       toast({
         title: "Error al actualizar",
-        description: err?.message || "",
+        description: err?.message || "No se pudo actualizar la cantidad",
         status: "error",
       });
     } finally {
@@ -170,15 +175,18 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
     try {
       await dispatch(deleteDetalleOrden(detalleId)).unwrap();
       toast({ title: "Producto eliminado", status: "info" });
-      // Recargar detalles dinámicamente
       const nuevosDetalles = await dispatch(
         getDetalleOrdenByPedidoId(pedido.id)
       ).unwrap();
       setDetallesLocal(nuevosDetalles);
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
+
       toast({
         title: "Error al eliminar",
-        description: err?.message || "",
+        description: err?.message || "No se pudo eliminar el producto",
         status: "error",
       });
     } finally {
@@ -187,17 +195,8 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
   };
   const bg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
-  const commentTextC = useColorModeValue("gray.700", "gray.300");
-  const badgeBgDisplay = useColorModeValue("purple.500", "purple.400");
-  const bgPurple = useColorModeValue("#F3E8FF", "#6B21A8");
 
   if (!pedido) return null;
-
-  let fechaDisplay = null;
-  if (pedido.fechaOrdenDisplay) {
-    const [yy, mm, dd] = pedido.fechaOrdenDisplay.slice(0, 10).split("-");
-    fechaDisplay = `${dd}/${mm}/${yy}`;
-  }
 
   return (
     <Modal
