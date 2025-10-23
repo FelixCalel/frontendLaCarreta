@@ -10,11 +10,14 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { OrderRow } from "./OrderRow";
+import { useGetAlmacenesQuery } from "../../services/pedidoProductionApi";
 
 export const OrdersTable = ({ data = [] }) => {
   const [expandedRows, setExpandedRows] = useState({});
   const toggleRow = (id) =>
     setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const { data: almacenes = [] } = useGetAlmacenesQuery();
 
   const headerBg = useColorModeValue("gray.100", "gray.700");
   const groupHeadBg = useColorModeValue("gray.200", "gray.600");
@@ -52,6 +55,7 @@ export const OrdersTable = ({ data = [] }) => {
                 order={order}
                 isExpanded={!!expandedRows[order.id]}
                 onToggle={toggleRow}
+                almacenes={almacenes}
               />
 
               {idx < data.length - 1 && <Tr></Tr>}

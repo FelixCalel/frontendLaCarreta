@@ -18,6 +18,12 @@ import {
 } from "../models/pedidoProduction";
 import { parseNumericFields } from "../utils/data-parser";
 
+export interface ProdAlmacen {
+  id: number | string;
+  nombre: string;
+  // Agrega otros campos si tu modelo los requiere
+}
+
 export const pedidoProduccionApi = createApi({
   reducerPath: "pedidoProduccionApi",
   baseQuery: fetchBaseQuery({
@@ -33,13 +39,13 @@ export const pedidoProduccionApi = createApi({
   ],
   endpoints: (builder) => ({
     getAlmacenes: builder.query<ProdAlmacen[], void>({
-      query: () => "/api/almacen",
+      query: () => "/almacen",
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: "Almacen" as const, id })),
-              { type: "Almacen", id: "LIST" },
-            ]
+            ...result.map(({ id }) => ({ type: "Almacen" as const, id })),
+            { type: "Almacen", id: "LIST" },
+          ]
           : [{ type: "Almacen", id: "LIST" }],
     }),
     getPedidoProduccionMetadata: builder.query<Metadata[], void>({
@@ -51,12 +57,12 @@ export const pedidoProduccionApi = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({
-                type: "PedidoProduccion" as const,
-                id,
-              })),
-              { type: "PedidoProduccion", id: "LIST" },
-            ]
+            ...result.map(({ id }) => ({
+              type: "PedidoProduccion" as const,
+              id,
+            })),
+            { type: "PedidoProduccion", id: "LIST" },
+          ]
           : [{ type: "PedidoProduccion", id: "LIST" }],
     }),
 
@@ -90,12 +96,12 @@ export const pedidoProduccionApi = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ pedidoId }) => ({
-                type: "PedidoAgrupado" as const,
-                id: pedidoId,
-              })),
-              { type: "PedidoAgrupado", id: "LIST" },
-            ]
+            ...result.map(({ pedidoId }) => ({
+              type: "PedidoAgrupado" as const,
+              id: pedidoId,
+            })),
+            { type: "PedidoAgrupado", id: "LIST" },
+          ]
           : [{ type: "PedidoAgrupado", id: "LIST" }],
       transformResponse: (response: PedidoAgrupado[]) => {
         return response.map((agrupado) => ({
@@ -195,9 +201,9 @@ export const pedidoProduccionApi = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: "Rechazo" as const, id })),
-              { type: "Rechazo", id: "LIST" },
-            ]
+            ...result.map(({ id }) => ({ type: "Rechazo" as const, id })),
+            { type: "Rechazo", id: "LIST" },
+          ]
           : [{ type: "Rechazo", id: "LIST" }],
     }),
 
@@ -242,9 +248,9 @@ export const pedidoProduccionApi = createApi({
       providesTags: (result, error, id) =>
         result
           ? [
-              { type: "Rechazo", id: result.id },
-              { type: "PedidoProduccion", id },
-            ]
+            { type: "Rechazo", id: result.id },
+            { type: "PedidoProduccion", id },
+          ]
           : [{ type: "PedidoProduccion", id }],
     }),
   }),

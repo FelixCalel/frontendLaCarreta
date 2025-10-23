@@ -22,7 +22,6 @@ import {
   useGetRecetaByPedidoQuery,
   useCreateRechazoMutation,
   useUpdateRechazoMutation,
-  useGetAlmacenesQuery,
 } from "../../services/pedidoProductionApi";
 import { OrderDetailsTable } from "./OrderDetailsTable";
 import { RecetaTable } from "./RecetaTable";
@@ -49,12 +48,16 @@ const FIELD_SPECS = {
   trazabilidad_Prod: { w: "70px", type: "text" },
 };
 
-export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
+export const OrderRow = ({
+  order,
+  isExpanded,
+  onToggle,
+  sx = {},
+  almacenes = [],
+}) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const shouldFetch = isExpanded;
-
-  const { data: almacenes = [], isLoading: loadingAlmacenes } = useGetAlmacenesQuery();
 
   const recetaArg = shouldFetch ? { pedidoId: order.id } : skipToken;
 
@@ -76,7 +79,7 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
     Number(order.cantidad) || 0
   );
   const [faltanteLocal, setFaltanteLocal] = useState(
-    (Number(order.cantidadUnidad) ?? 0) - (Number(order.cantidad) || 0)
+    (Number(order.cantidadUnidad) || 0) - (Number(order.cantidad) || 0)
   );
   const {
     data: details = [],
@@ -84,14 +87,23 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
     refetch: refetchDetalles,
   } = useGetDetallesYProduccionQuery(shouldFetch ? order.id : skipToken);
   const [prodFields, setProdFields] = useState({
-    mpUtilizada: Number(order.mpUtilizada) ?? 0,
-    mp1ra: Number(order.mp1ra) ?? 0,
-    mp2da: Number(order.mp2da) ?? 0,
-    mp3ra: Number(order.mp3ra) ?? 0,
-    mpSobrante: Number(order.mpSobrante) ?? 0,
-    basura: Number(order.basura) ?? 0,
+    mpUtilizada: Number(order.mpUtilizada) || 0,
+    mp1ra: Number(order.mp1ra) || 0,
+    mp2da: Number(order.mp2da) || 0,
+    mp3ra: Number(order.mp3ra) || 0,
+    mpSobrante: Number(order.mpSobrante) || 0,
+    basura: Number(order.basura) || 0,
     trazabilidad_Prod: order.trazabilidad_Prod ?? "",
   });
+  // Inicializa almacenId correctamente desde order.id_almacen
+  const [almacenId, setAlmacenId] = useState(
+    order.id_almacen ? String(order.id_almacen) : ""
+  );
+
+  // Sincroniza almacenId local si cambia el pedido (por recarga o actualización)
+  useEffect(() => {
+    setAlmacenId(order.id_almacen ? String(order.id_almacen) : "");
+  }, [order.id_almacen]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -105,7 +117,7 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
   useEffect(() => {
     setCantidadLocal(Number(order.cantidad) || 0);
     setFaltanteLocal(
-      (Number(order.cantidadUnidad) ?? 0) - (Number(order.cantidad) || 0)
+      (Number(order.cantidadUnidad) || 0) - (Number(order.cantidad) || 0)
     );
   }, [order.cantidad, order.cantidadUnidad]);
 
@@ -134,12 +146,12 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
 
   useEffect(() => {
     setProdFields({
-      mpUtilizada: Number(order.mpUtilizada) ?? 0,
-      mp1ra: Number(order.mp1ra) ?? 0,
-      mp2da: Number(order.mp2da) ?? 0,
-      mp3ra: Number(order.mp3ra) ?? 0,
-      mpSobrante: Number(order.mpSobrante) ?? 0,
-      basura: Number(order.basura) ?? 0,
+      mpUtilizada: Number(order.mpUtilizada) || 0,
+      mp1ra: Number(order.mp1ra) || 0,
+      mp2da: Number(order.mp2da) || 0,
+      mp3ra: Number(order.mp3ra) || 0,
+      mpSobrante: Number(order.mpSobrante) || 0,
+      basura: Number(order.basura) || 0,
       trazabilidad_Prod: order.trazabilidad_Prod ?? "",
     });
   }, [
@@ -166,12 +178,12 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
     ];
 
     if (!isText) {
-      if (isNaN(value) || value < 0) {
+      if (Number.isNaN(value) || value < 0) {
         value = 0;
       }
 
       if (fieldsToValidate.includes(field)) {
-        const maxAllowed = Number(order.cantidadUnidad) ?? 0;
+        const maxAllowed = Number(order.cantidadUnidad) || 0;
         if (value > maxAllowed) {
           toast({
             title: "Valor inválido",
@@ -191,7 +203,7 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
 
     if (field === "mpUtilizada") {
       const nuevaCantidad = value;
-      const nuevoFaltante = (Number(order.cantidadUnidad) ?? 0) - nuevaCantidad;
+      const nuevoFaltante = (Number(order.cantidadUnidad) || 0) - nuevaCantidad;
 
       setCantidadLocal(nuevaCantidad);
       setFaltanteLocal(nuevoFaltante);
@@ -214,7 +226,7 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
           const revertCantidad = Number(order.cantidad) || 0;
           setCantidadLocal(revertCantidad);
           setFaltanteLocal(
-            (Number(order.cantidadUnidad) ?? 0) - revertCantidad
+            (Number(order.cantidadUnidad) || 0) - revertCantidad
           );
         }
       });
@@ -298,6 +310,50 @@ export const OrderRow = ({ order, isExpanded, onToggle, sx = {} }) => {
         </Td>
         <Td px={2} py={2} textAlign="center">
           {faltanteLocal}
+          {/* Selector de almacén */}
+          <Box display="inline-block" ml={2} minW="120px">
+            <Text fontSize="xs" mb={1} fontWeight="semibold">
+              Almacén:
+            </Text>
+            <select
+              value={almacenId}
+              onChange={async (e) => {
+                const newId = e.target.value;
+                setAlmacenId(newId);
+                try {
+                  await updatePedido({
+                    id: order.id,
+                    data: { id_almacen: newId ? Number(newId) : null },
+                  }).unwrap();
+                } catch {
+                  setAlmacenId(
+                    order.id_almacen ? String(order.id_almacen) : ""
+                  );
+                }
+              }}
+              style={{
+                fontSize: "12px",
+                padding: "2px 6px",
+                borderRadius: "4px",
+                color: useColorModeValue("#222", "#fff"),
+                background: useColorModeValue("#fff", "#222"),
+              }}
+            >
+              <option value="">Seleccionar</option>
+              {almacenes.map((almacen) => (
+                <option
+                  key={almacen.id}
+                  value={almacen.id}
+                  style={{
+                    color: useColorModeValue("#222", "#fff"),
+                    background: useColorModeValue("#fff", "#222"),
+                  }}
+                >
+                  {almacen.nombre || almacen.name}
+                </option>
+              ))}
+            </select>
+          </Box>
         </Td>
       </Tr>
 
@@ -403,8 +459,10 @@ OrderRow.propTypes = {
     basura: PropTypes.number,
     trazabilidad_Prod: PropTypes.string,
     ptmq: PropTypes.bool,
+    almacenId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   }).isRequired,
   isExpanded: PropTypes.bool.isRequired,
   onToggle: PropTypes.func.isRequired,
   sx: PropTypes.object,
+  almacenes: PropTypes.array,
 };
