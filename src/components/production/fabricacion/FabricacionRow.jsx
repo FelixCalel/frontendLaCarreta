@@ -148,8 +148,15 @@ export const FabricacionRow = ({ order }) => {
           {order.trazabilidad_Prod ?? "-"}
         </Td>
 
+        {/* Nueva celda para mostrar almacén */}
         <Td px={2} py={1}>
-            <Button size="xs" onClick={onOpen}>Rechazo</Button>
+          {order.almacen?.nombre || order.almacen?.name || "-"}
+        </Td>
+
+        <Td px={2} py={1}>
+          <Button size="xs" onClick={onOpen}>
+            Rechazo
+          </Button>
         </Td>
       </Tr>
 
@@ -190,7 +197,11 @@ export const FabricacionRow = ({ order }) => {
                     <Spinner size="sm" />
                   </Center>
                 ) : receta.length ? (
-                  <RecetaTable pedidoId={order.id} receta={receta} almacenes={almacenes} />
+                  <RecetaTable
+                    pedidoId={order.id}
+                    receta={receta}
+                    almacenes={almacenes}
+                  />
                 ) : (
                   <Center py={2}>
                     <Text
@@ -206,7 +217,13 @@ export const FabricacionRow = ({ order }) => {
           </Collapse>
         </Td>
       </Tr>
-      {isOpen && <RechazoModal isOpen={isOpen} onClose={onClose} rechazoId={order.rechazo} />}
+      {isOpen && (
+        <RechazoModal
+          isOpen={isOpen}
+          onClose={onClose}
+          rechazoId={order.rechazo}
+        />
+      )}
     </Fragment>
   );
 };
