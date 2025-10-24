@@ -16,7 +16,7 @@ import {
   Th,
   Td,
   useColorModeValue,
-  Flex,
+  Stack,
 } from "@chakra-ui/react";
 import { DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
@@ -576,12 +576,13 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <Flex
+              <Stack
+                direction={{ base: "column", md: "row" }}
+                spacing={2}
                 width="100%"
-                alignItems="center"
-                justifyContent="space-between"
+                align="stretch"
               >
-                <Box minW="120px" maxW="180px" mr="auto">
+                <Box w="100%">
                   <ProductoSelector
                     deudorId={Number(deudorId)}
                     onSelect={(
@@ -604,9 +605,9 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                   display="flex"
                   alignItems="center"
                   gap={1}
-                  minWidth="120px"
                   justifyContent="flex-end"
-                  mr={2}
+                  w={{ base: "100%", md: "auto" }}
+                  mt={{ base: 1, md: 0 }}
                 >
                   <CantidadInput
                     value={newProducto.cantidad}
@@ -621,7 +622,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                     }
                     placeholder="0"
                     size="sm"
-                    width="50px"
+                    width="60px"
                     maxWidth="60px"
                     style={{ margin: 0, padding: "2px", fontSize: "0.95rem" }}
                   />
@@ -635,7 +636,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                     />
                   </Tooltip>
                 </Box>
-              </Flex>
+              </Stack>
             </MotionBox>
           </Box>
         </>
