@@ -105,7 +105,12 @@ const HomePage = () => {
       <Flex flex="1">
         <MenuPrincipalD />
 
-        <Box flex="1" py={2} px={{ base: 2, md: 2 }}>
+        <Box
+          flex="1"
+          py={2}
+          px={{ base: 2, md: 2 }}
+          mt={{ base: "50px", md: "0" }}
+        >
           <Box maxW="1900px" mx="auto">
             <VStack align="stretch" spacing={2}>
               <Box
