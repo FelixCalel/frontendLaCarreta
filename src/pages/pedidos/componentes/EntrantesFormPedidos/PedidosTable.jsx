@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Table,
   Thead,
@@ -118,4 +119,8 @@ PedidosTable.propTypes = {
   highlight: PropTypes.string,
 };
 
-export default PedidosTable;
+// Optimización: Memorizar el componente para evitar renderizados innecesarios
+const MemoizedPedidosTable = React.memo(PedidosTable);
+MemoizedPedidosTable.displayName = "PedidosTable";
+
+export default MemoizedPedidosTable;

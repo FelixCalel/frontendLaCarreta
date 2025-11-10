@@ -1,6 +1,15 @@
-import React from "react";
 import PropTypes from "prop-types";
-import { Table, Thead, Tbody, Tr, Th, Td, Button } from "@chakra-ui/react";
+import {
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Button,
+  Flex,
+  Spinner,
+} from "@chakra-ui/react";
 
 const DetallesProductosTable = ({
   detallesLocal,
@@ -8,7 +17,7 @@ const DetallesProductosTable = ({
   handleCantidadChange,
   handleCantidadConfirm,
   handleRemoveProducto,
-  loading,
+  loadingDetalle,
   isEditable,
 }) => (
   <Table variant="simple">
@@ -27,29 +36,36 @@ const DetallesProductosTable = ({
           <Td>{producto.nombreProducto}</Td>
           <Td>
             {isEditable ? (
-              <input
-                type="number"
-                min={1}
-                value={
-                  editCantidad[producto.id] !== undefined
-                    ? editCantidad[producto.id]
-                    : producto.cantidad
-                }
-                onChange={(e) =>
-                  handleCantidadChange(producto.id, e.target.value)
-                }
-                onBlur={() => handleCantidadConfirm(producto.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleCantidadConfirm(producto.id);
-                }}
-                style={{
-                  width: "50px",
-                  padding: "6px",
-                  borderRadius: "8px",
-                  border: "1px solid #ccc",
-                  fontSize: "1rem",
-                }}
-              />
+              <Flex align="center" gap={2}>
+                <input
+                  type="number"
+                  min={1}
+                  value={
+                    editCantidad[producto.id] !== undefined
+                      ? editCantidad[producto.id]
+                      : producto.cantidad
+                  }
+                  onChange={(e) =>
+                    handleCantidadChange(producto.id, e.target.value)
+                  }
+                  onBlur={() => handleCantidadConfirm(producto.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleCantidadConfirm(producto.id);
+                  }}
+                  disabled={loadingDetalle[producto.id]}
+                  style={{
+                    width: "50px",
+                    padding: "6px",
+                    borderRadius: "8px",
+                    border: "1px solid #ccc",
+                    fontSize: "1rem",
+                    opacity: loadingDetalle[producto.id] ? 0.6 : 1,
+                  }}
+                />
+                {loadingDetalle[producto.id] && (
+                  <Spinner size="xs" color="green.500" />
+                )}
+              </Flex>
             ) : (
               producto.cantidad
             )}
@@ -60,7 +76,7 @@ const DetallesProductosTable = ({
                 colorScheme="red"
                 size="sm"
                 onClick={() => handleRemoveProducto(producto.id)}
-                isLoading={loading}
+                isLoading={loadingDetalle[producto.id]}
                 fontSize="1rem"
                 py={2}
                 maxWidth="60px"
@@ -90,6 +106,6 @@ DetallesProductosTable.propTypes = {
   handleCantidadChange: PropTypes.func.isRequired,
   handleCantidadConfirm: PropTypes.func.isRequired,
   handleRemoveProducto: PropTypes.func.isRequired,
-  loading: PropTypes.bool.isRequired,
+  loadingDetalle: PropTypes.object.isRequired,
   isEditable: PropTypes.bool.isRequired,
 };

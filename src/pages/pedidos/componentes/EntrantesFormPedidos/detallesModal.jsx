@@ -50,6 +50,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
   });
   const [cantidadAgregar, setCantidadAgregar] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingDetalle, setLoadingDetalle] = useState({}); // Estado de carga por registro individual
   const [resetFields, setResetFields] = useState(false);
   const [detallesLocal, setDetallesLocal] = useState(detalles);
   const [editCantidad, setEditCantidad] = useState({});
@@ -140,7 +141,8 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
   const handleCantidadConfirm = async (detalleId) => {
     const cantidad = Number(editCantidad[detalleId]);
     if (!cantidad || cantidad <= 0) return;
-    setLoading(true);
+
+    setLoadingDetalle((prev) => ({ ...prev, [detalleId]: true })); // Solo este registro
     try {
       await dispatch(
         updateDetalleOrden({
@@ -166,12 +168,12 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
         status: "error",
       });
     } finally {
-      setLoading(false);
+      setLoadingDetalle((prev) => ({ ...prev, [detalleId]: false })); // Quitar loading solo de este registro
     }
   };
 
   const handleRemoveProducto = async (detalleId) => {
-    setLoading(true);
+    setLoadingDetalle((prev) => ({ ...prev, [detalleId]: true })); // Solo este registro
     try {
       await dispatch(deleteDetalleOrden(detalleId)).unwrap();
       toast({ title: "Producto eliminado", status: "info" });
@@ -190,7 +192,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
         status: "error",
       });
     } finally {
-      setLoading(false);
+      setLoadingDetalle((prev) => ({ ...prev, [detalleId]: false })); // Quitar loading solo de este registro
     }
   };
   const bg = useColorModeValue("white", "gray.800");
@@ -250,7 +252,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
               handleRemoveProducto={
                 isEditable ? handleRemoveProducto : () => {}
               }
-              loading={loading}
+              loadingDetalle={loadingDetalle}
               isEditable={isEditable}
             />
           </VStack>

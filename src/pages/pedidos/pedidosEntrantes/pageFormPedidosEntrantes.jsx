@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Box,
   Flex,
@@ -32,10 +32,13 @@ import { selectPedidosEntrantesPorRuta } from "./componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 import { useSearch } from "../../../components/component/SearchContext";
 import CancelOrderDialog from "./componentes/CancelOrderDialog";
+import Pagination from "../../../components/pagination";
 //cambio
 const EntrantesPage = () => {
   const { query, setSuggestions } = useSearch();
   const [lista, setLista] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
   const dispatch = useDispatch();
   const toast = useToast();
   const bgColor = useColorModeValue("white", "gray.800");
@@ -126,144 +129,172 @@ const EntrantesPage = () => {
     );
   }, [pedidosRuta, query]);
 
-  const handleConfirmApprove = async ({ fechaOrden, comentario }) => {
-    setIsApproving(true);
-    try {
-      const fechaOrdenFormateada = new Date(fechaOrden).toLocaleDateString(
-        "en-GB"
-      );
+  // Reiniciar a la primera página solo cuando cambia la búsqueda, no cuando cambian los pedidos
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query]);
 
-      for (const pedidoId of selectedPedidos) {
-        await dispatch(
-          actualizarFechaOrden({
-            pedidoId,
-            fechaOrden: fechaOrdenFormateada,
-            comentario,
-          })
-        ).unwrap();
+  // Optimización: Memorizar pedidos paginados
+  const pedidosPaginados = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return lista.slice(startIndex, endIndex);
+  }, [lista, currentPage, itemsPerPage]);
 
-        await dispatch(
-          togglePedidoStatus({
-            id: pedidoId,
-            estadoId: 3,
-            comentarioDisplay: comentario,
-            fechaOrdenDisplay: fechaOrdenFormateada,
-          })
-        ).unwrap();
+  // Optimización: Usar useCallback para funciones que se pasan como props
+  const handlePageChange = useCallback((page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
-        await dispatch(tablaPedidos());
-        const pedido = pedidos.find((p) => p.id === pedidoId);
-        if (pedido && !pedido.isActive) {
+  const handleConfirmApprove = useCallback(
+    async ({ fechaOrden, comentario }) => {
+      setIsApproving(true);
+      try {
+        const fechaOrdenFormateada = new Date(fechaOrden).toLocaleDateString(
+          "en-GB"
+        );
+
+        for (const pedidoId of selectedPedidos) {
           await dispatch(
-            updatePedidoActivacion({ id: pedidoId, isActive: true })
+            actualizarFechaOrden({
+              pedidoId,
+              fechaOrden: fechaOrdenFormateada,
+              comentario,
+            })
+          ).unwrap();
+
+          await dispatch(
+            togglePedidoStatus({
+              id: pedidoId,
+              estadoId: 3,
+              comentarioDisplay: comentario,
+              fechaOrdenDisplay: fechaOrdenFormateada,
+            })
+          ).unwrap();
+
+          await dispatch(tablaPedidos());
+          const pedido = pedidos.find((p) => p.id === pedidoId);
+          if (pedido && !pedido.isActive) {
+            await dispatch(
+              updatePedidoActivacion({ id: pedidoId, isActive: true })
+            ).unwrap();
+          }
+        }
+
+        onApproveClose();
+        setSelectedPedidos([]);
+        toast({
+          title: "Pedidos aprobados",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        console.error("Error al aprobar pedidos:", error);
+        toast({
+          title: "Error",
+          description: error.message || "Hubo un error al aprobar pedidos.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setIsApproving(false);
+      }
+    },
+    [selectedPedidos, dispatch, pedidos, onApproveClose, toast]
+  );
+
+  const handleCancelarPedidos = useCallback(
+    async (comentario) => {
+      setIsLoading(true);
+      try {
+        for (const pedidoId of selectedPedidos) {
+          const pedidoActual = pedidos.find((p) => p.id === pedidoId);
+
+          await dispatch(
+            togglePedidoStatus({
+              id: pedidoId,
+              estadoId: 4,
+              comentario: comentario.trim(),
+              comentarioDisplay: pedidoActual?.comentarioDisplay,
+              fechaOrdenDisplay: pedidoActual?.fechaOrdenDisplay,
+            })
           ).unwrap();
         }
+
+        setSelectedPedidos([]);
+        toast({
+          title: "Pedidos cancelados",
+          description:
+            "Los pedidos seleccionados han sido cancelados correctamente.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        console.error("Error al cancelar pedidos:", error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cancelar los pedidos.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [selectedPedidos, pedidos, dispatch, toast]
+  );
 
-      onApproveClose();
-      setSelectedPedidos([]);
-      toast({
-        title: "Pedidos aprobados",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error al aprobar pedidos:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Hubo un error al aprobar pedidos.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsApproving(false);
-    }
-  };
+  const onCancelDialogConfirm = useCallback(
+    async (comentario) => {
+      setIsCancelling(true);
+      await handleCancelarPedidos(comentario);
+      setIsCancelling(false);
+      onCancelClose();
+    },
+    [handleCancelarPedidos, onCancelClose]
+  );
 
-  const handleCancelarPedidos = async (comentario) => {
-    setIsLoading(true);
-    try {
-      for (const pedidoId of selectedPedidos) {
-        const pedidoActual = pedidos.find((p) => p.id === pedidoId);
-
-        await dispatch(
-          togglePedidoStatus({
-            id: pedidoId,
-            estadoId: 4,
-            comentario: comentario.trim(),
-            comentarioDisplay: pedidoActual?.comentarioDisplay,
-            fechaOrdenDisplay: pedidoActual?.fechaOrdenDisplay,
-          })
+  const handleVerDetalles = useCallback(
+    async (pedidoId) => {
+      try {
+        const detalles = await dispatch(
+          getDetalleOrdenByPedidoId(pedidoId)
         ).unwrap();
+
+        detalles.sort(
+          (a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion)
+        );
+        setDetallesPedido(detalles);
+
+        const pedido = pedidos.find((p) => p.id === pedidoId);
+
+        if (pedido) {
+          setSelectedPedido(pedido);
+          setIsModalOpen(true);
+        } else {
+          console.error(`No se encontró el pedido con ID ${pedidoId}`);
+        }
+      } catch (error) {
+        console.error(
+          `Error al obtener los detalles del pedido ${pedidoId}:`,
+          error
+        );
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los detalles del pedido.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
-
-      setSelectedPedidos([]);
-      toast({
-        title: "Pedidos cancelados",
-        description:
-          "Los pedidos seleccionados han sido cancelados correctamente.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error al cancelar pedidos:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cancelar los pedidos.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const onCancelDialogConfirm = async (comentario) => {
-    setIsCancelling(true);
-    await handleCancelarPedidos(comentario);
-    setIsCancelling(false);
-    onCancelClose();
-  };
-
-  const handleVerDetalles = async (pedidoId) => {
-    try {
-      const detalles = await dispatch(
-        getDetalleOrdenByPedidoId(pedidoId)
-      ).unwrap();
-
-      detalles.sort(
-        (a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion)
-      );
-      setDetallesPedido(detalles);
-
-      const pedido = pedidos.find((p) => p.id === pedidoId);
-
-      if (pedido) {
-        console.log("Pedido Seleccionado:", pedido);
-
-        setSelectedPedido(pedido);
-        setIsModalOpen(true);
-      } else {
-        console.error(`No se encontró el pedido con ID ${pedidoId}`);
-      }
-    } catch (error) {
-      console.error(
-        `Error al obtener los detalles del pedido ${pedidoId}:`,
-        error
-      );
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los detalles del pedido.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
+    },
+    [dispatch, pedidos, toast]
+  );
 
   const handleCloseApproveDialog = () => {
     setIsApproving(false);
@@ -350,12 +381,17 @@ const EntrantesPage = () => {
         </Flex>
       </Flex>
       <PedidosTable
-        pedidosEntrantes={lista}
+        pedidosEntrantes={pedidosPaginados}
         highlight={query}
-        // pedidosEntrantes={pedidosFiltrados}
         selectedPedidos={selectedPedidos}
         setSelectedPedidos={setSelectedPedidos}
         handleVerDetalles={handleVerDetalles}
+      />
+      <Pagination
+        currentPage={currentPage}
+        totalItems={lista.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={handlePageChange}
       />
       <DetallesModal
         isOpen={isModalOpen}

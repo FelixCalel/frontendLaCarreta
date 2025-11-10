@@ -16,10 +16,13 @@ export const selectPedidosEntrantesPorRuta = (estadoIds = [2]) =>
       );
       const tiendaRuta = new Map(tiendas.map((t) => [t.id, +t.rutaId]));
 
-      return pedidos.filter(
+      const pedidosFiltrados = pedidos.filter(
         (p) =>
           rutasSet.has(tiendaRuta.get(p.tiendaId)) &&
           estadoIds.includes(p.estadoId)
       );
+
+      // Ordenar por ID descendente (más recientes primero)
+      return pedidosFiltrados.sort((a, b) => b.id - a.id);
     }
   );

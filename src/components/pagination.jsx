@@ -2,10 +2,15 @@ import { Flex, IconButton, Button, Text } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 
-const Pagination = ({ currentPage, totalItems, itemsPerPage, onPageChange }) => {
+const Pagination = ({
+  currentPage,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
+}) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  const maxVisiblePages = 9; // Máximo de números visibles
+  const maxVisiblePages = 15; // Máximo de números visibles
   const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
   const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
