@@ -10,13 +10,8 @@ import HomePage from "../pages/auth/HomePage";
 import { routeComponentMap } from "./routeComponentMap";
 
 export const AppRouter = () => {
-  const {
-    permissions,
-    roleId: roleIdNum,
-    status,
-  } = useSelector((state) => state.auth);
+  const { permissions, status } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
-  const roleId = String(roleIdNum);
 
   useEffect(() => {
     if (status !== "checking") {
@@ -24,24 +19,12 @@ export const AppRouter = () => {
     }
   }, [status]);
 
-  const rolesPermitidosAdmin = [
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-  ];
-
   if (loading || status === "checking") {
     return <CheckingAuth />;
   }
 
   const allowedRoutes = permissions?.routes || [];
+  const hasAdminAccess = permissions?.hasAdminAccess || false;
   const isAuthenticated = status === "authenticated";
 
   return (
@@ -62,7 +45,7 @@ export const AppRouter = () => {
           </PrivateRoute>
         }
       />
-      {rolesPermitidosAdmin.includes(roleId) ? (
+      {hasAdminAccess ? (
         <Route
           path="/admin/*"
           element={
