@@ -6,9 +6,10 @@ const LOCAL_KEY = "authSlice";
 const loadState = () => {
   try {
     const s = JSON.parse(localStorage.getItem(LOCAL_KEY) || "{}");
-    //console.log(s);
+    const hasToken = s.token && s.uid;
+
     return {
-      status: s.status ?? "not-authenticated",
+      status: hasToken ? s.status ?? "authenticated" : "not-authenticated",
       uid: s.uid ?? null,
       correo: s.correo ?? null,
       displayName: s.displayName ?? null,
@@ -19,6 +20,7 @@ const loadState = () => {
       token: s.token ?? null,
       rutas: s.rutas ?? [],
       user: s.user ?? null,
+      permissions: s.permissions ?? null,
     };
   } catch (_err) {
     return {
@@ -33,6 +35,7 @@ const loadState = () => {
       token: null,
       rutas: [],
       user: null,
+      permissions: null,
     };
   }
 };
@@ -77,6 +80,7 @@ export const authSlice = createSlice({
             ? payload.rutasFull
             : state.user?.rutas || [],
       };
+      state.permissions = payload.permissions ?? state.permissions;
       saveState(state);
     },
 
@@ -92,6 +96,7 @@ export const authSlice = createSlice({
       state.errorMessage = payload?.errorMessage || null;
       state.rutas = [];
       state.user = null;
+      state.permissions = null;
       localStorage.removeItem(LOCAL_KEY);
     },
 

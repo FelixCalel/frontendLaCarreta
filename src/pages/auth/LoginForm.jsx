@@ -73,6 +73,7 @@ export const LoginForm = () => {
           const doExchange = async (idToken) => {
             let access_token = null;
             let refresh_token = null;
+            let permissions = null;
             try {
               const tokenExchangeResp = await axios.post(
                 `${BASE_URL}/usuarios/exchange-token`,
@@ -80,6 +81,7 @@ export const LoginForm = () => {
               );
               access_token = tokenExchangeResp?.data?.access_token ?? null;
               refresh_token = tokenExchangeResp?.data?.refresh_token ?? null;
+              permissions = tokenExchangeResp?.data?.permissions ?? null;
             } catch (e1) {
               const status = e1?.response?.status;
               if (status === 404 || status === 401 || status === 405) {
@@ -94,18 +96,23 @@ export const LoginForm = () => {
                   fbResp?.data?.refreshToken ??
                   fbResp?.data?.refresh_token ??
                   null;
+                permissions = fbResp?.data?.permissions ?? null;
               } else {
                 throw e1;
               }
             }
-            return { access_token, refresh_token };
+            return { access_token, refresh_token, permissions };
           };
 
-          let { access_token, refresh_token } = await doExchange(token);
+          let { access_token, refresh_token, permissions } = await doExchange(
+            token
+          );
 
           if (!access_token) {
             token = await user.getIdToken(true);
-            ({ access_token, refresh_token } = await doExchange(token));
+            ({ access_token, refresh_token, permissions } = await doExchange(
+              token
+            ));
           }
 
           console.log("JWT del backend recibido:", access_token);
@@ -140,11 +147,12 @@ export const LoginForm = () => {
               rutas: resp.data.usuario.rutas?.map((r) => r.id) ?? [],
               rutasFull: resp.data.usuario.rutas,
               id: usuarioId,
+              permissions,
             })
           );
           await dispatch(fetchCurrentUser());
           navigate("/auth/home", { replace: true });
-          window.location.reload();
+          //window.location.reload();
         } catch (tokenError) {
           console.error("Error al intercambiar token:", tokenError);
           const msg =
