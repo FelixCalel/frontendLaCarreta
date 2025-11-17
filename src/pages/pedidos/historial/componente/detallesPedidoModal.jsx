@@ -75,9 +75,9 @@ BloqueComentario.propTypes = {
 const DetallesPedidoModal = ({
   isOpen,
   onClose,
-  pedido,
-  detalles,
-  isLoading,
+  pedido = null,
+  detalles = [],
+  isLoading = false,
 }) => {
   const cardBg = useColorModeValue("white", "gray.700");
   const cardBorderColor = useColorModeValue("gray.200", "gray.600");
@@ -221,12 +221,6 @@ DetallesPedidoModal.propTypes = {
     })
   ),
   isLoading: PropTypes.bool,
-};
-
-DetallesPedidoModal.defaultProps = {
-  pedido: null,
-  detalles: [],
-  isLoading: false,
 };
 
 export default DetallesPedidoModal;
