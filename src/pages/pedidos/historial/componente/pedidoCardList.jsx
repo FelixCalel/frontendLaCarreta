@@ -19,20 +19,22 @@ const PedidosCardList = ({ pedidos, roleId, onVerDetalles }) => {
   const hoverBg = useColorModeValue("gray.50", "gray.600");
 
   return (
-    <VStack spacing={4} align="stretch">
+    <VStack spacing={3} align="stretch" w="100%">
       {pedidos.map((pedido) => {
         const showDocIds = roleId === 3 && pedido.estadoId === 5;
 
         return (
           <Box
             key={pedido.id}
-            p={4}
+            p={{ base: 3, sm: 4 }}
             borderWidth="1px"
             borderColor={cardBorderColor}
             rounded="lg"
             bg={cardBg}
             shadow="md"
             transition="all 0.2s"
+            w="100%"
+            maxW="100%"
             _hover={{
               shadow: "lg",
               transform: "scale(1.02)",

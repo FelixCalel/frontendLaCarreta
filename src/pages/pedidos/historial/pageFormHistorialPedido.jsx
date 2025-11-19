@@ -95,14 +95,23 @@ const HistorialPedidosPage = () => {
 
   return (
     <Box
-      p={6}
-      boxShadow="xl"
+      p={{ base: 1, sm: 2, md: 6 }}
+      boxShadow={{ base: "none", md: "xl" }}
       bg={containerBg}
-      rounded="lg"
-      mt={{ base: "0px", md: "0" }}
-      mb={{ base: "70px", md: "0" }}
+      rounded={{ base: "none", md: "lg" }}
+      mt={{ base: "80px", sm: "85px", md: "0" }}
+      mb={{ base: "60px", sm: "65px", md: "0" }}
+      minH={{ base: "calc(100vh - 140px)", md: "auto" }}
+      maxW="100%"
+      w="100%"
     >
-      <Heading as="h2" size="lg" mb={[4, 6]} mt={[5, 0]} color={headingColor}>
+      <Heading
+        as="h2"
+        size={{ base: "md", md: "lg" }}
+        mb={{ base: 3, md: 6 }}
+        mt={{ base: 0, md: 0 }}
+        color={headingColor}
+      >
         Historial de Pedidos
       </Heading>
 
