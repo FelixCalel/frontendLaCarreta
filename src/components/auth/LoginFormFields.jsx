@@ -24,7 +24,9 @@ export const LoginFormFields = ({ onSubmit, isLoading, error }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ correo, contrasena });
+    const correoNormalizado = correo.toLowerCase().trim(" ");
+    const contrasenaNormalizada = contrasena;
+    onSubmit({ correo: correoNormalizado, contrasena: contrasenaNormalizada });
   };
 
   return (

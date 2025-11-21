@@ -216,9 +216,10 @@ const RegisterForm = () => {
     let phoneE164 = "";
 
     if (emailRegex.test(contact)) {
+      const correoNormalizado = contact.trim().toLowerCase();
       payload = {
         ...rest,
-        correo: contact.trim(),
+        correo: correoNormalizado,
         telefono: telefono ? telefono.replace(/\D+/g, "") : null,
       };
     } else {
