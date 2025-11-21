@@ -15,6 +15,7 @@ import {
   Heading,
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import PropTypes from "prop-types";
 
 export const LoginFormFields = ({ onSubmit, isLoading, error }) => {
   const navigate = useNavigate();
@@ -163,4 +164,10 @@ export const LoginFormFields = ({ onSubmit, isLoading, error }) => {
       </form>
     </Stack>
   );
+};
+
+LoginFormFields.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+  isLoading: PropTypes.bool,
+  error: PropTypes.string,
 };

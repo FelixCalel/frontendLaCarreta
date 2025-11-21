@@ -13,6 +13,7 @@ import PropTypes from "prop-types";
 const phoneRegex = /^[\d\s()+-]+$/;
 
 export default function ContactField({ value, onChange, error = "" }) {
+  const emailRegex = /^\S+@\S+\.\S+$/;
   const { icon, placeholder } = useMemo(() => {
     const soloTelefono =
       value && phoneRegex.test(value) && !value.includes("@");
@@ -41,7 +42,14 @@ export default function ContactField({ value, onChange, error = "" }) {
           type="text"
           placeholder={`Ingresa tu ${placeholder.toLowerCase()}`}
           value={value}
-          onChange={onChange}
+          onChange={(e) => {
+            let val = e.target.value.replace(/^\s+|\s+$/g, "");
+            if (emailRegex.test(val) || val.includes("@")) {
+              val = val.toLowerCase();
+            }
+            e.target.value = val;
+            onChange(e);
+          }}
           focusBorderColor="green.500"
           borderRadius="md"
           size="lg"

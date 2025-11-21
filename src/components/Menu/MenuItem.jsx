@@ -27,7 +27,6 @@ const MenuItem = ({
   const isOpen = openMenus[item.nombre] || false;
   const hasChildren = item.opciones && item.opciones.length > 0;
 
-  // Colores VERDES similares a los botones y footer
   const linkBgHover = useColorModeValue("green.50", "green.900");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const textColorSecondary = useColorModeValue("gray.600", "gray.400");
@@ -53,7 +52,6 @@ const MenuItem = ({
         [item.nombre]: !isOpen,
       }));
     } else if (item.ruta && onNavigate) {
-      // Si no tiene hijos y hay ruta, cerrar el menú móvil al navegar
       onNavigate();
     }
   };
@@ -201,7 +199,6 @@ const MenuItem = ({
     </Flex>
   );
 
-  // Si no está expandido y no es mobile drawer, mostrar tooltip
   if (!isExpanded && !isMobileDrawer && indentLevel === 0) {
     return (
       <Tooltip
