@@ -101,7 +101,7 @@ const PageFormPedidos = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    const message = sessionStorage.getItem('showToastAfterReload');
+    const message = sessionStorage.getItem("showToastAfterReload");
     if (message) {
       toast({
         title: "Información",
@@ -110,7 +110,7 @@ const PageFormPedidos = () => {
         duration: 5000,
         isClosable: true,
       });
-      sessionStorage.removeItem('showToastAfterReload');
+      sessionStorage.removeItem("showToastAfterReload");
     }
   }, [toast]);
 
@@ -127,6 +127,7 @@ const PageFormPedidos = () => {
 
   const copiarUltimoPedido = async (tiendaId) => {
     try {
+      setIsLoading(true);
       const tiendaSel = allTiendas.find((t) => t.id === tiendaId);
       if (!tiendaSel) {
         toast({
@@ -164,11 +165,17 @@ const PageFormPedidos = () => {
 
       onClose();
     } catch (error) {
-      const errorMessage = typeof error === 'string' ? error : (error?.message || "Error desconocido");
+      const errorMessage =
+        typeof error === "string"
+          ? error
+          : error?.message || "Error desconocido";
       console.error("Error al copiar pedido:", errorMessage);
 
       if (errorMessage.includes("No existe un pedido aprobado anterior")) {
-        sessionStorage.setItem('showToastAfterReload', 'No se encontró un pedido anterior para esta tienda.');
+        sessionStorage.setItem(
+          "showToastAfterReload",
+          "No se encontró un pedido anterior para esta tienda."
+        );
         window.location.reload();
       } else {
         toast({
@@ -179,6 +186,8 @@ const PageFormPedidos = () => {
           isClosable: true,
         });
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 

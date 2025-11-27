@@ -26,7 +26,7 @@ import CantidadInput from "./pageFormPedidos/cantidadInput";
 import {
   addNewDetalleOrden,
   deleteDetalleOrden,
-  getPedidosComunesByUsuarioId,
+  getPedidoModeloByUsuarioId,
   getDetalleOrdenByPedidoId,
   updateDetalleOrden,
 } from "../../../store/Pedidos/DetallePedidos/thunks";
@@ -40,11 +40,10 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   const toast = useToast();
   const [productos, setProductos] = useState([]);
   const [detallesCargados, setDetallesCargados] = useState(false);
-  const [productosComunesCargados, setProductosComunesCargados] =
-    useState(false);
+  const [pedidoModeloCargado, setPedidoModeloCargado] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [resetFields, setResetFields] = useState(false);
-  const hasLoadedProductosComunes = useRef(false);
+  const hasLoadedPedidoModelo = useRef(false);
   const [newProducto, setNewProducto] = useState({
     productoId: "",
     nombreProducto: "",
@@ -95,6 +94,10 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           `productos_${pedidoId}`,
           JSON.stringify(detalles)
         );
+
+        if (detalles.length > 0) {
+          setIsLoading(false);
+        }
       } catch (err) {
         console.error("Error al obtener detalles del servidor:", err);
         const cache = sessionStorage.getItem(`productos_${pedidoId}`);
@@ -108,6 +111,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             duration: 3000,
             isClosable: true,
           });
+          setIsLoading(false);
         } else {
           toast({
             title: "Error",
@@ -116,9 +120,14 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             duration: 3000,
             isClosable: true,
           });
+          // Keep isLoading true so cargarPedidoModelo can take over or we handle it in useEffect
         }
       } finally {
-        setIsLoading(false);
+        // If we found products, stop loading. If not, keep loading for cargarPedidoModelo
+        // We check the state in the useEffect, but we can't easily check 'detalles' here as it's scoped.
+        // However, we can check if we set products? No, state update is async.
+        // We rely on the fact that if we didn't set isLoading(false) above, it's still true.
+
         setDetallesCargados(true);
       }
     };
@@ -129,30 +138,32 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   }, [deudorId, pedidoId, tiendaId, detallesCargados, dispatch, toast]);
 
   useEffect(() => {
-    if (detallesCargados && !hasLoadedProductosComunes.current) {
+    if (detallesCargados && !hasLoadedPedidoModelo.current) {
       if (productos.length === 0) {
-        cargarProductosComunes();
+        cargarPedidoModelo();
+      } else {
+        setIsLoading(false);
       }
-      hasLoadedProductosComunes.current = true;
+      hasLoadedPedidoModelo.current = true;
     }
   }, [detallesCargados]);
 
   useEffect(() => {
     setDetallesCargados(false);
-    setProductosComunesCargados(false);
-    hasLoadedProductosComunes.current = false;
+    setPedidoModeloCargado(false);
+    hasLoadedPedidoModelo.current = false;
     setProductos([]);
   }, [pedidoId]);
 
-  const cargarProductosComunes = async () => {
-    if (productosComunesCargados) return;
+  const cargarPedidoModelo = async () => {
+    if (pedidoModeloCargado) return;
     setIsLoading(true);
 
     try {
-      const comunesRaw = await dispatch(
-        getPedidosComunesByUsuarioId({ deudorId, pedidoId, tiendaId })
+      const modeloRaw = await dispatch(
+        getPedidoModeloByUsuarioId({ deudorId, pedidoId, tiendaId })
       ).unwrap();
-      const comunes = comunesRaw.map((c) => ({
+      const modelo = modeloRaw.map((c) => ({
         ...c,
         detallePedidoId: c.detallePedidoId ?? c.id,
       }));
@@ -160,7 +171,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
       setProductos((prev) => {
         const nuevos = [
           ...prev,
-          ...comunes.filter(
+          ...modelo.filter(
             (c) => !prev.some((p) => p.detallePedidoId === c.detallePedidoId)
           ),
         ];
@@ -170,24 +181,24 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
 
       toast({
         title:
-          comunes.length > 0
-            ? "Productos comunes agregados"
-            : "Sin productos comunes",
+          modelo.length > 0
+            ? "Productos activos agregados"
+            : "Sin productos activos",
         description:
-          comunes.length > 0
-            ? "Los productos comunes ya están en el pedido."
-            : "No se encontraron productos comunes.",
-        status: comunes.length > 0 ? "success" : "info",
+          modelo.length > 0
+            ? "Los productos activos ya están en el pedido."
+            : "No se encontraron productos activos para este deudor.",
+        status: modelo.length > 0 ? "success" : "info",
         duration: 3000,
         isClosable: true,
       });
 
-      setProductosComunesCargados(true);
+      setPedidoModeloCargado(true);
     } catch (err) {
-      console.error("Error al cargar comunes:", err);
+      console.error("Error al cargar pedido modelo:", err);
       toast({
         title: "Error",
-        description: "Hubo un problema al obtener los productos comunes.",
+        description: "Hubo un problema al obtener el pedido modelo.",
         status: "error",
         duration: 3000,
         isClosable: true,

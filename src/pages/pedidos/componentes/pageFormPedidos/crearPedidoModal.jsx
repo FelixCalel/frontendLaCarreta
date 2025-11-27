@@ -246,6 +246,8 @@ const PedidoModal = ({
               fontSize="sm"
               width="auto"
               variant="outline"
+              isLoading={isLoading}
+              loadingText="Copiando..."
             >
               Copiar Último Pedido
             </Button>
@@ -267,11 +269,12 @@ const PedidoModal = ({
               size="sm"
               onClick={handleSubmit}
               isLoading={isLoading}
+              loadingText={isPedidoFinalizado ? "Agregando..." : "Guardando..."}
               spinner={<Spinner size="xs" color="white" />}
               px={4}
               py={2}
             >
-              {isPedidoFinalizado ? "Agregar" : "Guardar"}
+              {isPedidoFinalizado ? "Agregar" : "Nuevo"}
             </Button>
           </HStack>
         </ModalFooter>

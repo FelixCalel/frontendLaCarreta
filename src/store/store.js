@@ -21,10 +21,12 @@ import proveedorReducer from "./Proveedor/proveedorSlice.js";
 import asignacionAMSlice from "./asignacionAM/asignacionAMSlice.js";
 import { pedidoProduccionApi } from "../services/pedidoProductionApi.ts";
 import { qaApi } from "../services/controlCalidadAPI.ts";
+import settingsReducer from "./settings/settingsSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authSlice.reducer,
+    settings: settingsReducer,
     usuarios: usuariosReducer,
     paises: paisesReducer,
     empresas: empresaReducer,

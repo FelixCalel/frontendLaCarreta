@@ -16,6 +16,8 @@ import { MenuPerfil } from "./MenuPerfil";
 import Notifications from "./Notificaciones";
 import SearchBar from "./component/searchBar";
 import { useSearch } from "./component/SearchContext";
+import { useDispatch } from "react-redux";
+import { setTheme } from "../store/settings/settingsSlice";
 
 export default function NavBar() {
   const { isOpen, onToggle, onClose } = useDisclosure();
@@ -24,6 +26,13 @@ export default function NavBar() {
   const handleSearch = (q) => setQuery(q);
 
   const { colorMode, toggleColorMode } = useColorMode();
+  const dispatch = useDispatch();
+
+  const handleToggleColorMode = () => {
+    toggleColorMode();
+    const newTheme = colorMode === "light" ? "dark" : "light";
+    dispatch(setTheme(newTheme));
+  };
 
   return (
     <Flex
@@ -82,7 +91,7 @@ export default function NavBar() {
           variant="ghost"
           aria-label="Toggle Color Mode"
           icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
-          onClick={toggleColorMode}
+          onClick={handleToggleColorMode}
         />
 
         <Notifications isOpen={isOpen} onToggle={onToggle} onClose={onClose} />

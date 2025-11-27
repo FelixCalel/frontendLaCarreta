@@ -136,8 +136,8 @@ export const getDetalleOrdenByPedidoId = createAsyncThunk(
   }
 );
 
-export const getPedidosComunesByUsuarioId = createAsyncThunk(
-  "detalleOrden/fetchPedidosComunesByUsuarioId",
+export const getPedidoModeloByUsuarioId = createAsyncThunk(
+  "detalleOrden/fetchPedidoModeloByUsuarioId",
   async ({ deudorId, pedidoId, tiendaId }, { rejectWithValue }) => {
     console.log("Valores enviados al thunk:", { deudorId, pedidoId, tiendaId });
 
@@ -157,7 +157,7 @@ export const getPedidosComunesByUsuarioId = createAsyncThunk(
     }
 
     try {
-      const url = `${BASE_URL}/detalle/pedido/pedidosComunes/${deudorId}/${pedidoId}/${tiendaId}`;
+      const url = `${BASE_URL}/detalle/pedido/pedidoModelo/${deudorId}/${pedidoId}/${tiendaId}`;
       console.log("URL solicitada:", url);
 
       const response = await axios.get(url);
@@ -172,7 +172,7 @@ export const getPedidosComunesByUsuarioId = createAsyncThunk(
       console.log("Datos recibidos del backend:", data);
       return data;
     } catch (error) {
-      console.error("Error al obtener pedidos comunes:", error);
+      console.error("Error al obtener pedidos modelo:", error);
 
       return rejectWithValue(
         error.response?.data || "Error desconocido en la API"
