@@ -5,6 +5,11 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { useDispatch, useSelector } from "react-redux";
+// @ts-ignore
+import { fetchModulos } from "../store/RolPermisoUsuario/thunks";
+// @ts-ignore
+import { fetchCurrentUser } from "../store/auth/thunks";
 
 interface IWebSocketContext {
   socket: WebSocket | null;
@@ -39,8 +44,18 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const wsUrl = import.meta.env.VITE_API_URL;
+  const { status, uid } = useSelector((state: any) => state.auth);
+  const dispatch = useDispatch();
 
   useEffect(() => {
+    if (status !== "authenticated") {
+      if (socket) {
+        socket.close();
+        setSocket(null);
+      }
+      return;
+    }
+
     let ws: WebSocket;
     let reconnectTimeout: ReturnType<typeof setTimeout>;
 
@@ -48,7 +63,19 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       ws = createWebSocket(
         wsUrl,
         (event) => {
-          //console.log("Mensaje recibido:", event.data);
+          // console.log("Mensaje recibido:", event.data);
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === "permissions-updated") {
+              // console.log("Permisos actualizados, recargando...");
+              if (uid) {
+                dispatch(fetchModulos(uid) as any);
+                dispatch(fetchCurrentUser() as any);
+              }
+            }
+          } catch (e) {
+            console.error("Error parsing WS message:", e);
+          }
         },
         () => {
           setSocket(ws);
@@ -58,7 +85,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
           reconnectTimeout = setTimeout(connect, 3000);
         },
         (error) => {
-          //console.warn("Advertencia en WebSocket:", error);
+          // Suppress connection errors to keep console clean
+          // console.warn("Advertencia en WebSocket:", error);
         }
       );
     };
@@ -67,9 +95,9 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return () => {
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
-      ws.close();
+      if (ws) ws.close();
     };
-  }, [wsUrl]);
+  }, [wsUrl, status]);
 
   const contextValue = useMemo(() => ({ socket }), [socket]);
 

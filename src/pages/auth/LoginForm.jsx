@@ -60,6 +60,7 @@ export const LoginForm = () => {
           paisId,
           roleId,
           estaActivo,
+          avatar,
         } = resp.data.usuario;
 
         if (!estaActivo) {
@@ -135,6 +136,7 @@ export const LoginForm = () => {
           localStorage.setItem("usuarioId", usuarioId);
           localStorage.setItem("roleId", roleId);
           localStorage.setItem("paisId", paisId);
+          if (avatar) localStorage.setItem("avatar", avatar);
 
           dispatch(
             loginAuth({
@@ -148,6 +150,7 @@ export const LoginForm = () => {
               rutasFull: resp.data.usuario.rutas,
               id: usuarioId,
               permissions,
+              photoURL: avatar,
             })
           );
           await dispatch(fetchCurrentUser());

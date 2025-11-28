@@ -22,6 +22,7 @@ const CHUNK_SIZE = 20;
 const DeuSelector = ({ onSelect, reset }) => {
   const dispatch = useDispatch();
   const allDeudores = useSelector((s) => s.deudores.deudores);
+  const { status } = useSelector((state) => state.auth);
 
   const [inputValue, setInputValue] = useState("");
   const [visible, setVisible] = useState([]);
@@ -30,8 +31,10 @@ const DeuSelector = ({ onSelect, reset }) => {
   const ref = useRef();
 
   useEffect(() => {
-    dispatch(tablaDeudores());
-  }, [dispatch]);
+    if (status === "authenticated") {
+      dispatch(tablaDeudores());
+    }
+  }, [dispatch, status]);
 
   useEffect(() => {
     if (allDeudores.length) {

@@ -1,12 +1,15 @@
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import PropTypes from "prop-types";
 import { tablaPedidos } from "../store/Pedidos/thunks";
 
 export const PedidoProvider = ({ children }) => {
   const dispatch = useDispatch();
+  const { status } = useSelector((state) => state.auth);
 
   useEffect(() => {
+    if (status !== "authenticated") return;
+
     const fetchPedidos = () => {
       dispatch(tablaPedidos());
     };
@@ -14,7 +17,10 @@ export const PedidoProvider = ({ children }) => {
     fetchPedidos();
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
+      if (
+        document.visibilityState === "visible" &&
+        status === "authenticated"
+      ) {
         fetchPedidos();
       }
     };
@@ -22,7 +28,10 @@ export const PedidoProvider = ({ children }) => {
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     const intervalId = setInterval(() => {
-      if (document.visibilityState === "visible") {
+      if (
+        document.visibilityState === "visible" &&
+        status === "authenticated"
+      ) {
         fetchPedidos();
       }
     }, 60000);
@@ -31,7 +40,7 @@ export const PedidoProvider = ({ children }) => {
       clearInterval(intervalId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [dispatch]);
+  }, [dispatch, status]);
 
   return <>{children}</>;
 };

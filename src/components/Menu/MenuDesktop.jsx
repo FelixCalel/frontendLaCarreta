@@ -73,12 +73,13 @@ const MenuDesktop = () => {
   const hoverBg = useColorModeValue("green.50", "green.900");
   const indicatorBg = useColorModeValue("green.400", "green.600");
 
+  const { uid } = useSelector((state) => state.auth);
+
   useEffect(() => {
-    const UsuarioId = localStorage.getItem("usuarioId");
-    if (UsuarioId) {
-      dispatch(fetchModulos(UsuarioId));
+    if (uid) {
+      dispatch(fetchModulos(uid));
     }
-  }, [dispatch]);
+  }, [dispatch, uid]);
 
   // Cerrar menú al hacer click fuera
   useEffect(() => {
@@ -186,11 +187,24 @@ const MenuDesktop = () => {
       {/* Botón toggle */}
       <Flex
         p={4}
-        justify={isExpanded ? "flex-end" : "center"}
+        justify={isExpanded ? "space-between" : "center"}
+        align="center"
         borderBottom="1px solid"
         borderColor={sidebarBorder}
         mb={2}
       >
+        {isExpanded && (
+          <Box
+            fontWeight="bold"
+            fontSize="lg"
+            color="green.600"
+            whiteSpace="nowrap"
+            overflow="hidden"
+            animation="fadeIn 0.3s"
+          >
+            Menú Principal
+          </Box>
+        )}
         <IconButton
           icon={<HamburgerIcon />}
           onClick={toggleMenu}

@@ -54,6 +54,7 @@ const RolSelector = ({ usuario, allRoles }) => {
         rolId: pendingRole,
       });
       setSelectedRole(pendingRole);
+
       toast({
         title: "Rol actualizado",
         status: "success",

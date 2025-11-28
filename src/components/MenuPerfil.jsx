@@ -21,27 +21,22 @@ import {
   FaThList,
 } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/auth";
-import { useEffect, useState } from "react";
 
 export const MenuPerfil = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [nombreUsuario, setNombreUsuario] = useState("");
-  const [correoUsuario, setCorreoUsuario] = useState("");
+  const { displayName, photoURL, correo } = useSelector((state) => state.auth);
   const roleId = localStorage.getItem("roleId");
 
-  useEffect(() => {
-    const nombre = localStorage.getItem("nombreUsuario");
-    const correo = localStorage.getItem("correoUsuario");
-
-    if (nombre && correo) {
-      setNombreUsuario(nombre);
-      setCorreoUsuario(correo);
-    }
-  }, []);
+  // Fallback values if Redux state is empty (e.g. on hard refresh before hydration if any)
+  const userData = {
+    nombre: displayName || localStorage.getItem("nombreUsuario") || "Usuario",
+    correo: correo || localStorage.getItem("correoUsuario") || "",
+    avatar: photoURL || localStorage.getItem("avatar") || "",
+  };
 
   const onLogout = () => {
     // Eliminar sólo claves relevantes para no borrar otras preferencias de la app
@@ -64,7 +59,7 @@ export const MenuPerfil = () => {
   };
 
   const menuBgColor = useColorModeValue("white", "gray.800");
-  const menuHeaderBg = useColorModeValue("teal.500", "teal.600");
+  const menuHeaderBg = useColorModeValue("brand.500", "brand.600");
   const avatarBg = useColorModeValue("gray.300", "gray.600");
   const menuItemHoverBg = useColorModeValue("green.100", "green.700");
   const menuItemFocusBg = useColorModeValue("green.200", "green.800");
@@ -78,7 +73,14 @@ export const MenuPerfil = () => {
           <MenuButton
             as={IconButton}
             aria-label="Perfil"
-            icon={<FaUser />}
+            icon={
+              <Avatar
+                size="sm"
+                name={userData.nombre}
+                src={userData.avatar}
+                bg={avatarBg}
+              />
+            }
             variant="ghost"
             size="lg"
             color={iconColor}
@@ -101,12 +103,19 @@ export const MenuPerfil = () => {
               p={4}
               bg={menuHeaderBg}
             >
-              <Avatar size="lg" name={nombreUsuario} bg={avatarBg} mb={2} />
+              <Avatar
+                size="lg"
+                name={userData.nombre}
+                src={userData.avatar}
+                bg={avatarBg}
+                mb={2}
+                border="2px solid white"
+              />
               <Text fontWeight="bold" color="white">
-                {nombreUsuario || "Nombre Usuario"}
+                {userData.nombre || "Nombre Usuario"}
               </Text>
               <Text fontSize="sm" color="whiteAlpha.800">
-                {correoUsuario || "usuario@correo.com"}
+                {userData.correo || "usuario@correo.com"}
               </Text>
             </Flex>
 

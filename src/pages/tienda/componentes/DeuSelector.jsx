@@ -20,13 +20,16 @@ import { tablaDeudores } from "../../../store/Deus/thunks";
 const DeuSelector = ({ onSelect, selectedDeudorId }) => {
   const dispatch = useDispatch();
   const { deudores } = useSelector((state) => state.deudores);
+  const { status } = useSelector((state) => state.auth);
   const [inputValue, setInputValue] = useState("");
   const [showOptions, setShowOptions] = useState(false);
   const autoCompleteRef = useRef(null);
 
   useEffect(() => {
-    dispatch(tablaDeudores());
-  }, [dispatch]);
+    if (status === "authenticated") {
+      dispatch(tablaDeudores());
+    }
+  }, [dispatch, status]);
 
   useEffect(() => {
     if (selectedDeudorId && deudores.length > 0) {

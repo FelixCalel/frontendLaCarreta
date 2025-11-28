@@ -12,7 +12,8 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { applyActionCode } from "firebase/auth";
+import axios from "axios";
+import { checkActionCode, applyActionCode } from "firebase/auth";
 import { auth } from "../../middleware/firebase-config";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { AnimatedBackground } from "../../components/auth/AnimatedBackground";
@@ -28,6 +29,7 @@ export const VerifyEmail = () => {
   const oobCode = searchParams.get("oobCode");
 
   const effectRan = useRef(false);
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     if (effectRan.current === true || !oobCode) return;
@@ -36,7 +38,28 @@ export const VerifyEmail = () => {
       effectRan.current = true;
 
       try {
+        // 1. Obtener el email del código
+        const info = await checkActionCode(auth, oobCode);
+        const email = info.data.email;
+
+        // 2. Verificar en Firebase
         await applyActionCode(auth, oobCode);
+
+        // 3. Sincronizar con el backend
+        if (email) {
+          try {
+            await axios.post(`${BASE_URL}/usuarios/sync-verification`, {
+              email,
+            });
+          } catch (syncError) {
+            console.error(
+              "Error syncing verification with backend:",
+              syncError
+            );
+            // No fallamos todo el proceso si esto falla, pero lo logueamos
+          }
+        }
+
         setStatus("success");
         setMessage("¡Tu correo ha sido verificado exitosamente!");
 

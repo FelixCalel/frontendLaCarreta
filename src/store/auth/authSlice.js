@@ -44,6 +44,7 @@ const saveState = (state) => {
   //console.log("Guardando estado en localStorage:", state);
   localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
 };
+
 export const authSlice = createSlice({
   name: "auth",
   initialState: loadState(),
@@ -97,7 +98,18 @@ export const authSlice = createSlice({
       state.rutas = [];
       state.user = null;
       state.permissions = null;
+      state.permissions = null;
       localStorage.removeItem(LOCAL_KEY);
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("token");
+      localStorage.removeItem("usuarioId");
+      localStorage.removeItem("nombreUsuario");
+      localStorage.removeItem("correoUsuario");
+      localStorage.removeItem("avatar");
+      localStorage.removeItem("roleId");
+      localStorage.removeItem("paisId");
+      localStorage.removeItem("userData");
+      localStorage.removeItem("isAuthenticated");
     },
 
     checkingCredentials: (state) => {
@@ -109,12 +121,35 @@ export const authSlice = createSlice({
       state.user = { ...(state.user || {}), rutas: payload.objetos };
       saveState(state);
     },
+
+    updateUser: (state, { payload }) => {
+      state.displayName = payload.nombre
+        ? `${payload.nombre} ${payload.apellido || ""}`.trim()
+        : state.displayName;
+      state.photoURL = payload.avatar || state.photoURL;
+      // Update nested user object if it exists
+      if (state.user) {
+        state.user = {
+          ...state.user,
+          nombre: payload.nombre || state.user.nombre,
+          apellido: payload.apellido || state.user.apellido,
+          telefono: payload.telefono || state.user.telefono,
+          avatar: payload.avatar || state.user.avatar,
+        };
+      }
+      saveState(state);
+    },
   },
 
   extraReducers: (builder) => {
     builder
       .addCase(fetchCurrentUser.pending, (state) => {
-        state.status = "checking";
+        // Only show loading spinner if we are not already authenticated
+        // This prevents the UI from flashing "Loading..." during background updates
+        // BUT if we are manually set to 'checking' (by AuthWrapper), keep it 'checking'
+        if (state.status !== "authenticated" && state.status !== "checking") {
+          state.status = "checking";
+        }
       })
       .addCase(fetchCurrentUser.fulfilled, (state, { payload }) => {
         state.status = "authenticated";
@@ -125,15 +160,36 @@ export const authSlice = createSlice({
         state.paisId = payload.paisId;
         state.roleId = payload.roleId;
         state.displayName = payload.nombre;
+        state.photoURL = payload.avatar;
         saveState(state);
       })
       .addCase(fetchCurrentUser.rejected, (state, { payload }) => {
-        state.status = "not-authenticated";
-        state.errorMessage = payload;
-        saveState(state);
+        // Only logout if it's an authentication error (401) or explicit logout
+        // If it's a network error, keep the user logged in (offline mode) or checking (retry mode)
+        const isNetworkError =
+          payload === "Network Error" ||
+          payload === "ERR_NETWORK" ||
+          payload?.message === "Network Error" ||
+          payload?.code === "ERR_NETWORK" ||
+          (typeof payload === "string" && payload.includes("Network"));
+
+        if (!isNetworkError) {
+          state.status = "not-authenticated";
+          state.errorMessage = payload;
+          saveState(state);
+        }
+        // If network error, do nothing.
+        // If status was 'checking', it stays 'checking' (Loading screen persists).
+        // If status was 'authenticated', it stays 'authenticated' (Offline mode).
       });
   },
 });
 
-export const { login, logout, checkingCredentials, registered, setRutas } =
-  authSlice.actions;
+export const {
+  login,
+  logout,
+  checkingCredentials,
+  registered,
+  setRutas,
+  updateUser,
+} = authSlice.actions;

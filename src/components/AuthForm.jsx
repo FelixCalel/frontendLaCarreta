@@ -34,7 +34,7 @@ const AuthForm = ({ onSubmit, loading, error }) => {
       p={4}
       borderWidth={1}
       borderRadius="lg"
-      boxShadow="none" // Eliminación de sombras
+      boxShadow="none"
     >
       <VStack spacing={4} align="stretch">
         <FormControl id="email" isRequired>
@@ -63,10 +63,9 @@ const AuthForm = ({ onSubmit, loading, error }) => {
           type="submit"
           colorScheme="blue"
           isDisabled={loading}
-          _hover={{}} // Eliminación de efectos hover
+          _hover={{}}
         >
           {loading ? "Cargando..." : "Iniciar Sesión"}{" "}
-          {/* Eliminación de Spinner */}
         </Button>
       </VStack>
     </Box>

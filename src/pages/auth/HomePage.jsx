@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MenuPrincipalD from "../../components/MenuPrincipalD";
@@ -76,17 +77,21 @@ const HomePage = () => {
 
   const navigate = useNavigate();
 
+  const { displayName, roleId: roleIdRedux } = useSelector(
+    (state) => state.auth
+  );
+
   useEffect(() => {
-    const nombre = localStorage.getItem("nombreUsuario") ?? "";
-    const roleIdLS = parseInt(localStorage.getItem("roleId"), 10);
+    setNombreUsuario(displayName || "Usuario");
 
-    setNombreUsuario(nombre);
+    // Prioritize Redux roleId, fallback to localStorage if needed (though Redux should be source of truth)
+    const currentRoleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
 
-    if (!isNaN(roleIdLS) && roleMap[roleIdLS]) {
-      setRolNombre(roleMap[roleIdLS]);
-      setRoleId(roleIdLS);
+    if (currentRoleId && roleMap[currentRoleId]) {
+      setRolNombre(roleMap[currentRoleId]);
+      setRoleId(currentRoleId);
     }
-  }, []);
+  }, [displayName, roleIdRedux]);
 
   const tipsMemo = useMemo(() => tips, []); // Memorizar los tips
 

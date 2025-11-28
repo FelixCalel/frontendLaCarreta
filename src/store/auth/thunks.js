@@ -175,7 +175,17 @@ export const fetchCurrentUser = createAsyncThunk(
 
       return me;
     } catch (err) {
-      console.error("Error fetching current user:", err);
+      // Suppress console error for 401 (Unauthorized) and Network Errors
+      if (err.response && err.response.status === 401) {
+        // console.warn("Session expired or invalid token");
+      } else if (
+        err.message === "Network Error" ||
+        err.code === "ERR_NETWORK"
+      ) {
+        // console.warn("Backend unavailable");
+      } else {
+        console.error("Error fetching current user:", err);
+      }
       return rejectWithValue(err.message || err);
     }
   }

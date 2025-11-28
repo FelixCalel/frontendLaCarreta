@@ -15,7 +15,6 @@ import { fetchModulos } from "../../store/RolPermisoUsuario/thunks";
 import iconCatalog from "../Iconos/IconCatalog";
 import MenuItem from "./MenuItem";
 
-// Animaciones
 const slideIn = keyframes`
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }
@@ -67,7 +66,6 @@ const MenuMobile = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState({});
 
-  // Colores VERDES - todos los hooks al inicio
   const buttonBg = useColorModeValue("green.500", "green.600");
   const buttonHoverBg = useColorModeValue("green.600", "green.700");
   const menuBg = useColorModeValue("white", "gray.800");
@@ -134,21 +132,31 @@ const MenuMobile = () => {
   return (
     <>
       {/* Botón de menú hamburguesa flotante */}
-      <IconButton
-        icon={<FaBars />}
+      {/* Botón de menú hamburguesa flotante */}
+      <Box
+        as="button"
         onClick={() => setIsOpen(true)}
         aria-label="Abrir menú"
         position="fixed"
         top="80px"
         left={4}
-        size="md"
         bg={buttonBg}
         color="white"
         _hover={{ bg: buttonHoverBg }}
         borderRadius="md"
         shadow="lg"
         zIndex={1100}
-      />
+        display="flex"
+        alignItems="center"
+        px={3}
+        py={2}
+        transition="all 0.2s"
+      >
+        <FaBars />
+        <Box ml={2} fontWeight="bold">
+          Menú
+        </Box>
+      </Box>
 
       {/* Overlay y panel del menú */}
       {isOpen && (
