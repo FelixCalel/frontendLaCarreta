@@ -32,7 +32,9 @@ export const startSignIn = ({ correo_electronico, password, paisId }) => {
 
           // Guardamos los datos en localStorage
           localStorage.setItem("userData", JSON.stringify(userData));
-          localStorage.setItem("token", result.token); // Guarda el token si es necesario
+          // FIX: Save as access_token to match interceptor
+          localStorage.setItem("access_token", result.token);
+          localStorage.setItem("token", result.token); // Keep for backward compatibility if needed
 
           dispatch(login(userData));
         } else {
@@ -162,21 +164,18 @@ export const fetchCurrentUser = createAsyncThunk(
   "auth/fetchCurrentUser",
   async (_, { rejectWithValue }) => {
     try {
-      // El interceptor adjunta Authorization de forma automática
-      const { data } = await axios.get(`${BASE_URL}/usuarios/todos`);
-      const usuarios = data.usuarios || data;
+      // Optimized: Fetch only the current user's profile
+      const { data } = await axios.get(`${BASE_URL}/login/me`);
 
-      const stored = JSON.parse(localStorage.getItem("userData")) || {
-        id: +localStorage.getItem("usuarioId"),
-      };
-      const myId = stored.id;
-      if (!myId) throw new Error("No hay id de usuario guardado");
+      // The endpoint returns the user object directly or nested, adapt as needed based on API response
+      // Assuming /login/me returns the user object directly or in a 'user' property
+      const me = data.user || data;
 
-      const me = usuarios.find((u) => u.id === myId);
-      if (!me) throw new Error("Usuario no encontrado en /usuarios/todos");
+      if (!me) throw new Error("No se pudo obtener la información del usuario");
 
       return me;
     } catch (err) {
+      console.error("Error fetching current user:", err);
       return rejectWithValue(err.message || err);
     }
   }

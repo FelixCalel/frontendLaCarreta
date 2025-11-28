@@ -169,11 +169,43 @@ export const LoginForm = () => {
       }
     } catch (err) {
       console.error("Error al iniciar sesión:", err);
-      const msg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.message ||
-        "Error al iniciar sesión. Verifica tus credenciales.";
+      let msg = "Error al iniciar sesión. Verifica tus credenciales.";
+
+      if (err.code === "auth/user-not-found") {
+        msg =
+          "Este correo no está registrado en el sistema. Por favor regístrate o crea una cuenta.";
+      } else if (
+        err.code === "auth/invalid-credential" ||
+        err.code === "auth/wrong-password"
+      ) {
+        // Firebase devuelve invalid-credential para ambos casos por seguridad.
+        // Consultamos al backend si el usuario existe para dar un mensaje más específico.
+        try {
+          await axios.post(`${BASE_URL}/usuarios/datos`, { correo });
+          // Si no lanza error, el usuario existe -> Contraseña incorrecta
+          msg = "Contraseña incorrecta. Por favor verifica e intenta de nuevo.";
+        } catch (backendErr) {
+          if (backendErr.response && backendErr.response.status === 404) {
+            msg =
+              "Este correo no está registrado en el sistema. Por favor regístrate o crea una cuenta.";
+          } else {
+            msg =
+              "Correo o contraseña incorrectos. Por favor verifica e intenta de nuevo.";
+          }
+        }
+      } else if (err.code === "auth/invalid-email") {
+        msg = "El formato del correo electrónico no es válido.";
+      } else if (err.code === "auth/too-many-requests") {
+        msg =
+          "Demasiados intentos fallidos. Por favor espera unos minutos e intenta de nuevo.";
+      } else if (err.code === "auth/network-request-failed") {
+        msg = "Error de conexión. Por favor revisa tu internet.";
+      } else if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      } else if (err.response?.data?.error) {
+        msg = err.response.data.error;
+      }
+
       setError(msg);
     } finally {
       setIsLoading(false);

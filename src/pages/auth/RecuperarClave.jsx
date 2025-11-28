@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -7,122 +7,195 @@ import {
   FormLabel,
   Input,
   Stack,
+  Text,
   useColorModeValue,
   Link,
-  Text,
-} from '@chakra-ui/react';
-
-// Importa la función de envío de correo de recuperación
-import { sendPasswordResetEmail } from 'firebase/auth';
-
-// Importa tu instancia de autenticación de Firebase
-import { auth } from '../../middleware/firebase-config';
+  InputGroup,
+  InputLeftElement,
+  Icon,
+  Heading,
+  useToast,
+  VStack,
+} from "@chakra-ui/react";
+import { FaEnvelope, FaArrowLeft, FaLock } from "react-icons/fa";
+import axios from "axios";
+import { AnimatedBackground } from "../../components/auth/AnimatedBackground";
 
 export const RecuperarClave = () => {
-  const [email, setEmail] = useState('');
-  const [mensaje, setMensaje] = useState('');
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  // Array de URLs de imágenes
-  const images = [
-    'url("./src/assets/images/fnd_py01.jpg")',
-    'url("./src/assets/images/fnd_py02.jpg")',
-    'url("./src/assets/images/fnd_py03.jpg")',
-    'url("./src/assets/images/fnd_py04.jpg")',
-  ];
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCurrentImageIndex((currentImageIndex) => (currentImageIndex + 1) % images.length);
-    }, 5000); // Cambia la imagen cada 5 segundos
-
-    return () => clearInterval(intervalId);
-  }, [images.length]);
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
     try {
-      // Envía la solicitud de recuperación de contraseña por Firebase
-      await sendPasswordResetEmail(auth, email);
-      setMensaje(
-        'Correo electrónico enviado correctamente. Por favor revisa tu bandeja de correo para restablecer tu contraseña.'
-      );
+      // Usar el endpoint personalizado del backend
+      const BASE_URL = import.meta.env.VITE_API_URL;
+      await axios.post(`${BASE_URL}/usuarios/recuperar-clave-custom`, {
+        email,
+      });
+
+      toast({
+        title: "Correo enviado",
+        description:
+          "Revisa tu bandeja de entrada para restablecer tu contraseña.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "top-right",
+      });
+      setEmail(""); // Limpiar el campo
     } catch (error) {
-      // Puedes manejar distintos mensajes de error según el type/code de Firebase
-      // Por ejemplo:
-      // if (error.code === 'auth/invalid-email') { ... }
-      // if (error.code === 'auth/user-not-found') { ... }
-      setMensaje(`Hubo un error al enviar el correo de recuperación: ${error.message}`);
+      let errorMessage = "Hubo un error al enviar el correo.";
+
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || errorMessage;
+      } else if (error.code === "auth/user-not-found") {
+        errorMessage = "No existe una cuenta con este correo electrónico.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "El correo electrónico no es válido.";
+      }
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top-right",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const cardBg = useColorModeValue("whiteAlpha.900", "whiteAlpha.100");
+  const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
+  const inputBg = useColorModeValue("gray.50", "whiteAlpha.50");
+  const inputBorder = useColorModeValue("gray.200", "whiteAlpha.100");
+  const textColor = useColorModeValue("gray.800", "white");
+  const subTextColor = useColorModeValue("gray.600", "gray.400");
+
   return (
-    <Flex
-      minHeight="100vh"
-      align="center"
-      justifyContent="center"
-      backgroundImage={images[currentImageIndex]}
-      backgroundColor={'gray.50'}
-      backgroundSize="cover"
-      transition="background-image 1s ease-in-out"
-      sx={{
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0,
-          backgroundImage: images[currentImageIndex],
-          backgroundSize: 'cover',
-          filter: 'blur(8px)',
-          zIndex: -1,
-        },
-      }}
+    <Box
+      position="relative"
+      minH="100vh"
+      w="100vw"
+      overflow="hidden"
+      bg="gray.900"
     >
-      <Box
-        p={8}
-        width="full"
-        maxWidth="400px"
-        borderRadius="lg"
-        boxShadow="lg"
-        backgroundColor={useColorModeValue('whiteAlpha.800', 'gray.700')}
+      {/* Fondo Animado */}
+      <AnimatedBackground />
+
+      <Flex
+        minH="100vh"
+        align="center"
+        justify="center"
+        position="relative"
+        zIndex={1}
+        px={4}
       >
-        <form onSubmit={handleSubmit}>
-          <Stack spacing={4}>
-            <Text fontSize="lg" fontWeight="bold" textAlign="center">
-              Recuperar Contraseña
-            </Text>
+        <Box
+          w="full"
+          maxW="md"
+          bg={cardBg}
+          backdropFilter="blur(20px)"
+          border="1px solid"
+          borderColor={borderColor}
+          rounded="2xl"
+          boxShadow="2xl"
+          p={{ base: 8, md: 10 }}
+          as="form"
+          onSubmit={handleSubmit}
+        >
+          <VStack spacing={6}>
+            <Box
+              p={3}
+              bgGradient="linear(to-br, green.400, teal.600)"
+              rounded="full"
+              color="white"
+              boxShadow="lg"
+            >
+              <Icon as={FaLock} w={6} h={6} />
+            </Box>
+
+            <VStack spacing={2} textAlign="center">
+              <Heading size="lg" color={textColor} fontWeight="bold">
+                Recuperar Contraseña
+              </Heading>
+              <Text color={subTextColor} fontSize="md">
+                Ingresa tu correo electrónico y te enviaremos un enlace para
+                restablecer tu acceso.
+              </Text>
+            </VStack>
+
             <FormControl isRequired>
-              <FormLabel>Correo Electrónico</FormLabel>
-              <Input
-                type="email"
-                placeholder="Ingresa tu correo electrónico"
-                onChange={(e) => setEmail(e.target.value)}
-                value={email}
-              />
+              <FormLabel color={textColor} fontWeight="medium">
+                Correo Electrónico
+              </FormLabel>
+              <InputGroup>
+                <InputLeftElement pointerEvents="none">
+                  <Icon as={FaEnvelope} color="gray.500" />
+                </InputLeftElement>
+                <Input
+                  type="email"
+                  placeholder="ejemplo@correo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  bg={inputBg}
+                  border="1px solid"
+                  borderColor={inputBorder}
+                  color={textColor}
+                  _hover={{ borderColor: "green.400" }}
+                  _focus={{
+                    borderColor: "green.400",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-green-400)",
+                  }}
+                  size="lg"
+                  rounded="xl"
+                />
+              </InputGroup>
             </FormControl>
 
-            {/* Muestra el mensaje si existe */}
-            {mensaje && (
-              <Text color="teal.700" fontSize="sm">
-                {mensaje}
-              </Text>
-            )}
-
-            <Button type="submit" colorScheme="green" width="full">
-              Enviar
+            <Button
+              type="submit"
+              w="full"
+              size="lg"
+              colorScheme="green"
+              bgGradient="linear(to-r, green.400, teal.500)"
+              _hover={{
+                bgGradient: "linear(to-r, green.500, teal.600)",
+                transform: "translateY(-2px)",
+                boxShadow: "lg",
+              }}
+              _active={{ transform: "translateY(0)" }}
+              rounded="xl"
+              isLoading={isLoading}
+              loadingText="Enviando..."
+              fontWeight="bold"
+            >
+              Enviar Enlace
             </Button>
-            <Flex justifyContent="center">
-              <Link color="teal.500" href="/auth/login">
-                Volver al inicio de sesión
-              </Link>
-            </Flex>
-          </Stack>
-        </form>
-      </Box>
-    </Flex>
+
+            <Link
+              href="/auth/login"
+              display="flex"
+              alignItems="center"
+              color="gray.400"
+              _hover={{ color: "green.400", textDecoration: "none" }}
+              fontSize="sm"
+              fontWeight="medium"
+              transition="all 0.2s"
+            >
+              <Icon as={FaArrowLeft} mr={2} />
+              Volver al inicio de sesión
+            </Link>
+          </VStack>
+        </Box>
+      </Flex>
+    </Box>
   );
 };
 

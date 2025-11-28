@@ -5,6 +5,8 @@ import {
   IconButton,
   VStack,
   useColorModeValue,
+  Skeleton,
+  SkeletonCircle,
 } from "@chakra-ui/react";
 import { HamburgerIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
@@ -103,7 +105,35 @@ const MenuDesktop = () => {
     }
   };
 
-  if (!modulos || loading) {
+  if (loading) {
+    return (
+      <Box
+        w="70px"
+        minH="100vh"
+        bg={sidebarBg}
+        borderRight="1px solid"
+        borderColor={sidebarBorder}
+        position="sticky"
+        top={0}
+        left={0}
+        zIndex={5}
+        py={4}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        gap={4}
+      >
+        <SkeletonCircle size="10" />
+        <VStack spacing={4} w="full" px={2}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} height="40px" width="40px" borderRadius="md" />
+          ))}
+        </VStack>
+      </Box>
+    );
+  }
+
+  if (!modulos) {
     return null;
   }
 

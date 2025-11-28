@@ -1,6 +1,8 @@
 import { Route, Routes, Navigate } from "react-router-dom";
 import { LoginForm } from "../pages/auth/LoginForm";
 import RecuperarClave from "../pages/auth/RecuperarClave";
+import ResetPassword from "../pages/auth/ResetPassword";
+import VerifyEmail from "../pages/auth/VerifyEmail";
 import RegisterForm from "../pages/auth/Registro/RegisterForm";
 import { ConfirmacionRegistro } from "../pages/auth/ConfirmacionRegistro";
 import { CambiarClave } from "../pages/auth/CambiarClave";
@@ -16,6 +18,8 @@ export const PortalPagePublic = () => (
     <Route path="registro" element={<RegisterForm />} />
     <Route path="confirmacion_registro" element={<ConfirmacionRegistro />} />
     <Route path="recuperar_clave" element={<RecuperarClave />} />
+    <Route path="reset-password" element={<ResetPassword />} />
+    <Route path="verify-email" element={<VerifyEmail />} />
     <Route
       path="cambiar_clave/:token/:correo_electronico"
       element={<CambiarClave />}

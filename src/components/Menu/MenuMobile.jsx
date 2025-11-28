@@ -5,6 +5,7 @@ import {
   useColorModeValue,
   IconButton,
   keyframes,
+  Skeleton,
 } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
 import { FaBars } from "react-icons/fa";
@@ -99,7 +100,21 @@ const MenuMobile = () => {
     };
   }, [isOpen]);
 
-  if (!modulos || loading) {
+  if (loading) {
+    return (
+      <Skeleton
+        height="40px"
+        width="40px"
+        borderRadius="md"
+        position="fixed"
+        top="80px"
+        left={4}
+        zIndex={1100}
+      />
+    );
+  }
+
+  if (!modulos) {
     return null;
   }
 

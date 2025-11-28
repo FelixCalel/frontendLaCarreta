@@ -110,6 +110,13 @@ const HomePage = () => {
           py={2}
           px={{ base: 2, md: 2 }}
           mt={{ base: "50px", md: "0" }}
+          animation="slideInBottom 0.5s ease-out"
+          sx={{
+            "@keyframes slideInBottom": {
+              "0%": { opacity: 0, transform: "translateY(20px)" },
+              "100%": { opacity: 1, transform: "translateY(0)" },
+            },
+          }}
         >
           <Box maxW="1900px" mx="auto">
             <VStack align="stretch" spacing={2}>
