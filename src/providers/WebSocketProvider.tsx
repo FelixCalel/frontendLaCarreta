@@ -43,7 +43,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  const wsUrl = import.meta.env.VITE_API_URL;
+  const wsUrl = useMemo(() => {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      return apiUrl.replace(/^http/, 'ws').replace('/api', '');
+  }, []);
   const { status, uid } = useSelector((state: any) => state.auth);
   const dispatch = useDispatch();
 
@@ -72,6 +75,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
                 dispatch(fetchModulos(uid) as any);
                 dispatch(fetchCurrentUser() as any);
               }
+            } else if (data.type === "notification") {
+              window.dispatchEvent(new CustomEvent("notification-received", { detail: data }));
             }
           } catch (e) {
             console.error("Error parsing WS message:", e);

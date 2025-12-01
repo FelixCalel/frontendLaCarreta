@@ -15,24 +15,16 @@ import {
   Flex,
   Heading,
   useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
   IconButton,
   Switch,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { FiUserPlus, FiSearch } from "react-icons/fi";
 import axios from "axios";
-import RutaSelector from "./componentes/RutaSelector";
 import RolSelector from "./componentes/RolSelector";
+import AsignarRutasModal from "./componentes/AsignarRutasModal";
 import { useDispatch } from "react-redux";
 import { setRutas } from "../../store/auth/authSlice";
-//import { fetchCurrentUser } from "../../store/auth/thunks";
 import { tablaPedidos } from "../../store/Pedidos/thunks";
 import Pagination from "../../components/pagination";
 
@@ -42,8 +34,6 @@ export const TablaBusuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedRoutes, setSelectedRoutes] = useState([]);
-  const [filteredRutas, setFilteredRutas] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const dispatch = useDispatch();
   const [allRoles, setAllRoles] = useState([]);
@@ -52,6 +42,7 @@ export const TablaBusuarios = () => {
   const [rutas, setRutasLocal] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [isAssigning, setIsAssigning] = useState(false);
 
   const usuariosFiltrados = usuarios.filter((u) => {
     const term = searchTerm.trim().toLowerCase();
@@ -78,7 +69,6 @@ export const TablaBusuarios = () => {
     const fetchUsuarios = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/usuarios/todos`);
-        console.log("Usuarios obtenidos:", response.data.usuarios);
         setUsuarios(response.data.usuarios);
       } catch (error) {
         console.error("Error al obtener los usuarios:", error);
@@ -109,7 +99,6 @@ export const TablaBusuarios = () => {
       try {
         const response = await axios.get(`${BASE_URL}/tienda/todos`);
         const tiendas = Array.isArray(response.data) ? response.data : [];
-        console.log("Tiendas obtenidas:", tiendas);
 
         const rutasExtraidas = tiendas.map((tienda) => ({
           id: tienda.rutaId,
@@ -118,12 +107,14 @@ export const TablaBusuarios = () => {
           paisId: tienda.paisId,
         }));
 
-        setRutasLocal(rutasExtraidas);
+        // Eliminar duplicados si es necesario, aunque la lógica original no lo hacía explícitamente aquí
+        // Pero para el selector es mejor tener rutas únicas
+        const uniqueRutas = Array.from(new Set(rutasExtraidas.map(r => r.id)))
+            .map(id => rutasExtraidas.find(r => r.id === id));
+
+        setRutasLocal(uniqueRutas);
       } catch (error) {
-        console.error(
-          "Error al obtener las rutas vinculadas a tiendas:",
-          error
-        );
+        console.error("Error al obtener las rutas vinculadas a tiendas:", error);
       }
     };
 
@@ -147,9 +138,7 @@ export const TablaBusuarios = () => {
       );
 
       toast({
-        title: `Usuario ${
-          !estaActivo ? "activado" : "desactivado"
-        } correctamente`,
+        title: `Usuario ${!estaActivo ? "activado" : "desactivado"} correctamente`,
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -165,16 +154,13 @@ export const TablaBusuarios = () => {
     }
   };
 
-  const asignarRutas = async (usuarioId) => {
+  const handleAssignRutas = async (usuarioId, selectedRoutes) => {
+    setIsAssigning(true);
     try {
       if (selectedRoutes.length === 0) {
-        toast({
-          title: "Selecciona al menos una ruta",
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
+        // Opcional: Permitir desasignar todo (array vacío)
+        // Si el backend lo soporta, enviamos array vacío.
+        // Si no, mostramos warning. Asumiremos que se puede limpiar.
       }
 
       const { data } = await axios.post(
@@ -212,62 +198,13 @@ export const TablaBusuarios = () => {
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+        setIsAssigning(false);
     }
   };
 
-  const fetchCiudadesYPaises = async () => {
-    try {
-      const response = await axios.get(`${BASE_URL}/ciudad/todos`);
-      console.log("Respuesta de la API de ciudades:", response.data);
-      if (response.data && Array.isArray(response.data)) {
-        return response.data;
-      } else {
-        console.error("No se encontraron ciudades en la respuesta de la API");
-        return [];
-      }
-    } catch (error) {
-      console.error("Error al obtener las ciudades y países:", error);
-      return [];
-    }
-  };
-
-  const handleOpenAssignRutas = async (usuario) => {
+  const handleOpenAssignRutas = (usuario) => {
     setSelectedUser(usuario);
-    setSelectedRoutes(
-      usuario.rutas ? usuario.rutas.map((ruta) => ruta.id) : []
-    );
-
-    const ciudades = await fetchCiudadesYPaises();
-
-    console.log("Ciudades recibidas:", ciudades);
-
-    if (!ciudades || ciudades.length === 0) {
-      toast({
-        title: "Error al obtener ciudades",
-        description: "No se encontraron ciudades.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    const rutasConPais =
-      rutas && rutas.length > 0
-        ? rutas.map((ruta) => {
-            const ciudad = ciudades.find((c) => c.id === ruta.ciudadId);
-            return {
-              ...ruta,
-              paisId: ciudad ? ciudad.paisId : null,
-            };
-          })
-        : [];
-
-    const rutasFiltradas = Array.from(
-      new Set(rutasConPais.map((ruta) => ruta.id))
-    ).map((id) => rutasConPais.find((ruta) => ruta.id === id));
-
-    setFilteredRutas(rutasFiltradas);
     onOpen();
   };
 
@@ -278,7 +215,6 @@ export const TablaBusuarios = () => {
   const rowHoverBg = useColorModeValue("green.50", "green.900");
   const inputBg = useColorModeValue("white", "gray.900");
   const inputPlaceholderColor = useColorModeValue("gray.400", "gray.500");
-  const modalHeaderColor = useColorModeValue("green.600", "green.200");
 
   return (
     <>
@@ -376,37 +312,15 @@ export const TablaBusuarios = () => {
           onPageChange={(page) => setCurrentPage(page)}
         />
       </Box>
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader color={modalHeaderColor}>Asignar Rutas</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {" "}
-            <Text mb={4}>
-              Asignar rutas a&nbsp;{" "}
-              {selectedUser ? `${selectedUser.nombre}` : ""}{" "}
-            </Text>
-            <RutaSelector
-              selectedRoutes={selectedRoutes}
-              setSelectedRoutes={setSelectedRoutes}
-              usuarioId={selectedUser?.id}
-              filteredRutas={filteredRutas}
-            />
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              colorScheme="green"
-              onClick={() => asignarRutas(selectedUser?.id)}
-            >
-              Asignar
-            </Button>
-            <Button variant="ghost" onClick={onClose}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      
+      <AsignarRutasModal 
+        isOpen={isOpen}
+        onClose={onClose}
+        usuario={selectedUser}
+        rutas={rutas}
+        onAssign={handleAssignRutas}
+        isLoading={isAssigning}
+      />
     </>
   );
 };

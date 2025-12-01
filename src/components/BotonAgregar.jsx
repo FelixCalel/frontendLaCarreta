@@ -8,7 +8,7 @@ export const BotonAgregar = ({ onOpen }) => {
  
   return (
     <><Box position="relative">
-          <IconButton
+          {/* <IconButton
               size="lg"
               aria-label="+"
               icon={<AddIcon />}
@@ -19,7 +19,7 @@ export const BotonAgregar = ({ onOpen }) => {
               boxShadow="lg"
               borderRadius="full"
               border="2px solid white"
-              onClick={onOpen} />
+              onClick={onOpen} /> */}
       </Box><CompModal /></>
   )
 }

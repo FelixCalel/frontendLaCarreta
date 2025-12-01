@@ -1,6 +1,7 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Box, Heading, useToast, useColorModeValue } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import { tablaPedidos } from "../../../store/Pedidos/thunks";
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
 import Pagination from "../../../components/pagination";
@@ -12,6 +13,7 @@ import { tablaTienda } from "../../../store/Tienda/thunks";
 
 const HistorialPedidosPage = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
   const toast = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState(null);
@@ -25,6 +27,20 @@ const HistorialPedidosPage = () => {
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("teal.600", "teal.200");
   const noDataTextColor = useColorModeValue("gray.500", "gray.400");
+
+  const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.highlightedPedidoId) {
+      setHighlightedPedidoId(location.state.highlightedPedidoId);
+      // Clear state to avoid re-highlighting on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
+  const handleClearHighlight = useCallback(() => {
+    setHighlightedPedidoId(null);
+  }, []);
 
   const todosLosPedidos = useSelector((state) => state.pedidos.data || []);
 
@@ -128,6 +144,8 @@ const HistorialPedidosPage = () => {
               pedidos={currentPedidos}
               roleId={roleId}
               onVerDetalles={handleVerDetalles}
+              highlightedPedidoId={highlightedPedidoId}
+              onClearHighlight={handleClearHighlight}
             />
           )}
           <Pagination

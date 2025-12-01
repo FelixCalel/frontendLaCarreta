@@ -5,61 +5,76 @@ import {
   Collapse,
   Text,
   Tooltip,
-  CloseButton,
   HStack,
   useOutsideClick,
   useColorModeValue,
+  Button,
+  Flex,
+  Portal,
 } from "@chakra-ui/react";
-import { FiBell } from "react-icons/fi";
+import { FiBell, FiCheck } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
-import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
-import { tablaPedidos, updatePedidoActivacion } from "../store/Pedidos/thunks";
-import { selectPedidosEntrantesPorRuta } from "../pages/pedidos/pedidosEntrantes/componentes/rutaSelectors";
-import { tablaTienda } from "../store/Tienda/thunks";
-
-const ESTADOS_PEDIDO_RUTA = [2, 5];
-const ESTADOS_NOTIFICACION_USUARIO = [3, 4, 5];
+import NotificationList from "./Notificaciones/NotificationList";
+import {
+  getNotificaciones,
+  markAsRead,
+  markAllAsRead,
+} from "../store/Notificaciones/thunks";
+import { addNotificacion } from "../store/Notificaciones/notificacionesSlice";
 
 export default function Notifications({ isOpen, onToggle, onClose }) {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const ref = useRef();
+  const dispatch = useDispatch();
+  
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = localStorage.getItem("roleId");
-  const [locallyHidden, setLocallyHidden] = useState(new Set());
-  const [visibleNotifications, setVisibleNotifications] = useState(10); // Número inicial de notificaciones visibles
-
-  const selectPedidosRutaParaNotif = useMemo(
-    () => selectPedidosEntrantesPorRuta(ESTADOS_PEDIDO_RUTA),
-    []
+  
+  const { notificaciones, unreadCount } = useSelector(
+    (state) => state.notificaciones
   );
-  const pedidosRuta = useSelector(selectPedidosRutaParaNotif);
-  const pedidos = useSelector((state) => state.pedidos.data || []);
+  const { token } = useSelector((state) => state.auth);
 
-  const notificaciones = useMemo(() => {
-    const basePedidos = roleId === "3" ? pedidosRuta : pedidos;
-    return basePedidos
-      .filter((p) => {
-        if (!p.isActive || locallyHidden.has(p.id)) {
-          return false;
-        }
-        if (roleId === "3") {
-          return true;
-        }
-        return (
-          p.usuarioId === usuarioId &&
-          ESTADOS_NOTIFICACION_USUARIO.includes(p.estadoId)
-        );
-      })
-      .sort((a, b) => new Date(b.creadoEl) - new Date(a.creadoEl));
-  }, [pedidos, pedidosRuta, roleId, usuarioId, locallyHidden]);
+  const colors = {
+    containerBg: useColorModeValue("white", "gray.800"),
+    containerBorder: useColorModeValue("gray.200", "gray.700"),
+    headerBg: useColorModeValue("gray.50", "gray.700"),
+    textColor: useColorModeValue("gray.700", "gray.200"),
+    mutedColor: useColorModeValue("gray.500", "gray.400"),
+    badgeBorder: useColorModeValue("white", "gray.800"),
+  };
 
   useEffect(() => {
-    dispatch(tablaTienda());
-    dispatch(tablaPedidos());
-  }, [dispatch]);
+    if (usuarioId) {
+      dispatch(getNotificaciones(usuarioId));
+    }
+
+    const handleNotification = (event) => {
+      const newNotification = event.detail;
+      
+      // Filter by usuarioId to ensure we only show relevant notifications
+      if (newNotification.usuarioId && newNotification.usuarioId !== usuarioId) {
+          return;
+      }
+
+      // Ensure we have an ID
+      if (!newNotification.id) {
+          console.warn("Received notification without ID:", newNotification);
+          return;
+      }
+      
+      dispatch(addNotificacion(newNotification));
+    };
+
+    window.addEventListener("notification-received", handleNotification);
+
+    return () => {
+      window.removeEventListener("notification-received", handleNotification);
+    };
+  }, [dispatch, usuarioId]);
 
   useOutsideClick({
     ref: ref,
@@ -68,129 +83,131 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     },
   });
 
-  const handleNotificationClick = () => {
-    if (roleId === "3") {
-      navigate(`/pedidos/entrantes`);
-    } else if (roleId === "2") {
-      navigate(`/historialPedido/listar`);
+  const handleNotificationClick = async (notificacion) => {
+    if (!notificacion.id) return;
+
+    // Removed auto-mark as read logic here as per user request.
+    // Notifications should persist until manually marked.
+
+    const pedidoId = notificacion.pedidoId || (notificacion.data && notificacion.data.pedidoId);
+
+    if (pedidoId) {
+      const navigationState = { state: { highlightedPedidoId: pedidoId } };
+      if (roleId === "3") {
+        navigate(`/pedidos/entrantes`, navigationState);
+      } else if (roleId === "2") {
+        navigate(`/historialPedido/listar`, navigationState);
+      }
     }
   };
 
-  const handleDeleteNotification = (pedidoId) => {
-    setLocallyHidden(new Set(locallyHidden).add(pedidoId));
-    dispatch(updatePedidoActivacion({ id: pedidoId, isActive: false }));
+  const handleMarkAllAsRead = () => {
+    dispatch(markAllAsRead());
   };
 
-  const loadMoreNotifications = useCallback(() => {
-    setVisibleNotifications((prev) => prev + 10); // Incrementar el número de notificaciones visibles
-  }, []);
-
-  const handleScroll = (event) => {
-    const { scrollTop, scrollHeight, clientHeight } = event.target;
-    if (scrollTop + clientHeight >= scrollHeight - 10) {
-      loadMoreNotifications();
-    }
+  const handleMarkAsRead = (id) => {
+    dispatch(markAsRead(id));
   };
-
-  const containerBg = useColorModeValue("white", "gray.700");
-  const containerTxt = useColorModeValue("gray.700", "gray.200");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const hoverBg = useColorModeValue("gray.50", "gray.600");
 
   return (
     <Box position="relative">
       <Tooltip label="Notificaciones" aria-label="Notificaciones Tooltip">
-        <Box position="relative" onClick={onToggle}>
+        <Box position="relative" onClick={onToggle} cursor="pointer">
           <IconButton
             variant="ghost"
-            fontSize={{ base: "20px", md: "24px" }}
+            fontSize="24px"
             icon={<FiBell />}
+            aria-label="Notificaciones"
             size="lg"
-            _hover={{ color: "blue.600", transform: "scale(1.05)" }}
-            transition="all 0.2s ease-in-out"
+            _hover={{ color: "blue.500", bg: "transparent" }}
+            _active={{ bg: "transparent" }}
           />
-          {notificaciones.length > 0 && (
+          {unreadCount > 0 && (
             <Badge
               colorScheme="red"
               borderRadius="full"
               position="absolute"
-              top="-1px"
-              right="-1px"
-              fontSize="xs"
-              p="4px"
+              top="8px"
+              right="8px"
+              fontSize="0.6em"
+              px={1.5}
+              border="2px solid"
+              borderColor={colors.badgeBorder}
             >
-              {notificaciones.length}
+              {unreadCount}
             </Badge>
           )}
         </Box>
       </Tooltip>
 
-      <Collapse in={isOpen} animateOpacity>
-        <Box
-          ref={ref}
-          pos="absolute"
-          top="60px"
-          right="0"
-          w="320px"
-          bg={containerBg}
-          color={containerTxt}
-          boxShadow="lg"
-          p={4}
-          borderRadius="lg"
-          zIndex="1000"
-          border="1px solid"
-          borderColor={borderColor}
-          maxH="400px" // Altura máxima del contenedor
-          overflowY="auto" // Habilitar desplazamiento vertical
-          onScroll={handleScroll} // Manejar el evento de desplazamiento
-        >
-          {notificaciones.slice(0, visibleNotifications).length > 0 ? (
-            notificaciones.slice(0, visibleNotifications).map((pedido) => (
-              <HStack
-                key={pedido.id}
-                justify="space-between"
-                align="center"
-                p={2}
-                borderRadius="md"
-                _hover={{ bg: hoverBg }}
-              >
-                <Box
-                  onClick={handleNotificationClick}
-                  cursor="pointer"
-                  flex={1}
-                >
-                  {roleId === "3" ? (
-                    <Text fontSize="sm" fontWeight="medium">
-                      Nuevo pedido pendiente: <strong>ID: {pedido.id}</strong>.
-                    </Text>
-                  ) : (
-                    <Text fontSize="sm" fontWeight="medium">
-                      Tu pedido <strong>ID: {pedido.id}</strong> ha sido{" "}
-                      <strong>
-                        {pedido.estadoId === 3
-                          ? "aprobado"
-                          : pedido.estadoId === 4
-                          ? "cancelado"
-                          : pedido.estadoId === 5
-                          ? "exportado"
-                          : "actualizado"}
-                      </strong>
-                    </Text>
-                  )}
-                </Box>
-                <CloseButton
-                  size="sm"
-                  onClick={() => handleDeleteNotification(pedido.id)}
-                />
+      <Portal>
+        <Collapse in={isOpen} animateOpacity>
+          <Box
+            ref={ref}
+            pos="fixed"
+            top={{ base: "70px", md: "60px" }}
+            right={{ base: "50%", md: "16px" }}
+            transform={{ base: "translateX(50%)", md: "none" }}
+            w={{ base: "90vw", md: "380px" }}
+            maxW={{ base: "400px", md: "380px" }}
+            bg={colors.containerBg}
+            color={colors.textColor}
+            boxShadow="2xl"
+            borderRadius="xl"
+            zIndex="9999"
+            border="1px solid"
+            borderColor={colors.containerBorder}
+            overflow="hidden"
+          >
+            {/* Header */}
+            <Flex
+              p={4}
+              bg={colors.headerBg}
+              justify="space-between"
+              align="center"
+              borderBottom="1px solid"
+              borderColor={colors.containerBorder}
+            >
+              <HStack spacing={2}>
+                <Text fontWeight="bold" fontSize="md">
+                  Notificaciones
+                </Text>
+                {unreadCount > 0 && (
+                  <Badge colorScheme="blue" borderRadius="full" px={2}>
+                    {unreadCount} nuevas
+                  </Badge>
+                )}
               </HStack>
-            ))
-          ) : (
-            <Text textAlign="center" fontSize="sm" color="gray.500">
-              No tienes notificaciones nuevas.
-            </Text>
-          )}
-        </Box>
-      </Collapse>
+              {unreadCount > 0 && (
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  colorScheme="blue"
+                  onClick={handleMarkAllAsRead}
+                  leftIcon={<FiCheck />}
+                  _hover={{ bg: "blue.50" }}
+                >
+                  Marcar todo leído
+                </Button>
+              )}
+            </Flex>
+
+            {/* List */}
+            <NotificationList
+              notificaciones={notificaciones}
+              onMarkAsRead={handleMarkAsRead}
+              onNotificationClick={handleNotificationClick}
+            />
+            
+            {/* Footer */}
+            <Box p={2} bg={colors.headerBg} borderTop="1px solid" borderColor={colors.containerBorder} textAlign="center">
+               <Text fontSize="xs" color={colors.mutedColor}>
+                  Mantente al día con tus pedidos
+               </Text>
+            </Box>
+          </Box>
+        </Collapse>
+      </Portal>
     </Box>
   );
 }

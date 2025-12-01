@@ -22,6 +22,7 @@ import asignacionAMSlice from "./asignacionAM/asignacionAMSlice.js";
 import { pedidoProduccionApi } from "../services/pedidoProductionApi.ts";
 import { qaApi } from "../services/controlCalidadAPI.ts";
 import settingsReducer from "./settings/settingsSlice";
+import notificacionesReducer from "./Notificaciones/notificacionesSlice";
 
 export const store = configureStore({
   reducer: {
@@ -46,6 +47,7 @@ export const store = configureStore({
     compras: comprasSlice,
     proveedores: proveedorReducer,
     AsignacionAreaMesa: asignacionAMSlice,
+    notificaciones: notificacionesReducer,
     [pedidoProduccionApi.reducerPath]: pedidoProduccionApi.reducer,
     [qaApi.reducerPath]: qaApi.reducer,
   },

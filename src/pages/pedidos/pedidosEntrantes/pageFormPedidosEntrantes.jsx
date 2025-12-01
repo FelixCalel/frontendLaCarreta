@@ -1,304 +1,77 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import {
-  Box,
-  Flex,
-  Heading,
-  Button,
-  Spinner,
-  useToast,
-  useDisclosure,
-  AlertDialog,
-  AlertDialogOverlay,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogBody,
-  AlertDialogFooter,
-  useColorModeValue,
-} from "@chakra-ui/react";
+import { Box, Heading, useToast, useColorModeValue } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  tablaPedidos,
-  togglePedidoStatus,
-  updatePedidoActivacion,
-} from "../../../store/Pedidos/thunks";
+import { useLocation } from "react-router-dom";
+import { tablaPedidos } from "../../../store/Pedidos/thunks";
+import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
+import { tablaTienda } from "../../../store/Tienda/thunks";
+import Pagination from "../../../components/pagination";
 import PedidosTable from "../componentes/EntrantesFormPedidos/PedidosTable";
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
-import {
-  getDetalleOrdenByPedidoId,
-  actualizarFechaOrden,
-} from "../../../store/Pedidos/DetallePedidos/thunks";
-import ApproveOrderDialog from "../componentes/EntrantesFormPedidos/ApproveOrderDialog";
 import { selectPedidosEntrantesPorRuta } from "./componentes/rutaSelectors";
-import { tablaTienda } from "../../../store/Tienda/thunks";
 import { useSearch } from "../../../components/component/SearchContext";
-import CancelOrderDialog from "./componentes/CancelOrderDialog";
-import Pagination from "../../../components/pagination";
-//cambio
-const EntrantesPage = () => {
-  const { query, setSuggestions } = useSearch();
-  const [lista, setLista] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15;
-  const dispatch = useDispatch();
-  const toast = useToast();
-  const bgColor = useColorModeValue("white", "gray.800");
-  const textColor = useColorModeValue("gray.800", "white");
-  const pedidos = useSelector((state) => state.pedidos.data);
-  const pedidosRuta = useSelector(selectPedidosEntrantesPorRuta());
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedPedidos, setSelectedPedidos] = useState([]);
-  const [detallesPedido, setDetallesPedido] = useState([]);
-  const [selectedPedido, setSelectedPedido] = useState(null);
-  const [pedidoParaAprobar, setPedidoParaAprobar] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isApproving, setIsApproving] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
-  const {
-    isOpen: isApproveOpen,
-    onOpen: onApproveOpen,
-    onClose: onApproveClose,
-  } = useDisclosure();
-  const {
-    isOpen: isCancelOpen,
-    onOpen: onCancelOpen,
-    onClose: onCancelClose,
-  } = useDisclosure();
 
+const EntrantesPage = () => {
+  const dispatch = useDispatch();
+  const location = useLocation();
+  const toast = useToast();
+  const { query } = useSearch(); // Use global search query
+  
+  // State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPedido, setSelectedPedido] = useState(null);
+  const [detallesPedido, setDetallesPedido] = useState([]);
+  const [selectedPedidos, setSelectedPedidos] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
+
+  // Colors
+  const containerBg = useColorModeValue("white", "gray.800");
+  const headingColor = useColorModeValue("teal.600", "teal.200");
+
+  // Selectors
+  const selectEntrantes = useMemo(() => selectPedidosEntrantesPorRuta([2]), []);
+  const pedidosEntrantes = useSelector(selectEntrantes);
+  const { isLoading } = useSelector((state) => state.pedidos);
+
+  // Effects
   useEffect(() => {
     dispatch(tablaTienda());
     dispatch(tablaPedidos());
   }, [dispatch]);
 
-  const todosLosPedidos = useSelector((s) => s.pedidos.data);
   useEffect(() => {
-    const candidatos = todosLosPedidos.filter((p) => p.estadoId === 2);
-    console.log(
-      "Pedidos con estadoId 2:",
-      candidatos.map((p) => ({
-        id: p.id,
-        tiendaId: p.tiendaId,
-      }))
-    );
-  }, [todosLosPedidos]);
+    if (location.state?.highlightedPedidoId) {
+      setHighlightedPedidoId(location.state.highlightedPedidoId);
+      // Clear state to avoid re-highlighting on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
-  const tiendas = useSelector((s) => s.tiendas.data ?? []);
-  useEffect(() => {
-    console.log("Tiendas en Redux:", tiendas.slice(0, 5));
-  }, [tiendas]);
-
-  useEffect(() => {
-    const sug = pedidos
-      .flatMap((p) => [
-        { id: `d-${p.id}`, label: p.nombreDeu },
-        { id: `t-${p.id}`, label: p.nombreTienda },
-        { id: `u-${p.id}`, label: `${p.nombreUsuario} ${p.apellidoUsuario}` },
-      ])
-      .flat();
-    setSuggestions(sug);
-    return () => setSuggestions([]);
-  }, [pedidos, setSuggestions]);
-
-  useEffect(() => {
-    const tienda1 = tiendas.find((t) => t.id === 1);
-    const tienda12 = tiendas.find((t) => t.id === 12);
-    console.log("Tienda 1:", tienda1);
-    console.log("Tienda 12:", tienda12);
-  }, [tiendas]);
-
-  useEffect(() => {
-    dispatch(tablaPedidos());
-  }, [selectedPedidos.length, dispatch]);
-
-  useEffect(() => {
-    if (pedidos.length) console.log("Ejemplo de pedido:", pedidos[0]);
-  }, [pedidos]);
-
-  useEffect(() => {
-    if (!pedidosRuta.length) return;
-
-    const q = query.trim().toLowerCase();
-
-    setLista(
-      q
-        ? pedidosRuta.filter((p) =>
-            `${p.nombreDeu} ${p.nombreTienda} ${p.nombreUsuario} ${p.apellidoUsuario}`
-              .toLowerCase()
-              .includes(q)
-          )
-        : pedidosRuta
-    );
-  }, [pedidosRuta, query]);
-
-  // Reiniciar a la primera página solo cuando cambia la búsqueda, no cuando cambian los pedidos
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [query]);
-
-  // Optimización: Memorizar pedidos paginados
-  const pedidosPaginados = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return lista.slice(startIndex, endIndex);
-  }, [lista, currentPage, itemsPerPage]);
-
-  // Optimización: Usar useCallback para funciones que se pasan como props
-  const handlePageChange = useCallback((page) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  // Handlers
+  const handleClearHighlight = useCallback(() => {
+    setHighlightedPedidoId(null);
   }, []);
 
-  const handleConfirmApprove = useCallback(
-    async ({ fechaOrden, comentario }) => {
-      setIsApproving(true);
-      try {
-        const fechaOrdenFormateada = new Date(fechaOrden).toLocaleDateString(
-          "en-GB"
-        );
-
-        for (const pedidoId of selectedPedidos) {
-          await dispatch(
-            actualizarFechaOrden({
-              pedidoId,
-              fechaOrden: fechaOrdenFormateada,
-              comentario,
-            })
-          ).unwrap();
-
-          await dispatch(
-            togglePedidoStatus({
-              id: pedidoId,
-              estadoId: 3,
-              comentarioDisplay: comentario,
-              fechaOrdenDisplay: fechaOrdenFormateada,
-            })
-          ).unwrap();
-
-          await dispatch(tablaPedidos());
-          const pedido = pedidos.find((p) => p.id === pedidoId);
-          if (pedido && !pedido.isActive) {
-            await dispatch(
-              updatePedidoActivacion({ id: pedidoId, isActive: true })
-            ).unwrap();
-          }
-        }
-
-        onApproveClose();
-        setSelectedPedidos([]);
-        toast({
-          title: "Pedidos aprobados",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (error) {
-        console.error("Error al aprobar pedidos:", error);
-        toast({
-          title: "Error",
-          description: error.message || "Hubo un error al aprobar pedidos.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      } finally {
-        setIsApproving(false);
-      }
-    },
-    [selectedPedidos, dispatch, pedidos, onApproveClose, toast]
-  );
-
-  const handleCancelarPedidos = useCallback(
-    async (comentario) => {
-      setIsLoading(true);
-      try {
-        for (const pedidoId of selectedPedidos) {
-          const pedidoActual = pedidos.find((p) => p.id === pedidoId);
-
-          await dispatch(
-            togglePedidoStatus({
-              id: pedidoId,
-              estadoId: 4,
-              comentario: comentario.trim(),
-              comentarioDisplay: pedidoActual?.comentarioDisplay,
-              fechaOrdenDisplay: pedidoActual?.fechaOrdenDisplay,
-            })
-          ).unwrap();
-        }
-
-        setSelectedPedidos([]);
-        toast({
-          title: "Pedidos cancelados",
-          description:
-            "Los pedidos seleccionados han sido cancelados correctamente.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (error) {
-        console.error("Error al cancelar pedidos:", error);
-        toast({
-          title: "Error",
-          description: "No se pudieron cancelar los pedidos.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [selectedPedidos, pedidos, dispatch, toast]
-  );
-
-  const onCancelDialogConfirm = useCallback(
-    async (comentario) => {
-      setIsCancelling(true);
-      await handleCancelarPedidos(comentario);
-      setIsCancelling(false);
-      onCancelClose();
-    },
-    [handleCancelarPedidos, onCancelClose]
-  );
-
-  const handleVerDetalles = useCallback(
-    async (pedidoId) => {
-      try {
-        const detalles = await dispatch(
-          getDetalleOrdenByPedidoId(pedidoId)
-        ).unwrap();
-
-        detalles.sort(
-          (a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion)
-        );
-        setDetallesPedido(detalles);
-
-        const pedido = pedidos.find((p) => p.id === pedidoId);
-
-        if (pedido) {
-          setSelectedPedido(pedido);
-          setIsModalOpen(true);
-        } else {
-          console.error(`No se encontró el pedido con ID ${pedidoId}`);
-        }
-      } catch (error) {
-        console.error(
-          `Error al obtener los detalles del pedido ${pedidoId}:`,
-          error
-        );
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar los detalles del pedido.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    },
-    [dispatch, pedidos, toast]
-  );
-
-  const handleCloseApproveDialog = () => {
-    setIsApproving(false);
-    onApproveClose();
+  const handleVerDetalles = async (pedido) => {
+    setSelectedPedido(pedido);
+    try {
+      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedido.id)).unwrap();
+      const detallesOrdenados = detalles.slice().sort((a, b) =>
+        a.nombreProducto.localeCompare(b.nombreProducto, undefined, { sensitivity: "base" })
+      );
+      setDetallesPedido(detallesOrdenados);
+      setIsModalOpen(true);
+    } catch (err) {
+      toast({
+        title: "Error al cargar detalles",
+        description: err.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const handleCloseModal = () => {
@@ -307,92 +80,82 @@ const EntrantesPage = () => {
     setDetallesPedido([]);
   };
 
-  const handleOpenApproveDialog = () => {
-    if (selectedPedidos.length > 0) {
-      const primerPedidoId = selectedPedidos[0];
-      const pedido = pedidos.find((p) => p.id === primerPedidoId);
-      setPedidoParaAprobar(pedido);
-    }
-    onApproveOpen();
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
-  return (
-    <Box p={6} boxShadow="xl" bg={bgColor} color={textColor} rounded="lg">
-      <Flex justify="space-between" mb={3}>
-        <Heading as="h2" size="lg">
-          Listado de Pedidos Entrantes
-        </Heading>
-        <Flex>
-          <Button
-            colorScheme="green"
-            mr={4}
-            onClick={handleOpenApproveDialog}
-            isDisabled={
-              selectedPedidos.length === 0 || isLoading || isApproving
-            }
-          >
-            {isApproving ? <Spinner size="sm" /> : "Aprobar Pedidos"}
-          </Button>
-          <Button
-            colorScheme="red"
-            onClick={onCancelOpen}
-            isDisabled={
-              selectedPedidos.length === 0 || isLoading || isCancelling
-            }
-          >
-            {isCancelling ? <Spinner size="sm" /> : "Cancelar Pedidos"}
-          </Button>
-          <ApproveOrderDialog
-            isOpen={isApproveOpen}
-            onClose={handleCloseApproveDialog}
-            onConfirm={handleConfirmApprove}
-            selectedPedidos={selectedPedidos}
-            fechaOrdenDB={pedidoParaAprobar?.fechaOrdenDisplay}
-            comentarioDB={pedidoParaAprobar?.comentarioDisplay}
-          />
+  // Filtering
+  const filteredPedidos = useMemo(() => {
+    if (!query) return pedidosEntrantes;
+    const lowerQuery = query.toLowerCase();
+    return pedidosEntrantes.filter((pedido) => {
+      const nombreCorrelativo = pedido.nombreCorrelativo?.toLowerCase() || "";
+      const nombreDeu = pedido.nombreDeu?.toLowerCase() || "";
+      const nombreTienda = pedido.nombreTienda?.toLowerCase() || "";
+      const nombreUsuario = pedido.nombreUsuario?.toLowerCase() || "";
+      const apellidoUsuario = pedido.apellidoUsuario?.toLowerCase() || "";
+      
+      return (
+        nombreCorrelativo.includes(lowerQuery) ||
+        nombreDeu.includes(lowerQuery) ||
+        nombreTienda.includes(lowerQuery) ||
+        nombreUsuario.includes(lowerQuery) ||
+        apellidoUsuario.includes(lowerQuery)
+      );
+    });
+  }, [pedidosEntrantes, query]);
 
-          <AlertDialog isOpen={isCancelOpen} onClose={onCancelClose} isCentered>
-            <AlertDialogOverlay>
-              <AlertDialogContent>
-                <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                  Cancelar Pedidos
-                </AlertDialogHeader>
-                <AlertDialogBody>
-                  ¿Estás seguro de que deseas cancelar los pedidos
-                  seleccionados?
-                </AlertDialogBody>
-                <AlertDialogFooter>
-                  <Button variant="outline" onClick={onCancelClose}>
-                    Cerrar
-                  </Button>
-                  <Button colorScheme="red" onClick={onCancelOpen} ml={3}>
-                    Cancelar
-                  </Button>
-                  <CancelOrderDialog
-                    isOpen={isCancelOpen}
-                    onClose={onCancelClose}
-                    onConfirm={onCancelDialogConfirm}
-                    cantidad={selectedPedidos.length}
-                  />
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialogOverlay>
-          </AlertDialog>
-        </Flex>
-      </Flex>
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const pedidosPaginados = filteredPedidos.slice(indexOfFirstItem, indexOfLastItem);
+
+  return (
+    <Box
+      p={{ base: 1, sm: 2, md: 6 }}
+      boxShadow={{ base: "none", md: "xl" }}
+      bg={containerBg}
+      rounded={{ base: "none", md: "lg" }}
+      mt={{ base: "80px", sm: "85px", md: "0" }}
+      mb={{ base: "60px", sm: "65px", md: "0" }}
+      minH={{ base: "calc(100vh - 140px)", md: "auto" }}
+      maxW="100%"
+      w="100%"
+    >
+      <Box 
+        display="flex" 
+        justifyContent="space-between" 
+        alignItems="center" 
+        mb={{ base: 3, md: 6 }}
+        flexDirection={{ base: "column", md: "row" }}
+        gap={4}
+      >
+        <Heading
+          as="h2"
+          size={{ base: "md", md: "lg" }}
+          color={headingColor}
+        >
+          Pedidos Entrantes
+        </Heading>
+      </Box>
+
       <PedidosTable
         pedidosEntrantes={pedidosPaginados}
         highlight={query}
         selectedPedidos={selectedPedidos}
         setSelectedPedidos={setSelectedPedidos}
         handleVerDetalles={handleVerDetalles}
+        highlightedPedidoId={highlightedPedidoId}
+        onClearHighlight={handleClearHighlight}
       />
+      
       <Pagination
         currentPage={currentPage}
-        totalItems={lista.length}
+        totalItems={filteredPedidos.length}
         itemsPerPage={itemsPerPage}
         onPageChange={handlePageChange}
       />
+      
       <DetallesModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}

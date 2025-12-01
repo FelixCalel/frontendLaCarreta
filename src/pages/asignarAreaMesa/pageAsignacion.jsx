@@ -22,7 +22,7 @@ const PageAsignacion = () => {
   useEffect(() => {
     const fetchAreaId = async () => {
       try {
-        const rutaActual = location.pathname.split("/")[1]; // ej: 'area1'
+        const rutaActual = location.pathname.split("/")[1];
         const rutaConSlash = `/${rutaActual}`;
 
         const opcionesRes = await axios.get(`${BASE_URL}/api/opciones/`);
