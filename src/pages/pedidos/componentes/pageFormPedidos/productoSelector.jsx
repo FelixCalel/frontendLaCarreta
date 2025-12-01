@@ -45,7 +45,6 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
 
     return (itemsAll || [])
       .filter((it) => {
-        // Handle both single deudor (deuId, deudor.id) and multiple deudores (deudores array)
         if (it.deudores && it.deudores.length > 0) {
           return it.deudores.some((d) => d.id === dId);
         }
@@ -69,16 +68,23 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
     setError("");
   }, [reset, deudorId]);
 
+  const normalizeText = (text) => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  };
+
   useEffect(() => {
-    const term = inputValue.trim().toLowerCase();
+    const term = normalizeText(inputValue.trim());
     if (term === "") {
       setRenderItems(visibleItems);
       return;
     }
     const matches = sourceItems.filter(
       (it) =>
-        it.nombre.toLowerCase().includes(term) ||
-        it.codigo.toLowerCase().includes(term)
+        normalizeText(it.nombre).includes(term) ||
+        normalizeText(it.codigo).includes(term)
     );
     setRenderItems(matches.slice(0, 200));
   }, [inputValue, sourceItems, visibleItems]);
@@ -117,8 +123,6 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
   };
 
   const disabled = !deudorId;
-
-  // Detecta si es móvil
   const isMobile = window.innerWidth <= 768;
 
   return (
@@ -138,7 +142,7 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
             minW={isMobile ? "220px" : "300px"}
             maxW={isMobile ? "100%" : "300px"}
           >
-            <AutoComplete openOnFocus>
+            <AutoComplete openOnFocus filter={() => true}>
               <AutoCompleteInput
                 variant="outline"
                 placeholder={
@@ -154,6 +158,11 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
                 height={isMobile ? "44px" : "48px"}
                 position="relative"
                 isDisabled={disabled}
+                spellCheck={false}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                translate="no"
               />
               <AutoCompleteList
                 onScroll={handleScroll}

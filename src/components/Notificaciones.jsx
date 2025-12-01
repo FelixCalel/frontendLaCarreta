@@ -55,12 +55,10 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     const handleNotification = (event) => {
       const newNotification = event.detail;
       
-      // Filter by usuarioId to ensure we only show relevant notifications
       if (newNotification.usuarioId && newNotification.usuarioId !== usuarioId) {
           return;
       }
 
-      // Ensure we have an ID
       if (!newNotification.id) {
           console.warn("Received notification without ID:", newNotification);
           return;
@@ -86,9 +84,6 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const handleNotificationClick = async (notificacion) => {
     if (!notificacion.id) return;
 
-    // Removed auto-mark as read logic here as per user request.
-    // Notifications should persist until manually marked.
-
     const pedidoId = notificacion.pedidoId || (notificacion.data && notificacion.data.pedidoId);
 
     if (pedidoId) {
@@ -111,7 +106,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
 
   return (
     <Box position="relative">
-      <Tooltip label="Notificaciones" aria-label="Notificaciones Tooltip">
+      <Tooltip label="Notificaciones" aria-label="Notificaciones Tooltip" zIndex={9999}>
         <Box position="relative" onClick={onToggle} cursor="pointer">
           <IconButton
             variant="ghost"
@@ -159,7 +154,6 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
             borderColor={colors.containerBorder}
             overflow="hidden"
           >
-            {/* Header */}
             <Flex
               p={4}
               bg={colors.headerBg}
@@ -192,14 +186,12 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
               )}
             </Flex>
 
-            {/* List */}
             <NotificationList
               notificaciones={notificaciones}
               onMarkAsRead={handleMarkAsRead}
               onNotificationClick={handleNotificationClick}
             />
             
-            {/* Footer */}
             <Box p={2} bg={colors.headerBg} borderTop="1px solid" borderColor={colors.containerBorder} textAlign="center">
                <Text fontSize="xs" color={colors.mutedColor}>
                   Mantente al día con tus pedidos

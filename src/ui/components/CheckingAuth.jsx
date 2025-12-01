@@ -15,7 +15,7 @@ const spin = keyframes`
   to   { transform: rotate(360deg); }
 `;
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 
 const CheckingAuth = () => {
   const controls = useAnimation();

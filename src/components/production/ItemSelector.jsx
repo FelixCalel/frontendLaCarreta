@@ -115,7 +115,7 @@ const ItemSelector = ({ onSelect, reset }) => {
       <FormControl>
         <HStack spacing={2} w="full" align="center" position="relative">
           <Box position="relative">
-            <AutoComplete openOnFocus>
+            <AutoComplete openOnFocus filter={() => true}>
               <AutoCompleteInput
                 variant="outline"
                 placeholder="Seleccione un item"

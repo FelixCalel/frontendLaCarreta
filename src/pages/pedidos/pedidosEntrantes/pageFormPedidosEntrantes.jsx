@@ -1,8 +1,26 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { Box, Heading, useToast, useColorModeValue } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  useToast,
+  useColorModeValue,
+  Button,
+  HStack,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  Textarea,
+  Text,
+  useDisclosure,
+  Input,
+} from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import { tablaPedidos } from "../../../store/Pedidos/thunks";
+import { tablaPedidos, togglePedidoStatus } from "../../../store/Pedidos/thunks";
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 import Pagination from "../../../components/pagination";
@@ -15,9 +33,8 @@ const EntrantesPage = () => {
   const dispatch = useDispatch();
   const location = useLocation();
   const toast = useToast();
-  const { query } = useSearch(); // Use global search query
+  const { query } = useSearch();
   
-  // State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [detallesPedido, setDetallesPedido] = useState([]);
@@ -26,16 +43,28 @@ const EntrantesPage = () => {
   const itemsPerPage = 10;
   const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
 
-  // Colors
+  const { isOpen: isCancelOpen, onOpen: onCancelOpen, onClose: onCancelClose } = useDisclosure();
+  const [cancelComment, setCancelComment] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const { isOpen: isApproveOpen, onOpen: onApproveOpen, onClose: onApproveClose } = useDisclosure();
+  const [approveData, setApproveData] = useState({
+    fechaOrdenDisplay: "",
+    comentarioDisplay: "",
+    comentario: "",
+  });
+
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("teal.600", "teal.200");
+  const inputBg = useColorModeValue("white", "gray.700");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const textColor = useColorModeValue("gray.800", "white");
+  const calendarFilter = useColorModeValue("none", "invert(1)");
 
-  // Selectors
   const selectEntrantes = useMemo(() => selectPedidosEntrantesPorRuta([2]), []);
   const pedidosEntrantes = useSelector(selectEntrantes);
   const { isLoading } = useSelector((state) => state.pedidos);
 
-  // Effects
   useEffect(() => {
     dispatch(tablaTienda());
     dispatch(tablaPedidos());
@@ -44,12 +73,10 @@ const EntrantesPage = () => {
   useEffect(() => {
     if (location.state?.highlightedPedidoId) {
       setHighlightedPedidoId(location.state.highlightedPedidoId);
-      // Clear state to avoid re-highlighting on refresh
       window.history.replaceState({}, document.title);
     }
   }, [location]);
 
-  // Handlers
   const handleClearHighlight = useCallback(() => {
     setHighlightedPedidoId(null);
   }, []);
@@ -84,7 +111,98 @@ const EntrantesPage = () => {
     setCurrentPage(page);
   };
 
-  // Filtering
+  const handleBulkApproveClick = () => {
+    if (selectedPedidos.length === 0) return;
+
+    if (selectedPedidos.length === 1) {
+      const pedido = pedidosEntrantes.find((p) => p.id === selectedPedidos[0]);
+      if (pedido) {
+        setApproveData({
+          fechaOrdenDisplay: pedido.fechaOrdenDisplay ? new Date(pedido.fechaOrdenDisplay).toISOString().split('T')[0] : "",
+          comentarioDisplay: pedido.comentarioDisplay || "",
+          comentario: pedido.comentario || "",
+        });
+      }
+    } else {
+      setApproveData({ fechaOrdenDisplay: "", comentarioDisplay: "", comentario: "" });
+    }
+    onApproveOpen();
+  };
+
+  const handleConfirmApprove = async () => {
+    setIsProcessing(true);
+    try {
+      await Promise.all(
+        selectedPedidos.map((id) => {
+          const pedido = pedidosEntrantes.find((p) => p.id === id);
+          if (!pedido) return Promise.resolve();
+
+          const fecha = selectedPedidos.length === 1 ? approveData.fechaOrdenDisplay : pedido.fechaOrdenDisplay;
+          const comentarioDisplay = selectedPedidos.length === 1 ? approveData.comentarioDisplay : pedido.comentarioDisplay;
+          const comentario = selectedPedidos.length === 1 ? approveData.comentario : pedido.comentario;
+
+          return dispatch(
+            togglePedidoStatus({
+              id,
+              estadoId: 3,
+              comentarioDisplay: comentarioDisplay,
+              comentario: comentario,
+              fechaOrdenDisplay: fecha,
+            })
+          ).unwrap();
+        })
+      );
+      toast({ title: "Pedidos aprobados correctamente", status: "success" });
+      setSelectedPedidos([]);
+      dispatch(tablaPedidos());
+      onApproveClose();
+    } catch (err) {
+      toast({
+        title: "Error al aprobar pedidos",
+        description: err.message || "Ocurrió un error",
+        status: "error",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleBulkCancel = async () => {
+    if (selectedPedidos.length === 0) return;
+    if (!cancelComment.trim()) {
+      toast({ title: "Debes ingresar un motivo de cancelación", status: "warning" });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      await Promise.all(
+        selectedPedidos.map((id) =>
+          dispatch(
+            togglePedidoStatus({
+              id,
+              estadoId: 4,
+              comentario: cancelComment,
+            })
+          ).unwrap()
+        )
+      );
+      toast({ title: "Pedidos cancelados correctamente", status: "info" });
+      setSelectedPedidos([]);
+      setCancelComment("");
+      onCancelClose();
+      dispatch(tablaPedidos());
+    } catch (err) {
+      toast({
+        title: "Error al cancelar pedidos",
+        description: err.message || "Ocurrió un error",
+        status: "error",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const filteredPedidos = useMemo(() => {
     if (!query) return pedidosEntrantes;
     const lowerQuery = query.toLowerCase();
@@ -105,7 +223,6 @@ const EntrantesPage = () => {
     });
   }, [pedidosEntrantes, query]);
 
-  // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const pedidosPaginados = filteredPedidos.slice(indexOfFirstItem, indexOfLastItem);
@@ -137,6 +254,26 @@ const EntrantesPage = () => {
         >
           Pedidos Entrantes
         </Heading>
+
+        <HStack spacing={4}>
+          <Button
+            bg="red.500"
+            color="white"
+            _hover={{ bg: "red.600" }}
+            isDisabled={selectedPedidos.length === 0 || isProcessing}
+            onClick={onCancelOpen}
+          >
+            Cancelar ({selectedPedidos.length})
+          </Button>
+          <Button
+            colorScheme="green"
+            isDisabled={selectedPedidos.length === 0 || isProcessing}
+            onClick={handleBulkApproveClick}
+            isLoading={isProcessing}
+          >
+            Aprobar ({selectedPedidos.length})
+          </Button>
+        </HStack>
       </Box>
 
       <PedidosTable
@@ -162,6 +299,118 @@ const EntrantesPage = () => {
         detalles={detallesPedido}
         pedido={selectedPedido}
       />
+
+      <Modal isOpen={isCancelOpen} onClose={onCancelClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Cancelar Pedidos</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text mb={4}>
+              Estás a punto de cancelar {selectedPedidos.length} pedidos. Por favor, ingresa el motivo de la cancelación:
+            </Text>
+            <Textarea
+              placeholder="Motivo de cancelación (Comentario de Ventas)"
+              value={cancelComment}
+              onChange={(e) => setCancelComment(e.target.value)}
+              bg={inputBg}
+              borderColor={borderColor}
+              color={textColor}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onCancelClose}>
+              Cerrar
+            </Button>
+            <Button
+              colorScheme="red"
+              onClick={handleBulkCancel}
+              isLoading={isProcessing}
+              isDisabled={!cancelComment.trim()}
+            >
+              Confirmar Cancelación
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal isOpen={isApproveOpen} onClose={onApproveClose} isCentered size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirmar Pedido</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text mb={4} fontWeight="medium">
+              ¿Estás seguro de que quieres aprobar {selectedPedidos.length > 1 ? "estos pedidos" : "este pedido"}?
+            </Text>
+            
+            {selectedPedidos.length === 1 ? (
+              <>
+                <Text mb={1} fontWeight="bold" fontSize="sm">Fecha de entrega *</Text>
+                <Box mb={4}>
+                  <Input
+                    type="date"
+                    value={approveData.fechaOrdenDisplay}
+                    onChange={(e) => setApproveData({ ...approveData, fechaOrdenDisplay: e.target.value })}
+                    bg={inputBg}
+                    borderColor={borderColor}
+                    color={textColor}
+                    sx={{
+                      "&::-webkit-calendar-picker-indicator": {
+                        filter: calendarFilter,
+                      },
+                    }}
+                  />
+                </Box>
+
+                <Text mb={1} fontWeight="bold" fontSize="sm">Instrucciones de Entrega (Cliente)</Text>
+                <Textarea
+                  placeholder="Instrucciones del cliente..."
+                  value={approveData.comentarioDisplay}
+                  onChange={(e) => setApproveData({ ...approveData, comentarioDisplay: e.target.value })}
+                  mb={4}
+                  bg={inputBg}
+                  borderColor={borderColor}
+                  color={textColor}
+                />
+
+                <Text mb={1} fontWeight="bold" fontSize="sm">Comentario de Ventas (Interno)</Text>
+                <Textarea
+                  placeholder="Comentario interno de ventas..."
+                  value={approveData.comentario}
+                  onChange={(e) => setApproveData({ ...approveData, comentario: e.target.value })}
+                  mb={4}
+                  bg={inputBg}
+                  borderColor={borderColor}
+                  color={textColor}
+                />
+              </>
+            ) : (
+              <Text color="gray.500" mb={4}>
+                Se aprobarán {selectedPedidos.length} pedidos con sus fechas y comentarios originales.
+              </Text>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button 
+              bg="red.500" 
+              color="white" 
+              _hover={{ bg: "red.600" }} 
+              mr={3} 
+              onClick={onApproveClose}
+            >
+              Cancelar
+            </Button>
+            <Button
+              colorScheme="green"
+              onClick={handleConfirmApprove}
+              isLoading={isProcessing}
+            >
+              Aprobar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

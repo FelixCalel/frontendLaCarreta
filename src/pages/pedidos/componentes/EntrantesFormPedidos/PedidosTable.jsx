@@ -82,6 +82,8 @@ const PedidosTable = ({
                 >
                   <Td w="50px">
                     <Checkbox
+                      size="lg"
+                      borderColor={useColorModeValue("gray.400", "whiteAlpha.500")}
                       isChecked={selectedPedidos.includes(p.id)}
                       onChange={(e) => {
                         e.stopPropagation();
@@ -105,7 +107,7 @@ const PedidosTable = ({
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleVerDetalles(p.id);
+                          handleVerDetalles(p);
                         }}
                       >
                         Ver Detalles

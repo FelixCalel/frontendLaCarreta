@@ -1,16 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Flex,
   Input,
   InputGroup,
   InputLeftElement,
+  InputRightElement,
   IconButton,
   Box,
   List,
   ListItem,
   useColorModeValue,
+  Fade,
 } from "@chakra-ui/react";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiX } from "react-icons/fi";
 import PropTypes from "prop-types";
 
 const SearchBar = ({
@@ -21,26 +23,36 @@ const SearchBar = ({
   initialValue = "",
 }) => {
   const [query, setQuery] = useState(initialValue);
-  const launchSearch = () => onSearch(query.trim());
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault(); // evita que el Enter recargue la página
-      launchSearch();
-    }
+  // Update local state if initialValue changes
+  useEffect(() => {
+    setQuery(initialValue);
+  }, [initialValue]);
+
+  const handleInputChange = (e) => {
+    const newValue = e.target.value;
+    setQuery(newValue);
+    onSearch(newValue); // Dynamic search: trigger on every change
+  };
+
+  const handleClear = () => {
+    setQuery("");
+    onSearch("");
+    // Focus back on input if needed, but keeping it simple for now
   };
 
   const inputBg = useColorModeValue("white", "gray.800");
   const inputColor = useColorModeValue("gray.800", "white");
-  const iconColor = useColorModeValue("gray.500", "gray.400");
+  const iconColor = useColorModeValue("gray.400", "gray.500");
   const suggestionsBg = useColorModeValue("white", "gray.700");
-  const suggestionsHoverBg = useColorModeValue("blue.50", "blue.800");
-  const focusBorderColor = useColorModeValue("blue.500", "blue.200");
+  const suggestionsHoverBg = useColorModeValue("blue.50", "blue.600");
+  const focusBorderColor = useColorModeValue("blue.500", "blue.300");
+  const shadow = useColorModeValue("md", "dark-lg");
 
   return (
-    <Box position="relative" width="100%">
-      <Flex>
-        <InputGroup>
+    <Box position="relative" width="100%" maxW="600px" mx="auto">
+      <Flex alignItems="center">
+        <InputGroup size="md">
           <InputLeftElement pointerEvents="none">
             <FiSearch color={iconColor} />
           </InputLeftElement>
@@ -48,52 +60,67 @@ const SearchBar = ({
             type="text"
             placeholder={placeholder || "Buscar..."}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyPress}
+            onChange={handleInputChange}
             focusBorderColor={focusBorderColor}
             bg={inputBg}
             color={inputColor}
             borderRadius="full"
-            boxShadow="sm"
+            boxShadow={shadow}
+            _hover={{ boxShadow: "lg" }}
+            _focus={{ boxShadow: "outline" }}
+            transition="all 0.2s"
+            pr="3rem" // Space for the clear button
           />
+          {query && (
+            <InputRightElement>
+              <IconButton
+                aria-label="Limpiar búsqueda"
+                icon={<FiX />}
+                size="sm"
+                variant="ghost"
+                color={iconColor}
+                onClick={handleClear}
+                borderRadius="full"
+                _hover={{ bg: "transparent", color: "red.500" }}
+              />
+            </InputRightElement>
+          )}
         </InputGroup>
-
-        <IconButton
-          aria-label="Buscar"
-          icon={<FiSearch />}
-          ml={2}
-          colorScheme="blue"
-          borderRadius="full"
-          onClick={launchSearch}
-        />
       </Flex>
 
       {suggestions && suggestions.length > 0 && (
-        <Box
-          position="absolute"
-          top="100%"
-          width="100%"
-          bg={suggestionsBg}
-          borderRadius="md"
-          boxShadow="md"
-          zIndex="1000"
-          maxHeight="200px"
-          overflowY="auto"
-        >
-          <List spacing={2}>
-            {suggestions.slice(0, 5).map((item) => (
-              <ListItem
-                key={item.id}
-                p={2}
-                cursor="pointer"
-                _hover={{ bg: suggestionsHoverBg }}
-                onClick={() => onSuggestionClick(item)}
-              >
-                {item.label}
-              </ListItem>
-            ))}
-          </List>
-        </Box>
+        <Fade in={suggestions.length > 0}>
+          <Box
+            position="absolute"
+            top="calc(100% + 8px)"
+            width="100%"
+            bg={suggestionsBg}
+            borderRadius="xl"
+            boxShadow="xl"
+            zIndex="1000"
+            maxHeight="300px"
+            overflowY="auto"
+            border="1px solid"
+            borderColor={useColorModeValue("gray.100", "gray.600")}
+          >
+            <List spacing={0}>
+              {suggestions.slice(0, 5).map((item, index) => (
+                <ListItem
+                  key={item.id || index}
+                  p={3}
+                  cursor="pointer"
+                  _hover={{ bg: suggestionsHoverBg }}
+                  onClick={() => onSuggestionClick(item)}
+                  borderBottomWidth={index === suggestions.length - 1 ? 0 : "1px"}
+                  borderColor={useColorModeValue("gray.100", "gray.600")}
+                  transition="background-color 0.2s"
+                >
+                  {item.label}
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Fade>
       )}
     </Box>
   );

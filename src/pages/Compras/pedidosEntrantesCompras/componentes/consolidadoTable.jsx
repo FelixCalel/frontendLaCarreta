@@ -19,7 +19,7 @@ import { ChevronDownIcon } from "@chakra-ui/icons";
 import PropTypes from "prop-types";
 import { motion } from "framer-motion";
 
-const MotionIcon = motion(IconButton);
+const MotionIcon = motion.create(IconButton);
 
 const ConsolidadoTable = ({ data, status = "succeeded", error }) => {
   const [expanded, setExpanded] = useState({});

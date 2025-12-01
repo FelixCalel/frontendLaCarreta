@@ -8,13 +8,16 @@ import Pagination from "../../../components/pagination";
 import PedidosTable from "./componente/pedidosTable";
 import PedidosCardList from "./componente/pedidoCardList";
 import DetallesPedidoModal from "./componente/detallesPedidoModal";
+import HistorialFilters from "./componente/HistorialFilters";
 import { selectPedidosEntrantesPorRuta } from "../pedidosEntrantes/componentes/rutaSelectors";
+import { useSearch } from "../../../components/component/SearchContext";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 
 const HistorialPedidosPage = () => {
   const dispatch = useDispatch();
   const location = useLocation();
   const toast = useToast();
+  const { query } = useSearch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [detallesPedido, setDetallesPedido] = useState([]);
@@ -30,10 +33,17 @@ const HistorialPedidosPage = () => {
 
   const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
 
+  const [filters, setFilters] = useState({
+    tienda: "",
+    deudor: "",
+    usuario: "",
+    fechaInicio: "",
+    fechaFin: "",
+  });
+
   useEffect(() => {
     if (location.state?.highlightedPedidoId) {
       setHighlightedPedidoId(location.state.highlightedPedidoId);
-      // Clear state to avoid re-highlighting on refresh
       window.history.replaceState({}, document.title);
     }
   }, [location]);
@@ -57,9 +67,43 @@ const HistorialPedidosPage = () => {
         )
       : pedidosPorRuta;
 
+  const uniqueValues = useMemo(() => {
+    const tiendas = [...new Set(pedidosHistorial.map((p) => p.nombreTienda).filter(Boolean))].sort();
+    const deudores = [...new Set(pedidosHistorial.map((p) => p.nombreDeu).filter(Boolean))].sort();
+    const usuarios = [...new Set(pedidosHistorial.map((p) => p.nombreUsuario).filter(Boolean))].sort();
+    return { tiendas, deudores, usuarios };
+  }, [pedidosHistorial]);
+
+  const filteredPedidos = useMemo(() => {
+    return pedidosHistorial.filter((pedido) => {
+      if (query) {
+        const searchLower = query.toLowerCase();
+        const matchesSearch =
+          pedido.id.toString().includes(searchLower) ||
+          (pedido.nombreCorrelativo && pedido.nombreCorrelativo.toLowerCase().includes(searchLower)) ||
+          (pedido.nombreDeu && pedido.nombreDeu.toLowerCase().includes(searchLower)) ||
+          (pedido.nombreTienda && pedido.nombreTienda.toLowerCase().includes(searchLower));
+        if (!matchesSearch) return false;
+      }
+
+      if (filters.tienda && pedido.nombreTienda !== filters.tienda) return false;
+      if (filters.deudor && pedido.nombreDeu !== filters.deudor) return false;
+      if (filters.usuario && pedido.nombreUsuario !== filters.usuario) return false;
+
+      if (filters.fechaInicio || filters.fechaFin) {
+        const pedidoDate = new Date(pedido.creadoEl).toISOString().split("T")[0];
+        
+        if (filters.fechaInicio && pedidoDate < filters.fechaInicio) return false;
+        if (filters.fechaFin && pedidoDate > filters.fechaFin) return false;
+      }
+
+      return true;
+    });
+  }, [pedidosHistorial, filters, query]);
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentPedidos = pedidosHistorial.slice(
+  const currentPedidos = filteredPedidos.slice(
     indexOfFirstItem,
     indexOfLastItem
   );
@@ -111,11 +155,11 @@ const HistorialPedidosPage = () => {
 
   return (
     <Box
-      p={{ base: 1, sm: 2, md: 6 }}
+      p={{ base: 1, sm: 2, md: 2 }}
       boxShadow={{ base: "none", md: "xl" }}
       bg={containerBg}
       rounded={{ base: "none", md: "lg" }}
-      mt={{ base: "80px", sm: "85px", md: "0" }}
+      mt={{ base: "35px", sm: "35px", md: "0" }}
       mb={{ base: "60px", sm: "65px", md: "0" }}
       minH={{ base: "calc(100vh - 140px)", md: "auto" }}
       maxW="100%"
@@ -124,14 +168,21 @@ const HistorialPedidosPage = () => {
       <Heading
         as="h2"
         size={{ base: "md", md: "lg" }}
-        mb={{ base: 3, md: 6 }}
+        mb={{ base: 3, md: 2 }}
         mt={{ base: 0, md: 0 }}
         color={headingColor}
       >
         Historial de Pedidos
       </Heading>
 
-      {pedidosHistorial.length > 0 ? (
+      <HistorialFilters
+        filters={filters}
+        onFilterChange={setFilters}
+        uniqueValues={uniqueValues}
+        roleId={roleId}
+      />
+
+      {filteredPedidos.length > 0 ? (
         <>
           {isMobile ? (
             <PedidosCardList
@@ -150,14 +201,14 @@ const HistorialPedidosPage = () => {
           )}
           <Pagination
             currentPage={currentPage}
-            totalItems={pedidosHistorial.length}
+            totalItems={filteredPedidos.length}
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
           />
         </>
       ) : (
         <Box textAlign="center" color={noDataTextColor} mt={6}>
-          No hay pedidos para mostrar.
+          No hay pedidos que coincidan con los filtros.
         </Box>
       )}
 
