@@ -1,45 +1,38 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import PropTypes from 'prop-types'; // Importa la librería de prop-types
-import { tablaPais } from '../../../store/pais/thunks'
+import PropTypes from 'prop-types';
+import { Select } from '@chakra-ui/react';
+import { tablaPais } from '../../../store/pais/thunks';
 
-const PaisSelector = ({ onPaisChange }) => {
+const PaisSelector = ({ value, onPaisChange }) => {
   const dispatch = useDispatch();
   const { data: paises, status } = useSelector((state) => state.paises);
 
   useEffect(() => {
-    dispatch(tablaPais());
-  }, [dispatch]);
-
-  if (status === 'loading') {
-    return <p>Cargando países...</p>;
-  }
-
-  if (status === 'failed') {
-    return <p>Error al cargar los países.</p>;
-  }
+    if (paises.length === 0) {
+      dispatch(tablaPais());
+    }
+  }, [dispatch, paises.length]);
 
   return (
-    <select onChange={(e) => onPaisChange(e.target.value)}>
-      <option value="">Selecciona un país</option>
+    <Select 
+      value={value} 
+      onChange={(e) => onPaisChange(e.target.value)} 
+      placeholder="Selecciona un país"
+      isDisabled={status === 'loading'}
+    >
       {paises.map((pais) => (
         <option key={pais.id} value={pais.id}>
           {pais.nombre}
         </option>
       ))}
-    </select>
+    </Select>
   );
 };
 
-// Validación de prop-types
 PaisSelector.propTypes = {
-  onPaisChange: PropTypes.func.isRequired,  // Validamos que onPaisChange es requerido y es una función
-};
-
-
-// Validación de props
-PaisSelector.propTypes = {
-  onPaisChange: PropTypes.func.isRequired,  // Declara que onPaisChange es una función requerida
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onPaisChange: PropTypes.func.isRequired,
 };
 
 export default PaisSelector;

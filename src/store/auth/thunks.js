@@ -3,7 +3,7 @@ import {
   registerUserChildren,
   singIn,
 } from "../../providers/endpoints";
-import { checkingCredentials, logout, login, registered } from "./authSlice";
+import { checkingCredentials, logout, login, registered, updateUser } from "./authSlice";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import {
@@ -499,6 +499,7 @@ export const startUpdateProfile = createAsyncThunk(
 
       return { success: true, message: "Perfil actualizado correctamente." };
     } catch (error) {
+      console.error("Error in startUpdateProfile:", error);
       return rejectWithValue(
         error.response?.data?.message || "Error al actualizar el perfil."
       );

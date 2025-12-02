@@ -41,8 +41,12 @@ const loadState = () => {
 };
 
 const saveState = (state) => {
-  //console.log("Guardando estado en localStorage:", state);
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+  try {
+    //console.log("Guardando estado en localStorage:", state);
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+  } catch (error) {
+    console.error("Error saving state to localStorage:", error);
+  }
 };
 
 export const authSlice = createSlice({
@@ -127,7 +131,6 @@ export const authSlice = createSlice({
         ? `${payload.nombre} ${payload.apellido || ""}`.trim()
         : state.displayName;
       state.photoURL = payload.avatar || state.photoURL;
-      // Update nested user object if it exists
       if (state.user) {
         state.user = {
           ...state.user,
@@ -144,9 +147,6 @@ export const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchCurrentUser.pending, (state) => {
-        // Only show loading spinner if we are not already authenticated
-        // This prevents the UI from flashing "Loading..." during background updates
-        // BUT if we are manually set to 'checking' (by AuthWrapper), keep it 'checking'
         if (state.status !== "authenticated" && state.status !== "checking") {
           state.status = "checking";
         }
@@ -164,8 +164,6 @@ export const authSlice = createSlice({
         saveState(state);
       })
       .addCase(fetchCurrentUser.rejected, (state, { payload }) => {
-        // Only logout if it's an authentication error (401) or explicit logout
-        // If it's a network error, keep the user logged in (offline mode) or checking (retry mode)
         const isNetworkError =
           payload === "Network Error" ||
           payload === "ERR_NETWORK" ||
@@ -178,9 +176,6 @@ export const authSlice = createSlice({
           state.errorMessage = payload;
           saveState(state);
         }
-        // If network error, do nothing.
-        // If status was 'checking', it stays 'checking' (Loading screen persists).
-        // If status was 'authenticated', it stays 'authenticated' (Offline mode).
       });
   },
 });

@@ -374,7 +374,7 @@ const EntrantesPage = () => {
                   color={textColor}
                 />
 
-                <Text mb={1} fontWeight="bold" fontSize="sm">Comentario de Ventas (Interno)</Text>
+                {/* <Text mb={1} fontWeight="bold" fontSize="sm">Comentario de Ventas (Interno)</Text>
                 <Textarea
                   placeholder="Comentario interno de ventas..."
                   value={approveData.comentario}
@@ -383,7 +383,7 @@ const EntrantesPage = () => {
                   bg={inputBg}
                   borderColor={borderColor}
                   color={textColor}
-                />
+                /> */}
               </>
             ) : (
               <Text color="gray.500" mb={4}>

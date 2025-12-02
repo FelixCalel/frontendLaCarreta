@@ -18,7 +18,7 @@ export const fetchModulos = createAsyncThunk('modulos/fetchModulos',
       }
 
       // Hacemos la petición a la API usando el UID
-      const response = await axios.get(`${BASE_URL}/asignarRMOP/modulosPermisos/${auth.uid}`);
+      const response = await axios.get(`${BASE_URL}/api/asignarRMOP/modulosPermisos/${auth.uid}`);
       return response.data;
     } catch (error) {
       // Manejo de errores
@@ -31,7 +31,7 @@ export const fetchModulosTabla = createAsyncThunk('modulos/fetchModulosTabla',
   async (_, thunkAPI) => {
     try {
       // Hacemos la petición a la API
-      const response = await axios.get(`${BASE_URL}/modulos/`);
+      const response = await axios.get(`${BASE_URL}/api/modulos/`);
       return response.data;  // Asegúrate de que los datos retornados sean correctos
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response ? error.response.data : error.message);
@@ -45,7 +45,7 @@ export const fetchMetadataModulos = createAsyncThunk('modulos/fetchMetadataModul
     try {
       // Hacemos la petición a la API
 
-      const response = await axios.get(`${BASE_URL}/modulos/metadata`);
+      const response = await axios.get(`${BASE_URL}/api/modulos/metadata`);
       return response.data;  // Asegúrate de que los datos retornados sean correctos
 
     } catch (error) {
@@ -73,7 +73,7 @@ export const createModulo = createAsyncThunk('modulos/createModulo',
       };
 
       // Llamada a la API para crear el módulo
-      const response = await axios.post(`${BASE_URL}/modulos/crear`, modulo);
+      const response = await axios.post(`${BASE_URL}/api/modulos/crear`, modulo);
       return response.data;
     } catch (error) {
       // Manejo de errores
@@ -87,7 +87,7 @@ export const updateModulo = createAsyncThunk(
   'modulos/updateModulo',
   async (moduloData, { rejectWithValue }) => {
       try {
-          const response = await axios.put(`${BASE_URL}/modulos/update`, moduloData);
+          const response = await axios.put(`${BASE_URL}/api/modulos/update`, moduloData);
           return response.data;
       } catch (error) {
           if (error.response && error.response.data) {
@@ -103,7 +103,7 @@ export const deleteModulo = createAsyncThunk(
   'modulos/deleteModulo',
   async (id, { rejectWithValue }) => {
       try {
-          const response = await axios.delete(`${BASE_URL}/modulos/eliminar/${id}`);
+          const response = await axios.delete(`${BASE_URL}/api/modulos/eliminar/${id}`);
           return response.data;
       } catch (error) {
           if (error.response && error.response.data) {

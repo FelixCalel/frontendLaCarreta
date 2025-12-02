@@ -28,6 +28,8 @@ import { MdOutlinePerson } from "react-icons/md";
 import DeuSelector from "./DeuSelector";
 import TiendaSelector from "./tiendaSelector";
 
+const EMPTY_ARRAY = [];
+
 const PedidoModal = ({
   isOpen,
   onClose,
@@ -183,7 +185,7 @@ const PedidoModal = ({
                       </HStack>
                     </FormLabel>
                     <TiendaSelector
-                      rutaIds={[]}
+                      rutaIds={EMPTY_ARRAY}
                       paisId={Number(paisId)}
                       value={currentPedido.tiendaId2}
                       onChange={handleTiendaChange2}

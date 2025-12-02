@@ -91,6 +91,10 @@ export const TablaBusuarios = () => {
       nombreCompleto.includes(term) ||
       correo.includes(term)
     );
+  }).sort((a, b) => {
+    const nombreA = (a.nombre ?? "").toLowerCase();
+    const nombreB = (b.nombre ?? "").toLowerCase();
+    return nombreA.localeCompare(nombreB);
   });
 
   const indexOfLast = currentPage * itemsPerPage;
@@ -112,7 +116,7 @@ export const TablaBusuarios = () => {
           duration: 3000,
           isClosable: true,
         });
-        dispatch(fetchUsuarios()); // Refresh list
+        dispatch(fetchUsuarios({ id: localStorage.getItem("usuarioId") }));
       } else {
         toast({
           title: "Error al actualizar el estado",
@@ -146,7 +150,7 @@ export const TablaBusuarios = () => {
           duration: 3000,
           isClosable: true,
         });
-        dispatch(fetchUsuarios()); // Refresh list
+        dispatch(fetchUsuarios({ id: localStorage.getItem("usuarioId") }));
         onClose();
       } else {
         toast({
@@ -224,7 +228,6 @@ export const TablaBusuarios = () => {
               const rolUsuario = allRoles.find(
                 (rol) => rol.id === usuario.roleId
               );
-              // const rolNombre = rolUsuario?.nombre || "Sin rol"; // Unused
               return (
                 <Tr key={usuario.id} _hover={{ bg: rowHoverBg }}>
                   <Td>

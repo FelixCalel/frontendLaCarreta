@@ -24,7 +24,6 @@ export const notificacionesSlice = createSlice({
       );
 
       if (existingIndex !== -1) {
-        // Update existing
         state.notificaciones.splice(existingIndex, 1);
         state.notificaciones.unshift({
           ...newNotification,
@@ -32,7 +31,6 @@ export const notificacionesSlice = createSlice({
           creadoEl: newNotification.creadoEl || new Date().toISOString(),
         });
       } else {
-        // Add new
         state.notificaciones.unshift({
           ...newNotification,
           leido: false,
@@ -59,6 +57,18 @@ export const notificacionesSlice = createSlice({
       state.isLoading = false;
       state.error = action.payload;
     },
+    removeNotificacion: (state, action) => {
+      const { id, pedidoId } = action.payload;
+      if (id) {
+        state.notificaciones = state.notificaciones.filter((n) => n.id !== id);
+      } else if (pedidoId) {
+        state.notificaciones = state.notificaciones.filter((n) => {
+          const nPedidoId = n.pedidoId || (n.data && n.data.pedidoId);
+          return nPedidoId !== pedidoId;
+        });
+      }
+      state.unreadCount = state.notificaciones.filter((n) => !n.leido).length;
+    },
   },
 });
 
@@ -69,6 +79,7 @@ export const {
   markRead,
   markAllRead,
   setError,
+  removeNotificacion,
 } = notificacionesSlice.actions;
 
 export default notificacionesSlice.reducer;

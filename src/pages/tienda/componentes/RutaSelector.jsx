@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import PropTypes from "prop-types"; // Importamos PropTypes para la validación de las props
+import PropTypes from "prop-types";
 import { useSelector, useDispatch } from "react-redux";
+import { Select } from "@chakra-ui/react";
 import { tablaRuta } from "../../../store/Ruta/thunks";
 
 const RutaSelector = ({ value, onChange }) => {
@@ -8,28 +9,25 @@ const RutaSelector = ({ value, onChange }) => {
   const rutas = useSelector((state) => state.rutas);
 
   useEffect(() => {
-    dispatch(tablaRuta());
-  }, [dispatch]);
+    if (rutas.data.length === 0) {
+      dispatch(tablaRuta());
+    }
+  }, [dispatch, rutas.data.length]);
 
   return (
-    <select value={value} onChange={onChange}>
-      {/* Opción por defecto */}
-      <option value="">Seleccionar ruta</option>
-      
-      {/* Mapeamos las rutas disponibles */}
+    <Select value={value} onChange={onChange} placeholder="Seleccionar ruta">
       {rutas.data.map((ruta) => (
         <option key={ruta.id} value={ruta.id}>
           {ruta.nombre}
         </option>
       ))}
-    </select>
+    </Select>
   );
 };
 
-// Añadimos la validación de las props con PropTypes
 RutaSelector.propTypes = {
-  value: PropTypes.string.isRequired,  // 'value' debe ser una string y es obligatorio
-  onChange: PropTypes.func.isRequired, // 'onChange' debe ser una función y es obligatorio
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func.isRequired,
 };
 
 export default RutaSelector;

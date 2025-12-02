@@ -23,7 +23,7 @@ import {
   markAsRead,
   markAllAsRead,
 } from "../store/Notificaciones/thunks";
-import { addNotificacion } from "../store/Notificaciones/notificacionesSlice";
+import { addNotificacion, removeNotificacion } from "../store/Notificaciones/notificacionesSlice";
 
 export default function Notifications({ isOpen, onToggle, onClose }) {
   const navigate = useNavigate();
@@ -59,6 +59,13 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
           return;
       }
 
+      if (roleId === "2") {
+        const estadoId = newNotification.estadoId || (newNotification.data && newNotification.data.estadoId);
+        if (estadoId && parseInt(estadoId) !== 2) {
+           return;
+        }
+      }
+
       if (!newNotification.id) {
           console.warn("Received notification without ID:", newNotification);
           return;
@@ -67,12 +74,24 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
       dispatch(addNotificacion(newNotification));
     };
 
+    const handleNotificationDeleted = (event) => {
+      const { id, pedidoId, usuarioId: targetUserId } = event.detail;
+      
+      if (targetUserId && targetUserId !== usuarioId) {
+          return;
+      }
+
+      dispatch(removeNotificacion({ id, pedidoId }));
+    };
+
     window.addEventListener("notification-received", handleNotification);
+    window.addEventListener("notification-deleted", handleNotificationDeleted);
 
     return () => {
       window.removeEventListener("notification-received", handleNotification);
+      window.removeEventListener("notification-deleted", handleNotificationDeleted);
     };
-  }, [dispatch, usuarioId]);
+  }, [dispatch, usuarioId, roleId]);
 
   useOutsideClick({
     ref: ref,
@@ -104,6 +123,18 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     dispatch(markAsRead(id));
   };
 
+  const filteredNotificaciones = notificaciones.filter(n => {
+    if (roleId === "2") {
+       const estadoId = n.estadoId || (n.data && n.data.estadoId);
+       if (estadoId !== undefined && estadoId !== null) {
+          return parseInt(estadoId) === 2;
+       }
+    }
+    return true;
+  });
+
+  const displayUnreadCount = filteredNotificaciones.filter(n => !n.leido).length;
+
   return (
     <Box position="relative">
       <Tooltip label="Notificaciones" aria-label="Notificaciones Tooltip" zIndex={9999}>
@@ -117,7 +148,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
             _hover={{ color: "blue.500", bg: "transparent" }}
             _active={{ bg: "transparent" }}
           />
-          {unreadCount > 0 && (
+          {displayUnreadCount > 0 && (
             <Badge
               colorScheme="red"
               borderRadius="full"
@@ -129,7 +160,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
               border="2px solid"
               borderColor={colors.badgeBorder}
             >
-              {unreadCount}
+              {displayUnreadCount}
             </Badge>
           )}
         </Box>
@@ -166,13 +197,13 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
                 <Text fontWeight="bold" fontSize="md">
                   Notificaciones
                 </Text>
-                {unreadCount > 0 && (
+                {displayUnreadCount > 0 && (
                   <Badge colorScheme="blue" borderRadius="full" px={2}>
-                    {unreadCount} nuevas
+                    {displayUnreadCount} nuevas
                   </Badge>
                 )}
               </HStack>
-              {unreadCount > 0 && (
+              {displayUnreadCount > 0 && (
                 <Button
                   size="xs"
                   variant="ghost"
@@ -187,7 +218,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
             </Flex>
 
             <NotificationList
-              notificaciones={notificaciones}
+              notificaciones={filteredNotificaciones}
               onMarkAsRead={handleMarkAsRead}
               onNotificationClick={handleNotificationClick}
             />

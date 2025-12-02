@@ -78,19 +78,19 @@ const PageFormPedidos = () => {
     }
   }, []);
 
-  const allUsuarios = useSelector((state) => state.usuarios.data.usuarios || []);
+  const authRutas = useSelector((state) => state.auth.rutas || []);
 
   useEffect(() => {
-    if (usuarioId && allUsuarios.length > 0) {
-      const usuario = allUsuarios.find((u) => u.id === usuarioId);
-      if (usuario && Array.isArray(usuario.rutas)) {
-        const rutasAsignadas = usuario.rutas.map((ruta) => ruta.id);
-        setUsuarioRutas(rutasAsignadas);
-      } else {
-        setUsuarioRutas([]);
-      }
+    if (Array.isArray(authRutas)) {
+      // authRutas can be an array of IDs or objects depending on how it's stored
+      // Based on authSlice, it seems to be payload.rutas which might be objects or IDs
+      // We handle both cases
+      const rutasAsignadas = authRutas.map((ruta) => (typeof ruta === 'object' ? ruta.id : ruta));
+      setUsuarioRutas(rutasAsignadas);
+    } else {
+      setUsuarioRutas([]);
     }
-  }, [usuarioId, allUsuarios]);
+  }, [authRutas]);
 
   useEffect(() => {
     dispatch(tablaPedidos());

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 import { tablaTienda, fetchTiendasByPais } from "../../../../store/Tienda/thunks";
@@ -17,9 +17,8 @@ const TiendaSelector = ({
   isSecondSelector = false,
 }) => {
   const dispatch = useDispatch();
-  const [tiendas, setTiendas] = useState([]);
-  const [loading, setLoading] = useState(true);
   const tiendasRedux = useSelector((state) => state.tiendas.data);
+  const tiendasStatus = useSelector((state) => state.tiendas.status);
 
   useEffect(() => {
     if (tiendasRedux.length === 0) {
@@ -27,41 +26,27 @@ const TiendaSelector = ({
     }
   }, [dispatch, tiendasRedux.length]);
 
-  useEffect(() => {
-    const fetchTiendas = async () => {
-      setLoading(true);
-      let tiendasFiltradas = [];
+  const tiendasFiltradas = useMemo(() => {
+    if (tiendasRedux.length === 0) return [];
 
-      if (isRutaFilter) {
-        if (!rutaIds || rutaIds.length === 0) {
-          setTiendas([]);
-          setLoading(false);
-          return;
-        }
-        tiendasFiltradas = tiendasRedux.filter(
-          (tienda) => rutaIds.includes(tienda.rutaId) && tienda.estaActivo
-        );
-      } else {
-        if (paisId) {
-          try {
-            const resultAction = await dispatch(fetchTiendasByPais(paisId));
-            if (fetchTiendasByPais.fulfilled.match(resultAction)) {
-              tiendasFiltradas = resultAction.payload;
-            }
-          } catch (error) {
-            console.error("Error al cargar tiendas por país:", error);
-          }
-        }
+    if (isRutaFilter) {
+      if (!rutaIds || rutaIds.length === 0) {
+        return [];
       }
+      return tiendasRedux.filter(
+        (tienda) => rutaIds.includes(tienda.rutaId) && tienda.estaActivo
+      );
+    } else {
+      if (paisId) {
+        return tiendasRedux.filter(
+          (tienda) => tienda.paisId == paisId && tienda.estaActivo
+        );
+      }
+      return tiendasRedux.filter((tienda) => tienda.estaActivo);
+    }
+  }, [tiendasRedux, isRutaFilter, rutaIds, paisId]);
 
-      setTiendas(tiendasFiltradas);
-      setLoading(false);
-    };
-
-    fetchTiendas();
-  }, [paisId, rutaIds, isRutaFilter, tiendasRedux]);
-
-  const options = tiendas.map((tienda) => ({
+  const options = tiendasFiltradas.map((tienda) => ({
     value: tienda.id,
     label: tienda.nombre,
   }));
@@ -87,10 +72,12 @@ const TiendaSelector = ({
     isSecondSelector ? menuBg2Dark : menuBg1Dark
   );
 
+  const isLoading = tiendasStatus === "loading" && tiendasRedux.length === 0;
+
   return (
     <ChakraReactSelect
-      placeholder={loading ? "Cargando tiendas..." : "Seleccionar tienda"}
-      isLoading={loading}
+      placeholder={isLoading ? "Cargando tiendas..." : "Seleccionar tienda"}
+      isLoading={isLoading}
       options={options}
       value={selectedOption}
       onChange={(selected) => onChange(selected ? selected.value : null)}

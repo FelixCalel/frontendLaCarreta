@@ -59,6 +59,12 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
     setDetallesLocal(detalles);
   }, [detalles]);
 
+  const sortDetalles = (lista) => {
+    return lista.slice().sort((a, b) =>
+      a.nombreProducto.localeCompare(b.nombreProducto, undefined, { sensitivity: "base" })
+    );
+  };
+
   const handleAddProducto = async () => {
     if (!newProducto.productoId || !cantidadAgregar || cantidadAgregar <= 0) {
       toast({
@@ -109,7 +115,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
       const nuevosDetalles = await dispatch(
         getDetalleOrdenByPedidoId(pedido.id)
       ).unwrap();
-      setDetallesLocal(nuevosDetalles);
+      setDetallesLocal(sortDetalles(nuevosDetalles));
     } catch (err) {
       if (handleAuthError(err)) {
         return;
@@ -155,7 +161,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
       const nuevosDetalles = await dispatch(
         getDetalleOrdenByPedidoId(pedido.id)
       ).unwrap();
-      setDetallesLocal(nuevosDetalles);
+      setDetallesLocal(sortDetalles(nuevosDetalles));
       setEditCantidad((prev) => ({ ...prev, [detalleId]: undefined }));
     } catch (err) {
       if (handleAuthError(err)) {
@@ -180,7 +186,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
       const nuevosDetalles = await dispatch(
         getDetalleOrdenByPedidoId(pedido.id)
       ).unwrap();
-      setDetallesLocal(nuevosDetalles);
+      setDetallesLocal(sortDetalles(nuevosDetalles));
     } catch (err) {
       if (handleAuthError(err)) {
         return;

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import PropTypes from "prop-types";
 import {
   Flex,
@@ -6,6 +6,9 @@ import {
   InputGroup,
   InputRightElement,
   IconButton,
+  useColorModeValue,
+  Box,
+  Text,
 } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
 import { useSelector, useDispatch } from "react-redux";
@@ -17,30 +20,72 @@ import {
 } from "@choc-ui/chakra-autocomplete";
 import { tablaDeudores } from "../../../store/Deus/thunks";
 
+const CHUNK_SIZE = 20;
+
 const DeuSelector = ({ onSelect, selectedDeudorId }) => {
   const dispatch = useDispatch();
   const { deudores } = useSelector((state) => state.deudores);
   const { status } = useSelector((state) => state.auth);
+  
   const [inputValue, setInputValue] = useState("");
+  const [renderItems, setRenderItems] = useState([]);
+  const [visibleItems, setVisibleItems] = useState([]);
   const [showOptions, setShowOptions] = useState(false);
-  const autoCompleteRef = useRef(null);
+
+  const listBg = useColorModeValue("white", "gray.800");
+  const listBorderColor = useColorModeValue("gray.200", "gray.600");
+  const itemHoverBg = useColorModeValue("gray.100", "gray.600");
 
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && deudores.length === 0) {
       dispatch(tablaDeudores());
     }
-  }, [dispatch, status]);
+  }, [dispatch, status, deudores.length]);
+
+  const sourceItems = useMemo(() => {
+    return deudores || [];
+  }, [deudores]);
 
   useEffect(() => {
-    if (selectedDeudorId && deudores.length > 0) {
-      const selectedDeudor = deudores.find((d) => d.id === selectedDeudorId);
+    if (selectedDeudorId && sourceItems.length > 0) {
+      const selectedDeudor = sourceItems.find((d) => d.id === selectedDeudorId);
       if (selectedDeudor) {
         setInputValue(
           `${selectedDeudor.correlativo} - ${selectedDeudor.nombre}`
         );
       }
     }
-  }, [selectedDeudorId, deudores]);
+  }, [selectedDeudorId, sourceItems]);
+
+  useEffect(() => {
+    if (sourceItems.length > 0) {
+      setVisibleItems(sourceItems.slice(0, CHUNK_SIZE));
+    } else {
+      setVisibleItems([]);
+    }
+  }, [sourceItems]);
+
+  const normalizeText = (text) => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  };
+
+  useEffect(() => {
+    const term = normalizeText(inputValue.trim());
+    if (term === "") {
+      setRenderItems(visibleItems);
+      return;
+    }
+
+    const matches = sourceItems.filter((deu) => {
+        const searchText = `${deu.correlativo} - ${deu.nombre}`;
+        return normalizeText(searchText).includes(term);
+    });
+    setRenderItems(matches.slice(0, 200));
+  }, [inputValue, sourceItems, visibleItems]);
+
 
   const handleSelectDeudor = (deudor) => {
     setInputValue(`${deudor.correlativo} - ${deudor.nombre}`);
@@ -61,9 +106,6 @@ const DeuSelector = ({ onSelect, selectedDeudorId }) => {
       correlativo: null,
       nombre: null,
     });
-    if (autoCompleteRef.current) {
-      autoCompleteRef.current.focus();
-    }
   };
 
   const handleInputChange = (e) => {
@@ -72,11 +114,22 @@ const DeuSelector = ({ onSelect, selectedDeudorId }) => {
     setShowOptions(true);
   };
 
-  const filteredDeudores = deudores.filter((deu) => {
-    const searchText = `${deu.correlativo} - ${deu.nombre}`.toLowerCase();
-    const inputSearch = inputValue.toLowerCase();
-    return !inputValue || searchText.includes(inputSearch);
-  });
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollTop + clientHeight >= scrollHeight - 10) {
+      loadMoreItems();
+    }
+  };
+
+  const loadMoreItems = () => {
+    if (visibleItems.length < sourceItems.length) {
+      const newLength = Math.min(
+        visibleItems.length + CHUNK_SIZE,
+        sourceItems.length
+      );
+      setVisibleItems(sourceItems.slice(0, newLength));
+    }
+  };
 
   return (
     <Flex pt="4" justify="start" align="center" w="full" flexDir="column">
@@ -87,7 +140,6 @@ const DeuSelector = ({ onSelect, selectedDeudorId }) => {
       >
         <InputGroup>
           <AutoCompleteInput
-            ref={autoCompleteRef}
             variant="outline"
             placeholder="Seleccione un deudor"
             value={inputValue}
@@ -106,23 +158,32 @@ const DeuSelector = ({ onSelect, selectedDeudorId }) => {
             </InputRightElement>
           )}
         </InputGroup>
-        <AutoCompleteList>
-          {filteredDeudores.length > 0 ? (
-            filteredDeudores.map((deu) => (
+        <AutoCompleteList
+            onScroll={handleScroll}
+            maxHeight="200px"
+            overflowY="auto"
+            bg={listBg}
+            borderColor={listBorderColor}
+        >
+          {renderItems.length > 0 ? (
+            renderItems.map((deu) => (
               <AutoCompleteItem
                 key={`option-${deu.id}`}
                 value={`${deu.correlativo} - ${deu.nombre}`}
                 onClick={() => handleSelectDeudor(deu)}
+                _hover={{ bg: itemHoverBg }}
               >
                 {`${deu.correlativo} - ${deu.nombre}`}
               </AutoCompleteItem>
             ))
           ) : (
-            <AutoCompleteItem key="no-results" value="" isDisabled>
-              {inputValue
-                ? "No se encontraron deudores"
-                : "No hay deudores disponibles"}
-            </AutoCompleteItem>
+            <Box p={2}>
+                <Text fontSize="sm" color="gray.500">
+                    {inputValue
+                        ? "No se encontraron deudores"
+                        : "No hay deudores disponibles"}
+                </Text>
+            </Box>
           )}
         </AutoCompleteList>
       </AutoComplete>
@@ -136,9 +197,8 @@ const DeuSelector = ({ onSelect, selectedDeudorId }) => {
 };
 
 DeuSelector.propTypes = {
-  //ciudadId: PropTypes.string,
   onSelect: PropTypes.func.isRequired,
-  selectedDeudorId: PropTypes.string,
+  selectedDeudorId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default DeuSelector;

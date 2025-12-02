@@ -28,6 +28,7 @@ const PedidosTable = ({
   const stripe = useColorModeValue("gray", "blue");
   const hlBg = useColorModeValue("yellow.100", "yellow.700");
   const blinkBg = useColorModeValue("orange.100", "orange.700");
+  const borderColor = useColorModeValue("gray.400", "whiteAlpha.500");
 
   const toggleSelect = (id) =>
     setSelectedPedidos(
@@ -83,7 +84,7 @@ const PedidosTable = ({
                   <Td w="50px">
                     <Checkbox
                       size="lg"
-                      borderColor={useColorModeValue("gray.400", "whiteAlpha.500")}
+                      borderColor={borderColor}
                       isChecked={selectedPedidos.includes(p.id)}
                       onChange={(e) => {
                         e.stopPropagation();

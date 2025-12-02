@@ -36,12 +36,14 @@ import {
 } from "../../store/AsignarPermisosAroles/thunks";
 import { fetchrole } from "../../store/PaginaRole/thunks";
 import { fetchOpciones } from "../../store/Opciones/thunks";
+import { fetchModulos } from "../../store/RolPermisoUsuario/thunks";
 import iconCatalog from "./../Iconos/IconCatalog";
 
 export const Permisos = () => {
   const dispatch = useDispatch();
   const toast = useToast();
 
+  const { uid } = useSelector((state) => state.auth);
   const { modulosTabla = [] } = useSelector((state) => state.modulos);
   const { Permisos = [] } = useSelector((state) => state.Permisos);
   const { roles = [] } = useSelector((state) => state.roles);
@@ -220,6 +222,16 @@ export const Permisos = () => {
         console.log("Permisos creados exitosamente:", permisosCreados);
       }
 
+      // Actualizar el menú lateral dinámicamente
+      if (uid) {
+        console.log("Dispatching fetchModulos for uid:", uid);
+        dispatch(fetchModulos(uid))
+          .then((res) => console.log("fetchModulos result:", res))
+          .catch((err) => console.error("fetchModulos error:", err));
+      } else {
+        console.warn("UID is missing, cannot refresh modules dynamically.");
+      }
+
       // Abre el diálogo después de guardar exitosamente
       setIsDialogOpen(true);
     } catch (error) {
@@ -235,6 +247,13 @@ export const Permisos = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Helper para asegurar que siempre trabajamos con arrays
+  const getArray = (data) => {
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.data)) return data.data;
+    return [];
   };
 
   return (
@@ -265,21 +284,29 @@ export const Permisos = () => {
           <Select
             placeholder="Selecciona un módulo"
             onChange={(e) => setSelectedModulo(e.target.value)}
-            bg="white"
-            borderColor="#673ab7"
+            bg={useColorModeValue("white", "gray.700")}
+            borderColor={useColorModeValue("#673ab7", "gray.600")}
             color={textColor}
             borderRadius="md"
             w="450px"
+            _hover={{ borderColor: "#512da8" }}
+            _focus={{ borderColor: "#311b92", boxShadow: "0 0 5px #673ab7" }}
           >
-            {(Array.isArray(modulosTabla) ? modulosTabla : [])
+            {getArray(modulosTabla)
               .slice()
               .sort((a, b) => a.nombre.localeCompare(b.nombre))
               .map((modulo) => {
-                const IconComponent = iconCatalog[modulo.icono]; // Obtiene el icono del módulo
+                const IconComponent = iconCatalog[modulo.icono];
 
                 return (
-                  <option key={modulo.id} value={modulo.id}>
-                    {IconComponent && <Icon as={IconComponent} mr={2} />}
+                  <option
+                    key={modulo.id}
+                    value={modulo.id}
+                    style={{
+                      backgroundColor: useColorModeValue("white", "#2D3748"),
+                      color: useColorModeValue("black", "white"),
+                    }}
+                  >
                     {modulo.nombre}
                   </option>
                 );
@@ -288,13 +315,16 @@ export const Permisos = () => {
         </Flex>
 
         <Flex align="center" justify="center" w="50%">
+          <Text fontWeight="bold" color={textColor} mr={2}>
+            Opción:
+          </Text>
           <Select
             placeholder="Selecciona una opción"
             value={selectedOpcion || ""}
             onChange={(e) => setSelectedOpcion(e.target.value)}
-            bg="white"
+            bg={useColorModeValue("white", "gray.700")}
             border="1px solid"
-            borderColor="#673ab7"
+            borderColor={useColorModeValue("#673ab7", "gray.600")}
             color={textColor}
             borderRadius="md"
             w="450px"
@@ -304,9 +334,9 @@ export const Permisos = () => {
             _focus={{ borderColor: "#311b92", boxShadow: "0 0 5px #673ab7" }}
             isDisabled={!selectedModulo}
           >
-            {opciones
+            {getArray(opciones)
               .filter((opcion) =>
-                asignacionMO.some(
+                getArray(asignacionMO).some(
                   (a) =>
                     Number(a.modulo_id) === Number(selectedModulo) &&
                     Number(a.opcion_id) === Number(opcion.id)
@@ -314,11 +344,17 @@ export const Permisos = () => {
               )
               .sort((a, b) => a.nombre.localeCompare(b.nombre))
               .map((opcion) => {
-                const IconComponent = iconCatalog[opcion.icono]; // Obtiene el icono de la opción
+                const IconComponent = iconCatalog[opcion.icono];
 
                 return (
-                  <option key={opcion.id} value={opcion.id}>
-                    {IconComponent && <Icon as={IconComponent} mr={2} />}
+                  <option
+                    key={opcion.id}
+                    value={opcion.id}
+                    style={{
+                      backgroundColor: useColorModeValue("white", "#2D3748"),
+                      color: useColorModeValue("black", "white"),
+                    }}
+                  >
                     {opcion.nombre}
                   </option>
                 );
@@ -333,7 +369,7 @@ export const Permisos = () => {
           borderRadius="lg"
           boxShadow="lg"
           border="0.5px solid"
-          borderColor="#673ab7"
+          borderColor={useColorModeValue("#673ab7", "gray.600")}
         >
           <Table variant="simple" borderRadius="md" bg={tableBgColor}>
             <Thead bg={tableHeaderBg}>
@@ -418,7 +454,7 @@ export const Permisos = () => {
               <Button
                 colorScheme="green"
                 onClick={() => {
-                  window.location.reload();
+                  setIsDialogOpen(false);
                 }}
                 ml={3}
               >
