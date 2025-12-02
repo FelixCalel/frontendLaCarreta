@@ -23,6 +23,7 @@ import { pedidoProduccionApi } from "../services/pedidoProductionApi.ts";
 import { qaApi } from "../services/controlCalidadAPI.ts";
 import settingsReducer from "./settings/settingsSlice";
 import notificacionesReducer from "./Notificaciones/notificacionesSlice";
+import { areasReducer } from "./areas/areasSlice";
 
 export const store = configureStore({
   reducer: {
@@ -50,6 +51,7 @@ export const store = configureStore({
     notificaciones: notificacionesReducer,
     [pedidoProduccionApi.reducerPath]: pedidoProduccionApi.reducer,
     [qaApi.reducerPath]: qaApi.reducer,
+    areas: areasReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(

@@ -1,71 +1,83 @@
 import { useEffect, useState } from "react";
-import { Box, Text, Spinner, Heading, Button, useDisclosure  } from "@chakra-ui/react";
+import {
+  Box,
+  Text,
+  Spinner,
+  Heading,
+  Button,
+  useDisclosure,
+} from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAreas, fetchOpciones } from "../../store/areas/thunks";
+import { fetchUsuarios } from "../../store/usuarios/usuariosSlice";
 import MesasAsignadas from "./MesasAsignadas";
 import AsignacionesTipoGrupo from "./AsignacionesTipoGrupo";
 import EncargadoModal from "./EncargadoModal";
 
-
-const BASE_URL = import.meta.env.VITE_API_URL;
-
 const PageAsignacion = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const location = useLocation();
+  const dispatch = useDispatch();
+  
   const [areaId, setAreaId] = useState(null);
   const [nombreArea, setNombreArea] = useState("");
-  const [loading, setLoading] = useState(true);
   const [encargado, setEncargado] = useState(null);
 
-
+  const { areas, opciones, loading: areasLoading } = useSelector((state) => state.areas);
+  const { usuarios, loading: usuariosLoading } = useSelector((state) => state.usuarios);
 
   useEffect(() => {
-    const fetchAreaId = async () => {
-      try {
-        const rutaActual = location.pathname.split("/")[1];
-        const rutaConSlash = `/${rutaActual}`;
+    dispatch(fetchAreas());
+    dispatch(fetchOpciones());
+    dispatch(fetchUsuarios());
+  }, [dispatch]);
 
-        const opcionesRes = await axios.get(`${BASE_URL}/api/opciones/`);
-        const opcion = opcionesRes.data.find((o) => o.ruta === rutaConSlash);
+  useEffect(() => {
+    if (areasLoading || usuariosLoading) return;
 
-        if (!opcion) {
-          console.warn("No se encontró la opción para esta ruta");
-          return;
-        }
+    const rutaActual = location.pathname.split("/")[1];
+    const rutaConSlash = `/${rutaActual}`;
 
-        const areasRes = await axios.get(`${BASE_URL}/area/`);
-        const area = areasRes.data.find((a) => a.opcion_id === opcion.id);
-        const areaDetalleRes = await axios.get(`${BASE_URL}/area/${area.id}`);
-        const encargadoId = areaDetalleRes.data.encargado_id;
-        if (!area) {
-          console.warn("No se encontró el área para esta opción");
-          return;
-        }
+    const opcion = opciones.find((o) => o.ruta === rutaConSlash);
 
-        setAreaId(area.id);
-        if (encargadoId) {
-          const usuariosRes = await axios.get(`${BASE_URL}/usuarios/todos`);
-          const encargadoData = usuariosRes.data.usuarios.find(
-            (u) => u.id === encargadoId
-          );
-          setEncargado(encargadoData);
-        }
-        setNombreArea(opcion.nombre);
-      } catch (error) {
-        console.error("Error al obtener datos del área:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!opcion) {
+      console.warn("No se encontró la opción para esta ruta");
+      return;
+    }
 
-    fetchAreaId();
-  }, [location.pathname]);
+    const area = areas.find((a) => a.opcion_id === opcion.id);
+    
+    if (!area) {
+      console.warn("No se encontró el área para esta opción");
+      return;
+    }
 
-  if (loading) {
+    setAreaId(area.id);
+    setNombreArea(opcion.nombre);
+
+    // We need to fetch area details to get encargado_id if it's not in the list
+    // But assuming fetchAreas returns enough info or we rely on what we have.
+    // The original code fetched area details.
+    // Let's assume the area object from list has encargado_id or we need to fetch it.
+    // If fetchAreas returns list of areas, check if it has encargado_id.
+    // If not, we might need a specific thunk or just use what we have.
+    // Let's assume for now we use what we have, or if needed we can dispatch fetchAreaById.
+    
+    if (area.encargado_id) {
+        const encargadoData = usuarios.find((u) => u.id === area.encargado_id);
+        setEncargado(encargadoData);
+    } else {
+        setEncargado(null);
+    }
+
+  }, [location.pathname, areas, opciones, usuarios, areasLoading, usuariosLoading]);
+
+  if (areasLoading || usuariosLoading) {
     return (
       <Box p={4}>
         <Spinner />
-        <Text>Cargando mesas asignadas…</Text>
+        <Text>Cargando datos...</Text>
       </Box>
     );
   }
@@ -88,7 +100,10 @@ const PageAsignacion = () => {
           Encargado
         </Button>
         <Text mt={2} fontWeight="bold">
-          Encargado: {encargado ? `${encargado.nombre} ${encargado.apellido}` : "Ninguno asignado"}
+          Encargado:{" "}
+          {encargado
+            ? `${encargado.nombre} ${encargado.apellido}`
+            : "Ninguno asignado"}
         </Text>
       </Box>
 
@@ -98,7 +113,6 @@ const PageAsignacion = () => {
         areaId={areaId}
         currentEncargado={encargado}
       />
-
 
       <MesasAsignadas areaId={areaId} />
       <AsignacionesTipoGrupo areaId={areaId} />

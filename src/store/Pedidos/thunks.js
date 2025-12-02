@@ -94,8 +94,11 @@ export const togglePedidoStatus = createAsyncThunk(
 
 export const tablaPedidosConDetalles = createAsyncThunk(
   "pedidos/fetchPedidosConDetalles",
-  async () => {
+  async (_, { getState }) => {
     try {
+      const state = getState();
+      const existingPedidos = state.pedidos.pedidosConDetalles || [];
+
       const responsePedidos = await axios.get(`${BASE_URL}/form/pedidos/todos`);
       let pedidos = responsePedidos.data;
 
@@ -103,6 +106,15 @@ export const tablaPedidosConDetalles = createAsyncThunk(
 
       const pedidosConDetalles = await Promise.all(
         pedidos.map(async (pedido) => {
+          // Check if we already have details for this pedido in the state
+          const existingPedido = existingPedidos.find(p => p.id === pedido.id);
+          
+          if (existingPedido && existingPedido.items && existingPedido.items.length > 0) {
+             // Use existing items if available
+             pedido.items = existingPedido.items;
+             return pedido;
+          }
+
           try {
             const detallesResponse = await axios.get(
               `${BASE_URL}/detalle/pedido/listar/${pedido.id}`

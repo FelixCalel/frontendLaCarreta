@@ -12,8 +12,9 @@ import {
   Link,
   Text,
 } from '@chakra-ui/react';
-import axios from 'axios';
-const BASE_URL = import.meta.env.VITE_API_URL;
+import { useDispatch } from 'react-redux';
+import { activateUserChild } from '../../store/auth/thunks';
+// import axios from 'axios';
 
 
 export const ActivarUsuarioDep = () => {
@@ -67,6 +68,8 @@ export const ActivarUsuarioDep = () => {
     // Resto de tu código
   }, []);
 
+  const dispatch = useDispatch();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
    // Restablece el estado de error antes de validar
@@ -86,20 +89,19 @@ export const ActivarUsuarioDep = () => {
     
     // Aquí se activa el usuario actualizando la contraseña solicitada
     try {
-      const response = await axios.post(`${BASE_URL}/usuarios/activarUsuarioHijo`, {
-        nombres, apellidos,correo_electronico,nuevaClave,telefono,celular
-      });
-      console.log(response.status)
-      setMensaje('Tu cuenta fue activada correctamente.');
-      if(response.status === 201){
+      const resultAction = await dispatch(activateUserChild({
+        nombres, apellidos, correo_electronico, nuevaClave, telefono, celular
+      }));
+
+      if (activateUserChild.fulfilled.match(resultAction)) {
+        setMensaje(resultAction.payload.message);
         window.location.href = '/auth/login';
+      } else {
+        setMensaje(resultAction.payload || 'Hubo un error al activar el usuario.');
       }
     } catch (error) {
-      setMensaje('Hubo un error: '+ error);
+      setMensaje('Hubo un error inesperado.');
     }
-   
-    
-    
   };
 
   return (

@@ -150,23 +150,34 @@ export function isAuthenticated() {
 
 export const listUsuarios = async (data) => {
   const usuarioData = { id: data.id };
-  const userData = JSON.parse(localStorage.getItem("userData"));
-  //console.log(userData);
+  const userDataString = localStorage.getItem("userData");
+  const userData = userDataString ? JSON.parse(userDataString) : null;
+  
   if (!usuarioData.id) {
-    // si en caso al refrescar la pagina se pierde el id del redux, lo almacenamos
-    // en localstorage para recuperarlo.
-    usuarioData.id = parseInt(userData.id);
+    if (userData && userData.id) {
+        usuarioData.id = parseInt(userData.id);
+    } else {
+        console.error("No user ID found in arguments or localStorage");
+        return { ok: false, error: "No user ID found" };
+    }
   }
   return await axios
     .get(`${BASE_URL}/usuarios/lista/${usuarioData.id}`)
     .then((response) => {
       // console.log(response.data.result)
       if (response.status === 200 || response.status === 201) {
-        const usuarios = response.data;
+        const data = response.data;
+        // Check if data is the array itself or if it's wrapped in an object property 'usuarios'
+        const usuariosList = Array.isArray(data) ? data : (data.usuarios || []);
+
+        if (typeof data === 'string' && data.trim().startsWith('<')) {
+            console.error("Received HTML instead of JSON from listUsuarios");
+            return { ok: false, error: "Invalid server response" };
+        }
 
         return {
           ok: true,
-          usuarios: usuarios,
+          usuarios: usuariosList,
         };
       }
     })

@@ -2,13 +2,13 @@ import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useToast } from "@chakra-ui/react";
-import axios from "axios";
+// import axios from "axios";
 import {
   addNewPedido,
   tablaPedidos,
 } from "../../store/Pedidos/thunks";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+
 
 const usePedidosLogic = ({
   onClose, // Asegúrate de pasar la función onClose desde el componente que utiliza este hook
@@ -48,26 +48,21 @@ const usePedidosLogic = ({
     dispatch(tablaPedidos());
   }, [dispatch]);
 
+  const authUser = useSelector((state) => state.auth.user);
+  const authRutas = useSelector((state) => state.auth.rutas);
+
   useEffect(() => {
-    const fetchUsuarioRutas = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/usuarios/todos`);
-        const usuario = response.data.usuarios.find(
-          (u) => u.id === parseInt(usuarioId)
-        );
-        if (usuario && Array.isArray(usuario.rutas)) {
-          const rutasAsignadas = usuario.rutas.map((ruta) => ruta.id);
-          setUsuarioRutas(rutasAsignadas);
-        } else {
-          setUsuarioRutas([]);
-        }
-      } catch (error) {
-        console.error("Error al obtener rutas del usuario:", error);
-        setUsuarioRutas([]);
-      }
-    };
-    fetchUsuarioRutas();
-  }, [usuarioId]);
+    if (authUser && authUser.rutas) {
+       // If authUser.rutas is array of objects
+       const rutasIds = authUser.rutas.map(r => r.id);
+       setUsuarioRutas(rutasIds);
+    } else if (authRutas && authRutas.length > 0) {
+       // Fallback to auth.rutas if it contains IDs
+       setUsuarioRutas(authRutas);
+    } else {
+       setUsuarioRutas([]);
+    }
+  }, [authUser, authRutas]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);

@@ -9,7 +9,7 @@ import { createOpciones } from '../../../../store/Opciones/thunks';
 import { useState, useRef } from 'react';
 import { createpermisos } from '../../../../store/Permisos/thunks';
 import { createRol } from '../../../../store/PaginaRole/thunks';
-import { createusuarios } from '../../../../store/usuarios/usuariosSlice';
+import { createUser } from '../../../../store/usuarios/thunks';
 import { createasignacionPermisosRoles } from '../../../../store/AsignarPermisosAroles/thunks';
 // import { createProcesos } from '../../../../store/Procesos/thunks';
 // import { createEtapa } from '../../../../store/Etapas';
@@ -27,7 +27,7 @@ export const BotonCrear = ({ nombreBoton, metadata }) => {
 
         switch (nombreBoton) {
             case 'Crear Usuario':
-                dispatch(createusuarios(formData))
+                dispatch(createUser(formData))
                     .then((result) => {
                         if (result.meta.requestStatus === 'fulfilled') {
                             setIsAlertOpen(true); // Abrir el AlertDialog de éxito

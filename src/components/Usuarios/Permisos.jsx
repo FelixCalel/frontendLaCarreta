@@ -271,7 +271,7 @@ export const Permisos = () => {
             borderRadius="md"
             w="450px"
           >
-            {modulosTabla
+            {(Array.isArray(modulosTabla) ? modulosTabla : [])
               .slice()
               .sort((a, b) => a.nombre.localeCompare(b.nombre))
               .map((modulo) => {

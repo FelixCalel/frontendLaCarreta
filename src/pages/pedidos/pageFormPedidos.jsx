@@ -15,11 +15,11 @@ import {
   getDetalleOrdenByPedidoId,
   copiarDetallesUltimoPedido,
 } from "../../store/Pedidos/DetallePedidos/thunks";
-import axios from "axios";
+// import axios from "axios";
 //import ProductosTable from "./componentes/detallesPedidosTable";
 import { useLocation } from "react-router-dom";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+
 
 const PageFormPedidos = () => {
   const location = useLocation();
@@ -78,23 +78,19 @@ const PageFormPedidos = () => {
     }
   }, []);
 
+  const allUsuarios = useSelector((state) => state.usuarios.data.usuarios || []);
+
   useEffect(() => {
-    const fetchUsuarioRutas = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/usuarios/todos`);
-        const usuario = response.data.usuarios.find((u) => u.id === usuarioId);
-        if (usuario && Array.isArray(usuario.rutas)) {
-          const rutasAsignadas = usuario.rutas.map((ruta) => ruta.id);
-          setUsuarioRutas(rutasAsignadas);
-        } else {
-          setUsuarioRutas([]);
-        }
-      } catch (error) {
-        console.error("Error al obtener rutas del usuario:", error);
+    if (usuarioId && allUsuarios.length > 0) {
+      const usuario = allUsuarios.find((u) => u.id === usuarioId);
+      if (usuario && Array.isArray(usuario.rutas)) {
+        const rutasAsignadas = usuario.rutas.map((ruta) => ruta.id);
+        setUsuarioRutas(rutasAsignadas);
+      } else {
+        setUsuarioRutas([]);
       }
-    };
-    if (usuarioId) fetchUsuarioRutas();
-  }, [usuarioId]);
+    }
+  }, [usuarioId, allUsuarios]);
 
   useEffect(() => {
     dispatch(tablaPedidos());

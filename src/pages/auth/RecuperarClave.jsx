@@ -17,8 +17,10 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
+import { useDispatch } from "react-redux";
+import { sendPasswordResetEmail } from "../../store/auth/thunks";
 import { FaEnvelope, FaArrowLeft, FaLock } from "react-icons/fa";
-import axios from "axios";
+// import axios from "axios"; // Removed axios
 import { AnimatedBackground } from "../../components/auth/AnimatedBackground";
 
 export const RecuperarClave = () => {
@@ -26,41 +28,39 @@ export const RecuperarClave = () => {
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
+  const dispatch = useDispatch();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Usar el endpoint personalizado del backend
-      const BASE_URL = import.meta.env.VITE_API_URL;
-      await axios.post(`${BASE_URL}/usuarios/recuperar-clave-custom`, {
-        email,
-      });
+      const resultAction = await dispatch(sendPasswordResetEmail(email));
 
-      toast({
-        title: "Correo enviado",
-        description:
-          "Revisa tu bandeja de entrada para restablecer tu contraseña.",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-        position: "top-right",
-      });
-      setEmail(""); // Limpiar el campo
-    } catch (error) {
-      let errorMessage = "Hubo un error al enviar el correo.";
-
-      if (axios.isAxiosError(error)) {
-        errorMessage = error.response?.data?.message || errorMessage;
-      } else if (error.code === "auth/user-not-found") {
-        errorMessage = "No existe una cuenta con este correo electrónico.";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "El correo electrónico no es válido.";
+      if (sendPasswordResetEmail.fulfilled.match(resultAction)) {
+        toast({
+          title: "Correo enviado",
+          description: resultAction.payload.message,
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+          position: "top-right",
+        });
+        setEmail(""); // Limpiar el campo
+      } else {
+        toast({
+          title: "Error",
+          description: resultAction.payload || "Hubo un error al enviar el correo.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "top-right",
+        });
       }
-
+    } catch (error) {
       toast({
         title: "Error",
-        description: errorMessage,
+        description: "Hubo un error inesperado.",
         status: "error",
         duration: 5000,
         isClosable: true,

@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  fetchUsuarios,
-  fetchUsuariosMetadata,
-} from "../../store/usuarios/usuariosSlice";
+import { fetchUsuarios } from "../../store/usuarios/usuariosSlice";
+import { fetchUsuariosMetadata } from "../../store/usuarios/thunks";
 import { ListarDatos } from "../../components/Genericos/Crud/listas/listarDatos";
 import { Box, useColorModeValue, Spinner } from "@chakra-ui/react";
 import { BotonEditar } from "../../components/Genericos/Crud/listas/botonEditar";

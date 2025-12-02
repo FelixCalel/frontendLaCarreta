@@ -22,7 +22,7 @@ import {
 } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../store/auth";
+import { startLogout } from "../store/auth/thunks";
 
 export const MenuPerfil = () => {
   const navigate = useNavigate();
@@ -39,22 +39,7 @@ export const MenuPerfil = () => {
   };
 
   const onLogout = () => {
-    // Eliminar sólo claves relevantes para no borrar otras preferencias de la app
-    const lsKeys = [
-      "access_token",
-      "refresh_token",
-      "usuarioId",
-      "roleId",
-      "nombreUsuario",
-      "correoUsuario",
-      "authSlice",
-      "userData",
-    ];
-    lsKeys.forEach((k) => localStorage.removeItem(k));
-    // Limpieza adicional en sessionStorage por si se usó como fallback
-    sessionStorage.removeItem("access_token");
-    sessionStorage.removeItem("refresh_token");
-    dispatch(logout());
+    dispatch(startLogout());
     navigate("/auth/login", { replace: true });
   };
 

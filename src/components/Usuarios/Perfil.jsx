@@ -1,35 +1,31 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { updateUser } from "../../store/auth";
-import axios from "axios";
+import { startUpdateProfile } from "../../store/auth/thunks";
+import { fetchUsuarioById } from "../../store/usuarios/thunks";
 import {
-  Flex,
-  Input,
-  Stack,
-  Button,
-  Avatar,
-  FormControl,
-  FormLabel,
-  Heading,
   Box,
-  IconButton,
-  useColorModeValue,
-  Spinner,
-  Text,
-  VStack,
-  Divider,
-  useToast,
   Container,
-  SimpleGrid,
   Card,
   CardHeader,
+  Flex,
+  Avatar,
+  IconButton,
+  VStack,
+  Heading,
+  Text,
   CardBody,
+  SimpleGrid,
+  FormControl,
+  FormLabel,
+  Input,
   CardFooter,
-  Image,
+  Button,
+  Spinner,
+  useToast,
+  useColorModeValue,
 } from "@chakra-ui/react";
-import { FaCamera, FaSave, FaUser, FaEnvelope, FaPhone } from "react-icons/fa";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
+import { FaUser, FaCamera, FaPhone, FaSave } from "react-icons/fa";
 
 export const Perfil = () => {
   const dispatch = useDispatch();
@@ -64,15 +60,19 @@ export const Perfil = () => {
     const obtenerUsuario = async () => {
       if (!usuarioId) return;
       try {
-        const response = await axios.get(`${BASE_URL}/usuarios/${usuarioId}`);
-        const usuario = response.data.usuario;
-        setUserData({
-          nombre: usuario.nombre || "",
-          apellido: usuario.apellido || "",
-          telefono: usuario.telefono || "",
-          correo: usuario.correo || "",
-          avatar: usuario.avatar || "",
-        });
+        const resultAction = await dispatch(fetchUsuarioById(usuarioId));
+        if (fetchUsuarioById.fulfilled.match(resultAction)) {
+          const usuario = resultAction.payload;
+          setUserData({
+            nombre: usuario.nombre || "",
+            apellido: usuario.apellido || "",
+            telefono: usuario.telefono || "",
+            correo: usuario.correo || "",
+            avatar: usuario.avatar || "",
+          });
+        } else {
+          throw new Error("No se pudo cargar la información del usuario.");
+        }
       } catch (err) {
         toast({
           title: "Error",
@@ -87,7 +87,7 @@ export const Perfil = () => {
     };
 
     obtenerUsuario();
-  }, [usuarioId, toast]);
+  }, [usuarioId, toast, dispatch]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -114,36 +114,36 @@ export const Perfil = () => {
   const handleSubmit = async () => {
     setIsSaving(true);
     try {
-      await axios.put(`${BASE_URL}/usuarios/${usuarioId}`, {
-        nombre: userData.nombre,
-        apellido: userData.apellido,
-        telefono: userData.telefono,
-        avatar: userData.avatar,
-      });
-
-      dispatch(
-        updateUser({
-          nombre: userData.nombre,
-          apellido: userData.apellido,
-          telefono: userData.telefono,
-          avatar: userData.avatar,
+      const resultAction = await dispatch(
+        startUpdateProfile({
+          usuarioId,
+          userData: {
+            nombre: userData.nombre,
+            apellido: userData.apellido,
+            telefono: userData.telefono,
+            avatar: userData.avatar,
+          },
         })
       );
 
-      // Dispatch custom event to notify MenuPerfil to refresh
-      window.dispatchEvent(new Event("profileUpdated"));
+      if (startUpdateProfile.fulfilled.match(resultAction)) {
+        // Dispatch custom event to notify MenuPerfil to refresh
+        window.dispatchEvent(new Event("profileUpdated"));
 
-      toast({
-        title: "Perfil actualizado",
-        description: "Los cambios se han guardado correctamente.",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      });
+        toast({
+          title: "Perfil actualizado",
+          description: "Los cambios se han guardado correctamente.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        throw new Error(resultAction.payload || "Error al actualizar");
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Hubo un problema al guardar los cambios.",
+        description: error.message || "Hubo un problema al guardar los cambios.",
         status: "error",
         duration: 5000,
         isClosable: true,

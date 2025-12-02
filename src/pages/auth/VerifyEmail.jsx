@@ -12,15 +12,15 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { checkActionCode, applyActionCode } from "firebase/auth";
-import { auth } from "../../middleware/firebase-config";
+import { useDispatch } from "react-redux";
+import { verifyEmailCode } from "../../store/auth/thunks";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { AnimatedBackground } from "../../components/auth/AnimatedBackground";
 
 export const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [status, setStatus] = useState("verifying"); // verifying, success, error
   const [message, setMessage] = useState(
     "Verificando tu correo electrónico..."
@@ -29,7 +29,7 @@ export const VerifyEmail = () => {
   const oobCode = searchParams.get("oobCode");
 
   const effectRan = useRef(false);
-  const BASE_URL = import.meta.env.VITE_API_URL;
+
 
   useEffect(() => {
     if (effectRan.current === true || !oobCode) return;
@@ -38,44 +38,23 @@ export const VerifyEmail = () => {
       effectRan.current = true;
 
       try {
-        // 1. Obtener el email del código
-        const info = await checkActionCode(auth, oobCode);
-        const email = info.data.email;
+        const resultAction = await dispatch(verifyEmailCode(oobCode));
 
-        // 2. Verificar en Firebase
-        await applyActionCode(auth, oobCode);
+        if (verifyEmailCode.fulfilled.match(resultAction)) {
+          setStatus("success");
+          setMessage(resultAction.payload.message);
 
-        // 3. Sincronizar con el backend
-        if (email) {
-          try {
-            await axios.post(`${BASE_URL}/usuarios/sync-verification`, {
-              email,
-            });
-          } catch (syncError) {
-            console.error(
-              "Error syncing verification with backend:",
-              syncError
-            );
-            // No fallamos todo el proceso si esto falla, pero lo logueamos
-          }
+          setTimeout(() => {
+            navigate("/auth/login", { replace: true });
+          }, 3000);
+        } else {
+          setStatus("error");
+          setMessage(resultAction.payload || "Hubo un error al verificar el correo.");
         }
-
-        setStatus("success");
-        setMessage("¡Tu correo ha sido verificado exitosamente!");
-
-        setTimeout(() => {
-          navigate("/auth/login", { replace: true });
-        }, 3000);
       } catch (error) {
         console.error("Verification error:", error);
         setStatus("error");
-        let errorMessage = "Hubo un error al verificar el correo.";
-        if (error.code === "auth/expired-action-code") {
-          errorMessage = "El enlace ha expirado. Por favor solicita uno nuevo.";
-        } else if (error.code === "auth/invalid-action-code") {
-          errorMessage = "El enlace no es válido o ya fue utilizado.";
-        }
-        setMessage(errorMessage);
+        setMessage("Hubo un error inesperado al verificar el correo.");
       }
     };
 

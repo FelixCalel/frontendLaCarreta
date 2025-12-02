@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { tablaTienda } from "../../../../store/Tienda/thunks";
+import { tablaTienda, fetchTiendasByPais } from "../../../../store/Tienda/thunks";
 import Select from "react-select";
 import { chakra, useColorModeValue } from "@chakra-ui/react";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+
 const ChakraReactSelect = chakra(Select);
 
 const TiendaSelector = ({
@@ -45,13 +44,9 @@ const TiendaSelector = ({
       } else {
         if (paisId) {
           try {
-            const response = await axios.get(
-              `${BASE_URL}/tienda/by-pais/${paisId}`
-            );
-            if (response && response.data) {
-              tiendasFiltradas = response.data.filter(
-                (tienda) => tienda.estaActivo
-              );
+            const resultAction = await dispatch(fetchTiendasByPais(paisId));
+            if (fetchTiendasByPais.fulfilled.match(resultAction)) {
+              tiendasFiltradas = resultAction.payload;
             }
           } catch (error) {
             console.error("Error al cargar tiendas por país:", error);

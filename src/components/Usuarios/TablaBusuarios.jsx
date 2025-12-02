@@ -20,18 +20,22 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { FiUserPlus, FiSearch } from "react-icons/fi";
-import axios from "axios";
 import RolSelector from "./componentes/RolSelector";
 import AsignarRutasModal from "./componentes/AsignarRutasModal";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setRutas } from "../../store/auth/authSlice";
 import { tablaPedidos } from "../../store/Pedidos/thunks";
 import Pagination from "../../components/pagination";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
+import {
+  fetchRoles,
+  toggleUserStatus,
+  assignUserRoutes,
+} from "../../store/usuarios/thunks";
+import { fetchUsuarios } from "../../store/usuarios/usuariosSlice";
+import { tablaTienda } from "../../store/Tienda/thunks";
+import { tablaRuta } from "../../store/Ruta/thunks";
 
 export const TablaBusuarios = () => {
-  const [usuarios, setUsuarios] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -43,8 +47,36 @@ export const TablaBusuarios = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [isAssigning, setIsAssigning] = useState(false);
+  const { items: usuarios } = useSelector((state) => state.usuarios);
+  const tiendas = useSelector((state) => state.tiendas.tiendas);
+  const rutasData = useSelector((state) => state.rutas.data);
 
-  const usuariosFiltrados = usuarios.filter((u) => {
+  useEffect(() => {
+    const usuarioId = localStorage.getItem("usuarioId");
+    dispatch(fetchUsuarios({ id: usuarioId }));
+    dispatch(tablaTienda());
+    dispatch(tablaRuta());
+
+    const getRoles = async () => {
+      try {
+        const resultAction = await dispatch(fetchRoles());
+        if (fetchRoles.fulfilled.match(resultAction)) {
+          setAllRoles(resultAction.payload);
+        }
+      } catch (error) {
+        console.error("Error fetching roles:", error);
+      }
+    };
+    getRoles();
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (rutasData) {
+      setRutasLocal(rutasData);
+    }
+  }, [rutasData]);
+
+  const usuariosFiltrados = (Array.isArray(usuarios) ? usuarios : []).filter((u) => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return true;
 
@@ -65,84 +97,30 @@ export const TablaBusuarios = () => {
   const indexOfFirst = indexOfLast - itemsPerPage;
   const usuariosPagina = usuariosFiltrados.slice(indexOfFirst, indexOfLast);
 
-  useEffect(() => {
-    const fetchUsuarios = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/usuarios/todos`);
-        setUsuarios(response.data.usuarios);
-      } catch (error) {
-        console.error("Error al obtener los usuarios:", error);
+  const toggleUsuarioEstado = async (usuarioId, estaActivo) => {
+    try {
+      const resultAction = await dispatch(
+        toggleUserStatus({ usuarioId, estaActivo })
+      );
+
+      if (toggleUserStatus.fulfilled.match(resultAction)) {
         toast({
-          title: "Error al obtener usuarios",
+          title: `Usuario ${
+            !estaActivo ? "activado" : "desactivado"
+          } correctamente`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        dispatch(fetchUsuarios()); // Refresh list
+      } else {
+        toast({
+          title: "Error al actualizar el estado",
           status: "error",
           duration: 3000,
           isClosable: true,
         });
       }
-    };
-
-    const fetchRoles = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/api/roles/listar`);
-        setAllRoles(response.data);
-      } catch (error) {
-        console.error("Error al obtener roles:", error);
-      }
-    };
-
-    fetchUsuarios();
-    fetchRoles();
-  }, [toast]);
-
-  useEffect(() => {
-    const fetchRutas = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/tienda/todos`);
-        const tiendas = Array.isArray(response.data) ? response.data : [];
-
-        const rutasExtraidas = tiendas.map((tienda) => ({
-          id: tienda.rutaId,
-          nombre: tienda.nombreRuta,
-          ciudadId: tienda.ciudadId,
-          paisId: tienda.paisId,
-        }));
-
-        // Eliminar duplicados si es necesario, aunque la lógica original no lo hacía explícitamente aquí
-        // Pero para el selector es mejor tener rutas únicas
-        const uniqueRutas = Array.from(new Set(rutasExtraidas.map(r => r.id)))
-            .map(id => rutasExtraidas.find(r => r.id === id));
-
-        setRutasLocal(uniqueRutas);
-      } catch (error) {
-        console.error("Error al obtener las rutas vinculadas a tiendas:", error);
-      }
-    };
-
-    fetchRutas();
-  }, [toast]);
-
-  const toggleUsuarioEstado = async (usuarioId, estaActivo) => {
-    try {
-      const response = await axios.put(
-        `${BASE_URL}/usuarios/estado/${usuarioId}`,
-        {
-          estaActivo: !estaActivo,
-        }
-      );
-
-      const usuarioActualizado = response.data.usuario;
-      setUsuarios((prevUsuarios) =>
-        prevUsuarios.map((usuario) =>
-          usuario.id === usuarioId ? usuarioActualizado : usuario
-        )
-      );
-
-      toast({
-        title: `Usuario ${!estaActivo ? "activado" : "desactivado"} correctamente`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
     } catch (error) {
       console.error("Error al actualizar el estado del usuario:", error);
       toast({
@@ -157,39 +135,27 @@ export const TablaBusuarios = () => {
   const handleAssignRutas = async (usuarioId, selectedRoutes) => {
     setIsAssigning(true);
     try {
-      if (selectedRoutes.length === 0) {
-        // Opcional: Permitir desasignar todo (array vacío)
-        // Si el backend lo soporta, enviamos array vacío.
-        // Si no, mostramos warning. Asumiremos que se puede limpiar.
-      }
-
-      const { data } = await axios.post(
-        `${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`,
-        { rutaId: selectedRoutes }
+      const resultAction = await dispatch(
+        assignUserRoutes({ usuarioId, selectedRoutes })
       );
 
-      setUsuarios((prev) =>
-        prev.map((u) =>
-          u.id === usuarioId ? { ...u, rutas: data.usuario.rutas } : u
-        )
-      );
-
-      const currentUid = Number(localStorage.getItem("usuarioId") ?? 0);
-
-      if (usuarioId === currentUid) {
-        const ids = data.usuario.rutas.map((r) => r.id);
-        dispatch(setRutas({ ids, objetos: data.usuario.rutas }));
-        dispatch(tablaPedidos());
+      if (assignUserRoutes.fulfilled.match(resultAction)) {
+        toast({
+          title: "Rutas asignadas correctamente",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        dispatch(fetchUsuarios()); // Refresh list
+        onClose();
+      } else {
+        toast({
+          title: "Error al asignar rutas",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
-
-      toast({
-        title: "Rutas asignadas correctamente",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-
-      onClose();
     } catch (error) {
       console.error("Error al asignar rutas:", error);
       toast({
@@ -199,7 +165,7 @@ export const TablaBusuarios = () => {
         isClosable: true,
       });
     } finally {
-        setIsAssigning(false);
+      setIsAssigning(false);
     }
   };
 
@@ -258,7 +224,7 @@ export const TablaBusuarios = () => {
               const rolUsuario = allRoles.find(
                 (rol) => rol.id === usuario.roleId
               );
-              const rolNombre = rolUsuario?.nombre || "Sin rol";
+              // const rolNombre = rolUsuario?.nombre || "Sin rol"; // Unused
               return (
                 <Tr key={usuario.id} _hover={{ bg: rowHoverBg }}>
                   <Td>
@@ -291,11 +257,13 @@ export const TablaBusuarios = () => {
                   </Td>
                   <Td>
                     {roleIdLogueado === "1" ? (
-                      <RolSelector usuario={usuario} allRoles={allRoles} />
+                      <RolSelector
+                        usuarioId={usuario.id}
+                        currentRoleId={usuario.roleId}
+                        roles={allRoles}
+                      />
                     ) : (
-                      <Text fontSize="sm" color="gray.500">
-                        {rolNombre}
-                      </Text>
+                      <Text>{rolUsuario?.nombre || "Sin rol"}</Text>
                     )}
                   </Td>
                 </Tr>
@@ -303,24 +271,25 @@ export const TablaBusuarios = () => {
             })}
           </Tbody>
         </Table>
-      </Box>
-      <Box mb={8}>
+
         <Pagination
           currentPage={currentPage}
           totalItems={usuariosFiltrados.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={(page) => setCurrentPage(page)}
+          onPageChange={setCurrentPage}
         />
       </Box>
-      
-      <AsignarRutasModal 
-        isOpen={isOpen}
-        onClose={onClose}
-        usuario={selectedUser}
-        rutas={rutas}
-        onAssign={handleAssignRutas}
-        isLoading={isAssigning}
-      />
+
+      {selectedUser && (
+        <AsignarRutasModal
+          isOpen={isOpen}
+          onClose={onClose}
+          usuario={selectedUser}
+          rutas={rutas}
+          onAssign={handleAssignRutas}
+          isLoading={isAssigning}
+        />
+      )}
     </>
   );
 };

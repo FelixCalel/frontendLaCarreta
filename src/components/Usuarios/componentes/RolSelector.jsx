@@ -13,9 +13,9 @@ import {
 } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import PropTypes from "prop-types";
-import axios from "axios";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
+import { useDispatch } from "react-redux";
+import { updateUserRole } from "../../../store/usuarios/thunks";
+import { fetchUsuarios } from "../../../store/usuarios/usuariosSlice";
 
 const roleEmojis = {
   admin: "👑",
@@ -30,9 +30,10 @@ const roleEmojis = {
   digitador: "⌨️",
 };
 
-const RolSelector = ({ usuario, allRoles }) => {
+const RolSelector = ({ usuarioId, currentRoleId, roles }) => {
   const toast = useToast();
-  const [selectedRole, setSelectedRole] = useState(usuario.roleId || "");
+  const dispatch = useDispatch();
+  const [selectedRole, setSelectedRole] = useState(currentRoleId || "");
   const [pendingRole, setPendingRole] = useState(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -50,17 +51,29 @@ const RolSelector = ({ usuario, allRoles }) => {
     if (pendingRole == null) return;
 
     try {
-      await axios.put(`${BASE_URL}/usuarios/actualizar-rol/${usuario.id}`, {
-        rolId: pendingRole,
-      });
-      setSelectedRole(pendingRole);
+      const resultAction = await dispatch(
+        updateUserRole({ usuarioId, rolId: pendingRole })
+      );
 
-      toast({
-        title: "Rol actualizado",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+      if (updateUserRole.fulfilled.match(resultAction)) {
+        setSelectedRole(pendingRole);
+        toast({
+          title: "Rol actualizado",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        dispatch(fetchUsuarios());
+      } else {
+        toast({
+          title: "Error al actualizar rol",
+          description: resultAction.payload || "Error desconocido",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        // Revert local change if failed (though we haven't changed selectedRole yet)
+      }
     } catch (err) {
       console.error(err);
       toast({
@@ -74,7 +87,7 @@ const RolSelector = ({ usuario, allRoles }) => {
     }
   };
 
-  if (!allRoles?.length) return <Text>No hay roles disponibles.</Text>;
+  if (!roles?.length) return <Text>No hay roles disponibles.</Text>;
 
   return (
     <>
@@ -89,7 +102,7 @@ const RolSelector = ({ usuario, allRoles }) => {
         sx={{ option: { whiteSpace: "normal" } }}
       >
         <option value="">— Selecciona un rol —</option>
-        {allRoles.map((rol) => {
+        {roles.map((rol) => {
           const emoji = roleEmojis[rol.nombre.toLowerCase()] || "";
           return (
             <option key={rol.id} value={rol.id}>
@@ -134,11 +147,9 @@ const RolSelector = ({ usuario, allRoles }) => {
 };
 
 RolSelector.propTypes = {
-  usuario: PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    roleId: PropTypes.number,
-  }).isRequired,
-  allRoles: PropTypes.arrayOf(
+  usuarioId: PropTypes.number.isRequired,
+  currentRoleId: PropTypes.number,
+  roles: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.number.isRequired,
       nombre: PropTypes.string.isRequired,
