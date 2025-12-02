@@ -82,9 +82,6 @@ const PageFormPedidos = () => {
 
   useEffect(() => {
     if (Array.isArray(authRutas)) {
-      // authRutas can be an array of IDs or objects depending on how it's stored
-      // Based on authSlice, it seems to be payload.rutas which might be objects or IDs
-      // We handle both cases
       const rutasAsignadas = authRutas.map((ruta) => (typeof ruta === 'object' ? ruta.id : ruta));
       setUsuarioRutas(rutasAsignadas);
     } else {

@@ -33,8 +33,6 @@ export const ActivarUsuarioDep = () => {
   const [confirmarClave, setConfirmarClave] = useState('');
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-
-  // Array de URLs de imágenes
   const images = [
    'url("./src/assets/images/fnd_py01.jpg")',
    'url("./src/assets/images/fnd_py02.jpg")',
@@ -46,48 +44,40 @@ export const ActivarUsuarioDep = () => {
  useEffect(() => {
     const intervalId = setInterval(() => {
       setCurrentImageIndex((currentImageIndex) => (currentImageIndex + 1) % images.length);
-    }, 5000); // Cambia la imagen cada 5 segundos
+    }, 5000);
 
     return () => clearInterval(intervalId);
   }, [images.length]);
 
   useEffect(() => {
-    // Extraer parámetros de la URL
     const [, token, correoElectronico, nombres, apellidos] = tokenMatch;
     const tokenp = token;
     const correoElectronicop = correoElectronico;
     const nombresp = decodeURIComponent(nombres);
     const apellidosp = decodeURIComponent(apellidos);
 
-    // Actualiza el estado con los parámetros de la URL
     setToken(tokenp);
     setCorreoElectronico(correoElectronicop);
     setNombres(nombresp);
     setApellidos(apellidosp);
-
-    // Resto de tu código
   }, []);
 
   const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-   // Restablece el estado de error antes de validar
    setError(false);
-    // Validar que todos los campos estén completos
   if (!nombres || !apellidos || !correo_electronico || !telefono || !celular || !nuevaClave || !confirmarClave) {
-    setError(true); // Activa el estado de error
+    setError(true);
     setMensaje('Por favor completa todos los campos.');
     return;
   }
-  // Validar que la nueva contraseña y la confirmación coincidan
   if (nuevaClave !== confirmarClave) {
-    setError(true); // Activa el estado de error
+    setError(true);
     setMensaje('La nueva contraseña y la confirmación no coinciden.');
     return;
   }
     
-    // Aquí se activa el usuario actualizando la contraseña solicitada
     try {
       const resultAction = await dispatch(activateUserChild({
         nombres, apellidos, correo_electronico, nuevaClave, telefono, celular
@@ -112,9 +102,8 @@ export const ActivarUsuarioDep = () => {
       backgroundImage={images[currentImageIndex]}
       backgroundColor={"gray.50"}
       backgroundSize="cover"
-      transition="background-image 1s ease-in-out" // Añade esta línea para la transición
+      transition="background-image 1s ease-in-out"
         sx={{
-          // Asegúrate de que el cambio de imagen sea suave
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -124,7 +113,7 @@ export const ActivarUsuarioDep = () => {
             left: 0,
             backgroundImage: images[currentImageIndex],
             backgroundSize: 'cover',
-            filter: 'blur(8px)', // Añade un efecto de desenfoque si lo deseas
+            filter: 'blur(8px)',
             zIndex: -1,
           }
         }}

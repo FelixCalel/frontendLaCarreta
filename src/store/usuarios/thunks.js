@@ -99,7 +99,6 @@ export const fetchUsuariosMetadata = createAsyncThunk(
   "usuarios/fetchUsuariosMetadata",
   async (_, { rejectWithValue }) => {
     try {
-      // Static metadata for users since the API endpoint is missing or unknown
       return [
         { name: "nombres", label: "Nombres", type: "text", required: true },
         { name: "apellidos", label: "Apellidos", type: "text", required: true },

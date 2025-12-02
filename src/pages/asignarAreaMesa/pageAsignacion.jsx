@@ -55,14 +55,6 @@ const PageAsignacion = () => {
 
     setAreaId(area.id);
     setNombreArea(opcion.nombre);
-
-    // We need to fetch area details to get encargado_id if it's not in the list
-    // But assuming fetchAreas returns enough info or we rely on what we have.
-    // The original code fetched area details.
-    // Let's assume the area object from list has encargado_id or we need to fetch it.
-    // If fetchAreas returns list of areas, check if it has encargado_id.
-    // If not, we might need a specific thunk or just use what we have.
-    // Let's assume for now we use what we have, or if needed we can dispatch fetchAreaById.
     
     if (area.encargado_id) {
         const encargadoData = usuarios.find((u) => u.id === area.encargado_id);

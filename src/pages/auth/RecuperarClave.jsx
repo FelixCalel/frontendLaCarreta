@@ -20,7 +20,6 @@ import {
 import { useDispatch } from "react-redux";
 import { sendPasswordResetEmail } from "../../store/auth/thunks";
 import { FaEnvelope, FaArrowLeft, FaLock } from "react-icons/fa";
-// import axios from "axios"; // Removed axios
 import { AnimatedBackground } from "../../components/auth/AnimatedBackground";
 
 export const RecuperarClave = () => {
@@ -46,7 +45,7 @@ export const RecuperarClave = () => {
           isClosable: true,
           position: "top-right",
         });
-        setEmail(""); // Limpiar el campo
+        setEmail("");
       } else {
         toast({
           title: "Error",
@@ -86,7 +85,6 @@ export const RecuperarClave = () => {
       overflow="hidden"
       bg="gray.900"
     >
-      {/* Fondo Animado */}
       <AnimatedBackground />
 
       <Flex

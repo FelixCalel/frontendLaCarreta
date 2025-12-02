@@ -24,7 +24,6 @@ const SearchBar = ({
 }) => {
   const [query, setQuery] = useState(initialValue);
 
-  // Update local state if initialValue changes
   useEffect(() => {
     setQuery(initialValue);
   }, [initialValue]);
@@ -32,13 +31,12 @@ const SearchBar = ({
   const handleInputChange = (e) => {
     const newValue = e.target.value;
     setQuery(newValue);
-    onSearch(newValue); // Dynamic search: trigger on every change
+    onSearch(newValue);
   };
 
   const handleClear = () => {
     setQuery("");
     onSearch("");
-    // Focus back on input if needed, but keeping it simple for now
   };
 
   const inputBg = useColorModeValue("white", "gray.800");
@@ -69,7 +67,7 @@ const SearchBar = ({
             _hover={{ boxShadow: "lg" }}
             _focus={{ boxShadow: "outline" }}
             transition="all 0.2s"
-            pr="3rem" // Space for the clear button
+            pr="3rem"
           />
           {query && (
             <InputRightElement>

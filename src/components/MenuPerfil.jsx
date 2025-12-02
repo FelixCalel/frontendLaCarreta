@@ -31,7 +31,6 @@ export const MenuPerfil = () => {
   const { displayName, photoURL, correo } = useSelector((state) => state.auth);
   const roleId = localStorage.getItem("roleId");
 
-  // Fallback values if Redux state is empty (e.g. on hard refresh before hydration if any)
   const userData = {
     nombre: displayName || localStorage.getItem("nombreUsuario") || "Usuario",
     correo: correo || localStorage.getItem("correoUsuario") || "",
@@ -69,7 +68,6 @@ export const MenuPerfil = () => {
             variant="ghost"
             size="lg"
             color={iconColor}
-            // Hover/active del botón de perfil
             _hover={{ bg: useColorModeValue("gray.100", "gray.700") }}
             _active={{ bg: useColorModeValue("gray.200", "gray.600") }}
           />

@@ -36,13 +36,12 @@ const HistorialFilters = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isMobile = useBreakpointValue({ base: true, lg: false });
 
-  // React Select Styles - Compact
   const customStyles = {
     control: (provided) => ({
       ...provided,
       backgroundColor: bg,
       borderColor: borderColor,
-      minHeight: "32px", // Compact height
+      minHeight: "32px",
       height: "32px",
       fontSize: "0.875rem",
       boxShadow: "none",
@@ -66,10 +65,10 @@ const HistorialFilters = ({
     }),
     menu: (provided) => ({
       ...provided,
-      backgroundColor: useColorModeValue("#ffffff", "#1A202C"), // Solid background (white / gray.900)
+      backgroundColor: useColorModeValue("#ffffff", "#1A202C"),
       zIndex: 9999,
       fontSize: "0.875rem",
-      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)", // Add shadow
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
       border: `1px solid ${borderColor}`,
     }),
     singleValue: (provided) => ({
@@ -80,7 +79,7 @@ const HistorialFilters = ({
       ...provided,
       backgroundColor: state.isFocused
         ? useColorModeValue("blue.50", "gray.700")
-        : "transparent", // Default to transparent so it shows menu bg
+        : "transparent",
       color: useColorModeValue("gray.800", "white"),
       fontSize: "0.875rem",
       cursor: "pointer",
@@ -107,7 +106,6 @@ const HistorialFilters = ({
     });
   };
 
-  // Convert unique values to options for React Select
   const tiendaOptions = uniqueValues.tiendas.map((t) => ({ value: t, label: t }));
   const deudorOptions = uniqueValues.deudores.map((d) => ({ value: d, label: d }));
   const usuarioOptions = uniqueValues.usuarios.map((u) => ({ value: u, label: u }));
@@ -117,12 +115,10 @@ const HistorialFilters = ({
     filters.fechaFin ? new Date(filters.fechaFin) : null,
   ].filter(Boolean);
 
-  // Show User Filter only for Sales (Role 3) or Admin (Role 1 - assumption)
   const showUserFilter = [1, 3].includes(roleId);
 
   const FilterContent = (
     <>
-      {/* Filtro por Tienda */}
       <FormControl flex="1" minW={{ base: "100%", lg: "200px" }}>
         <FormLabel fontSize="xs" fontWeight="bold" mb={1}>Tienda</FormLabel>
         <Select
@@ -136,7 +132,6 @@ const HistorialFilters = ({
         />
       </FormControl>
 
-      {/* Filtro por Deudor */}
       <FormControl flex="1" minW={{ base: "100%", lg: "200px" }}>
         <FormLabel fontSize="xs" fontWeight="bold" mb={1}>Deudor</FormLabel>
         <Select
@@ -150,7 +145,6 @@ const HistorialFilters = ({
         />
       </FormControl>
 
-      {/* Filtro por Usuario (Condicional) */}
       {showUserFilter && (
         <FormControl flex="1" minW={{ base: "100%", lg: "200px" }}>
           <FormLabel fontSize="xs" fontWeight="bold" mb={1}>Usuario</FormLabel>
@@ -166,7 +160,6 @@ const HistorialFilters = ({
         </FormControl>
       )}
 
-      {/* Filtro por Rango de Fechas */}
       <FormControl flex="1" minW={{ base: "100%", lg: "250px" }}>
         <FormLabel fontSize="xs" fontWeight="bold" mb={1}>Rango de Fechas</FormLabel>
         <Box
@@ -202,7 +195,6 @@ const HistorialFilters = ({
         </Box>
       </FormControl>
 
-      {/* Botón Limpiar Filtros */}
       <Box pt={{ base: 0, lg: 6 }}>
         <Button
           size="sm"
@@ -272,7 +264,7 @@ const HistorialFilters = ({
       <Flex
         direction={{ base: "column", lg: "row" }}
         gap={4}
-        alignItems={{ base: "stretch", lg: "flex-start" }} // Changed to flex-start for better alignment with label
+        alignItems={{ base: "stretch", lg: "flex-start" }}
         wrap="wrap"
       >
         {FilterContent}

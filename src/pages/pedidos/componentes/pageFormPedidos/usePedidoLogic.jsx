@@ -11,7 +11,7 @@ import {
 
 
 const usePedidosLogic = ({
-  onClose, // Asegúrate de pasar la función onClose desde el componente que utiliza este hook
+  onClose,
 }) => {
   const dispatch = useDispatch();
   const toast = useToast();
@@ -53,11 +53,9 @@ const usePedidosLogic = ({
 
   useEffect(() => {
     if (authUser && authUser.rutas) {
-       // If authUser.rutas is array of objects
        const rutasIds = authUser.rutas.map(r => r.id);
        setUsuarioRutas(rutasIds);
     } else if (authRutas && authRutas.length > 0) {
-       // Fallback to auth.rutas if it contains IDs
        setUsuarioRutas(authRutas);
     } else {
        setUsuarioRutas([]);
@@ -115,11 +113,11 @@ const usePedidosLogic = ({
       toast({
         title: "Pedido duplicado",
         description: "Ya has realizado un pedido en esta tienda hoy.",
-        status: "warning", // Usamos 'warning' para que no bloquee la creación del pedido
+        status: "warning",
         duration: 3000,
         isClosable: true,
       });
-      console.log("Pedido duplicado detectado:", pedidosHoy); // Mostrar log en consola
+      console.log("Pedido duplicado detectado:", pedidosHoy); 
     }
     
     
@@ -128,17 +126,16 @@ const usePedidosLogic = ({
       ...currentPedido,
       tiendaId: tiendaSeleccionada,
       creadoEl: today,
-      productos: currentPedido.productos, // Aquí usa el estado correcto
+      productos: currentPedido.productos, 
     };
   
     try {
-      setIsLoading(true); // Activar el estado de carga
+      setIsLoading(true);
       
       const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
-      setPedidoIdGuardado(pedidoGuardado.id); // Guardar el ID del nuevo pedido
+      setPedidoIdGuardado(pedidoGuardado.id); 
     
-      // Actualiza la lista de pedidos después de crear el nuevo pedido
-      dispatch(tablaPedidos()); // Actualiza el listado de pedidos
+      dispatch(tablaPedidos());
     
       toast({
         title: "Pedido creado",
@@ -148,8 +145,8 @@ const usePedidosLogic = ({
         isClosable: true,
       });
     
-      onClose(); // Cierra el modal
-      resetForm(); // Resetea el formulario
+      onClose();
+      resetForm(); 
     } catch (error) {
       console.error("Error al guardar el pedido:", error);
       toast({
@@ -160,7 +157,7 @@ const usePedidosLogic = ({
         isClosable: true,
       });
     } finally {
-      setIsLoading(false); // Desactiva el estado de carga
+      setIsLoading(false);
     }
     
   };

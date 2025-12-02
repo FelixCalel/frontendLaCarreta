@@ -41,7 +41,6 @@ export const Perfil = () => {
   const usuarioId = localStorage.getItem("usuarioId");
   const toast = useToast();
 
-  // Move all hooks to the top level
   const bg = useColorModeValue("gray.50", "gray.900");
   const cardBg = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.700", "gray.200");
@@ -53,8 +52,8 @@ export const Perfil = () => {
   const inputBg = useColorModeValue("gray.100", "gray.700");
   const inputHoverBg = useColorModeValue("gray.200", "gray.600");
   const inputFocusBg = useColorModeValue("white", "gray.600");
-  const buttonHoverBg = "brand.600"; // Static value, no hook needed
-  const buttonActiveBg = "brand.700"; // Static value
+  const buttonHoverBg = "brand.600";
+  const buttonActiveBg = "brand.700";
 
   useEffect(() => {
     const obtenerUsuario = async () => {
@@ -127,7 +126,6 @@ export const Perfil = () => {
       );
 
       if (startUpdateProfile.fulfilled.match(resultAction)) {
-        // Dispatch custom event to notify MenuPerfil to refresh
         window.dispatchEvent(new Event("profileUpdated"));
 
         toast({

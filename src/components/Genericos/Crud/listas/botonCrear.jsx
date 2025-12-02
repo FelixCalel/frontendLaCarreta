@@ -4,24 +4,20 @@ import PropTypes from 'prop-types';
 import { ModalV1 } from '../Modal/modalV1';
 import { useDisclosure } from '@chakra-ui/react';
 import { useDispatch } from 'react-redux';
-import { createModulo } from '../../../../store/Modulos/thunks'; // Asegúrate de importar todas las acciones necesarias
+import { createModulo } from '../../../../store/Modulos/thunks';
 import { createOpciones } from '../../../../store/Opciones/thunks';
 import { useState, useRef } from 'react';
 import { createpermisos } from '../../../../store/Permisos/thunks';
 import { createRol } from '../../../../store/PaginaRole/thunks';
 import { createUser } from '../../../../store/usuarios/thunks';
 import { createasignacionPermisosRoles } from '../../../../store/AsignarPermisosAroles/thunks';
-// import { createProcesos } from '../../../../store/Procesos/thunks';
-// import { createEtapa } from '../../../../store/Etapas';
-
 export const BotonCrear = ({ nombreBoton, metadata }) => {
-    const { isOpen, onOpen, onClose } = useDisclosure(); // Hook para manejar el estado del modal
+    const { isOpen, onOpen, onClose } = useDisclosure(); 
     const dispatch = useDispatch();
-    const toast = useToast();  // Hook para mostrar notificaciones
-    const [isAlertOpen, setIsAlertOpen] = useState(false); // Estado para el AlertDialog
-    const cancelRef = useRef(); // Referencia para el botón de cancelar en el AlertDialog
+    const toast = useToast();
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const cancelRef = useRef();
 
-    // Función para manejar el envío de datos al API adecuado
     const handleSubmit = (formData) => {
 
 
@@ -30,8 +26,8 @@ export const BotonCrear = ({ nombreBoton, metadata }) => {
                 dispatch(createUser(formData))
                     .then((result) => {
                         if (result.meta.requestStatus === 'fulfilled') {
-                            setIsAlertOpen(true); // Abrir el AlertDialog de éxito
-                            onClose();  // Cerrar el modal
+                            setIsAlertOpen(true);
+                            onClose();
                         } else {
                             console.error('Error al crear usuario:', result.payload);
                             mostrarToastError('usuario');
@@ -161,8 +157,8 @@ export const BotonCrear = ({ nombreBoton, metadata }) => {
                 variant="outline"
                 size="md"
                 borderRadius="full"
-                onClick={onOpen} // Abre el modal
-                mt={4} // Margen superior para alineación estética
+                onClick={onOpen}
+                mt={4}
             >
                 {nombreBoton} {/* Texto dinámico del botón */}
             </Button>
@@ -172,7 +168,7 @@ export const BotonCrear = ({ nombreBoton, metadata }) => {
                 onClose={onClose}
                 titulo={nombreBoton}
                 metadata={metadata || []}
-                onSubmit={handleSubmit} // Pasamos la función de envío
+                onSubmit={handleSubmit}
             />
 
             {/* AlertDialog para el mensaje de éxito */}
@@ -207,10 +203,9 @@ export const BotonCrear = ({ nombreBoton, metadata }) => {
     );
 };
 
-// Definición de PropTypes
 BotonCrear.propTypes = {
-    nombreBoton: PropTypes.string.isRequired, // El texto del botón
-    metadata: PropTypes.arrayOf(PropTypes.object), // Metadatos opcionales
+    nombreBoton: PropTypes.string.isRequired,
+    metadata: PropTypes.arrayOf(PropTypes.object),
 };
 
 export default BotonCrear;

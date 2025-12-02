@@ -36,11 +36,9 @@ export const startSignIn = ({ correo_electronico, password, paisId }) => {
             paisId: result.usuario.paisId,
           };
 
-          // Guardamos los datos en localStorage
           localStorage.setItem("userData", JSON.stringify(userData));
-          // FIX: Save as access_token to match interceptor
           localStorage.setItem("access_token", result.token);
-          localStorage.setItem("token", result.token); // Keep for backward compatibility if needed
+          localStorage.setItem("token", result.token);
 
           dispatch(login(userData));
         } else {
@@ -146,12 +144,10 @@ export const startCreatingUserChildren = (
 export const obtenerDatosLogeado = () => {
   const data = JSON.parse(localStorage.getItem("userData"));
 
-  // Verificamos si los datos existen
   if (!data) {
-    return null; // Retornamos null si no hay datos
+    return null;
   }
 
-  // Validamos que todos los datos esperados estén presentes
   const payload = {
     uid: data.id || null,
     displayName: data.displayName || null,
@@ -170,18 +166,13 @@ export const fetchCurrentUser = createAsyncThunk(
   "auth/fetchCurrentUser",
   async (_, { rejectWithValue }) => {
     try {
-      // Optimized: Fetch only the current user's profile
       const { data } = await axios.get(`${BASE_URL}/login/me`);
-
-      // The endpoint returns the user object directly or nested, adapt as needed based on API response
-      // Assuming /login/me returns the user object directly or in a 'user' property
       const me = data.user || data;
 
       if (!me) throw new Error("No se pudo obtener la información del usuario");
 
       return me;
     } catch (err) {
-      // Suppress console error for 401 (Unauthorized) and Network Errors
       if (err.response && err.response.status === 401) {
         // console.warn("Session expired or invalid token");
       } else if (
@@ -197,13 +188,11 @@ export const fetchCurrentUser = createAsyncThunk(
   }
 );
 
-// --- New Thunks for Refactoring ---
 
 export const startLoginWithEmailPassword = createAsyncThunk(
   "auth/startLoginWithEmailPassword",
   async ({ correo, contrasena }, { dispatch, rejectWithValue }) => {
     try {
-      // 1. Firebase Login
       const userCredential = await signInWithEmailAndPassword(
         auth,
         correo,
@@ -219,7 +208,6 @@ export const startLoginWithEmailPassword = createAsyncThunk(
 
       let token = await user.getIdToken(true);
 
-      // 2. Check User Status in Backend
       const resp = await axios.post(`${BASE_URL}/usuarios/datos`, {
         correo: user.email,
       });
@@ -244,7 +232,6 @@ export const startLoginWithEmailPassword = createAsyncThunk(
         );
       }
 
-      // 3. Exchange Token
       const doExchange = async (idToken) => {
         try {
           const tokenExchangeResp = await axios.post(
@@ -292,7 +279,6 @@ export const startLoginWithEmailPassword = createAsyncThunk(
         throw new Error("No se recibió access_token del backend");
       }
 
-      // 4. Save to LocalStorage
       localStorage.setItem("access_token", access_token);
       if (refresh_token) {
         localStorage.setItem("refresh_token", refresh_token);
@@ -304,7 +290,6 @@ export const startLoginWithEmailPassword = createAsyncThunk(
       localStorage.setItem("paisId", paisId);
       if (avatar) localStorage.setItem("avatar", avatar);
 
-      // 5. Dispatch Login Action
       dispatch(
         login({
           uid: user.uid,
@@ -321,7 +306,6 @@ export const startLoginWithEmailPassword = createAsyncThunk(
         })
       );
 
-      // 6. Fetch Current User Data
       await dispatch(fetchCurrentUser());
 
       return { success: true };
@@ -372,14 +356,11 @@ export const verifyEmailCode = createAsyncThunk(
   "auth/verifyEmailCode",
   async (oobCode, { rejectWithValue }) => {
     try {
-      // 1. Obtener el email del código
       const info = await checkActionCode(auth, oobCode);
       const email = info.data.email;
 
-      // 2. Verificar en Firebase
       await applyActionCode(auth, oobCode);
 
-      // 3. Sincronizar con el backend
       if (email) {
         try {
           await axios.post(`${BASE_URL}/usuarios/sync-verification`, {
@@ -487,7 +468,6 @@ export const startUpdateProfile = createAsyncThunk(
     try {
       await axios.put(`${BASE_URL}/usuarios/${usuarioId}`, userData);
 
-      // Dispatch update to local state
       dispatch(
         updateUser({
           nombre: userData.nombre,

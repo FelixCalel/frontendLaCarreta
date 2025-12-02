@@ -88,7 +88,7 @@ export const PageListarUsuarios = () => {
         nombreBoton="Crear Usuario"
         onCrear={() => console.log("Creando nuevo usuario")}
         metadata={metadataProcesada.length > 0 ? metadataProcesada : []}
-        onSearch={setFiltroBusqueda} // Pasa la función de búsqueda
+        onSearch={setFiltroBusqueda}
         renderCustomCell={(columnKey, rowData) => {
           if (columnKey === "role.nombre") {
             return rowData.role ? rowData.role.nombre : "Sin Rol";

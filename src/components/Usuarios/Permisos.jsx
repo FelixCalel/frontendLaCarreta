@@ -42,16 +42,13 @@ import iconCatalog from "./../Iconos/IconCatalog";
 export const Permisos = () => {
   const dispatch = useDispatch();
   const toast = useToast();
-
   const { uid } = useSelector((state) => state.auth);
   const { modulosTabla = [] } = useSelector((state) => state.modulos);
   const { Permisos = [] } = useSelector((state) => state.Permisos);
   const { roles = [] } = useSelector((state) => state.roles);
   const { opciones = [] } = useSelector((state) => state.opciones);
   const { asignacionMO = [] } = useSelector((state) => state.PermisosRoles);
-  // Estado local para almacenar los permisosRoles que obtenemos
   const [permisosRoles, setPermisosRoles] = useState([]);
-
   const [selectedModulo, setSelectedModulo] = useState(null);
   const [selectedOpcion, setSelectedOpcion] = useState(null);
   const [accessMatrix, setAccessMatrix] = useState({});
@@ -67,7 +64,6 @@ export const Permisos = () => {
   const tableBgColor = useColorModeValue("#ffffff", "#2D3748");
   const textColor = useColorModeValue("#1c1c1e", "#f1f1f1");
 
-  // Cargar datos iniciales
   useEffect(() => {
     dispatch(fetchModulosTabla());
     dispatch(fetchPermisos());
@@ -76,13 +72,12 @@ export const Permisos = () => {
     dispatch(fetchAsignacionMO());
   }, [dispatch]);
 
-  // Manejo de permisos basados en el módulo y la opción seleccionados
   useEffect(() => {
     if (selectedModulo && selectedOpcion) {
       dispatch(fetchPermisosRoles({ selectedModulo, selectedOpcion }))
         .then((response) => {
           const permisosRolesData = response.payload || [];
-          setPermisosRoles(permisosRolesData); // Aquí almacenamos los permisosRoles obtenidos
+          setPermisosRoles(permisosRolesData);
 
           const matrix = {};
           roles.forEach((role) => {
@@ -126,14 +121,14 @@ export const Permisos = () => {
             ...prevMatrix[roleId].permisos,
             [permisoNombre]: {
               ...prevMatrix[roleId].permisos[permisoNombre],
-              isAssigned: !currentAssignedState, // Alterna el estado aquí
+              isAssigned: !currentAssignedState,
             },
           },
         },
       };
       return updatedMatrix;
     });
-    setHasChanges(true); // Esto asegura que los cambios se marquen
+    setHasChanges(true);
   };
 
   const handleSaveChanges = async () => {
@@ -146,7 +141,6 @@ export const Permisos = () => {
       const permisosCreados = [];
       const permisosEliminados = [];
 
-      // Recorrer la matriz de acceso para verificar cambios
       Object.keys(accessMatrix).forEach((roleId) => {
         const role = accessMatrix[roleId];
         Permisos.forEach((permiso) => {
@@ -158,20 +152,18 @@ export const Permisos = () => {
           console.log("Estado del permiso:", permisoState.isAssigned);
 
           if (permisoState.isAssigned && !permisoState.id) {
-            // Crear asignaciones nuevas si el permiso está activado y no existe en la DB
             createPayload.push({
               role_id: parseInt(roleId),
               modulo_id: parseInt(selectedModulo),
               opcion_id: parseInt(selectedOpcion),
               permiso_id: parseInt(permiso.id),
-              created_by: 1, // Asume un ID de usuario de prueba
-              updated_by: 1, // Asume un ID de usuario de prueba
+              created_by: 1,
+              updated_by: 1,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             });
-            permisosCreados.push(permiso.nombre); // Log de permisos creados
+            permisosCreados.push(permiso.nombre);
           } else if (!permisoState.isAssigned && permisoState.id) {
-            // Si el permiso fue desactivado y tiene ID, agregar a eliminación
             const permisoExistente = permisosRoles.find(
               (pr) =>
                 pr.role_id === parseInt(roleId) &&
@@ -180,26 +172,22 @@ export const Permisos = () => {
                 pr.permiso_id === parseInt(permiso.id)
             );
 
-            // Si se encuentra el permiso exacto, agregar a la lista de eliminación
             if (permisoExistente) {
               console.log(`Eliminar permiso con id: ${permisoExistente.id}`);
-              deletePayload.push(permisoExistente.id); // Agregar a la lista de eliminaciones
-              permisosEliminados.push(permiso.nombre); // Log de permisos eliminados
+              deletePayload.push(permisoExistente.id);
+              permisosEliminados.push(permiso.nombre);
             }
           }
         });
       });
 
-      // Mostrar logs en la consola para ver qué se ha hecho
       console.log("Permisos a crear:", createPayload);
       console.log("Permisos a eliminar:", permisosEliminados);
 
-      // Validación extra para asegurar que hay cambios para guardar
       if (createPayload.length === 0 && deletePayload.length === 0) {
         throw new Error("No hay cambios para guardar.");
       }
 
-      // Ejecutar eliminaciones primero
       if (deletePayload.length > 0) {
         await Promise.all(
           deletePayload.map((id) =>
@@ -209,7 +197,6 @@ export const Permisos = () => {
         console.log("Permisos eliminados exitosamente:", permisosEliminados);
       }
 
-      // Si hay asignaciones nuevas, hacer la petición de creación
       if (createPayload.length > 0) {
         await dispatch(
           createasignacionPermisosRoles({
@@ -222,7 +209,6 @@ export const Permisos = () => {
         console.log("Permisos creados exitosamente:", permisosCreados);
       }
 
-      // Actualizar el menú lateral dinámicamente
       if (uid) {
         console.log("Dispatching fetchModulos for uid:", uid);
         dispatch(fetchModulos(uid))
@@ -232,7 +218,6 @@ export const Permisos = () => {
         console.warn("UID is missing, cannot refresh modules dynamically.");
       }
 
-      // Abre el diálogo después de guardar exitosamente
       setIsDialogOpen(true);
     } catch (error) {
       toast({
@@ -249,7 +234,6 @@ export const Permisos = () => {
     }
   };
 
-  // Helper para asegurar que siempre trabajamos con arrays
   const getArray = (data) => {
     if (Array.isArray(data)) return data;
     if (data && Array.isArray(data.data)) return data.data;
@@ -375,8 +359,8 @@ export const Permisos = () => {
             <Thead bg={tableHeaderBg}>
               <Tr>
                 <Th color={textColor}>Roles</Th>
-                {Permisos.slice() // Copiar el array para prevenir mutaciones
-                  .sort((a, b) => a.nombre.localeCompare(b.nombre)) // Orden superficial de los permisos
+                {Permisos.slice()
+                  .sort((a, b) => a.nombre.localeCompare(b.nombre))
                   .map((permiso) => (
                     <Th key={permiso.id} color={textColor}>
                       {permiso.nombre}
@@ -386,8 +370,8 @@ export const Permisos = () => {
             </Thead>
             <Tbody>
               {roles
-                .slice() // Copiar el array para prevenir mutaciones
-                .sort((a, b) => a.nombre.localeCompare(b.nombre)) // Orden superficial de los roles
+                .slice()
+                .sort((a, b) => a.nombre.localeCompare(b.nombre))
                 .map((role, index) => (
                   <Tr
                     key={role.id}
@@ -433,7 +417,6 @@ export const Permisos = () => {
         </Button>
       )}
 
-      {/* Dialogo para confirmar y recargar */}
       <AlertDialog
         isOpen={isDialogOpen}
         leastDestructiveRef={dialogRef}

@@ -13,7 +13,6 @@ const areasSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Fetch Areas
       .addCase(fetchAreas.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -26,7 +25,6 @@ const areasSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Fetch Area By ID
       .addCase(fetchAreaById.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -39,7 +37,6 @@ const areasSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Fetch Opciones
       .addCase(fetchOpciones.pending, (state) => {
         state.loading = true;
         state.error = null;

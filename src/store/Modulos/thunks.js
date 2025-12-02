@@ -4,24 +4,19 @@ import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 
-// Función que realiza la petición a la API para obtener los módulos
 export const fetchModulos = createAsyncThunk('modulos/fetchModulos',
   async (_, thunkAPI) => {
     try {
-      // Accedemos al estado de auth desde thunkAPI
       const state = thunkAPI.getState();
       const auth = state.auth;
 
-      // Verificamos que auth.uid esté disponible
       if (!auth?.uid) {
         throw new Error('El UID de autenticación no está disponible');
       }
 
-      // Hacemos la petición a la API usando el UID
       const response = await axios.get(`${BASE_URL}/api/asignarRMOP/modulosPermisos/${auth.uid}`);
       return response.data;
     } catch (error) {
-      // Manejo de errores
       return thunkAPI.rejectWithValue(error.response ? error.response.data : error.message);
     }
   }
@@ -30,9 +25,8 @@ export const fetchModulos = createAsyncThunk('modulos/fetchModulos',
 export const fetchModulosTabla = createAsyncThunk('modulos/fetchModulosTabla',
   async (_, thunkAPI) => {
     try {
-      // Hacemos la petición a la API
       const response = await axios.get(`${BASE_URL}/api/modulos/`);
-      return response.data;  // Asegúrate de que los datos retornados sean correctos
+      return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response ? error.response.data : error.message);
     }
@@ -43,10 +37,9 @@ export const fetchModulosTabla = createAsyncThunk('modulos/fetchModulosTabla',
 export const fetchMetadataModulos = createAsyncThunk('modulos/fetchMetadataModulos',
   async (_, thunkAPI) => {
     try {
-      // Hacemos la petición a la API
 
       const response = await axios.get(`${BASE_URL}/api/modulos/metadata`);
-      return response.data;  // Asegúrate de que los datos retornados sean correctos
+      return response.data;
 
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response ? error.response.data : error.message);
@@ -55,28 +48,23 @@ export const fetchMetadataModulos = createAsyncThunk('modulos/fetchMetadataModul
 );
 
 
-// Función que realiza la petición a la API para crear un módulo
 export const createModulo = createAsyncThunk('modulos/createModulo',
   async (moduloData, thunkAPI) => {
     try {
-      // Agregar los campos faltantes a los datos del módulo
       const state = thunkAPI.getState();
-      const auth = state.auth;  // Asegurarse de que auth contiene los datos del usuario actual
+      const auth = state.auth;
 
-      // Formatear los datos de creación
       const modulo = {
         ...moduloData,
-        created_by: auth.userId || 1,  // ID del usuario autenticado
-        updated_by: auth.userId || 1,  // Asumimos que es el mismo usuario que lo actualiza
+        created_by: auth.userId || 1,
+        updated_by: auth.userId || 1,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
-      // Llamada a la API para crear el módulo
       const response = await axios.post(`${BASE_URL}/api/modulos/crear`, modulo);
       return response.data;
     } catch (error) {
-      // Manejo de errores
       return thunkAPI.rejectWithValue(error.response ? error.response.data : error.message);
     }
   }

@@ -151,7 +151,6 @@ PedidosTable.propTypes = {
   onClearHighlight: PropTypes.func,
 };
 
-// Optimización: Memorizar el componente para evitar renderizados innecesarios
 const MemoizedPedidosTable = React.memo(PedidosTable);
 MemoizedPedidosTable.displayName = "PedidosTable";
 

@@ -6,7 +6,6 @@ const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleSearch = () => {
-    // Aquí puedes manejar la búsqueda, por ejemplo, filtrando datos o redirigiendo a otra vista
     console.log('Buscando:', searchTerm);
   };
 

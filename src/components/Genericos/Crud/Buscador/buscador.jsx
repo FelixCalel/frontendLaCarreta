@@ -5,7 +5,6 @@ import { FaSearch } from 'react-icons/fa';
 export const BuscadorGenerico = ({ onSearch }) => {
     const [searchValue, setSearchValue] = useState('');
 
-    // Valores que cambiarán según el modo claro u oscuro
     const inputBg = useColorModeValue('gray.50', 'gray.800');
     const inputBorderColor = useColorModeValue('teal.400', 'teal.300');
     const iconColor = useColorModeValue('gray.500', 'gray.400');
@@ -15,7 +14,7 @@ export const BuscadorGenerico = ({ onSearch }) => {
     const handleSearchChange = (e) => {
         const value = e.target.value;
         setSearchValue(value);
-        onSearch(value);  // Pasamos el valor de búsqueda al componente padre
+        onSearch(value);
     };
 
     return (
@@ -29,16 +28,16 @@ export const BuscadorGenerico = ({ onSearch }) => {
                     placeholder="Buscar..."
                     value={searchValue}
                     onChange={handleSearchChange}
-                    size="lg"  // Aumentamos el tamaño del input
-                    borderRadius="full"  // Hacemos que el borde sea completamente redondeado
+                    size="lg"
+                    borderRadius="full"
                     focusBorderColor={inputBorderColor}
                     _placeholder={{ color: placeholderColor }}
-                    _hover={{ borderColor: inputBorderColor }}  // Cambiamos el borde al pasar el mouse
-                    color={inputTextColor}  // Color del texto en el input
+                    _hover={{ borderColor: inputBorderColor }}
+                    color={inputTextColor}
                     bg={inputBg}
-                    transition="all 0.2s ease-in-out"  // Suave transición para cuando se enfoca el input
-                    boxShadow="lg"  // Más sombra para destacar
-                    border="2px solid transparent"  // Borde predeterminado transparente
+                    transition="all 0.2s ease-in-out"
+                    boxShadow="lg"
+                    border="2px solid transparent"
                 />
             </InputGroup>
         </Box>

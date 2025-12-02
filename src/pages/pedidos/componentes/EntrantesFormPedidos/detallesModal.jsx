@@ -50,7 +50,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
   });
   const [cantidadAgregar, setCantidadAgregar] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loadingDetalle, setLoadingDetalle] = useState({}); // Estado de carga por registro individual
+  const [loadingDetalle, setLoadingDetalle] = useState({});
   const [resetFields, setResetFields] = useState(false);
   const [detallesLocal, setDetallesLocal] = useState(detalles);
   const [editCantidad, setEditCantidad] = useState({});
@@ -148,7 +148,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
     const cantidad = Number(editCantidad[detalleId]);
     if (!cantidad || cantidad <= 0) return;
 
-    setLoadingDetalle((prev) => ({ ...prev, [detalleId]: true })); // Solo este registro
+    setLoadingDetalle((prev) => ({ ...prev, [detalleId]: true }));
     try {
       await dispatch(
         updateDetalleOrden({
@@ -174,12 +174,12 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
         status: "error",
       });
     } finally {
-      setLoadingDetalle((prev) => ({ ...prev, [detalleId]: false })); // Quitar loading solo de este registro
+      setLoadingDetalle((prev) => ({ ...prev, [detalleId]: false }));
     }
   };
 
   const handleRemoveProducto = async (detalleId) => {
-    setLoadingDetalle((prev) => ({ ...prev, [detalleId]: true })); // Solo este registro
+    setLoadingDetalle((prev) => ({ ...prev, [detalleId]: true }));
     try {
       await dispatch(deleteDetalleOrden(detalleId)).unwrap();
       toast({ title: "Producto eliminado", status: "info" });
@@ -198,7 +198,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
         status: "error",
       });
     } finally {
-      setLoadingDetalle((prev) => ({ ...prev, [detalleId]: false })); // Quitar loading solo de este registro
+      setLoadingDetalle((prev) => ({ ...prev, [detalleId]: false }));
     }
   };
   const bg = useColorModeValue("white", "gray.800");

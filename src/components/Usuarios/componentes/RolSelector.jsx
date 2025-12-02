@@ -72,7 +72,6 @@ const RolSelector = ({ usuarioId, currentRoleId, roles }) => {
           duration: 3000,
           isClosable: true,
         });
-        // Revert local change if failed (though we haven't changed selectedRole yet)
       }
     } catch (err) {
       console.error(err);

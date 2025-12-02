@@ -21,7 +21,7 @@ export const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [status, setStatus] = useState("verifying"); // verifying, success, error
+  const [status, setStatus] = useState("verifying");
   const [message, setMessage] = useState(
     "Verificando tu correo electrónico..."
   );

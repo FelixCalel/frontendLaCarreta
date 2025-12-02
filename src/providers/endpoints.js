@@ -70,12 +70,10 @@ export const registerUser = async (data) => {
   return await axios
     .post(`${BASE_URL}/usuarios/registro`, userData)
     .then((response) => {
-      // cambio
       console.log(response);
       if (response.status === 200) {
         const { id, nombres, apellidos, correo, paisId, nombre_empresa } =
           response.data.usuario;
-        // errores
         return {
           ok: true,
           usuario: response.data.usuario,
@@ -101,7 +99,7 @@ export const registerUserChildren = async (data) => {
   const nombre_empresa = "no obligatorio";
 
   const userData = {
-    username: username, // Esto es equivalente a username: username
+    username: username,
     nombres: data.nombres,
     apellidos: data.apellidos,
     nit,
@@ -119,12 +117,10 @@ export const registerUserChildren = async (data) => {
   return await axios
     .post(`${BASE_URL}/usuarios/registro_usuario_hijo`, userData)
     .then((response) => {
-      // cambio
       console.log(response);
       if (response.status === 200) {
         const { id, nombres, apellidos, nombre_empresa } =
           response.data.usuario;
-        // errores
         return {
           ok: true,
           usuario: response.data.usuario,
@@ -167,7 +163,6 @@ export const listUsuarios = async (data) => {
       // console.log(response.data.result)
       if (response.status === 200 || response.status === 201) {
         const data = response.data;
-        // Check if data is the array itself or if it's wrapped in an object property 'usuarios'
         const usuariosList = Array.isArray(data) ? data : (data.usuarios || []);
 
         if (typeof data === 'string' && data.trim().startsWith('<')) {

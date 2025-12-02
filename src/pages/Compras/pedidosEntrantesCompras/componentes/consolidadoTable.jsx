@@ -50,7 +50,6 @@ const ConsolidadoTable = ({ data, status = "succeeded", error }) => {
       rounded="lg"
       shadow="md"
       border="1px solid"
-      // eslint-disable-next-line react-hooks/rules-of-hooks
       borderColor={useColorModeValue("gray.200", "gray.700")}
     >
       <Table variant="unstyled" size={{ base: "sm", md: "md" }}>

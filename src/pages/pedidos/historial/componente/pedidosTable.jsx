@@ -123,7 +123,6 @@ const PedidosTable = ({
   );
 };
 
-// PropTypes
 PedidosTable.propTypes = {
   pedidos: PropTypes.arrayOf(
     PropTypes.shape({
@@ -137,7 +136,6 @@ PedidosTable.propTypes = {
         PropTypes.instanceOf(Date),
       ]).isRequired,
       nombreUsuario: PropTypes.string,
-      // NUEVO (opcionales):
       docNum: PropTypes.number,
       docEntry: PropTypes.number,
     })
