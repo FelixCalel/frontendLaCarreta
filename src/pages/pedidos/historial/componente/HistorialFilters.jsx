@@ -177,6 +177,7 @@ const HistorialFilters = ({
           <RangeDatepicker
             selectedDates={selectedDates}
             onDateChange={handleDateChange}
+            monthsToDisplay={1}
             configs={{
               dateFormat: "dd/MM/yyyy",
               dayNames: ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"],
