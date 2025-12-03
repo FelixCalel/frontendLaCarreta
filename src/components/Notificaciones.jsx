@@ -23,16 +23,19 @@ import {
   markAsRead,
   markAllAsRead,
 } from "../store/Notificaciones/thunks";
-import { addNotificacion, removeNotificacion } from "../store/Notificaciones/notificacionesSlice";
+import {
+  addNotificacion,
+  removeNotificacion,
+} from "../store/Notificaciones/notificacionesSlice";
 
 export default function Notifications({ isOpen, onToggle, onClose }) {
   const navigate = useNavigate();
   const ref = useRef();
   const dispatch = useDispatch();
-  
+
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = localStorage.getItem("roleId");
-  
+
   const { notificaciones, unreadCount } = useSelector(
     (state) => state.notificaciones
   );
@@ -54,31 +57,36 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
 
     const handleNotification = (event) => {
       const newNotification = event.detail;
-      
-      if (newNotification.usuarioId && newNotification.usuarioId !== usuarioId) {
-          return;
+
+      if (
+        newNotification.usuarioId &&
+        newNotification.usuarioId !== usuarioId
+      ) {
+        return;
       }
 
-      if (roleId === "2") {
-        const estadoId = newNotification.estadoId || (newNotification.data && newNotification.data.estadoId);
+      if (roleId === "3") {
+        const estadoId =
+          newNotification.estadoId ||
+          (newNotification.data && newNotification.data.estadoId);
         if (estadoId && parseInt(estadoId) !== 2) {
-           return;
+          return;
         }
       }
 
       if (!newNotification.id) {
-          console.warn("Received notification without ID:", newNotification);
-          return;
+        console.warn("Received notification without ID:", newNotification);
+        return;
       }
-      
+
       dispatch(addNotificacion(newNotification));
     };
 
     const handleNotificationDeleted = (event) => {
       const { id, pedidoId, usuarioId: targetUserId } = event.detail;
-      
+
       if (targetUserId && targetUserId !== usuarioId) {
-          return;
+        return;
       }
 
       dispatch(removeNotificacion({ id, pedidoId }));
@@ -89,7 +97,10 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
 
     return () => {
       window.removeEventListener("notification-received", handleNotification);
-      window.removeEventListener("notification-deleted", handleNotificationDeleted);
+      window.removeEventListener(
+        "notification-deleted",
+        handleNotificationDeleted
+      );
     };
   }, [dispatch, usuarioId, roleId]);
 
@@ -103,7 +114,9 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const handleNotificationClick = async (notificacion) => {
     if (!notificacion.id) return;
 
-    const pedidoId = notificacion.pedidoId || (notificacion.data && notificacion.data.pedidoId);
+    const pedidoId =
+      notificacion.pedidoId ||
+      (notificacion.data && notificacion.data.pedidoId);
 
     if (pedidoId) {
       const navigationState = { state: { highlightedPedidoId: pedidoId } };
@@ -123,21 +136,27 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     dispatch(markAsRead(id));
   };
 
-  const filteredNotificaciones = notificaciones.filter(n => {
-    if (roleId === "2") {
-       const estadoId = n.estadoId || (n.data && n.data.estadoId);
-       if (estadoId !== undefined && estadoId !== null) {
-          return parseInt(estadoId) === 2;
-       }
+  const filteredNotificaciones = notificaciones.filter((n) => {
+    if (roleId === "3") {
+      const estadoId = n.estadoId || (n.data && n.data.estadoId);
+      if (estadoId !== undefined && estadoId !== null) {
+        return parseInt(estadoId) === 2;
+      }
     }
     return true;
   });
 
-  const displayUnreadCount = filteredNotificaciones.filter(n => !n.leido).length;
+  const displayUnreadCount = filteredNotificaciones.filter(
+    (n) => !n.leido
+  ).length;
 
   return (
     <Box position="relative">
-      <Tooltip label="Notificaciones" aria-label="Notificaciones Tooltip" zIndex={9999}>
+      <Tooltip
+        label="Notificaciones"
+        aria-label="Notificaciones Tooltip"
+        zIndex={9999}
+      >
         <Box position="relative" onClick={onToggle} cursor="pointer">
           <IconButton
             variant="ghost"
@@ -222,11 +241,17 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
               onMarkAsRead={handleMarkAsRead}
               onNotificationClick={handleNotificationClick}
             />
-            
-            <Box p={2} bg={colors.headerBg} borderTop="1px solid" borderColor={colors.containerBorder} textAlign="center">
-               <Text fontSize="xs" color={colors.mutedColor}>
-                  Mantente al día con tus pedidos
-               </Text>
+
+            <Box
+              p={2}
+              bg={colors.headerBg}
+              borderTop="1px solid"
+              borderColor={colors.containerBorder}
+              textAlign="center"
+            >
+              <Text fontSize="xs" color={colors.mutedColor}>
+                Mantente al día con tus pedidos
+              </Text>
             </Box>
           </Box>
         </Collapse>

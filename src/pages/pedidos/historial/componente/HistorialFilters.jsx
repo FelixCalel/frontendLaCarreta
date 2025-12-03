@@ -68,7 +68,8 @@ const HistorialFilters = ({
       backgroundColor: useColorModeValue("#ffffff", "#1A202C"),
       zIndex: 9999,
       fontSize: "0.875rem",
-      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+      boxShadow:
+        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
       border: `1px solid ${borderColor}`,
     }),
     singleValue: (provided) => ({
@@ -106,9 +107,18 @@ const HistorialFilters = ({
     });
   };
 
-  const tiendaOptions = uniqueValues.tiendas.map((t) => ({ value: t, label: t }));
-  const deudorOptions = uniqueValues.deudores.map((d) => ({ value: d, label: d }));
-  const usuarioOptions = uniqueValues.usuarios.map((u) => ({ value: u, label: u }));
+  const tiendaOptions = uniqueValues.tiendas.map((t) => ({
+    value: t,
+    label: t,
+  }));
+  const deudorOptions = uniqueValues.deudores.map((d) => ({
+    value: d,
+    label: d,
+  }));
+  const usuarioOptions = uniqueValues.usuarios.map((u) => ({
+    value: u,
+    label: u,
+  }));
 
   const selectedDates = [
     filters.fechaInicio ? new Date(filters.fechaInicio) : null,
@@ -117,13 +127,24 @@ const HistorialFilters = ({
 
   const showUserFilter = [1, 3].includes(roleId);
 
+  const estadoOptions = [
+    { value: 2, label: "Pendiente" },
+    { value: 3, label: "Aprobado" },
+    { value: 4, label: "Cancelado" },
+    { value: 5, label: "Exportado" },
+  ];
+
   const FilterContent = (
     <>
       <FormControl flex="1" minW={{ base: "100%", lg: "200px" }}>
-        <FormLabel fontSize="xs" fontWeight="bold" mb={1}>Tienda</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="bold" mb={1}>
+          Tienda
+        </FormLabel>
         <Select
           options={tiendaOptions}
-          value={tiendaOptions.find((opt) => opt.value === filters.tienda) || null}
+          value={
+            tiendaOptions.find((opt) => opt.value === filters.tienda) || null
+          }
           onChange={(opt) => handleSelectChange("tienda", opt)}
           placeholder="Todas las tiendas"
           isClearable
@@ -133,10 +154,14 @@ const HistorialFilters = ({
       </FormControl>
 
       <FormControl flex="1" minW={{ base: "100%", lg: "200px" }}>
-        <FormLabel fontSize="xs" fontWeight="bold" mb={1}>Deudor</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="bold" mb={1}>
+          Deudor
+        </FormLabel>
         <Select
           options={deudorOptions}
-          value={deudorOptions.find((opt) => opt.value === filters.deudor) || null}
+          value={
+            deudorOptions.find((opt) => opt.value === filters.deudor) || null
+          }
           onChange={(opt) => handleSelectChange("deudor", opt)}
           placeholder="Todos los deudores"
           isClearable
@@ -147,10 +172,15 @@ const HistorialFilters = ({
 
       {showUserFilter && (
         <FormControl flex="1" minW={{ base: "100%", lg: "200px" }}>
-          <FormLabel fontSize="xs" fontWeight="bold" mb={1}>Usuario</FormLabel>
+          <FormLabel fontSize="xs" fontWeight="bold" mb={1}>
+            Usuario
+          </FormLabel>
           <Select
             options={usuarioOptions}
-            value={usuarioOptions.find((opt) => opt.value === filters.usuario) || null}
+            value={
+              usuarioOptions.find((opt) => opt.value === filters.usuario) ||
+              null
+            }
             onChange={(opt) => handleSelectChange("usuario", opt)}
             placeholder="Todos los usuarios"
             isClearable
@@ -160,19 +190,38 @@ const HistorialFilters = ({
         </FormControl>
       )}
 
+      <FormControl flex="1" minW={{ base: "100%", lg: "200px" }}>
+        <FormLabel fontSize="xs" fontWeight="bold" mb={1}>
+          Estado
+        </FormLabel>
+        <Select
+          options={estadoOptions}
+          value={
+            estadoOptions.find((opt) => opt.value === filters.estado) || null
+          }
+          onChange={(opt) => handleSelectChange("estado", opt)}
+          placeholder="Todos los estados"
+          isClearable
+          isSearchable
+          styles={customStyles}
+        />
+      </FormControl>
+
       <FormControl flex="1" minW={{ base: "100%", lg: "250px" }}>
-        <FormLabel fontSize="xs" fontWeight="bold" mb={1}>Rango de Fechas</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="bold" mb={1}>
+          Rango de Fechas
+        </FormLabel>
         <Box
-            sx={{
-              "& input": {
-                height: "32px",
-                fontSize: "0.875rem",
-                paddingTop: "4px",
-                paddingBottom: "4px",
-                backgroundColor: bg,
-                borderColor: borderColor,
-              }
-            }}
+          sx={{
+            "& input": {
+              height: "32px",
+              fontSize: "0.875rem",
+              paddingTop: "4px",
+              paddingBottom: "4px",
+              backgroundColor: bg,
+              borderColor: borderColor,
+            },
+          }}
         >
           <RangeDatepicker
             selectedDates={selectedDates}
@@ -182,8 +231,18 @@ const HistorialFilters = ({
               dateFormat: "dd/MM/yyyy",
               dayNames: ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"],
               monthNames: [
-                "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+                "Enero",
+                "Febrero",
+                "Marzo",
+                "Abril",
+                "Mayo",
+                "Junio",
+                "Julio",
+                "Agosto",
+                "Septiembre",
+                "Octubre",
+                "Noviembre",
+                "Diciembre",
               ],
             }}
             propsConfigs={{
@@ -207,6 +266,7 @@ const HistorialFilters = ({
               tienda: "",
               deudor: "",
               usuario: "",
+              estado: "",
               fechaInicio: "",
               fechaFin: "",
             });

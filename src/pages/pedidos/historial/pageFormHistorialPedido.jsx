@@ -37,6 +37,7 @@ const HistorialPedidosPage = () => {
     tienda: "",
     deudor: "",
     usuario: "",
+    estado: "",
     fechaInicio: "",
     fechaFin: "",
   });
@@ -68,9 +69,15 @@ const HistorialPedidosPage = () => {
       : pedidosPorRuta;
 
   const uniqueValues = useMemo(() => {
-    const tiendas = [...new Set(pedidosHistorial.map((p) => p.nombreTienda).filter(Boolean))].sort();
-    const deudores = [...new Set(pedidosHistorial.map((p) => p.nombreDeu).filter(Boolean))].sort();
-    const usuarios = [...new Set(pedidosHistorial.map((p) => p.nombreUsuario).filter(Boolean))].sort();
+    const tiendas = [
+      ...new Set(pedidosHistorial.map((p) => p.nombreTienda).filter(Boolean)),
+    ].sort();
+    const deudores = [
+      ...new Set(pedidosHistorial.map((p) => p.nombreDeu).filter(Boolean)),
+    ].sort();
+    const usuarios = [
+      ...new Set(pedidosHistorial.map((p) => p.nombreUsuario).filter(Boolean)),
+    ].sort();
     return { tiendas, deudores, usuarios };
   }, [pedidosHistorial]);
 
@@ -80,20 +87,29 @@ const HistorialPedidosPage = () => {
         const searchLower = query.toLowerCase();
         const matchesSearch =
           pedido.id.toString().includes(searchLower) ||
-          (pedido.nombreCorrelativo && pedido.nombreCorrelativo.toLowerCase().includes(searchLower)) ||
-          (pedido.nombreDeu && pedido.nombreDeu.toLowerCase().includes(searchLower)) ||
-          (pedido.nombreTienda && pedido.nombreTienda.toLowerCase().includes(searchLower));
+          (pedido.nombreCorrelativo &&
+            pedido.nombreCorrelativo.toLowerCase().includes(searchLower)) ||
+          (pedido.nombreDeu &&
+            pedido.nombreDeu.toLowerCase().includes(searchLower)) ||
+          (pedido.nombreTienda &&
+            pedido.nombreTienda.toLowerCase().includes(searchLower));
         if (!matchesSearch) return false;
       }
 
-      if (filters.tienda && pedido.nombreTienda !== filters.tienda) return false;
+      if (filters.tienda && pedido.nombreTienda !== filters.tienda)
+        return false;
       if (filters.deudor && pedido.nombreDeu !== filters.deudor) return false;
-      if (filters.usuario && pedido.nombreUsuario !== filters.usuario) return false;
+      if (filters.usuario && pedido.nombreUsuario !== filters.usuario)
+        return false;
+      if (filters.estado && pedido.estadoId !== filters.estado) return false;
 
       if (filters.fechaInicio || filters.fechaFin) {
-        const pedidoDate = new Date(pedido.creadoEl).toISOString().split("T")[0];
-        
-        if (filters.fechaInicio && pedidoDate < filters.fechaInicio) return false;
+        const pedidoDate = new Date(pedido.creadoEl)
+          .toISOString()
+          .split("T")[0];
+
+        if (filters.fechaInicio && pedidoDate < filters.fechaInicio)
+          return false;
         if (filters.fechaFin && pedidoDate > filters.fechaFin) return false;
       }
 
