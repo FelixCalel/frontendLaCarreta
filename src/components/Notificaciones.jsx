@@ -142,8 +142,15 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
       if (estadoId !== undefined && estadoId !== null) {
         return parseInt(estadoId) === 2;
       }
+      return true;
     }
-    return true;
+
+    const nUsuarioId = n.usuarioId || (n.data && n.data.usuarioId);
+    if (nUsuarioId) {
+      return parseInt(nUsuarioId) === usuarioId;
+    }
+
+    return false;
   });
 
   const displayUnreadCount = filteredNotificaciones.filter(

@@ -33,7 +33,7 @@ export const AuthWrapper = ({ children }) => {
 
       // Set status to checking AFTER restoring data
       // This ensures we show the loading screen while verifying with backend
-      dispatch(checkingCredentials());
+      // dispatch(checkingCredentials());
 
       // Función para intentar obtener datos del usuario con reintentos
       const fetchData = async () => {
