@@ -81,12 +81,10 @@ const MenuMobile = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    // Cerrar menú cuando cambia la ruta
     setIsOpen(false);
     setOpenMenus({});
   }, [location.pathname]);
 
-  // Prevenir scroll del body cuando el menú está abierto
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -124,15 +122,12 @@ const MenuMobile = () => {
     return null;
   }
 
-  // Filtrar opciones con rutas dinámicas
   modulosAgrupados.forEach((m) => {
     m.opciones = m.opciones.filter((op) => !op.ruta?.includes(":"));
   });
 
   return (
     <>
-      {/* Botón de menú hamburguesa flotante */}
-      {/* Botón de menú hamburguesa flotante */}
       <Box
         as="button"
         onClick={() => setIsOpen(true)}
@@ -157,11 +152,8 @@ const MenuMobile = () => {
           Menú
         </Box>
       </Box>
-
-      {/* Overlay y panel del menú */}
       {isOpen && (
         <>
-          {/* Overlay oscuro */}
           <Box
             position="fixed"
             top={0}
@@ -174,8 +166,6 @@ const MenuMobile = () => {
             zIndex={1200}
             animation={`${fadeIn} 0.3s ease`}
           />
-
-          {/* Panel del menú */}
           <Box
             position="fixed"
             top={0}
@@ -189,7 +179,6 @@ const MenuMobile = () => {
             animation={`${slideIn} 0.3s ease`}
             overflowY="auto"
           >
-            {/* Header del menú con botón cerrar */}
             <Box
               p={4}
               borderBottom="1px solid"
@@ -212,8 +201,6 @@ const MenuMobile = () => {
                 borderRadius="full"
               />
             </Box>
-
-            {/* Contenido del menú */}
             <VStack align="stretch" spacing={2} p={4}>
               {modulosAgrupados.map((modulo) => (
                 <MenuItem
