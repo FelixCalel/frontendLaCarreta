@@ -22,17 +22,14 @@ class GlobalErrorBoundary extends React.Component {
       error: null,
       retryCount: this.state.retryCount + 1,
     });
-    // window.location.reload(); // Optional: full reload if state reset isn't enough
   };
 
   componentDidUpdate(prevProps, prevState) {
-    // Automatic retry logic: if error occurred and we haven't retried yet, try once automatically
     if (
       this.state.hasError &&
       prevState.hasError !== this.state.hasError &&
       this.state.retryCount === 0
     ) {
-      // Small delay to prevent immediate loop if error is persistent during render
       setTimeout(() => {
         this.handleRetry();
       }, 100);
@@ -41,7 +38,6 @@ class GlobalErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      // If we are in the middle of an auto-retry, render null or a spinner to avoid flashing the error UI
       if (this.state.retryCount === 0) {
         return null;
       }

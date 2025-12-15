@@ -36,10 +36,10 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = localStorage.getItem("roleId");
 
-  const { notificaciones, unreadCount } = useSelector(
-    (state) => state.notificaciones
+  const { notificaciones = [], unreadCount } = useSelector(
+    (state) => state.notificaciones || {}
   );
-  const { token } = useSelector((state) => state.auth);
+  const { token } = useSelector((state) => state.auth || {});
 
   const colors = {
     containerBg: useColorModeValue("white", "gray.800"),

@@ -17,7 +17,7 @@ const TiendaSelector = ({
   isSecondSelector = false,
 }) => {
   const dispatch = useDispatch();
-  const tiendasRedux = useSelector((state) => state.tiendas.data);
+  const tiendasRedux = useSelector((state) => state.tiendas.data || []);
   const tiendasStatus = useSelector((state) => state.tiendas.status);
 
   useEffect(() => {

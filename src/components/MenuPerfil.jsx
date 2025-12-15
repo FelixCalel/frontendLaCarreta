@@ -28,7 +28,9 @@ export const MenuPerfil = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { displayName, photoURL, correo } = useSelector((state) => state.auth);
+  const { displayName, photoURL, correo } = useSelector(
+    (state) => state.auth || {}
+  );
   const roleId = localStorage.getItem("roleId");
 
   const userData = {
