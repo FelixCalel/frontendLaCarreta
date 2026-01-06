@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
+import Footer from "../../pages/proveedores/Footer";
 import MenuPrincipalD from "../../components/MenuPrincipalD";
 import {
   Box,
@@ -212,6 +213,7 @@ const HomePage = () => {
           </Box>
         </Box>
       </Flex>
+      <Footer />
     </Flex>
   );
 };

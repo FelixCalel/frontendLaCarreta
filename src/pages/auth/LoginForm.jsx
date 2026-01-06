@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Box, Flex, Stack } from "@chakra-ui/react";
+import { Box, Flex, Stack, Button } from "@chakra-ui/react";
+import { FaWhatsapp } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { startLoginWithEmailPassword } from "../../store/auth/thunks";
 import { BrandingPanel } from "../../components/auth/BrandingPanel";
@@ -64,12 +65,29 @@ export const LoginForm = () => {
         zIndex={1}
       >
         <BrandingPanel display={{ base: "none", md: "flex" }} />
-        <Flex p={1} flex={1} align="center" justify="center" bg="transparent">
+        <Flex p={1} flex={1} align="center" justify="center" bg="transparent" direction="column">
           <LoginFormFields
             onSubmit={handleSubmit}
             isLoading={isLoading}
             error={error}
           />
+          {/* SEO Footer Links */}
+          <Stack direction="row" spacing={4} mt={8}>
+            <Button
+              as="a"
+              href="https://chat.whatsapp.com/FqaqKawbkrO5yOJUMcvruf"
+              target="_blank"
+              rel="noopener noreferrer"
+              leftIcon={<FaWhatsapp />}
+              colorScheme="green"
+              variant="outline"
+              size="sm"
+              rounded="full"
+              px={4}
+            >
+              Soporte WhatsApp
+            </Button>
+          </Stack>
         </Flex>
       </Stack>
     </Box>

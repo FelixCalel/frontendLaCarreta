@@ -6,6 +6,7 @@ import {
   Link,
   Text,
   useColorModeValue,
+  Button,
 } from "@chakra-ui/react";
 import { FaFacebookF, FaInstagram, FaWhatsapp } from "react-icons/fa";
 
@@ -18,7 +19,7 @@ const Footer = () => {
     <Box
       bgGradient={`linear(to-r, ${bgStart}, ${bgEnd})`}
       color="whiteAlpha.900"
-      py={{ base: 6, md: 8 }}
+      py={{ base: 6, md: 4 }}
       px={{ base: 4, md: 10 }}
       shadow="inner"
     >
@@ -34,23 +35,22 @@ const Footer = () => {
           &copy; {new Date().getFullYear()} La Carreta · Todos los derechos
           reservados
         </Text>
-
-        <HStack spacing={8}>
-          {[
-            { icon: FaFacebookF, href: "#" },
-            { icon: FaInstagram, href: "#" },
-            { icon: FaWhatsapp, href: "#" },
-          ].map(({ icon, href }) => (
-            <Link
-              key={href}
-              href={href}
-              isExternal
-              transition="transform 0.2s"
-              _hover={{ transform: "scale(1.15)", color: hover }}
-            >
-              <Icon as={icon} boxSize={5} />
-            </Link>
-          ))}
+        <HStack spacing={0}>         
+          <Button
+            as="a"
+            href="https://chat.whatsapp.com/FqaqKawbkrO5yOJUMcvruf"
+            target="_blank"
+            rel="noopener noreferrer"
+            leftIcon={<FaWhatsapp />}
+            color="white"
+            variant="outline"
+            size="sm"
+            rounded="full"
+            px={4}
+            _hover={{ bg: "whiteAlpha.200" }}
+          >
+             Soporte WhatsApp
+          </Button>
         </HStack>
       </Flex>
     </Box>

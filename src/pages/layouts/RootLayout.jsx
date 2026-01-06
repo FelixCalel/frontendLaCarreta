@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import { Grid, Box, Flex, useColorModeValue } from "@chakra-ui/react";
 import { MenuPrincipal } from "../../components/MenuPrincipal";
-import Footer from "../../components/Dashboard/PiePagina";
+import Footer from "../../pages/proveedores/Footer";
 import { NavBarDashboard } from "../../components/NavBarDashboard";
 import { useEffect, useState } from "react";
 
@@ -19,8 +19,6 @@ export const RootLayout = () => {
   const headerBg = useColorModeValue("white", "gray.900");
   const headerColor = useColorModeValue("black", "white");
   const contentBg = useColorModeValue("white", "gray.800");
-  const footerBg = useColorModeValue("green.500", "green.700");
-  const footerColor = useColorModeValue("white", "white");
 
   return (
     <Grid
@@ -40,16 +38,7 @@ export const RootLayout = () => {
         </Box>
       </Flex>
 
-      <Box
-        gridRow="4"
-        gridColumn="1 / -1"
-        bg={footerBg}
-        p={1}
-        color={footerColor}
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
+      <Box gridRow="4" gridColumn="1 / -1">
         <Footer />
       </Box>
     </Grid>

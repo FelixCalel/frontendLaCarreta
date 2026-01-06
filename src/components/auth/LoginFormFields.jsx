@@ -42,7 +42,7 @@ export const LoginFormFields = ({ onSubmit, isLoading, error }) => {
       color={useColorModeValue("gray.800", "white")}
     >
       <Stack align="center">
-        <Heading fontSize="2xl">Inicia Sesión en tu Cuenta</Heading>
+        <Heading as="h1" fontSize="2xl">Inicia Sesión en tu Cuenta</Heading>
       </Stack>
       <form onSubmit={handleSubmit}>
         <Stack spacing={4}>
