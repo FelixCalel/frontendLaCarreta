@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /auth/
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://app.lacarreta.com.gt/sitemap.xml

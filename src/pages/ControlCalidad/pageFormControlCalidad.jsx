@@ -17,6 +17,7 @@ import * as ExcelJS from "exceljs";
 import FiltrosCompras from "./componentes/FiltrosCompras";
 import moment from "moment";
 import { FaFileExport } from "react-icons/fa";
+import SEO from "../../components/SEO";
 
 const ControlCalidadPage = () => {
   const dispatch = useDispatch();
@@ -203,6 +204,7 @@ const ControlCalidadPage = () => {
 
   return (
     <Box p={6} boxShadow="xl" bg={pageBg} rounded="lg">
+      <SEO title="Control de Calidad" description="Inventario y control de calidad." />
       <Flex justify="space-between" alignItems="center" mb={4}>
         <Heading mb={4} color={headingColor}>
           Inventario

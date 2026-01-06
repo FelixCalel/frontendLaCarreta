@@ -6,6 +6,7 @@ import { startLoginWithEmailPassword } from "../../store/auth/thunks";
 import { BrandingPanel } from "../../components/auth/BrandingPanel";
 import { LoginFormFields } from "../../components/auth/LoginFormFields";
 import { AnimatedBackground } from "../../components/auth/AnimatedBackground";
+import SEO from "../../components/SEO";
 
 
 
@@ -16,8 +17,6 @@ export const LoginForm = () => {
 
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  
 
   useEffect(() => {
     if (actualUsuario?.status === "authenticated") {
@@ -53,6 +52,10 @@ export const LoginForm = () => {
 
   return (
     <Box position="relative" minH="100vh" w="100vw" overflow="hidden">
+      <SEO 
+        title="Iniciar Sesión" 
+        description="Inicia sesión en el Portal Administrativo de La Carreta. Gestiona tus pedidos, inventarios y reportes de forma segura." 
+      />
       <AnimatedBackground />
       <Stack
         direction={{ base: "column", md: "row" }}

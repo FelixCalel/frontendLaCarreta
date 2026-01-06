@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import SEO from "../../components/SEO";
 import {
   Box,
   Spinner,
@@ -136,6 +137,10 @@ const PageFormTienda = () => {
 
   return (
     <Container maxW="container.xl" py={0} mt={-4}>
+      <SEO 
+        title="Gestión de Tiendas" 
+        description="Administra el catálogo de tiendas, rutas y asignaciones de La Carreta."
+      />
       <Flex justify="space-between" align="center" mb={0}>
         <Box>
           <Heading size="lg" color="gray.700">Gestión de Tiendas</Heading>

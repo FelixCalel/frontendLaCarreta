@@ -58,4 +58,5 @@ export const store = configureStore({
       pedidoProduccionApi.middleware,
       qaApi.middleware
     ),
+  devTools: process.env.NODE_ENV !== "production",
 });

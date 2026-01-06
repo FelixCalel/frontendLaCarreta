@@ -18,11 +18,14 @@ setupAxiosInterceptors();
 const container = document.getElementById("root");
 const root = createRoot(container);
 
+import { HelmetProvider } from 'react-helmet-async';
+
 root.render(
   <React.StrictMode>
     <GlobalErrorBoundary>
-      <Provider store={store}>
-        <AuthProvider>
+      <HelmetProvider>
+        <Provider store={store}>
+          <AuthProvider>
           <ColorModeScript initialColorMode={theme.config.initialColorMode} />
           <ChakraProvider theme={theme}>
             <BrowserRouter>
@@ -35,6 +38,7 @@ root.render(
           </ChakraProvider>
         </AuthProvider>
       </Provider>
+      </HelmetProvider>
     </GlobalErrorBoundary>
   </React.StrictMode>
 );
