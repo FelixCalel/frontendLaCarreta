@@ -7,12 +7,31 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), "");
 
     return {
+        server: {
+            host: env.HOST,
+            port: Number(env.PORT),
+            hmr: {
+                host: mode === "production" ? env.HOST : "localhost",
+                protocol: "ws",
+            },
+        },
+        preview: {
+            host: env.HOST,
+            port: Number(env.PORT),
+        },
+        esbuild: {
+            drop: mode === "production" ? ["console", "debugger"] : [],
+        },
+
         plugins: [
             react(),
             viteCompression(),
             VitePWA({
                 registerType: "prompt",
                 includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
+                devOptions: {
+                    enabled: false,
+                },
                 manifest: {
                     name: "Portal La Carreta",
                     short_name: "La Carreta",
@@ -36,6 +55,7 @@ export default defineConfig(({ mode }) => {
                 },
                 workbox: {
                     maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+                    cleanupOutdatedCaches: true,
                 },
             }),
         ],

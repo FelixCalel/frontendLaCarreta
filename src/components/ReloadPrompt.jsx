@@ -11,7 +11,6 @@ export function ReloadPrompt() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-      // console.log('SW Registered: ' + r)
     },
     onRegisterError(error) {
       console.log("SW registration error", error);
@@ -51,7 +50,7 @@ export function ReloadPrompt() {
         duration: 5000,
         isClosable: true,
       });
-      setOfflineReady(false); // Reset state to avoid repeated toasts
+      setOfflineReady(false);
     }
   }, [offlineReady, toast, setOfflineReady]);
 
@@ -59,7 +58,7 @@ export function ReloadPrompt() {
     if (needRefresh) {
       toast({
         position: "bottom-right",
-        duration: null, // Keep open until user interaction
+        duration: null,
         render: () => (
           <Box
             color="white"
@@ -111,6 +110,17 @@ export function ReloadPrompt() {
       });
     }
   }, [needRefresh, toast, updateServiceWorker]);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (let registration of registrations) {
+          registration.unregister();
+          console.log("Service Worker unregistered in dev mode to prevent logs.");
+        }
+      });
+    }
+  }, []);
 
   return null;
 }
