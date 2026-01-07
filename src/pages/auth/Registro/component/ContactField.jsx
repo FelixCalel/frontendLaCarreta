@@ -33,14 +33,14 @@ export default function ContactField({ value, onChange, error = "" }) {
 
   return (
     <FormControl id="contact" isInvalid={!!error} isRequired>
-      <FormLabel>Correo Electronico</FormLabel>
+      <FormLabel>Correo Electronico o Número #</FormLabel>
 
       <InputGroup>
         <InputLeftElement pointerEvents="none">{icon}</InputLeftElement>
         <Input
           name="contact"
           type="text"
-          placeholder={`Ingresa tu ${placeholder.toLowerCase()}`}
+          placeholder={`Ingresa tu ${placeholder.toLowerCase()} o número #`}
           value={value}
           onChange={(e) => {
             let val = e.target.value.replace(/^\s+|\s+$/g, "");
