@@ -29,7 +29,7 @@ const pedidoSlice = createSlice({
       })
       .addCase(tablaPedidos.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.data = action.payload;
+        state.data = Array.isArray(action.payload) ? action.payload : [];
         state.data.sort((a, b) => b.id - a.id);
       })
       .addCase(tablaPedidos.rejected, (state, action) => {

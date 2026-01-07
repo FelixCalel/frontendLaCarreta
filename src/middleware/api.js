@@ -43,3 +43,20 @@ export async function verifySMSCode(to, code) {
     };
   }
 }
+
+export async function verifyRegistrationPhone(to, code) {
+  try {
+    await axios.post(`${BASE_URL}/usuarios/verify-phone`, {
+      telefono: to,
+      code,
+    });
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      errorMessage:
+        err.response?.data?.message ||
+        "Código incorrecto o expirado. Intenta de nuevo.",
+    };
+  }
+}

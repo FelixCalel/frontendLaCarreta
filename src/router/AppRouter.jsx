@@ -7,6 +7,7 @@ import { PublicRoute } from "./PublicRoute";
 import { PortalPagePublic } from "./PortalPagePublic";
 import CheckingAuth from "../ui/components/CheckingAuth";
 import HomePage from "../pages/auth/HomePage";
+import ResetPassword from "../pages/auth/ResetPassword";
 import { routeComponentMap } from "./routeComponentMap";
 import { Box, Spinner } from "@chakra-ui/react";
 
@@ -37,6 +38,7 @@ export const AppRouter = () => {
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route
           path="/auth/*"
           element={

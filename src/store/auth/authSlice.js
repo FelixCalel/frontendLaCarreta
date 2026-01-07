@@ -80,6 +80,8 @@ export const authSlice = createSlice({
       state.rutas =
         payload.rutas && payload.rutas.length ? payload.rutas : state.rutas;
       state.user = {
+        ...(state.user || {}),
+        ...(payload.user || {}),
         rutas:
           payload.rutasFull && payload.rutasFull.length
             ? payload.rutasFull
@@ -153,14 +155,15 @@ export const authSlice = createSlice({
       })
       .addCase(fetchCurrentUser.fulfilled, (state, { payload }) => {
         state.status = "authenticated";
-        state.user = payload;
-        state.rutas = payload.rutas || [];
-        state.uid = payload.id;
-        state.correo = payload.correo;
-        state.paisId = payload.paisId;
-        state.roleId = payload.roleId;
-        state.displayName = payload.nombre;
-        state.photoURL = payload.avatar;
+        state.user = payload.user || payload; // Handle wrapped or unwrapped user
+        state.rutas = payload.rutas || payload.user?.rutas || [];
+        state.uid = payload.id || payload.user?.id;
+        state.correo = payload.correo || payload.user?.correo;
+        state.paisId = payload.paisId || payload.user?.paisId;
+        state.roleId = payload.roleId || payload.user?.roleId;
+        state.displayName = payload.nombre || payload.user?.nombre;
+        state.photoURL = payload.avatar || payload.user?.avatar;
+        state.permissions = payload.permissions ?? state.permissions;
         saveState(state);
       })
       .addCase(fetchCurrentUser.rejected, (state, { payload }) => {

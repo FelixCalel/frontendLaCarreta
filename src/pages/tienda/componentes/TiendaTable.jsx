@@ -68,6 +68,12 @@ const TiendaTable = ({
         ? tienda.nombre?.toLowerCase().includes(filtroNombre.toLowerCase())
         : true)
     );
+  }).sort((a, b) => {
+    const rutaA = a.nombreRuta || "";
+    const rutaB = b.nombreRuta || "";
+    const numA = parseInt(rutaA.replace(/\D/g, '')) || 0;
+    const numB = parseInt(rutaB.replace(/\D/g, '')) || 0;
+    return numA - numB || rutaA.localeCompare(rutaB);
   });
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -84,12 +90,17 @@ const TiendaTable = ({
   const textColor = useColorModeValue("gray.800", "white");
   const subTextColor = useColorModeValue("gray.600", "gray.400");
   const ciudades = Array.from(new Set(data.map((t) => t.nombreCiudad))).filter(Boolean);
-  const rutas = Array.from(new Set(data.map((t) => t.nombreRuta))).filter(Boolean);
+  const rutas = Array.from(new Set(data.map((t) => t.nombreRuta)))
+    .filter(Boolean)
+    .sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, '')) || 0;
+      const numB = parseInt(b.replace(/\D/g, '')) || 0;
+      return numA - numB || a.localeCompare(b);
+    });
 
   return (
     <Card bg={cardBg} boxShadow="lg" borderRadius="xl" overflow="hidden" mt={0}>
       <CardHeader pb={2}>
-        {/* <Heading size="md" mb={2} color={textColor}>Listado de Tiendas</Heading> */}
         <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4} mb={2}>
           <InputGroup>
             <InputLeftElement pointerEvents="none">

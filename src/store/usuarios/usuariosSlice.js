@@ -36,7 +36,6 @@ export const usuariosSlice = createSlice({
     metadata: [],
   },
   reducers: {
-    // Puedes definir otras acciones sincrónicas aquí si es necesario
   },
   extraReducers: (builder) => {
     builder
@@ -47,8 +46,8 @@ export const usuariosSlice = createSlice({
       .addCase(fetchUsuarios.fulfilled, (state, action) => {
         console.log(action, "<---");
         state.status = "succeeded";
-        state.items = action.payload.usuarios;
-        state.data = action.payload;
+        state.items = Array.isArray(action.payload.usuarios) ? action.payload.usuarios : [];
+        state.data =  action.payload || {};
 
         if (action.payload.paisId) {
           state.paisId = action.payload.paisId;

@@ -28,13 +28,27 @@ export const MenuPerfil = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { displayName, photoURL, correo } = useSelector((state) => state.auth);
+  const { displayName, photoURL, correo, user } = useSelector(
+    (state) => state.auth || {}
+  );
   const roleId = localStorage.getItem("roleId");
 
+  const getValidValue = (val) => (val && val !== "null" ? val : null);
+
   const userData = {
-    nombre: displayName || localStorage.getItem("nombreUsuario") || "Usuario",
-    correo: correo || localStorage.getItem("correoUsuario") || "",
-    avatar: photoURL || localStorage.getItem("avatar") || "",
+    nombre:
+      getValidValue(displayName) ||
+      getValidValue(localStorage.getItem("nombreUsuario")) ||
+      "Usuario",
+    correo:
+      getValidValue(correo) ||
+      getValidValue(localStorage.getItem("correoUsuario")) ||
+      getValidValue(user?.telefono) ||
+      "",
+    avatar:
+      getValidValue(photoURL) ||
+      getValidValue(localStorage.getItem("avatar")) ||
+      "",
   };
 
   const onLogout = () => {

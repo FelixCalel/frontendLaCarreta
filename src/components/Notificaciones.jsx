@@ -36,10 +36,10 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = localStorage.getItem("roleId");
 
-  const { notificaciones, unreadCount } = useSelector(
-    (state) => state.notificaciones
+  const { notificaciones = [], unreadCount } = useSelector(
+    (state) => state.notificaciones || {}
   );
-  const { token } = useSelector((state) => state.auth);
+  const { token } = useSelector((state) => state.auth || {});
 
   const colors = {
     containerBg: useColorModeValue("white", "gray.800"),
@@ -58,10 +58,10 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     const handleNotification = (event) => {
       const newNotification = event.detail;
 
-      if (
-        newNotification.usuarioId &&
-        newNotification.usuarioId !== usuarioId
-      ) {
+      const notifUserId = newNotification.usuarioId
+        ? parseInt(newNotification.usuarioId, 10)
+        : null;
+      if (!notifUserId || notifUserId !== usuarioId) {
         return;
       }
 
@@ -85,7 +85,9 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     const handleNotificationDeleted = (event) => {
       const { id, pedidoId, usuarioId: targetUserId } = event.detail;
 
-      if (targetUserId && targetUserId !== usuarioId) {
+      const parsedTargetId = targetUserId ? parseInt(targetUserId, 10) : null;
+
+      if (parsedTargetId && parsedTargetId !== usuarioId) {
         return;
       }
 
@@ -137,6 +139,12 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   };
 
   const filteredNotificaciones = notificaciones.filter((n) => {
+    const nUsuarioId = n.usuarioId || (n.data && n.data.usuarioId);
+    
+    if (!nUsuarioId || parseInt(nUsuarioId) !== usuarioId) {
+      return false; 
+    }
+
     if (roleId === "3") {
       const estadoId = n.estadoId || (n.data && n.data.estadoId);
       if (estadoId !== undefined && estadoId !== null) {
@@ -145,7 +153,6 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
       return true;
     }
 
-    const nUsuarioId = n.usuarioId || (n.data && n.data.usuarioId);
     if (nUsuarioId) {
       return parseInt(nUsuarioId) === usuarioId;
     }

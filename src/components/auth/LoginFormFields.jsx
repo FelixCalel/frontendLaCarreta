@@ -42,15 +42,17 @@ export const LoginFormFields = ({ onSubmit, isLoading, error }) => {
       color={useColorModeValue("gray.800", "white")}
     >
       <Stack align="center">
-        <Heading fontSize="2xl">Inicia Sesión en tu Cuenta</Heading>
+        <Heading as="h1" fontSize="2xl">
+          Inicia Sesión en tu Cuenta
+        </Heading>
       </Stack>
       <form onSubmit={handleSubmit}>
         <Stack spacing={4}>
           <FormControl id="email" isRequired>
-            <FormLabel>Correo electrónico</FormLabel>
+            <FormLabel>Correo electrónico o Teléfono</FormLabel>
             <Input
-              type="email"
-              placeholder="tu-correo@ejemplo.com"
+              type="text"
+              placeholder="correo@ejemplo.com o #numero"
               value={correo}
               onChange={(e) => setCorreo(e.target.value)}
               autoComplete="email"

@@ -1,8 +1,12 @@
 import { Permisos } from "../components/Usuarios/Permisos"
+import SEO from "../components/SEO"
 
 
 export const PagePermisos = () => {
   return (
-    <Permisos />
+    <>
+      <SEO title="Gestión de Permisos" description="Administración de permisos por módulo." />
+      <Permisos />
+    </>
   )
 }

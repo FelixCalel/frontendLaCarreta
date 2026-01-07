@@ -32,7 +32,7 @@ const PageFormPedidos = () => {
     onClose: onDialogClose,
   } = useDisclosure();
 
-  const pedidos = useSelector((state) => state.pedidos.data);
+  const pedidos = useSelector((state) => state.pedidos.data || []);
   const usuarioId = Number(localStorage.getItem("usuarioId")) || 0;
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [paisId, setPaisId] = useState(null);

@@ -9,14 +9,6 @@ import {
   useColorModeValue,
   useToast,
   useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  ModalCloseButton,
-  Input,
   Stepper,
   Step,
   StepIndicator,
@@ -27,7 +19,6 @@ import {
   StepDescription,
   useSteps,
   HStack,
-  keyframes,
   VStack,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
@@ -35,101 +26,21 @@ import { useSelector } from "react-redux";
 import {
   registerUser,
   sendSMSCode,
-  verifySMSCode,
+  verifyRegistrationPhone,
 } from "../../../middleware/api";
 import Step1Account from "./component/Step1Account";
 import Step2Contact from "./component/Step2Contact";
 import Step3Security from "./component/Step3Security";
 import ErrorAlerts from "./component/ErrorAlerts";
 import AnimatedBlobBackground from "../component/AnimatedBlobBackground";
+import { BrandingPanel } from "./component/BrandingPanel";
+import OTPVerificationModal from "./component/OTPVerificationModal";
 
 const steps = [
   { title: "Cuenta", description: "Información personal" },
   { title: "Contacto", description: "Correo y teléfono" },
   { title: "Seguridad", description: "Crea tu contraseña" },
 ];
-
-const float = keyframes`
-  0% { transform: translateY(10vh); opacity: 0; }
-  20% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { transform: translateY(-120vh); opacity: 0; }
-`;
-
-const AnimatedBackground = React.memo(() => {
-  const icons = React.useMemo(
-    () => ["🍍", "🍎", "🛒", "🛍️", "🥦", "🥖", "🧀", "🍇"],
-    []
-  );
-  const bg = useColorModeValue("green.50", "gray.900");
-
-  const animatedElements = React.useMemo(() => {
-    return Array.from({ length: 15 }).map((_, index) => {
-      const duration = Math.random() * 15 + 10;
-      const delay = Math.random() * 15;
-      const animation = `${float} ${duration}s linear ${delay}s infinite`;
-      return (
-        <Text
-          key={index}
-          position="absolute"
-          bottom="-20%"
-          left={`${Math.random() * 95}%`}
-          fontSize={`${Math.random() * 1.5 + 0.75}rem`}
-          animation={animation}
-          opacity={0}
-        >
-          {icons[Math.floor(Math.random() * icons.length)]}
-        </Text>
-      );
-    });
-  }, [icons]);
-
-  return (
-    <Box
-      position="absolute"
-      top={0}
-      left={0}
-      right={0}
-      bottom={0}
-      overflow="hidden"
-      bg={bg}
-      zIndex={0}
-    >
-      {animatedElements}
-    </Box>
-  );
-});
-
-AnimatedBackground.displayName = "AnimatedBackground";
-
-const BrandingPanel = React.memo(({ ...props }) => (
-  <Flex
-    flex={1}
-    align={"center"}
-    justify={"center"}
-    position="relative"
-    {...props}
-  >
-    <AnimatedBackground />
-    <Stack spacing={4} w={"full"} maxW={"md"} p={8} zIndex={1}>
-      <Heading
-        fontSize={{ base: "2xl", md: "4xl", lg: "5xl" }}
-        color={useColorModeValue("green.700", "green.200")}
-      >
-        Gestiona tus Pedidos con La Carreta
-      </Heading>
-      <Text
-        fontSize={{ base: "md", lg: "lg" }}
-        color={useColorModeValue("gray.600", "gray.300")}
-      >
-        Regístrate para acceder a nuestro sistema y optimizar tus pedidos de
-        forma rápida, fácil y segura.
-      </Text>
-    </Stack>
-  </Flex>
-));
-
-BrandingPanel.displayName = "BrandingPanel";
 
 const RegisterForm = () => {
   const navigate = useNavigate();
@@ -215,60 +126,73 @@ const RegisterForm = () => {
     let payload;
     let phoneE164 = "";
 
+    const pais = paises.find((p) => p.id == formData.paisId);
+    let dialCode = "";
+    if (pais?.dialCode) {
+      dialCode = pais.dialCode.replace(/\s/g, "");
+      dialCode = dialCode.startsWith("+") ? dialCode : "+" + dialCode;
+    }
+
     if (emailRegex.test(contact)) {
       const correoNormalizado = contact.trim().toLowerCase();
+
+      let finalPhone = null;
+      if (telefono) {
+        finalPhone = dialCode + telefono.replace(/\D+/g, "");
+      }
+
       payload = {
         ...rest,
         correo: correoNormalizado,
-        telefono: telefono ? telefono.replace(/\D+/g, "") : null,
+        telefono: finalPhone,
       };
+
+      const res = await registerUser(payload);
+      setIsLoading(false);
+
+      if (!res.ok) {
+        setErrors({ general: res.errorMessage });
+        return;
+      }
+
+      toast({
+        title: "¡Registro Exitoso!",
+        description: "Revisa tu correo para activar tu cuenta.",
+        status: "success",
+        duration: 5000,
+      });
+      navigate("/auth/login");
     } else {
-      const pais = paises.find((p) => p.id == formData.paisId);
-      if (pais?.dialCode) {
-        phoneE164 =
-          pais.dialCode.replace(/\s/g, "") + contact.replace(/\D+/g, "");
+      if (dialCode) {
+        phoneE164 = dialCode + contact.replace(/\D+/g, "");
         payload = { ...rest, correo: null, telefono: phoneE164 };
+
+        const res = await registerUser(payload);
+        setIsLoading(false);
+
+        if (!res.ok) {
+          setErrors({ general: res.errorMessage });
+          return;
+        }
+
+        const sms = await sendSMSCode(phoneE164);
+        if (!sms.ok) {
+          setErrors({ general: sms.errorMessage });
+          return;
+        }
+        setPendingPhone(phoneE164);
+        onOpen();
       } else {
         setErrors({ paisId: "País inválido para registro por teléfono" });
         setIsLoading(false);
         return;
       }
     }
-
-    const res = await registerUser(payload);
-    setIsLoading(false);
-
-    if (!res.ok) {
-      setErrors({ general: res.errorMessage });
-      return;
-    }
-
-    if (phoneE164 && !emailRegex.test(contact)) {
-      const sms = await sendSMSCode(phoneE164);
-      if (!sms.ok) {
-        setErrors({ general: sms.errorMessage });
-        return;
-      }
-      setPendingPhone(phoneE164);
-      onOpen();
-      toast({
-        title: "Código enviado",
-        description: "Revisa tu SMS para verificar tu cuenta.",
-        status: "info",
-      });
-    } else {
-      toast({
-        title: "¡Registro Exitoso!",
-        description: "Revisa tu correo para activar tu cuenta.",
-        status: "success",
-      });
-      navigate("/auth/login");
-    }
   };
 
   const handleVerifySMS = async () => {
     setIsLoading(true);
-    const res = await verifySMSCode(pendingPhone, verifyCode.trim());
+    const res = await verifyRegistrationPhone(pendingPhone, verifyCode.trim());
     setIsLoading(false);
 
     if (res.ok) {
@@ -276,6 +200,7 @@ const RegisterForm = () => {
         title: "¡Cuenta Activada!",
         description: "Tu cuenta ha sido verificada con éxito.",
         status: "success",
+        duration: 5000,
       });
       onClose();
       navigate("/auth/login");
@@ -399,38 +324,15 @@ const RegisterForm = () => {
           </Stack>
         </Flex>
 
-        <Modal isOpen={isOpen} onClose={onClose} isCentered>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Verificar Teléfono</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <Text mb={3}>
-                Hemos enviado un SMS al <b>{pendingPhone}</b>. Ingresa el código
-                para activar tu cuenta.
-              </Text>
-              <Input
-                placeholder="Código SMS"
-                value={verifyCode}
-                onChange={(e) => setVerifyCode(e.target.value)}
-                maxLength={6}
-              />
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                colorScheme="green"
-                mr={3}
-                onClick={handleVerifySMS}
-                isLoading={isLoading}
-              >
-                Verificar
-              </Button>
-              <Button variant="ghost" onClick={onClose}>
-                Cancelar
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+        <OTPVerificationModal
+          isOpen={isOpen}
+          onClose={onClose}
+          pendingPhone={pendingPhone}
+          verifyCode={verifyCode}
+          setVerifyCode={setVerifyCode}
+          handleVerifySMS={handleVerifySMS}
+          isLoading={isLoading}
+        />
       </Stack>
     </Box>
   );
