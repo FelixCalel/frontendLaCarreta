@@ -3,7 +3,13 @@ import {
   registerUserChildren,
   singIn,
 } from "../../providers/endpoints";
-import { checkingCredentials, logout, login, registered, updateUser } from "./authSlice";
+import {
+  checkingCredentials,
+  logout,
+  login,
+  registered,
+  updateUser,
+} from "./authSlice";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import {
@@ -188,166 +194,123 @@ export const fetchCurrentUser = createAsyncThunk(
   }
 );
 
-
-export const startLoginWithEmailPassword = createAsyncThunk(
-  "auth/startLoginWithEmailPassword",
-  async ({ correo, contrasena }, { dispatch, rejectWithValue }) => {
+// Renamed to generic startLogin as it handles both email/phone
+export const startLogin = createAsyncThunk(
+  "auth/startLogin",
+  async ({ identifier, contrasena }, { dispatch, rejectWithValue }) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        correo,
-        contrasena
-      );
-      const user = userCredential.user;
+      const trustToken = localStorage.getItem("trust_token");
 
-      if (!user.emailVerified) {
-        return rejectWithValue(
-          "El correo electrónico no está verificado. Por favor, verifica tu correo antes de iniciar sesión."
-        );
-      }
-
-      let token = await user.getIdToken(true);
-
-      const resp = await axios.post(`${BASE_URL}/usuarios/datos`, {
-        correo: user.email,
+      // 1. Initial Login Request
+      const resp = await axios.post(`${BASE_URL}/usuarios/login`, {
+        identifier,
+        contrasena,
+        trustToken,
       });
 
-      if (!resp.data || !resp.data.usuario) {
-        return rejectWithValue("Error al obtener datos del usuario.");
-      }
+      // 2. Check response type
+      if (resp.data.status === "2fa_required") {
+        return {
+          status: "2fa_required",
+          userId: resp.data.userId,
+          maskedPhone: resp.data.maskedPhone,
+        };
+      } else if (resp.data.token && resp.data.usuario) {
+        // Direct login success (Trust Token)
+        const { token, usuario, firebaseToken, permissions } = resp.data;
 
-      const {
-        nombre,
-        correo: correoUsuario,
-        id: usuarioId,
-        paisId,
-        roleId,
-        estaActivo,
-        avatar,
-      } = resp.data.usuario;
+        localStorage.setItem("access_token", token);
+        const userData = {
+          id: usuario.id,
+          displayName: usuario.nombre + " " + usuario.apellido,
+          email: usuario.correo,
+          roleId: usuario.roleId,
+          paisId: usuario.paisId,
+        };
+        localStorage.setItem("userData", JSON.stringify(userData));
 
-      if (!estaActivo) {
-        return rejectWithValue(
-          "Tu usuario está inactivo. No tienes acceso al sistema."
+        // Restore legacy keys for compatibility
+        localStorage.setItem("usuarioId", usuario.id);
+        localStorage.setItem("roleId", usuario.roleId);
+        localStorage.setItem("nombreUsuario", userData.displayName);
+        if (usuario.correo)
+          localStorage.setItem("correoUsuario", usuario.correo);
+        localStorage.setItem("isAuthenticated", "true");
+
+        dispatch(
+          login({
+            uid: usuario.id,
+            email: usuario.correo,
+            displayName: usuario.nombre,
+            token: token,
+            roleId: usuario.roleId,
+            permissions: permissions,
+            user: usuario,
+          })
         );
+
+        return { status: "authenticated" };
       }
 
-      const doExchange = async (idToken) => {
-        try {
-          const tokenExchangeResp = await axios.post(
-            `${BASE_URL}/usuarios/exchange-token`,
-            { firebaseToken: idToken }
-          );
-          return {
-            access_token: tokenExchangeResp?.data?.access_token ?? null,
-            refresh_token: tokenExchangeResp?.data?.refresh_token ?? null,
-            permissions: tokenExchangeResp?.data?.permissions ?? null,
-          };
-        } catch (e1) {
-          const status = e1?.response?.status;
-          if (status === 404 || status === 401 || status === 405) {
-            const fbResp = await axios.post(`${BASE_URL}/login/firebase`, {
-              idToken: idToken,
-            });
-            return {
-              access_token:
-                fbResp?.data?.accessToken ?? fbResp?.data?.access_token ?? null,
-              refresh_token:
-                fbResp?.data?.refreshToken ??
-                fbResp?.data?.refresh_token ??
-                null,
-              permissions: fbResp?.data?.permissions ?? null,
-            };
-          } else {
-            throw e1;
-          }
-        }
-      };
-
-      let { access_token, refresh_token, permissions } = await doExchange(
-        token
+      return rejectWithValue("Flujo inesperado.");
+    } catch (err) {
+      console.error("Error al iniciar sesión:", err);
+      return rejectWithValue(
+        err.response?.data?.error || "Error al iniciar sesión."
       );
+    }
+  }
+);
 
-      if (!access_token) {
-        token = await user.getIdToken(true);
-        ({ access_token, refresh_token, permissions } = await doExchange(
-          token
-        ));
-      }
+export const startVerifyLogin = createAsyncThunk(
+  "auth/startVerifyLogin",
+  async ({ userId, code }, { dispatch, rejectWithValue }) => {
+    try {
+      const resp = await axios.post(`${BASE_URL}/usuarios/verify-login`, {
+        userId,
+        code,
+      });
 
-      if (!access_token) {
-        throw new Error("No se recibió access_token del backend");
-      }
+      const { token, usuario, firebaseToken, permissions, trustToken } =
+        resp.data;
 
-      localStorage.setItem("access_token", access_token);
-      if (refresh_token) {
-        localStorage.setItem("refresh_token", refresh_token);
-      }
-      localStorage.setItem("nombreUsuario", nombre);
-      localStorage.setItem("correoUsuario", correoUsuario);
-      localStorage.setItem("usuarioId", usuarioId);
-      localStorage.setItem("roleId", roleId);
-      localStorage.setItem("paisId", paisId);
-      if (avatar) localStorage.setItem("avatar", avatar);
+      // Store tokens
+      localStorage.setItem("access_token", token);
+      if (trustToken) localStorage.setItem("trust_token", trustToken);
 
+      // ... store other user data ...
+      const userData = {
+        id: usuario.id,
+        displayName: usuario.nombre + " " + usuario.apellido,
+        email: usuario.correo,
+        roleId: usuario.roleId,
+        paisId: usuario.paisId,
+      };
+      localStorage.setItem("userData", JSON.stringify(userData));
+
+      // Restore legacy keys for compatibility
+      localStorage.setItem("usuarioId", usuario.id);
+      localStorage.setItem("roleId", usuario.roleId);
+      localStorage.setItem("nombreUsuario", userData.displayName);
+      if (usuario.correo) localStorage.setItem("correoUsuario", usuario.correo);
+      localStorage.setItem("isAuthenticated", "true");
+
+      // Update Redux state
       dispatch(
         login({
-          uid: user.uid,
-          email: correoUsuario,
-          displayName: nombre,
-          token: access_token,
-          roleId,
-          paisId,
-          rutas: resp.data.usuario.rutas?.map((r) => r.id) ?? [],
-          rutasFull: resp.data.usuario.rutas,
-          id: usuarioId,
-          permissions,
-          photoURL: avatar,
+          uid: usuario.id,
+          email: usuario.correo,
+          displayName: usuario.nombre,
+          token: token,
+          roleId: usuario.roleId,
+          permissions: permissions,
+          user: usuario,
         })
       );
 
-      await dispatch(fetchCurrentUser());
-
       return { success: true };
     } catch (err) {
-      console.error("Error al iniciar sesión:", err);
-      let msg = "Error al iniciar sesión. Verifica tus credenciales.";
-
-      if (err.code === "auth/user-not-found") {
-        msg =
-          "Este correo no está registrado en el sistema. Por favor regístrate o crea una cuenta.";
-      } else if (
-        err.code === "auth/invalid-credential" ||
-        err.code === "auth/wrong-password"
-      ) {
-        try {
-          await axios.post(`${BASE_URL}/usuarios/datos`, { correo });
-          msg = "Contraseña incorrecta. Por favor verifica e intenta de nuevo.";
-        } catch (backendErr) {
-          if (backendErr.response && backendErr.response.status === 404) {
-            msg =
-              "Este correo no está registrado en el sistema. Por favor regístrate o crea una cuenta.";
-          } else {
-            msg =
-              "Correo o contraseña incorrectos. Por favor verifica e intenta de nuevo.";
-          }
-        }
-      } else if (err.code === "auth/invalid-email") {
-        msg = "El formato del correo electrónico no es válido.";
-      } else if (err.code === "auth/too-many-requests") {
-        msg =
-          "Demasiados intentos fallidos. Por favor espera unos minutos e intenta de nuevo.";
-      } else if (err.code === "auth/network-request-failed") {
-        msg = "Error de conexión. Por favor revisa tu internet.";
-      } else if (err.response?.data?.message) {
-        msg = err.response.data.message;
-      } else if (err.response?.data?.error) {
-        msg = err.response.data.error;
-      } else if (typeof err === "string") {
-        msg = err;
-      }
-
-      return rejectWithValue(msg);
+      return rejectWithValue(err.response?.data?.error || "Código inválido.");
     }
   }
 );
@@ -367,13 +330,13 @@ export const verifyEmailCode = createAsyncThunk(
             email,
           });
         } catch (syncError) {
-          console.error(
-            "Error syncing verification with backend:",
-            syncError
-          );
+          console.error("Error syncing verification with backend:", syncError);
         }
       }
-      return { success: true, message: "¡Tu correo ha sido verificado exitosamente!" };
+      return {
+        success: true,
+        message: "¡Tu correo ha sido verificado exitosamente!",
+      };
     } catch (error) {
       console.error("Verification error:", error);
       let errorMessage = "Hubo un error al verificar el correo.";
@@ -394,7 +357,10 @@ export const sendPasswordResetEmail = createAsyncThunk(
       await axios.post(`${BASE_URL}/usuarios/recuperar-clave-custom`, {
         email,
       });
-      return { success: true, message: "Correo enviado. Revisa tu bandeja de entrada." };
+      return {
+        success: true,
+        message: "Correo enviado. Revisa tu bandeja de entrada.",
+      };
     } catch (error) {
       let errorMessage = "Hubo un error al enviar el correo.";
 
@@ -419,10 +385,15 @@ export const resetPasswordWithToken = createAsyncThunk(
         token,
         clave,
       });
-      return { success: true, message: "Tu contraseña ha sido cambiada exitosamente." };
+      return {
+        success: true,
+        message: "Tu contraseña ha sido cambiada exitosamente.",
+      };
     } catch (error) {
       console.error("Error al enviar la contraseña:", error);
-      return rejectWithValue("Hubo un error al cambiar la contraseña. Por favor, inténtalo de nuevo más tarde.");
+      return rejectWithValue(
+        "Hubo un error al cambiar la contraseña. Por favor, inténtalo de nuevo más tarde."
+      );
     }
   }
 );
@@ -431,9 +402,15 @@ export const activateUserChild = createAsyncThunk(
   "auth/activateUserChild",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${BASE_URL}/usuarios/activarUsuarioHijo`, userData);
+      const response = await axios.post(
+        `${BASE_URL}/usuarios/activarUsuarioHijo`,
+        userData
+      );
       if (response.status === 201) {
-        return { success: true, message: "Tu cuenta fue activada correctamente." };
+        return {
+          success: true,
+          message: "Tu cuenta fue activada correctamente.",
+        };
       } else {
         return rejectWithValue("No se pudo activar la cuenta.");
       }

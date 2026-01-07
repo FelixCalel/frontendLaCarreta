@@ -141,7 +141,8 @@ export const Perfil = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Hubo un problema al guardar los cambios.",
+        description:
+          error.message || "Hubo un problema al guardar los cambios.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -252,7 +253,7 @@ export const Perfil = () => {
                 />
               </FormControl>
 
-              <FormControl>
+              {/* <FormControl>
                 <FormLabel display="flex" alignItems="center" gap={2}>
                   <FaPhone color={iconColor} /> Teléfono
                 </FormLabel>
@@ -269,7 +270,7 @@ export const Perfil = () => {
                     borderColor: "brand.500",
                   }}
                 />
-              </FormControl>
+              </FormControl> */}
 
               {/* <FormControl>
                 <FormLabel display="flex" alignItems="center" gap={2}>
