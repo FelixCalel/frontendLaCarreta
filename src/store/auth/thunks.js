@@ -463,3 +463,61 @@ export const startUpdateProfile = createAsyncThunk(
     }
   }
 );
+
+// SMS Password Recovery Thunks
+
+export const requestSmsRecovery = createAsyncThunk(
+  "auth/requestSmsRecovery",
+  async (telefono, { rejectWithValue }) => {
+    try {
+      const resp = await axios.post(
+        `${BASE_URL}/usuarios/recuperar-clave-sms`,
+        {
+          telefono,
+        }
+      );
+      return resp.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error || "Error al solicitar el código."
+      );
+    }
+  }
+);
+
+export const verifySmsRecovery = createAsyncThunk(
+  "auth/verifySmsRecovery",
+  async ({ telefono, code }, { rejectWithValue }) => {
+    try {
+      const resp = await axios.post(
+        `${BASE_URL}/usuarios/verificar-clave-sms`,
+        {
+          telefono,
+          code,
+        }
+      );
+      return resp.data; // Expected to return { token: '...' }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error || "Código inválido o expirado."
+      );
+    }
+  }
+);
+
+export const resetPasswordSms = createAsyncThunk(
+  "auth/resetPasswordSms",
+  async ({ token, nuevaClave }, { rejectWithValue }) => {
+    try {
+      const resp = await axios.post(`${BASE_URL}/usuarios/cambiar-clave-sms`, {
+        token,
+        nuevaClave,
+      });
+      return resp.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error || "Error al restablecer la contraseña."
+      );
+    }
+  }
+);
