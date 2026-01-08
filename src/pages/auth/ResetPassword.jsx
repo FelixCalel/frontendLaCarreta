@@ -16,14 +16,17 @@ import {
   InputRightElement,
 } from "@chakra-ui/react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { confirmPasswordReset } from "firebase/auth";
+import { confirmPasswordReset, checkActionCode } from "firebase/auth";
 import { auth } from "../../middleware/firebase-config";
+import { useDispatch } from "react-redux";
+import { resetPasswordWithToken } from "../../store/auth/thunks";
 import { FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { AnimatedBackground } from "../../components/auth/AnimatedBackground";
 
 export const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const toast = useToast();
 
   const [newPassword, setNewPassword] = useState("");
@@ -74,7 +77,28 @@ export const ResetPassword = () => {
     setIsLoading(true);
 
     try {
+      // 1. Get email from the code
+      const info = await checkActionCode(auth, oobCode);
+      const email = info["data"]["email"];
+
+      // 2. Update Firebase
       await confirmPasswordReset(auth, oobCode, newPassword);
+
+      // 3. Update Backend (Postgres)
+      const resultAction = await dispatch(
+        resetPasswordWithToken({
+          correo_electronico: email,
+          token: "firebase-verified", // Backend ignores token for this endpoint, acts as trusted update
+          clave: newPassword,
+        })
+      );
+
+      if (!resetPasswordWithToken.fulfilled.match(resultAction)) {
+        throw new Error(
+          resultAction.payload || "Error al actualizar en servidor."
+        );
+      }
+
       toast({
         title: "Contraseña restablecida",
         description:

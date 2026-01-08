@@ -25,7 +25,7 @@ import {
   useToast,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { FaUser, FaCamera, FaPhone, FaSave } from "react-icons/fa";
+import { FaUser, FaCamera, FaPhone, FaSave, FaEnvelope } from "react-icons/fa";
 
 export const Perfil = () => {
   const dispatch = useDispatch();
@@ -253,26 +253,26 @@ export const Perfil = () => {
                 />
               </FormControl>
 
-              {/* <FormControl>
+              <FormControl>
                 <FormLabel display="flex" alignItems="center" gap={2}>
                   <FaPhone color={iconColor} /> Teléfono
                 </FormLabel>
                 <Input
                   name="telefono"
                   value={userData.telefono}
-                  onChange={handleChange}
-                  focusBorderColor="brand.500"
+                  isReadOnly
                   variant="filled"
                   bg={inputBg}
                   _hover={{ bg: inputHoverBg }}
-                  _focus={{
-                    bg: inputFocusBg,
-                    borderColor: "brand.500",
-                  }}
+                  cursor="not-allowed"
+                  color="gray.500"
                 />
-              </FormControl> */}
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  El teléfono no se puede modificar.
+                </Text>
+              </FormControl>
 
-              {/* <FormControl>
+              <FormControl>
                 <FormLabel display="flex" alignItems="center" gap={2}>
                   <FaEnvelope color={iconColor} /> Correo Electrónico
                 </FormLabel>
@@ -289,7 +289,7 @@ export const Perfil = () => {
                 <Text fontSize="xs" color="gray.500" mt={1}>
                   El correo electrónico no se puede modificar.
                 </Text>
-              </FormControl> */}
+              </FormControl>
             </SimpleGrid>
           </CardBody>
 

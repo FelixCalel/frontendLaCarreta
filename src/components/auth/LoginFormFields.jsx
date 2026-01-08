@@ -52,7 +52,7 @@ export const LoginFormFields = ({ onSubmit, isLoading, error }) => {
             <FormLabel>Correo electrónico o Teléfono</FormLabel>
             <Input
               type="text"
-              placeholder="correo@ejemplo.com o #numero"
+              placeholder="correo@ejemplo.com o 3210..."
               value={correo}
               onChange={(e) => setCorreo(e.target.value)}
               autoComplete="email"

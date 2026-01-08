@@ -60,10 +60,11 @@ const OTPVerificationModal = ({
             placeholder="Código SMS"
             value={verifyCode}
             onChange={(e) => setVerifyCode(e.target.value)}
+            textAlign="center"
+            fontSize="2xl"
+            letterSpacing="widest"
             maxLength={6}
             autoComplete="one-time-code"
-            type="number"
-            mb={2}
           />
           <Text fontSize="xs" color="gray.500">
             Detectando código automáticamente...
