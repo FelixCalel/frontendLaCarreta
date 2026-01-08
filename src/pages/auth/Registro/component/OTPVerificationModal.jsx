@@ -58,8 +58,8 @@ const OTPVerificationModal = ({
           </Text>
           <Input
             placeholder="Código SMS"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
+            value={verifyCode}
+            onChange={(e) => setVerifyCode(e.target.value)}
             textAlign="center"
             fontSize="2xl"
             letterSpacing="widest"

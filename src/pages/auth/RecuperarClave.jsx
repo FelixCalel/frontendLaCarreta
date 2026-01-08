@@ -61,7 +61,7 @@ export const RecuperarClave = () => {
             isClosable: true,
             position: "top-right",
           });
-          setIdentifier("");
+          navigate("/auth/login");
         } else {
           throw new Error(resultAction.payload || "Error al enviar correo.");
         }
@@ -230,7 +230,7 @@ export const RecuperarClave = () => {
         <InputGroup>
           <Input
             type="text"
-            placeholder="Ej: ejemplo@correo.com o +502..."
+            placeholder="ejemplo@correo.com o 3210..."
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             bg={inputBg}

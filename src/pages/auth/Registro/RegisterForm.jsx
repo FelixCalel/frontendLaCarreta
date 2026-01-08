@@ -95,6 +95,10 @@ const RegisterForm = () => {
       ) {
         newErrors.contact = "Ingresa un correo o teléfono válido";
       }
+
+      if (emailRegex.test(formData.contact) && !formData.telefono) {
+        newErrors.telefono = "El teléfono es obligatorio";
+      }
     } else if (activeStep === 2) {
       if (!formData.contrasena)
         newErrors.contrasena = "La contraseña es obligatoria";
