@@ -381,7 +381,7 @@ export const resetPasswordWithToken = createAsyncThunk(
   async ({ token, correo_electronico, clave }, { rejectWithValue }) => {
     try {
       await axios.post(`${BASE_URL}/usuarios/recuperar-clave`, {
-        correo_electronico,
+        correo: correo_electronico,
         token,
         clave,
       });
