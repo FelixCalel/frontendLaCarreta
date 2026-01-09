@@ -6,11 +6,71 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const tablaPedidos = createAsyncThunk(
   "pedidos/fetchPedidos",
+  async (arg = null) => {
+    let url = `${BASE_URL}/form/pedidos/todos`;
+
+    if (arg && typeof arg === "object") {
+      const { userId, roleId, status, page, limit } = arg;
+      if (userId) {
+        const p = page || 1;
+        const l = limit || 200;
+        url = `${BASE_URL}/form/pedidos/historial/${userId}?roleId=${roleId}&page=${p}&limit=${l}`;
+        if (status) {
+          url += `&status=${status}`;
+        }
+        if (arg.filters) {
+          const { tienda, deudor, usuario, fechaInicio, fechaFin } =
+            arg.filters;
+          if (tienda) url += `&tienda=${encodeURIComponent(tienda)}`;
+          if (deudor) url += `&deudor=${encodeURIComponent(deudor)}`;
+          if (usuario) url += `&usuario=${encodeURIComponent(usuario)}`;
+          if (fechaInicio) url += `&fechaInicio=${fechaInicio}`;
+          if (fechaFin) url += `&fechaFin=${fechaFin}`;
+        }
+      } else if (status) {
+        const p = page || 1;
+        const l = limit || 10;
+        url = `${BASE_URL}/form/pedidos/estado/${status}?page=${p}&limit=${l}`;
+      }
+    } else if (arg) {
+      url = `${BASE_URL}/form/pedidos/estado/${arg}`;
+    }
+
+    const response = await axios.get(url);
+    const resData = response.data;
+
+    let resultData = [];
+    let resultTotal = 0;
+
+    if (resData.data && Array.isArray(resData.data)) {
+      resultData = resData.data;
+      resultTotal = resData.total;
+    } else if (Array.isArray(resData)) {
+      resultData = resData;
+      resultTotal = resData.length;
+    }
+
+    resultData.sort((a, b) => a.id - b.id);
+
+    return { data: resultData, total: resultTotal };
+  }
+);
+
+export const fetchIncomingPedidos = createAsyncThunk(
+  "pedidos/fetchIncomingPedidos",
   async () => {
-    const response = await axios.get(`${BASE_URL}/form/pedidos/todos`);
-    const data = response.data;
-    data.sort((a, b) => a.id - b.id);
-    return data;
+    const response = await axios.get(`${BASE_URL}/form/pedidos/estado/2`);
+    return response.data;
+  }
+);
+
+export const fetchFilterOptions = createAsyncThunk(
+  "pedidos/fetchFilterOptions",
+  async ({ userId, roleId }) => {
+    const response = await axios.get(
+      `${BASE_URL}/form/pedidos/historial/filtros/${userId}?roleId=${roleId}`
+    );
+    return response.data;
   }
 );
 
@@ -106,13 +166,17 @@ export const tablaPedidosConDetalles = createAsyncThunk(
 
       const pedidosConDetalles = await Promise.all(
         pedidos.map(async (pedido) => {
-          // Check if we already have details for this pedido in the state
-          const existingPedido = existingPedidos.find(p => p.id === pedido.id);
-          
-          if (existingPedido && existingPedido.items && existingPedido.items.length > 0) {
-             // Use existing items if available
-             pedido.items = existingPedido.items;
-             return pedido;
+          const existingPedido = existingPedidos.find(
+            (p) => p.id === pedido.id
+          );
+
+          if (
+            existingPedido &&
+            existingPedido.items &&
+            existingPedido.items.length > 0
+          ) {
+            pedido.items = existingPedido.items;
+            return pedido;
           }
 
           try {

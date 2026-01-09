@@ -18,6 +18,7 @@ import {
   IconButton,
   Switch,
   useColorModeValue,
+  Spinner,
 } from "@chakra-ui/react";
 import { FiUserPlus, FiSearch } from "react-icons/fi";
 import RolSelector from "./componentes/RolSelector";
@@ -47,7 +48,7 @@ export const TablaBusuarios = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [isAssigning, setIsAssigning] = useState(false);
-  const { items: usuarios } = useSelector((state) => state.usuarios);
+  const { items: usuarios, status } = useSelector((state) => state.usuarios);
   const tiendas = useSelector((state) => state.tiendas.tiendas);
   const rutasData = useSelector((state) => state.rutas.data);
 
@@ -76,26 +77,28 @@ export const TablaBusuarios = () => {
     }
   }, [rutasData]);
 
-  const usuariosFiltrados = (Array.isArray(usuarios) ? usuarios : []).filter((u) => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) return true;
+  const usuariosFiltrados = (Array.isArray(usuarios) ? usuarios : [])
+    .filter((u) => {
+      const term = searchTerm.trim().toLowerCase();
+      if (!term) return true;
 
-    const nombre = (u.nombre ?? "").toLowerCase();
-    const apellido = (u.apellido ?? "").toLowerCase();
-    const correo = (u.correo ?? "").toLowerCase();
-    const nombreCompleto = `${nombre} ${apellido}`.trim();
+      const nombre = (u.nombre ?? "").toLowerCase();
+      const apellido = (u.apellido ?? "").toLowerCase();
+      const correo = (u.correo ?? "").toLowerCase();
+      const nombreCompleto = `${nombre} ${apellido}`.trim();
 
-    return (
-      nombre.includes(term) ||
-      apellido.includes(term) ||
-      nombreCompleto.includes(term) ||
-      correo.includes(term)
-    );
-  }).sort((a, b) => {
-    const nombreA = (a.nombre ?? "").toLowerCase();
-    const nombreB = (b.nombre ?? "").toLowerCase();
-    return nombreA.localeCompare(nombreB);
-  });
+      return (
+        nombre.includes(term) ||
+        apellido.includes(term) ||
+        nombreCompleto.includes(term) ||
+        correo.includes(term)
+      );
+    })
+    .sort((a, b) => {
+      const nombreA = (a.nombre ?? "").toLowerCase();
+      const nombreB = (b.nombre ?? "").toLowerCase();
+      return nombreA.localeCompare(nombreB);
+    });
 
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
@@ -212,75 +215,92 @@ export const TablaBusuarios = () => {
       </Flex>
 
       <Box borderRadius="md" boxShadow="lg" p={8} bg={containerBg} mt={-8}>
-        <Table variant="simple">
-          <Thead bg={tableHeaderBg}>
-            <Tr>
-              <Th color={tableHeaderColor}>Nombre</Th>
-              <Th color={tableHeaderColor}>Correo</Th>
-              <Th color={tableHeaderColor}>Estado</Th>
-              <Th color={tableHeaderColor}>Teléfono</Th>
-              <Th color={tableHeaderColor}>Acciones</Th>
-              <Th color={tableHeaderColor}>Roles Asignados</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {usuariosPagina.map((usuario) => {
-              const rolUsuario = allRoles.find(
-                (rol) => rol.id === usuario.roleId
-              );
-              return (
-                <Tr key={usuario.id} _hover={{ bg: rowHoverBg }}>
-                  <Td>
-                    {usuario.nombre} {usuario.apellido}
-                  </Td>
-                  <Td>{usuario.correo}</Td>
-                  <Td>
-                    <Switch
-                      isChecked={usuario.estaActivo}
-                      onChange={() =>
-                        toggleUsuarioEstado(usuario.id, usuario.estaActivo)
-                      }
-                      colorScheme="green"
-                    />
-                  </Td>
-                  <Td>{usuario.telefono}</Td>
-                  <Td>
-                    <Stack align="center" direction="row">
-                      <Button
-                        size="sm"
-                        onClick={() => handleOpenAssignRutas(usuario)}
-                        leftIcon={<FiUserPlus />}
-                        colorScheme="green"
-                        variant="solid"
-                        _hover={{ bg: "green.300" }}
-                      >
-                        Asignar Rutas
-                      </Button>
-                    </Stack>
-                  </Td>
-                  <Td>
-                    {roleIdLogueado === "1" ? (
-                      <RolSelector
-                        usuarioId={usuario.id}
-                        currentRoleId={usuario.roleId}
-                        roles={allRoles}
-                      />
-                    ) : (
-                      <Text>{rolUsuario?.nombre || "Sin rol"}</Text>
-                    )}
-                  </Td>
+        {status === "loading" ? (
+          <Box textAlign="center" py={10}>
+            <Spinner
+              size="xl"
+              thickness="4px"
+              speed="0.65s"
+              emptyColor="gray.200"
+              color="green.500"
+            />
+            <Text mt={4} fontWeight="medium" color={headingColor}>
+              Cargando usuarios...
+            </Text>
+          </Box>
+        ) : (
+          <>
+            <Table variant="simple">
+              <Thead bg={tableHeaderBg}>
+                <Tr>
+                  <Th color={tableHeaderColor}>Nombre</Th>
+                  <Th color={tableHeaderColor}>Correo</Th>
+                  <Th color={tableHeaderColor}>Estado</Th>
+                  <Th color={tableHeaderColor}>Teléfono</Th>
+                  <Th color={tableHeaderColor}>Acciones</Th>
+                  <Th color={tableHeaderColor}>Roles Asignados</Th>
                 </Tr>
-              );
-            })}
-          </Tbody>
-        </Table>
+              </Thead>
+              <Tbody>
+                {usuariosPagina.map((usuario) => {
+                  const rolUsuario = allRoles.find(
+                    (rol) => rol.id === usuario.roleId
+                  );
+                  return (
+                    <Tr key={usuario.id} _hover={{ bg: rowHoverBg }}>
+                      <Td>
+                        {usuario.nombre} {usuario.apellido}
+                      </Td>
+                      <Td>{usuario.correo}</Td>
+                      <Td>
+                        <Switch
+                          isChecked={usuario.estaActivo}
+                          onChange={() =>
+                            toggleUsuarioEstado(usuario.id, usuario.estaActivo)
+                          }
+                          colorScheme="green"
+                        />
+                      </Td>
+                      <Td>{usuario.telefono}</Td>
+                      <Td>
+                        <Stack align="center" direction="row">
+                          <Button
+                            size="sm"
+                            onClick={() => handleOpenAssignRutas(usuario)}
+                            leftIcon={<FiUserPlus />}
+                            colorScheme="green"
+                            variant="solid"
+                            _hover={{ bg: "green.300" }}
+                          >
+                            Asignar Rutas
+                          </Button>
+                        </Stack>
+                      </Td>
+                      <Td>
+                        {roleIdLogueado === "1" ? (
+                          <RolSelector
+                            usuarioId={usuario.id}
+                            currentRoleId={usuario.roleId}
+                            roles={allRoles}
+                          />
+                        ) : (
+                          <Text>{rolUsuario?.nombre || "Sin rol"}</Text>
+                        )}
+                      </Td>
+                    </Tr>
+                  );
+                })}
+              </Tbody>
+            </Table>
 
-        <Pagination
-          currentPage={currentPage}
-          totalItems={usuariosFiltrados.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-        />
+            <Pagination
+              currentPage={currentPage}
+              totalItems={usuariosFiltrados.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        )}
       </Box>
 
       {selectedUser && (

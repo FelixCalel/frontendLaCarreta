@@ -8,12 +8,17 @@ import {
   tablaPedidosConDetalles,
   updatePedidoActivacion,
   exportarPedidoSap,
+  fetchIncomingPedidos,
+  fetchFilterOptions,
 } from "./thunks";
 
 const pedidoSlice = createSlice({
   name: "pedidos",
   initialState: {
     data: [],
+    total: 0,
+    filterOptions: { tiendas: [], deudores: [], usuarios: [] },
+    incomingData: [],
     pedidosConDetalles: [],
     status: "idle",
     error: null,
@@ -21,7 +26,15 @@ const pedidoSlice = createSlice({
     exportResultado: null,
     exportError: null,
   },
-  reducers: {},
+  reducers: {
+    clearPedidos: (state) => {
+      state.data = [];
+      state.total = 0;
+      state.pedidosConDetalles = [];
+      state.status = "idle";
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(tablaPedidos.pending, (state) => {
@@ -29,12 +42,31 @@ const pedidoSlice = createSlice({
       })
       .addCase(tablaPedidos.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.data = Array.isArray(action.payload) ? action.payload : [];
+        if (
+          action.payload &&
+          typeof action.payload === "object" &&
+          !Array.isArray(action.payload) &&
+          "data" in action.payload
+        ) {
+          state.data = action.payload.data;
+          state.total = action.payload.total;
+        } else {
+          state.data = Array.isArray(action.payload) ? action.payload : [];
+          state.total = state.data.length;
+        }
         state.data.sort((a, b) => b.id - a.id);
       })
       .addCase(tablaPedidos.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message;
+      })
+      .addCase(fetchIncomingPedidos.fulfilled, (state, action) => {
+        state.incomingData = Array.isArray(action.payload)
+          ? action.payload
+          : [];
+      })
+      .addCase(fetchFilterOptions.fulfilled, (state, action) => {
+        state.filterOptions = action.payload;
       })
       .addCase(addNewPedido.fulfilled, (state, action) => {
         state.data.push(action.payload);
@@ -109,4 +141,5 @@ const pedidoSlice = createSlice({
   },
 });
 
+export const { clearPedidos } = pedidoSlice.actions;
 export default pedidoSlice.reducer;

@@ -15,7 +15,12 @@ const RutaSelector = ({ value, onChange }) => {
   }, [dispatch, rutas.data.length]);
 
   return (
-    <Select value={value} onChange={onChange} placeholder="Seleccionar ruta">
+    <Select
+      name="rutaId"
+      value={value}
+      onChange={onChange}
+      placeholder="Seleccionar ruta"
+    >
       {rutas.data.map((ruta) => (
         <option key={ruta.id} value={ruta.id}>
           {ruta.nombre}

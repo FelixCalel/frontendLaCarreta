@@ -35,7 +35,11 @@ const PedidosTable = ({
           }
         `}
       </style>
-      <Table variant="striped" colorScheme="gray" sx={{ "--blink-color": blinkBg }}>
+      <Table
+        variant="striped"
+        colorScheme="gray"
+        sx={{ "--blink-color": blinkBg }}
+      >
         <Thead>
           <Tr>
             <Th>ID</Th>
@@ -51,9 +55,11 @@ const PedidosTable = ({
         </Thead>
         <Tbody>
           {pedidos.map((pedido) => {
-            const isHighlighted = highlightedPedidoId && Number(highlightedPedidoId) === pedido.id;
+            const isHighlighted =
+              highlightedPedidoId && Number(highlightedPedidoId) === pedido.id;
             return (
-              <Tr 
+              <Tr
+                id={`pedido-${pedido.id}`}
                 key={pedido.id}
                 animation={isHighlighted ? "blink 1s infinite" : undefined}
                 onClick={isHighlighted ? onClearHighlight : undefined}
@@ -142,7 +148,10 @@ PedidosTable.propTypes = {
   ).isRequired,
   roleId: PropTypes.number.isRequired,
   onVerDetalles: PropTypes.func.isRequired,
-  highlightedPedidoId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  highlightedPedidoId: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number,
+  ]),
   onClearHighlight: PropTypes.func,
 };
 

@@ -29,11 +29,9 @@ export const LoginForm = () => {
   const actualUsuario = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // 2FA State
   const {
     isOpen: is2FAOpen,
     onOpen: on2FAOpen,
@@ -50,7 +48,6 @@ export const LoginForm = () => {
     }
   }, [actualUsuario, navigate]);
 
-  // WebOTP API for Auto-fill
   useEffect(() => {
     if (is2FAOpen && "OTPCredential" in window) {
       const ac = new AbortController();
@@ -82,18 +79,15 @@ export const LoginForm = () => {
       );
 
       if (startLogin.fulfilled.match(action)) {
-        // Check if 2FA is needed (returned by payload)
         const payload = action.payload;
         if (payload.status === "2fa_required") {
           setVerifyUserId(payload.userId);
           setMaskedPhone(payload.maskedPhone || "");
           on2FAOpen();
         } else {
-          // If direct login was allowed (not currently implemented but good to have)
           navigate("/auth/home", { replace: true });
         }
       } else {
-        // Error handled via rejectWithValue
         const errMsg = action.payload || "Error al iniciar sesión";
         setError(errMsg);
       }
@@ -117,8 +111,6 @@ export const LoginForm = () => {
         navigate("/auth/home", { replace: true });
       } else {
         setError(action.payload || "Código incorrecto");
-        // Don't close modal, show error inside or logic to persist?
-        // Currently error state is global for the form, might look weird but works
         alert(action.payload || "Código incorrecto");
       }
     } catch (err) {
