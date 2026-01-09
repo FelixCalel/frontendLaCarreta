@@ -19,13 +19,14 @@ export const tablaPedidos = createAsyncThunk(
           url += `&status=${status}`;
         }
         if (arg.filters) {
-          const { tienda, deudor, usuario, fechaInicio, fechaFin } =
+          const { tienda, deudor, usuario, fechaInicio, fechaFin, estado } =
             arg.filters;
           if (tienda) url += `&tienda=${encodeURIComponent(tienda)}`;
           if (deudor) url += `&deudor=${encodeURIComponent(deudor)}`;
           if (usuario) url += `&usuario=${encodeURIComponent(usuario)}`;
           if (fechaInicio) url += `&fechaInicio=${fechaInicio}`;
           if (fechaFin) url += `&fechaFin=${fechaFin}`;
+          if (estado) url += `&status=${estado}`;
         }
       } else if (status) {
         const p = page || 1;
