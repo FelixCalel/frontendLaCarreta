@@ -122,9 +122,10 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
 
     if (pedidoId) {
       const navigationState = { state: { highlightedPedidoId: pedidoId } };
+      console.log("Navigating to historial with state:", navigationState);
       if (roleId === "3") {
         navigate(`/pedidos/entrantes`, navigationState);
-      } else if (roleId === "2") {
+      } else {
         navigate(`/historialPedido/listar`, navigationState);
       }
     }
@@ -140,9 +141,9 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
 
   const filteredNotificaciones = notificaciones.filter((n) => {
     const nUsuarioId = n.usuarioId || (n.data && n.data.usuarioId);
-    
+
     if (!nUsuarioId || parseInt(nUsuarioId) !== usuarioId) {
-      return false; 
+      return false;
     }
 
     if (roleId === "3") {

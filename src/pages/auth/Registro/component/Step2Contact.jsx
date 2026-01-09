@@ -1,8 +1,15 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { VStack, InputGroup, InputLeftElement, Input } from '@chakra-ui/react';
-import { PhoneIcon } from '@chakra-ui/icons';
-import ContactField from './ContactField';
+import React from "react";
+import PropTypes from "prop-types";
+import {
+  VStack,
+  InputGroup,
+  InputLeftElement,
+  Input,
+  FormControl,
+  Text,
+} from "@chakra-ui/react";
+import { PhoneIcon } from "@chakra-ui/icons";
+import ContactField from "./ContactField";
 
 const isEmail = (v) => /^\S+@\S+\.\S+$/.test(v);
 
@@ -16,21 +23,28 @@ const Step2Contact = ({ formData, handleChange, errors }) => {
       />
 
       {isEmail(formData.contact) && (
-        <InputGroup>
-          <InputLeftElement pointerEvents="none">
-            <PhoneIcon color="gray.400" />
-          </InputLeftElement>
-          <Input
-            name="telefono"
-            type="text"
-            placeholder="Ingresa tu teléfono (opcional)"
-            value={formData.telefono}
-            onChange={handleChange}
-            focusBorderColor="green.500"
-            borderRadius="md"
-            size="lg"
-          />
-        </InputGroup>
+        <FormControl isInvalid={!!errors.telefono}>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <PhoneIcon color="gray.400" />
+            </InputLeftElement>
+            <Input
+              name="telefono"
+              type="text"
+              placeholder="Ingresa tu teléfono"
+              value={formData.telefono}
+              onChange={handleChange}
+              focusBorderColor="green.500"
+              borderRadius="md"
+              size="lg"
+            />
+          </InputGroup>
+          {errors.telefono && (
+            <Text fontSize="sm" color="red.500" mt={1}>
+              {errors.telefono}
+            </Text>
+          )}
+        </FormControl>
       )}
     </VStack>
   );

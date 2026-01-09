@@ -25,7 +25,7 @@ import {
   useToast,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { FaUser, FaCamera, FaPhone, FaSave } from "react-icons/fa";
+import { FaUser, FaCamera, FaPhone, FaSave, FaEnvelope } from "react-icons/fa";
 
 export const Perfil = () => {
   const dispatch = useDispatch();
@@ -141,7 +141,8 @@ export const Perfil = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Hubo un problema al guardar los cambios.",
+        description:
+          error.message || "Hubo un problema al guardar los cambios.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -259,19 +260,19 @@ export const Perfil = () => {
                 <Input
                   name="telefono"
                   value={userData.telefono}
-                  onChange={handleChange}
-                  focusBorderColor="brand.500"
+                  isReadOnly
                   variant="filled"
                   bg={inputBg}
                   _hover={{ bg: inputHoverBg }}
-                  _focus={{
-                    bg: inputFocusBg,
-                    borderColor: "brand.500",
-                  }}
+                  cursor="not-allowed"
+                  color="gray.500"
                 />
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  El teléfono no se puede modificar.
+                </Text>
               </FormControl>
 
-              {/* <FormControl>
+              <FormControl>
                 <FormLabel display="flex" alignItems="center" gap={2}>
                   <FaEnvelope color={iconColor} /> Correo Electrónico
                 </FormLabel>
@@ -288,7 +289,7 @@ export const Perfil = () => {
                 <Text fontSize="xs" color="gray.500" mt={1}>
                   El correo electrónico no se puede modificar.
                 </Text>
-              </FormControl> */}
+              </FormControl>
             </SimpleGrid>
           </CardBody>
 

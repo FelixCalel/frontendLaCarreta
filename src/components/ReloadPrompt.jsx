@@ -1,5 +1,18 @@
-import { useRegisterSW } from "virtual:pwa-register/react";
-import { Box, Button, Text, useToast, VStack, HStack, Icon } from "@chakra-ui/react";
+// import { useRegisterSW } from "virtual:pwa-register/react";
+const useRegisterSW = () => ({
+  offlineReady: [false, () => {}],
+  needRefresh: [false, () => {}],
+  updateServiceWorker: () => {},
+});
+import {
+  Box,
+  Button,
+  Text,
+  useToast,
+  VStack,
+  HStack,
+  Icon,
+} from "@chakra-ui/react";
 import { useEffect } from "react";
 import { FiRefreshCw, FiCheckCircle } from "react-icons/fi";
 
@@ -10,8 +23,7 @@ export function ReloadPrompt() {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r) {
-    },
+    onRegistered(r) {},
     onRegisterError(error) {
       console.log("SW registration error", error);
     },
@@ -42,7 +54,12 @@ export function ReloadPrompt() {
               <Text fontWeight="bold">Listo para trabajar sin conexión</Text>
               <Text fontSize="sm">La aplicación se ha guardado en caché.</Text>
             </VStack>
-            <Button size="sm" variant="ghost" onClick={close} _hover={{ bg: "teal.700" }}>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={close}
+              _hover={{ bg: "teal.700" }}
+            >
               Cerrar
             </Button>
           </Box>
@@ -112,11 +129,16 @@ export function ReloadPrompt() {
   }, [needRefresh, toast, updateServiceWorker]);
 
   useEffect(() => {
-    if (process.env.NODE_ENV === "development" && "serviceWorker" in navigator) {
+    if (
+      process.env.NODE_ENV === "development" &&
+      "serviceWorker" in navigator
+    ) {
       navigator.serviceWorker.getRegistrations().then((registrations) => {
         for (let registration of registrations) {
           registration.unregister();
-          console.log("Service Worker unregistered in dev mode to prevent logs.");
+          console.log(
+            "Service Worker unregistered in dev mode to prevent logs."
+          );
         }
       });
     }

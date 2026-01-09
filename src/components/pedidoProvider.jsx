@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import PropTypes from "prop-types";
-import { tablaPedidos } from "../store/Pedidos/thunks";
+import { fetchIncomingPedidos } from "../store/Pedidos/thunks";
 
 export const PedidoProvider = ({ children }) => {
   const dispatch = useDispatch();
@@ -11,7 +11,7 @@ export const PedidoProvider = ({ children }) => {
     if (status !== "authenticated") return;
 
     const fetchPedidos = () => {
-      dispatch(tablaPedidos());
+      dispatch(fetchIncomingPedidos());
     };
 
     fetchPedidos();

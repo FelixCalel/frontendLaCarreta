@@ -1,15 +1,24 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { Box, Heading, useToast, useColorModeValue } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  useToast,
+  useColorModeValue,
+  Spinner,
+} from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import { tablaPedidos } from "../../../store/Pedidos/thunks";
+import {
+  tablaPedidos,
+  fetchFilterOptions,
+} from "../../../store/Pedidos/thunks";
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
 import Pagination from "../../../components/pagination";
 import PedidosTable from "./componente/pedidosTable";
 import PedidosCardList from "./componente/pedidoCardList";
 import DetallesPedidoModal from "./componente/detallesPedidoModal";
 import HistorialFilters from "./componente/HistorialFilters";
-import { selectPedidosEntrantesPorRuta } from "../pedidosEntrantes/componentes/rutaSelectors";
+
 import { useSearch } from "../../../components/component/SearchContext";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 
@@ -31,8 +40,6 @@ const HistorialPedidosPage = () => {
   const headingColor = useColorModeValue("teal.600", "teal.200");
   const noDataTextColor = useColorModeValue("gray.500", "gray.400");
 
-  const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
-
   const [filters, setFilters] = useState({
     tienda: "",
     deudor: "",
@@ -49,85 +56,62 @@ const HistorialPedidosPage = () => {
     }
   }, [location]);
 
+  const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
+
+  useEffect(() => {
+    if (highlightedPedidoId) {
+      const element = document.getElementById(`pedido-${highlightedPedidoId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      const timer = setTimeout(() => {
+        setHighlightedPedidoId(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedPedidoId]);
+
   const handleClearHighlight = useCallback(() => {
     setHighlightedPedidoId(null);
   }, []);
 
-  const todosLosPedidos = useSelector((state) => state.pedidos.data || []);
+  const {
+    data: todosLosPedidos = [],
+    status,
+    total,
+    filterOptions,
+  } = useSelector((state) => state.pedidos);
 
-  const selectHistorial = useMemo(
-    () => selectPedidosEntrantesPorRuta([2, 3, 4, 5]),
-    []
-  );
-  const pedidosPorRuta = useSelector(selectHistorial);
+  const filteredPedidos = todosLosPedidos;
+  const currentPedidos = filteredPedidos;
 
-  const pedidosHistorial =
-    roleId === 2
-      ? todosLosPedidos.filter(
-          (p) => p.usuarioId === usuarioId && [2, 3, 4, 5].includes(p.estadoId)
-        )
-      : pedidosPorRuta;
+  useEffect(() => {
+    if (usuarioId && roleId) {
+      dispatch(fetchFilterOptions({ userId: usuarioId, roleId }));
+    }
+  }, [dispatch, usuarioId, roleId]);
 
   const uniqueValues = useMemo(() => {
-    const tiendas = [
-      ...new Set(pedidosHistorial.map((p) => p.nombreTienda).filter(Boolean)),
-    ].sort();
-    const deudores = [
-      ...new Set(pedidosHistorial.map((p) => p.nombreDeu).filter(Boolean)),
-    ].sort();
-    const usuarios = [
-      ...new Set(pedidosHistorial.map((p) => p.nombreUsuario).filter(Boolean)),
-    ].sort();
-    return { tiendas, deudores, usuarios };
-  }, [pedidosHistorial]);
-
-  const filteredPedidos = useMemo(() => {
-    return pedidosHistorial.filter((pedido) => {
-      if (query) {
-        const searchLower = query.toLowerCase();
-        const matchesSearch =
-          pedido.id.toString().includes(searchLower) ||
-          (pedido.nombreCorrelativo &&
-            pedido.nombreCorrelativo.toLowerCase().includes(searchLower)) ||
-          (pedido.nombreDeu &&
-            pedido.nombreDeu.toLowerCase().includes(searchLower)) ||
-          (pedido.nombreTienda &&
-            pedido.nombreTienda.toLowerCase().includes(searchLower));
-        if (!matchesSearch) return false;
-      }
-
-      if (filters.tienda && pedido.nombreTienda !== filters.tienda)
-        return false;
-      if (filters.deudor && pedido.nombreDeu !== filters.deudor) return false;
-      if (filters.usuario && pedido.nombreUsuario !== filters.usuario)
-        return false;
-      if (filters.estado && pedido.estadoId !== filters.estado) return false;
-
-      if (filters.fechaInicio || filters.fechaFin) {
-        const pedidoDate = new Date(pedido.creadoEl)
-          .toISOString()
-          .split("T")[0];
-
-        if (filters.fechaInicio && pedidoDate < filters.fechaInicio)
-          return false;
-        if (filters.fechaFin && pedidoDate > filters.fechaFin) return false;
-      }
-
-      return true;
-    });
-  }, [pedidosHistorial, filters, query]);
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentPedidos = filteredPedidos.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
+    return filterOptions || { tiendas: [], deudores: [], usuarios: [] };
+  }, [filterOptions]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
 
   useEffect(() => {
     dispatch(tablaTienda());
-    dispatch(tablaPedidos());
-  }, [dispatch]);
+    if (usuarioId && roleId) {
+      dispatch(
+        tablaPedidos({
+          userId: usuarioId,
+          roleId: roleId,
+          page: currentPage,
+          limit: itemsPerPage,
+          filters: filters,
+        })
+      );
+    }
+  }, [dispatch, usuarioId, roleId, currentPage, filters]);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth <= 768);
@@ -198,7 +182,20 @@ const HistorialPedidosPage = () => {
         roleId={roleId}
       />
 
-      {filteredPedidos.length > 0 ? (
+      {status === "loading" ? (
+        <Box textAlign="center" mt={10}>
+          <Spinner
+            size="xl"
+            thickness="4px"
+            speed="0.65s"
+            emptyColor="gray.200"
+            color="teal.500"
+          />
+          <Box mt={4} fontWeight="medium" color={headingColor}>
+            Cargando historial...
+          </Box>
+        </Box>
+      ) : filteredPedidos.length > 0 ? (
         <>
           {isMobile ? (
             <PedidosCardList
@@ -217,7 +214,7 @@ const HistorialPedidosPage = () => {
           )}
           <Pagination
             currentPage={currentPage}
-            totalItems={filteredPedidos.length}
+            totalItems={total}
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
           />
