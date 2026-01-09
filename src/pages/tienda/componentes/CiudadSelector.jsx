@@ -15,7 +15,12 @@ const CiudadSelector = ({ value, onChange }) => {
   }, [dispatch, ciudades.data.length]);
 
   return (
-    <Select value={value} onChange={onChange} placeholder="Seleccionar ciudad">
+    <Select
+      name="ciudadId"
+      value={value}
+      onChange={onChange}
+      placeholder="Seleccionar ciudad"
+    >
       {ciudades.data.map((ciudad) => (
         <option key={ciudad.id} value={ciudad.id}>
           {ciudad.nombre}

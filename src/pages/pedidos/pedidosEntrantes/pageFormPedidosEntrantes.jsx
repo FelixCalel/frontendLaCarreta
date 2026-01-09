@@ -17,16 +17,19 @@ import {
   Text,
   useDisclosure,
   Input,
+  Spinner,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import { tablaPedidos, togglePedidoStatus } from "../../../store/Pedidos/thunks";
+import {
+  tablaPedidos,
+  togglePedidoStatus,
+} from "../../../store/Pedidos/thunks";
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 import Pagination from "../../../components/pagination";
 import PedidosTable from "../componentes/EntrantesFormPedidos/PedidosTable";
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
-import { selectPedidosEntrantesPorRuta } from "./componentes/rutaSelectors";
 import { useSearch } from "../../../components/component/SearchContext";
 
 const EntrantesPage = () => {
@@ -34,7 +37,7 @@ const EntrantesPage = () => {
   const location = useLocation();
   const toast = useToast();
   const { query } = useSearch();
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [detallesPedido, setDetallesPedido] = useState([]);
@@ -43,11 +46,23 @@ const EntrantesPage = () => {
   const itemsPerPage = 10;
   const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
 
-  const { isOpen: isCancelOpen, onOpen: onCancelOpen, onClose: onCancelClose } = useDisclosure();
+  // Get User Context
+  const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
+  const roleId = parseInt(localStorage.getItem("roleId"), 10);
+
+  const {
+    isOpen: isCancelOpen,
+    onOpen: onCancelOpen,
+    onClose: onCancelClose,
+  } = useDisclosure();
   const [cancelComment, setCancelComment] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { isOpen: isApproveOpen, onOpen: onApproveOpen, onClose: onApproveClose } = useDisclosure();
+  const {
+    isOpen: isApproveOpen,
+    onOpen: onApproveOpen,
+    onClose: onApproveClose,
+  } = useDisclosure();
   const [approveData, setApproveData] = useState({
     fechaOrdenDisplay: "",
     comentarioDisplay: "",
@@ -61,14 +76,34 @@ const EntrantesPage = () => {
   const textColor = useColorModeValue("gray.800", "white");
   const calendarFilter = useColorModeValue("none", "invert(1)");
 
-  const selectEntrantes = useMemo(() => selectPedidosEntrantesPorRuta([2]), []);
-  const pedidosEntrantes = useSelector(selectEntrantes);
-  const { isLoading } = useSelector((state) => state.pedidos);
+  // Selectors
+  const {
+    data: pedidosEntrantes,
+    status,
+    total,
+  } = useSelector((state) => state.pedidos);
+  const isLoading = status === "loading";
 
   useEffect(() => {
     dispatch(tablaTienda());
-    dispatch(tablaPedidos());
-  }, [dispatch]);
+    // Dispatch with User Context and Status 2 (Entrantes) + Pagination
+    if (usuarioId && roleId) {
+      dispatch(
+        tablaPedidos({
+          userId: usuarioId,
+          roleId: roleId,
+          status: 2,
+          page: currentPage,
+          limit: itemsPerPage,
+        })
+      );
+    } else {
+      // Fallback for missing user context
+      dispatch(
+        tablaPedidos({ status: 2, page: currentPage, limit: itemsPerPage })
+      );
+    }
+  }, [dispatch, currentPage, usuarioId, roleId]);
 
   useEffect(() => {
     if (location.state?.highlightedPedidoId) {
@@ -84,9 +119,13 @@ const EntrantesPage = () => {
   const handleVerDetalles = async (pedido) => {
     setSelectedPedido(pedido);
     try {
-      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedido.id)).unwrap();
+      const detalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedido.id)
+      ).unwrap();
       const detallesOrdenados = detalles.slice().sort((a, b) =>
-        a.nombreProducto.localeCompare(b.nombreProducto, undefined, { sensitivity: "base" })
+        a.nombreProducto.localeCompare(b.nombreProducto, undefined, {
+          sensitivity: "base",
+        })
       );
       setDetallesPedido(detallesOrdenados);
       setIsModalOpen(true);
@@ -118,13 +157,19 @@ const EntrantesPage = () => {
       const pedido = pedidosEntrantes.find((p) => p.id === selectedPedidos[0]);
       if (pedido) {
         setApproveData({
-          fechaOrdenDisplay: pedido.fechaOrdenDisplay ? new Date(pedido.fechaOrdenDisplay).toISOString().split('T')[0] : "",
+          fechaOrdenDisplay: pedido.fechaOrdenDisplay
+            ? new Date(pedido.fechaOrdenDisplay).toISOString().split("T")[0]
+            : "",
           comentarioDisplay: pedido.comentarioDisplay || "",
           comentario: pedido.comentario || "",
         });
       }
     } else {
-      setApproveData({ fechaOrdenDisplay: "", comentarioDisplay: "", comentario: "" });
+      setApproveData({
+        fechaOrdenDisplay: "",
+        comentarioDisplay: "",
+        comentario: "",
+      });
     }
     onApproveOpen();
   };
@@ -137,9 +182,18 @@ const EntrantesPage = () => {
           const pedido = pedidosEntrantes.find((p) => p.id === id);
           if (!pedido) return Promise.resolve();
 
-          const fecha = selectedPedidos.length === 1 ? approveData.fechaOrdenDisplay : pedido.fechaOrdenDisplay;
-          const comentarioDisplay = selectedPedidos.length === 1 ? approveData.comentarioDisplay : pedido.comentarioDisplay;
-          const comentario = selectedPedidos.length === 1 ? approveData.comentario : pedido.comentario;
+          const fecha =
+            selectedPedidos.length === 1
+              ? approveData.fechaOrdenDisplay
+              : pedido.fechaOrdenDisplay;
+          const comentarioDisplay =
+            selectedPedidos.length === 1
+              ? approveData.comentarioDisplay
+              : pedido.comentarioDisplay;
+          const comentario =
+            selectedPedidos.length === 1
+              ? approveData.comentario
+              : pedido.comentario;
 
           return dispatch(
             togglePedidoStatus({
@@ -154,7 +208,18 @@ const EntrantesPage = () => {
       );
       toast({ title: "Pedidos aprobados correctamente", status: "success" });
       setSelectedPedidos([]);
-      dispatch(tablaPedidos());
+
+      // Refresh list after approval
+      dispatch(
+        tablaPedidos({
+          userId: usuarioId,
+          roleId: roleId,
+          status: 2,
+          page: currentPage,
+          limit: itemsPerPage,
+        })
+      );
+
       onApproveClose();
     } catch (err) {
       toast({
@@ -170,7 +235,10 @@ const EntrantesPage = () => {
   const handleBulkCancel = async () => {
     if (selectedPedidos.length === 0) return;
     if (!cancelComment.trim()) {
-      toast({ title: "Debes ingresar un motivo de cancelación", status: "warning" });
+      toast({
+        title: "Debes ingresar un motivo de cancelación",
+        status: "warning",
+      });
       return;
     }
 
@@ -191,7 +259,16 @@ const EntrantesPage = () => {
       setSelectedPedidos([]);
       setCancelComment("");
       onCancelClose();
-      dispatch(tablaPedidos());
+      // Refresh list
+      dispatch(
+        tablaPedidos({
+          userId: usuarioId,
+          roleId: roleId,
+          status: 2,
+          page: currentPage,
+          limit: itemsPerPage,
+        })
+      );
     } catch (err) {
       toast({
         title: "Error al cancelar pedidos",
@@ -212,7 +289,7 @@ const EntrantesPage = () => {
       const nombreTienda = pedido.nombreTienda?.toLowerCase() || "";
       const nombreUsuario = pedido.nombreUsuario?.toLowerCase() || "";
       const apellidoUsuario = pedido.apellidoUsuario?.toLowerCase() || "";
-      
+
       return (
         nombreCorrelativo.includes(lowerQuery) ||
         nombreDeu.includes(lowerQuery) ||
@@ -223,9 +300,8 @@ const EntrantesPage = () => {
     });
   }, [pedidosEntrantes, query]);
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const pedidosPaginados = filteredPedidos.slice(indexOfFirstItem, indexOfLastItem);
+  // removed client side slicing since backend does it
+  const pedidosPaginados = filteredPedidos;
 
   return (
     <Box
@@ -239,19 +315,15 @@ const EntrantesPage = () => {
       maxW="100%"
       w="100%"
     >
-      <Box 
-        display="flex" 
-        justifyContent="space-between" 
-        alignItems="center" 
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
         mb={{ base: 3, md: 6 }}
         flexDirection={{ base: "column", md: "row" }}
         gap={4}
       >
-        <Heading
-          as="h2"
-          size={{ base: "md", md: "lg" }}
-          color={headingColor}
-        >
+        <Heading as="h2" size={{ base: "md", md: "lg" }} color={headingColor}>
           Pedidos Entrantes
         </Heading>
 
@@ -276,23 +348,40 @@ const EntrantesPage = () => {
         </HStack>
       </Box>
 
-      <PedidosTable
-        pedidosEntrantes={pedidosPaginados}
-        highlight={query}
-        selectedPedidos={selectedPedidos}
-        setSelectedPedidos={setSelectedPedidos}
-        handleVerDetalles={handleVerDetalles}
-        highlightedPedidoId={highlightedPedidoId}
-        onClearHighlight={handleClearHighlight}
-      />
-      
-      <Pagination
-        currentPage={currentPage}
-        totalItems={filteredPedidos.length}
-        itemsPerPage={itemsPerPage}
-        onPageChange={handlePageChange}
-      />
-      
+      {isLoading ? (
+        <Box textAlign="center" py={10}>
+          <Spinner
+            size="xl"
+            thickness="4px"
+            speed="0.65s"
+            emptyColor="gray.200"
+            color="teal.500"
+          />
+          <Box mt={4} fontWeight="medium" color={headingColor}>
+            Cargando pedidos entrantes...
+          </Box>
+        </Box>
+      ) : (
+        <>
+          <PedidosTable
+            pedidosEntrantes={pedidosPaginados}
+            highlight={query}
+            selectedPedidos={selectedPedidos}
+            setSelectedPedidos={setSelectedPedidos}
+            handleVerDetalles={handleVerDetalles}
+            highlightedPedidoId={highlightedPedidoId}
+            onClearHighlight={handleClearHighlight}
+          />
+
+          <Pagination
+            currentPage={currentPage}
+            totalItems={total}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+          />
+        </>
+      )}
+
       <DetallesModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -307,7 +396,8 @@ const EntrantesPage = () => {
           <ModalCloseButton />
           <ModalBody>
             <Text mb={4}>
-              Estás a punto de cancelar {selectedPedidos.length} pedidos. Por favor, ingresa el motivo de la cancelación:
+              Estás a punto de cancelar {selectedPedidos.length} pedidos. Por
+              favor, ingresa el motivo de la cancelación:
             </Text>
             <Textarea
               placeholder="Motivo de cancelación (Comentario de Ventas)"
@@ -334,24 +424,37 @@ const EntrantesPage = () => {
         </ModalContent>
       </Modal>
 
-      <Modal isOpen={isApproveOpen} onClose={onApproveClose} isCentered size="lg">
+      <Modal
+        isOpen={isApproveOpen}
+        onClose={onApproveClose}
+        isCentered
+        size="lg"
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Confirmar Pedido</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Text mb={4} fontWeight="medium">
-              ¿Estás seguro de que quieres aprobar {selectedPedidos.length > 1 ? "estos pedidos" : "este pedido"}?
+              ¿Estás seguro de que quieres aprobar{" "}
+              {selectedPedidos.length > 1 ? "estos pedidos" : "este pedido"}?
             </Text>
-            
+
             {selectedPedidos.length === 1 ? (
               <>
-                <Text mb={1} fontWeight="bold" fontSize="sm">Fecha de entrega *</Text>
+                <Text mb={1} fontWeight="bold" fontSize="sm">
+                  Fecha de entrega *
+                </Text>
                 <Box mb={4}>
                   <Input
                     type="date"
                     value={approveData.fechaOrdenDisplay}
-                    onChange={(e) => setApproveData({ ...approveData, fechaOrdenDisplay: e.target.value })}
+                    onChange={(e) =>
+                      setApproveData({
+                        ...approveData,
+                        fechaOrdenDisplay: e.target.value,
+                      })
+                    }
                     bg={inputBg}
                     borderColor={borderColor}
                     color={textColor}
@@ -363,11 +466,18 @@ const EntrantesPage = () => {
                   />
                 </Box>
 
-                <Text mb={1} fontWeight="bold" fontSize="sm">Instrucciones de Entrega (Cliente)</Text>
+                <Text mb={1} fontWeight="bold" fontSize="sm">
+                  Instrucciones de Entrega (Cliente)
+                </Text>
                 <Textarea
                   placeholder="Instrucciones del cliente..."
                   value={approveData.comentarioDisplay}
-                  onChange={(e) => setApproveData({ ...approveData, comentarioDisplay: e.target.value })}
+                  onChange={(e) =>
+                    setApproveData({
+                      ...approveData,
+                      comentarioDisplay: e.target.value,
+                    })
+                  }
                   mb={4}
                   bg={inputBg}
                   borderColor={borderColor}
@@ -387,16 +497,17 @@ const EntrantesPage = () => {
               </>
             ) : (
               <Text color="gray.500" mb={4}>
-                Se aprobarán {selectedPedidos.length} pedidos con sus fechas y comentarios originales.
+                Se aprobarán {selectedPedidos.length} pedidos con sus fechas y
+                comentarios originales.
               </Text>
             )}
           </ModalBody>
           <ModalFooter>
-            <Button 
-              bg="red.500" 
-              color="white" 
-              _hover={{ bg: "red.600" }} 
-              mr={3} 
+            <Button
+              bg="red.500"
+              color="white"
+              _hover={{ bg: "red.600" }}
+              mr={3}
               onClick={onApproveClose}
             >
               Cancelar

@@ -10,7 +10,14 @@ import {
   Flex,
   Heading,
   Container,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
 } from "@chakra-ui/react";
+import React from "react";
 import { AddIcon } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -30,6 +37,9 @@ const PageFormTienda = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [editingTienda, setEditingTienda] = useState(null);
   const [isToggling, setIsToggling] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [tiendaToDelete, setTiendaToDelete] = useState(null);
+  const cancelRef = React.useRef();
   const toast = useToast();
 
   useEffect(() => {
@@ -68,18 +78,27 @@ const PageFormTienda = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar esta tienda?")) return;
+  const onDeleteClick = (id) => {
+    setTiendaToDelete(id);
+    setIsDeleteOpen(true);
+  };
+
+  const confirmDelete = async () => {
     try {
-      await dispatch(deleteTienda(id)).unwrap();
-      toast({ title: "Tienda eliminada", status: "info" });
-      dispatch(tablaTienda());
+      if (tiendaToDelete) {
+        await dispatch(deleteTienda(tiendaToDelete)).unwrap();
+        toast({ title: "Tienda eliminada", status: "info" });
+        dispatch(tablaTienda());
+      }
     } catch (err) {
       toast({
         title: "Error al eliminar",
         description: err.message,
         status: "error",
       });
+    } finally {
+      setIsDeleteOpen(false);
+      setTiendaToDelete(null);
     }
   };
 
@@ -89,7 +108,7 @@ const PageFormTienda = () => {
       await dispatch(
         toggleTiendaStatus({ id: tienda.id, estaActivo: !tienda.estaActivo })
       ).unwrap();
-      
+
       toast({
         title: `Tienda ${!tienda.estaActivo ? "activada" : "desactivada"}`,
         status: "success",
@@ -137,14 +156,18 @@ const PageFormTienda = () => {
 
   return (
     <Container maxW="container.xl" py={0} mt={-4}>
-      <SEO 
-        title="Gestión de Tiendas" 
+      <SEO
+        title="Gestión de Tiendas"
         description="Administra el catálogo de tiendas, rutas y asignaciones de La Carreta."
       />
       <Flex justify="space-between" align="center" mb={0}>
         <Box>
-          <Heading size="lg" color="gray.700">Gestión de Tiendas</Heading>
-          <Text color="gray.500" mt={1}>Administra las tiendas, rutas y asignaciones.</Text>
+          <Heading size="lg" color="gray.700">
+            Gestión de Tiendas
+          </Heading>
+          <Text color="gray.500" mt={1}>
+            Administra las tiendas, rutas y asignaciones.
+          </Text>
         </Box>
         <Button
           leftIcon={<AddIcon />}
@@ -162,7 +185,7 @@ const PageFormTienda = () => {
       <TiendaTable
         data={data}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={onDeleteClick}
         onToggleStatus={handleToggleStatus}
         isToggling={isToggling}
       />
@@ -173,6 +196,35 @@ const PageFormTienda = () => {
         initialData={editingTienda}
         onSave={handleSave}
       />
+
+      <AlertDialog
+        isOpen={isDeleteOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={() => setIsDeleteOpen(false)}
+        isCentered
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent borderRadius="lg">
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Eliminar Tienda
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              ¿Estás seguro de que deseas eliminar esta tienda? Esta acción no
+              se puede deshacer.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setIsDeleteOpen(false)}>
+                Cancelar
+              </Button>
+              <Button colorScheme="red" onClick={confirmDelete} ml={3}>
+                Eliminar
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Container>
   );
 };

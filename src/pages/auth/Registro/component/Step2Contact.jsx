@@ -1,6 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { VStack, InputGroup, InputLeftElement, Input } from "@chakra-ui/react";
+import {
+  VStack,
+  InputGroup,
+  InputLeftElement,
+  Input,
+  FormControl,
+  Text,
+} from "@chakra-ui/react";
 import { PhoneIcon } from "@chakra-ui/icons";
 import ContactField from "./ContactField";
 

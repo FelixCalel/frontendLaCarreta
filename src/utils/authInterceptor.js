@@ -87,18 +87,15 @@ export const setupAxiosInterceptors = () => {
       isRefreshing = true;
       try {
         const baseUrl = import.meta.env.VITE_API_URL;
-        const refreshToken = localStorage.getItem("refresh_token");
-
-        if (!refreshToken) {
-          throw new Error("SESSION_EXPIRED");
-        }
-
-        const resp = await axios.post(`${baseUrl}/login/refresh-token`, {
-          refreshToken,
-        });
+        const resp = await axios.post(
+          `${baseUrl}/login/refresh-token`,
+          {},
+          { withCredentials: true }
+        );
 
         const newAccessToken =
           resp?.data?.accessToken || resp?.data?.access_token;
+
         if (!newAccessToken) {
           throw new Error("INVALID_REFRESH_RESPONSE");
         }
@@ -112,14 +109,8 @@ export const setupAxiosInterceptors = () => {
       } catch (refreshErr) {
         processQueue(refreshErr, null);
         localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        sessionStorage.removeItem("access_token");
 
-        if (refreshErr.message === "SESSION_EXPIRED") {
-          setTimeout(() => {
-            performLogout();
-          }, 2000);
-        }
+        performLogout();
 
         const customError = new Error();
         customError.message = "Tu sesión ha expirado. Redirigiendo al login...";

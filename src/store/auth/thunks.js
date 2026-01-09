@@ -10,6 +10,7 @@ import {
   registered,
   updateUser,
 } from "./authSlice";
+import { clearPedidos } from "../Pedidos/pedidoSlice";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import {
@@ -194,21 +195,20 @@ export const fetchCurrentUser = createAsyncThunk(
   }
 );
 
-// Renamed to generic startLogin as it handles both email/phone
 export const startLogin = createAsyncThunk(
   "auth/startLogin",
   async ({ identifier, contrasena }, { dispatch, rejectWithValue }) => {
     try {
-      const trustToken = localStorage.getItem("trust_token");
-
-      // 1. Initial Login Request
+      const keyId = identifier.trim().toLowerCase();
+      const trustToken =
+        localStorage.getItem(`trust_token_${keyId}`) ||
+        localStorage.getItem("trust_token");
       const resp = await axios.post(`${BASE_URL}/usuarios/login`, {
         identifier,
         contrasena,
         trustToken,
       });
 
-      // 2. Check response type
       if (resp.data.status === "2fa_required") {
         return {
           status: "2fa_required",
@@ -216,10 +216,22 @@ export const startLogin = createAsyncThunk(
           maskedPhone: resp.data.maskedPhone,
         };
       } else if (resp.data.token && resp.data.usuario) {
-        // Direct login success (Trust Token)
-        const { token, usuario, firebaseToken, permissions } = resp.data;
+        const { token, usuario, firebaseToken, permissions, trustToken } =
+          resp.data;
 
         localStorage.setItem("access_token", token);
+
+        if (trustToken) {
+          if (usuario.correo)
+            localStorage.setItem(
+              `trust_token_${usuario.correo.toLowerCase()}`,
+              trustToken
+            );
+          if (usuario.telefono)
+            localStorage.setItem(`trust_token_${usuario.telefono}`, trustToken);
+          localStorage.setItem("trust_token", trustToken);
+        }
+
         const userData = {
           id: usuario.id,
           displayName: usuario.nombre + " " + usuario.apellido,
@@ -229,7 +241,6 @@ export const startLogin = createAsyncThunk(
         };
         localStorage.setItem("userData", JSON.stringify(userData));
 
-        // Restore legacy keys for compatibility
         localStorage.setItem("usuarioId", usuario.id);
         localStorage.setItem("roleId", usuario.roleId);
         localStorage.setItem("nombreUsuario", userData.displayName);
@@ -274,11 +285,18 @@ export const startVerifyLogin = createAsyncThunk(
       const { token, usuario, firebaseToken, permissions, trustToken } =
         resp.data;
 
-      // Store tokens
       localStorage.setItem("access_token", token);
-      if (trustToken) localStorage.setItem("trust_token", trustToken);
+      if (trustToken) {
+        if (usuario.correo)
+          localStorage.setItem(
+            `trust_token_${usuario.correo.toLowerCase()}`,
+            trustToken
+          );
+        if (usuario.telefono)
+          localStorage.setItem(`trust_token_${usuario.telefono}`, trustToken);
+        localStorage.setItem("trust_token", trustToken);
+      }
 
-      // ... store other user data ...
       const userData = {
         id: usuario.id,
         displayName: usuario.nombre + " " + usuario.apellido,
@@ -288,14 +306,12 @@ export const startVerifyLogin = createAsyncThunk(
       };
       localStorage.setItem("userData", JSON.stringify(userData));
 
-      // Restore legacy keys for compatibility
       localStorage.setItem("usuarioId", usuario.id);
       localStorage.setItem("roleId", usuario.roleId);
       localStorage.setItem("nombreUsuario", userData.displayName);
       if (usuario.correo) localStorage.setItem("correoUsuario", usuario.correo);
       localStorage.setItem("isAuthenticated", "true");
 
-      // Update Redux state
       dispatch(
         login({
           uid: usuario.id,
@@ -436,6 +452,7 @@ export const startLogout = createAsyncThunk(
     lsKeys.forEach((k) => localStorage.removeItem(k));
     sessionStorage.removeItem("access_token");
     sessionStorage.removeItem("refresh_token");
+    dispatch(clearPedidos());
     dispatch(logout());
   }
 );
@@ -463,8 +480,6 @@ export const startUpdateProfile = createAsyncThunk(
     }
   }
 );
-
-// SMS Password Recovery Thunks
 
 export const requestSmsRecovery = createAsyncThunk(
   "auth/requestSmsRecovery",
@@ -496,7 +511,7 @@ export const verifySmsRecovery = createAsyncThunk(
           code,
         }
       );
-      return resp.data; // Expected to return { token: '...' }
+      return resp.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.error || "Código inválido o expirado."
