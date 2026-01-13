@@ -69,7 +69,7 @@ const PageFormPedidos = () => {
   }, [location.state, onOpen]);
 
   useEffect(() => {
-  useEffect(() => {
+
     const paisIdFromStorage = localStorage.getItem("paisId");
     if (paisIdFromStorage) {
       setPaisId(parseInt(paisIdFromStorage, 10));
