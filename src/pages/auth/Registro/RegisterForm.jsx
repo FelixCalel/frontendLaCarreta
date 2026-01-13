@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import {
   Box,
   Button,
@@ -121,9 +122,24 @@ const RegisterForm = () => {
     }
   };
 
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
   const handleSubmit = async () => {
     setIsLoading(true);
     setErrors({});
+
+    if (!executeRecaptcha) {
+      setErrors({ general: "Seguridad no disponible. Intente de nuevo." });
+      setIsLoading(false);
+      return;
+    }
+
+    const captchaToken = await executeRecaptcha("register");
+    if (!captchaToken) {
+      setErrors({ general: "Error de seguridad. Intente de nuevo." });
+      setIsLoading(false);
+      return;
+    }
 
     const emailRegex = /^\S+@\S+\.\S+$/;
     const { contact, telefono, ...rest } = formData;
@@ -149,6 +165,7 @@ const RegisterForm = () => {
         ...rest,
         correo: correoNormalizado,
         telefono: finalPhone,
+        captchaToken,
       };
 
       const res = await registerUser(payload);
@@ -169,7 +186,7 @@ const RegisterForm = () => {
     } else {
       if (dialCode) {
         phoneE164 = dialCode + contact.replace(/\D+/g, "");
-        payload = { ...rest, correo: null, telefono: phoneE164 };
+        payload = { ...rest, correo: null, telefono: phoneE164, captchaToken };
 
         const res = await registerUser(payload);
         setIsLoading(false);
@@ -179,7 +196,7 @@ const RegisterForm = () => {
           return;
         }
 
-        const sms = await sendSMSCode(phoneE164);
+        const sms = await sendSMSCode(phoneE164, captchaToken);
         if (!sms.ok) {
           setErrors({ general: sms.errorMessage });
           return;

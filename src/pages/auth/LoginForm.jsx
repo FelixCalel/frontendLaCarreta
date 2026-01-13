@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
@@ -69,13 +70,23 @@ export const LoginForm = () => {
     }
   }, [is2FAOpen]);
 
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
   const handleSubmit = async ({ correo, contrasena }) => {
     setError("");
     setIsLoading(true);
 
+    if (!executeRecaptcha) {
+      console.warn("Recaptcha not yet available");
+      setError("Verificación de seguridad no disponible. Intente de nuevo.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
+      const captchaToken = await executeRecaptcha("login");
       const action = await dispatch(
-        startLogin({ identifier: correo, contrasena })
+        startLogin({ identifier: correo, contrasena, captchaToken })
       );
 
       if (startLogin.fulfilled.match(action)) {

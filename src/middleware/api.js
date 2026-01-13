@@ -16,9 +16,9 @@ export async function registerUser(payload) {
   }
 }
 
-export async function sendSMSCode(to) {
+export async function sendSMSCode(to, captchaToken) {
   try {
-    await axios.post(`${BASE_URL}/sms/send`, { to });
+    await axios.post(`${BASE_URL}/sms/send`, { to, captchaToken });
     return { ok: true };
   } catch (err) {
     return {
