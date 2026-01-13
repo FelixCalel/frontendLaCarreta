@@ -171,6 +171,7 @@ const HistorialPedidosPage = () => {
         mb={{ base: 3, md: 2 }}
         mt={{ base: 0, md: 0 }}
         color={headingColor}
+        textAlign="center"
       >
         Historial de Pedidos
       </Heading>
@@ -197,13 +198,6 @@ const HistorialPedidosPage = () => {
         </Box>
       ) : filteredPedidos.length > 0 ? (
         <>
-          {isMobile ? (
-            <PedidosCardList
-              pedidos={currentPedidos}
-              roleId={roleId}
-              onVerDetalles={handleVerDetalles}
-            />
-          ) : (
             <PedidosTable
               pedidos={currentPedidos}
               roleId={roleId}
@@ -211,7 +205,6 @@ const HistorialPedidosPage = () => {
               highlightedPedidoId={highlightedPedidoId}
               onClearHighlight={handleClearHighlight}
             />
-          )}
           <Pagination
             currentPage={currentPage}
             totalItems={total}
@@ -219,6 +212,7 @@ const HistorialPedidosPage = () => {
             onPageChange={setCurrentPage}
           />
         </>
+
       ) : (
         <Box textAlign="center" color={noDataTextColor} mt={6}>
           No hay pedidos que coincidan con los filtros.

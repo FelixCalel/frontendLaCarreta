@@ -289,13 +289,21 @@ const HistorialFilters = ({
           variant="outline"
           size="sm"
           w="100%"
+          display="block"
         >
           Filtrar Pedidos
         </Button>
 
-        <Modal isOpen={isOpen} onClose={onClose} size="full">
+        <Modal isOpen={isOpen} onClose={onClose} isCentered motionPreset="slideInBottom">
           <ModalOverlay />
-          <ModalContent>
+          <ModalContent
+            mx={4}
+            bg={useColorModeValue("rgba(255, 255, 255, 0.85)", "rgba(26, 32, 44, 0.85)")}
+            backdropFilter="blur(10px)"
+            borderWidth="1px"
+            borderColor={useColorModeValue("gray.200", "gray.700")}
+            boxShadow="xl"
+          >
             <ModalHeader>Filtrar Pedidos</ModalHeader>
             <ModalCloseButton />
             <ModalBody>

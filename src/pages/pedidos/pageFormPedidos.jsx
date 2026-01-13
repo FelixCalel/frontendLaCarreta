@@ -69,11 +69,23 @@ const PageFormPedidos = () => {
   }, [location.state, onOpen]);
 
   useEffect(() => {
+  useEffect(() => {
     const paisIdFromStorage = localStorage.getItem("paisId");
     if (paisIdFromStorage) {
       setPaisId(parseInt(paisIdFromStorage, 10));
     } else {
-      console.error("No se encontró el paisId en el localStorage");
+      // Intentar obtenerlo de userData (para usuarios que ya iniciaron sesión)
+      try {
+        const userData = JSON.parse(localStorage.getItem("userData"));
+        if (userData && userData.paisId !== undefined) {
+          setPaisId(parseInt(userData.paisId, 10));
+          return;
+        }
+      } catch (e) {
+        console.warn("Error al leer userData:", e);
+      }
+      
+      console.warn("No se encontró el paisId en el localStorage, usando valor predeterminado 0");
       setPaisId(0);
     }
   }, []);

@@ -1,4 +1,4 @@
-import { Flex, IconButton, Button, Text } from "@chakra-ui/react";
+import { Flex, IconButton, Button, Text, useBreakpointValue } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 
@@ -10,7 +10,7 @@ const Pagination = ({
 }) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  const maxVisiblePages = 15; // Máximo de números visibles
+  const maxVisiblePages = useBreakpointValue({ base: 4, md: 5, lg: 10 }) || 3;
   const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
   const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
@@ -21,7 +21,6 @@ const Pagination = ({
 
   return (
     <Flex mt={6} justify="center" alignItems="center" gap={2}>
-      {/* Botón para retroceder */}
       <IconButton
         aria-label="Página anterior"
         icon={<ChevronLeftIcon />}
@@ -32,7 +31,6 @@ const Pagination = ({
         _hover={{ bg: "gray.200" }}
       />
 
-      {/* Números de páginas */}
       {startPage > 1 && (
         <Button
           size="sm"
@@ -68,7 +66,6 @@ const Pagination = ({
         </Button>
       )}
 
-      {/* Botón para avanzar */}
       <IconButton
         aria-label="Página siguiente"
         icon={<ChevronRightIcon />}
@@ -82,7 +79,6 @@ const Pagination = ({
   );
 };
 
-// Validación de PropTypes
 Pagination.propTypes = {
   currentPage: PropTypes.number.isRequired,
   totalItems: PropTypes.number.isRequired,
