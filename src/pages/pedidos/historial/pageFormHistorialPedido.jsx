@@ -82,7 +82,7 @@ const HistorialPedidosPage = () => {
     filterOptions,
   } = useSelector((state) => state.pedidos);
 
-  const filteredPedidos = todosLosPedidos;
+  const filteredPedidos = todosLosPedidos.filter((p) => p.estadoId !== 1);
   const currentPedidos = filteredPedidos;
 
   useEffect(() => {

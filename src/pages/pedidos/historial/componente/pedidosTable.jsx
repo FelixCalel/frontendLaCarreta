@@ -79,17 +79,23 @@ const PedidosTable = ({
                         ? "green.600"
                         : pedido.estadoId === 2
                         ? "yellow.600"
-                        : "red.600"
+                        : pedido.estadoId === 4
+                        ? "red.600"
+                        : "gray.600"
                     }
                     fontWeight="bold"
                   >
                     {pedido.estadoId === 5
                       ? "Exportado"
+                      : pedido.estadoId === 4
+                      ? "Cancelado"
                       : pedido.estadoId === 3
                       ? "Aprobado"
                       : pedido.estadoId === 2
                       ? "Pendiente"
-                      : "Cancelado"}
+                      : pedido.estadoId === 1
+                      ? "Creado"
+                      : "Desconocido"}
                   </Box>
                 </Td>
 
