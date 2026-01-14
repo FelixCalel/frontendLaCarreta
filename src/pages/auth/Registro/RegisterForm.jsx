@@ -36,6 +36,7 @@ import ErrorAlerts from "./component/ErrorAlerts";
 import AnimatedBlobBackground from "../component/AnimatedBlobBackground";
 import { BrandingPanel } from "./component/BrandingPanel";
 import OTPVerificationModal from "./component/OTPVerificationModal";
+import { RecaptchaStatus } from "../../../components/auth/RecaptchaStatus";
 
 const steps = [
   { title: "Cuenta", description: "Información personal" },
@@ -69,6 +70,7 @@ const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [pendingPhone, setPendingPhone] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
+  const [recaptchaStatus, setRecaptchaStatus] = useState("idle");
 
   useEffect(() => {
     if (auth === "authenticated") navigate("/home", { replace: true });
@@ -127,10 +129,12 @@ const RegisterForm = () => {
   const handleSubmit = async () => {
     setIsLoading(true);
     setErrors({});
+    setRecaptchaStatus("loading");
 
     if (!executeRecaptcha) {
       setErrors({ general: "Seguridad no disponible. Intente de nuevo." });
       setIsLoading(false);
+      setRecaptchaStatus("error");
       return;
     }
 
@@ -138,8 +142,12 @@ const RegisterForm = () => {
     if (!captchaToken) {
       setErrors({ general: "Error de seguridad. Intente de nuevo." });
       setIsLoading(false);
+      setRecaptchaStatus("error");
       return;
     }
+
+    setRecaptchaStatus("success");
+    await new Promise((r) => setTimeout(r, 500));
 
     const emailRegex = /^\S+@\S+\.\S+$/;
     const { contact, telefono, ...rest } = formData;
@@ -193,12 +201,25 @@ const RegisterForm = () => {
 
         if (!res.ok) {
           setErrors({ general: res.errorMessage });
+          setRecaptchaStatus("idle");
           return;
         }
 
-        const sms = await sendSMSCode(phoneE164, captchaToken);
+        setRecaptchaStatus("loading");
+        const smsCaptchaToken = await executeRecaptcha("register");
+        if (!smsCaptchaToken) {
+          setErrors({ general: "Error de seguridad al enviar SMS." });
+          setIsLoading(false);
+          setRecaptchaStatus("error");
+          return;
+        }
+        setRecaptchaStatus("success");
+        await new Promise((r) => setTimeout(r, 300));
+
+        const sms = await sendSMSCode(phoneE164, smsCaptchaToken);
         if (!sms.ok) {
           setErrors({ general: sms.errorMessage });
+          setRecaptchaStatus("idle");
           return;
         }
         setPendingPhone(phoneE164);
@@ -308,6 +329,8 @@ const RegisterForm = () => {
                 )}
               </Box>
 
+              <RecaptchaStatus status={recaptchaStatus} />
+
               <HStack justify="space-between">
                 <Button
                   onClick={goToPrevious}
@@ -315,15 +338,19 @@ const RegisterForm = () => {
                 >
                   Anterior
                 </Button>
-                <Button
-                  colorScheme="green"
-                  onClick={handleNext}
-                  isLoading={isLoading}
-                >
-                  {activeStep === steps.length - 1
-                    ? "Crear Cuenta"
-                    : "Siguiente"}
-                </Button>
+                {(activeStep !== steps.length - 1 ||
+                  recaptchaStatus === "idle" ||
+                  recaptchaStatus === "error") && (
+                  <Button
+                    colorScheme="green"
+                    onClick={handleNext}
+                    isLoading={isLoading}
+                  >
+                    {activeStep === steps.length - 1
+                      ? "Crear Cuenta"
+                      : "Siguiente"}
+                  </Button>
+                )}
               </HStack>
 
               <Text align={"center"}>
