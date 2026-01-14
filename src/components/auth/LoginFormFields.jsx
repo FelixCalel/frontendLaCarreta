@@ -16,8 +16,14 @@ import {
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import PropTypes from "prop-types";
+import { RecaptchaStatus } from "./RecaptchaStatus";
 
-export const LoginFormFields = ({ onSubmit, isLoading, error }) => {
+export const LoginFormFields = ({
+  onSubmit,
+  isLoading,
+  error,
+  recaptchaStatus,
+}) => {
   const navigate = useNavigate();
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
@@ -126,16 +132,21 @@ export const LoginFormFields = ({ onSubmit, isLoading, error }) => {
           )}
 
           <Stack spacing={6} pt={2}>
-            <Button
-              type="submit"
-              bg={"green.400"}
-              color={"white"}
-              size="lg"
-              isLoading={isLoading}
-              _hover={{ bg: "green.500" }}
-            >
-              Iniciar Sesión
-            </Button>
+            {(recaptchaStatus === "idle" || recaptchaStatus === "error") && (
+              <Button
+                type="submit"
+                bg={"green.400"}
+                color={"white"}
+                size="lg"
+                isLoading={isLoading}
+                _hover={{ bg: "green.500" }}
+              >
+                Iniciar Sesión
+              </Button>
+            )}
+
+            <RecaptchaStatus status={recaptchaStatus} />
+
             <Button
               variant="outline"
               onClick={() => navigate("/auth/registro")}
@@ -172,4 +183,5 @@ LoginFormFields.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   isLoading: PropTypes.bool,
   error: PropTypes.string,
+  recaptchaStatus: PropTypes.string,
 };

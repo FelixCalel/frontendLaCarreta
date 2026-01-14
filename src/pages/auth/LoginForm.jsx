@@ -24,6 +24,7 @@ import { startLogin, startVerifyLogin } from "../../store/auth/thunks";
 import { BrandingPanel } from "../../components/auth/BrandingPanel";
 import { LoginFormFields } from "../../components/auth/LoginFormFields";
 import { AnimatedBackground } from "../../components/auth/AnimatedBackground";
+import { RecaptchaStatus } from "../../components/auth/RecaptchaStatus";
 import SEO from "../../components/SEO";
 
 export const LoginForm = () => {
@@ -31,6 +32,7 @@ export const LoginForm = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [error, setError] = useState("");
+  const [recaptchaStatus, setRecaptchaStatus] = useState("idle");
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -75,16 +77,22 @@ export const LoginForm = () => {
   const handleSubmit = async ({ correo, contrasena }) => {
     setError("");
     setIsLoading(true);
+    setRecaptchaStatus("loading");
 
     if (!executeRecaptcha) {
       console.warn("Recaptcha not yet available");
       setError("Verificación de seguridad no disponible. Intente de nuevo.");
       setIsLoading(false);
+      setRecaptchaStatus("error");
       return;
     }
 
     try {
       const captchaToken = await executeRecaptcha("login");
+      setRecaptchaStatus("success");
+      // Small delay to show success
+      await new Promise((r) => setTimeout(r, 500));
+
       const action = await dispatch(
         startLogin({ identifier: correo, contrasena, captchaToken })
       );
@@ -101,10 +109,14 @@ export const LoginForm = () => {
       } else {
         const errMsg = action.payload || "Error al iniciar sesión";
         setError(errMsg);
+        // If login failed, likely not a robot, but logic failed. Keep success or reset?
+        // Resetting to idle might be better so it doesn't stay green on error.
+        setRecaptchaStatus("idle");
       }
     } catch (err) {
       console.error("Error al iniciar sesión:", err);
       setError("Error inesperado al iniciar sesión.");
+      setRecaptchaStatus("error");
     } finally {
       setIsLoading(false);
     }
@@ -158,6 +170,7 @@ export const LoginForm = () => {
             onSubmit={handleSubmit}
             isLoading={isLoading}
             error={error}
+            recaptchaStatus={recaptchaStatus}
           />
           {/* SEO Footer Links */}
           <Stack direction="row" spacing={4} mt={8}>
