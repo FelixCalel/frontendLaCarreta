@@ -176,9 +176,16 @@ export const fetchCurrentUser = createAsyncThunk(
       const { data } = await axios.get(`${BASE_URL}/login/me`);
       const me = data.user || data;
 
+      // If a new token is returned, update local storage and potentially axios headers
+      if (data.token) {
+        localStorage.setItem("access_token", data.token);
+        localStorage.setItem("token", data.token);
+      }
+
       if (!me) throw new Error("No se pudo obtener la información del usuario");
 
-      return me;
+      // Pass token along with user data if available
+      return data.token ? { ...me, token: data.token } : me;
     } catch (err) {
       if (err.response && err.response.status === 401) {
         // console.warn("Session expired or invalid token");
@@ -256,7 +263,10 @@ export const startLogin = createAsyncThunk(
             token: token,
             roleId: usuario.roleId,
             permissions: permissions,
+            roleId: usuario.roleId,
+            permissions: permissions,
             user: usuario,
+            photoURL: usuario.avatar,
           })
         );
 
@@ -320,7 +330,10 @@ export const startVerifyLogin = createAsyncThunk(
           token: token,
           roleId: usuario.roleId,
           permissions: permissions,
+          roleId: usuario.roleId,
+          permissions: permissions,
           user: usuario,
+          photoURL: usuario.avatar,
         })
       );
 

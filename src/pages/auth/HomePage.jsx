@@ -15,6 +15,10 @@ import {
   VStack,
   HStack,
   useColorModeValue,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from "@chakra-ui/react";
 import {
   FaUserShield,
@@ -84,6 +88,7 @@ const HomePage = () => {
 
   useEffect(() => {
     setNombreUsuario(displayName || "Usuario");
+
     const currentRoleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
 
     if (currentRoleId && roleMap[currentRoleId]) {
@@ -158,6 +163,31 @@ const HomePage = () => {
                   </Text>
                 </VStack>
               </Box>
+
+              {rolNombre === "Sin rol" && (
+                <Alert
+                  status="warning"
+                  variant="subtle"
+                  flexDirection="column"
+                  alignItems="center"
+                  justifyContent="center"
+                  textAlign="center"
+                  height="200px"
+                  borderRadius="lg"
+                  borderWidth="1px"
+                  borderColor="orange.200"
+                >
+                  <AlertIcon boxSize="40px" mr={0} />
+                  <AlertTitle mt={4} mb={1} fontSize="lg">
+                    Sin Rol Asignado
+                  </AlertTitle>
+                  <AlertDescription maxWidth="sm">
+                    No tienes un rol asignado actualmente. Por favor, contacta
+                    con un administrador para que te asignen un rol y puedas
+                    acceder a todas las funcionalidades del sistema.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {roleId === 2 && (
                 <Box
