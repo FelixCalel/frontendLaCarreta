@@ -164,6 +164,9 @@ export const authSlice = createSlice({
         state.displayName = payload.nombre || payload.user?.nombre;
         state.photoURL = payload.avatar || payload.user?.avatar;
         state.permissions = payload.permissions ?? state.permissions;
+        if (payload.token) {
+          state.token = payload.token;
+        }
         saveState(state);
       })
       .addCase(fetchCurrentUser.rejected, (state, { payload }) => {
