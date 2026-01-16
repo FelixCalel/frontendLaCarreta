@@ -21,7 +21,8 @@ const PedidosTable = ({
   highlightedPedidoId = null,
   onClearHighlight = () => {},
 }) => {
-  const isSeller = roleId === 3;
+  // Show SAP info (DocEntry/DocNum) for Admin (1) and Seller (3)
+  const showSapInfo = roleId === 1 || roleId === 3;
   const blinkBg = useColorModeValue("orange.100", "orange.700");
 
   return (
@@ -47,8 +48,8 @@ const PedidosTable = ({
             <Th>Deudor</Th>
             <Th>Tienda</Th>
             <Th>Estado</Th>
-            {isSeller && <Th>DocEntry</Th>}
-            {isSeller && <Th>DocNum</Th>}
+            {showSapInfo && <Th>DocEntry</Th>}
+            {showSapInfo && <Th>DocNum</Th>}
             <Th>Fecha realización de pedido</Th>
             {(roleId === 1 || roleId === 3) && <Th>Usuario</Th>}
             <Th>Acciones</Th>
@@ -100,8 +101,8 @@ const PedidosTable = ({
                   </Box>
                 </Td>
 
-                {isSeller && <Td>{pedido.docEntry ?? "—"}</Td>}
-                {isSeller && <Td>{pedido.docNum ?? "—"}</Td>}
+{showSapInfo && <Td>{pedido.docEntry ?? "—"}</Td>}
+                {showSapInfo && <Td>{pedido.docNum ?? "—"}</Td>}
 
                 <Td>
                   {format(new Date(pedido.creadoEl), "dd MMM yyyy, HH:mm", {
@@ -201,7 +202,7 @@ const PedidosTable = ({
               <Box mb={2}>
                 <strong>Tienda:</strong> {pedido.nombreTienda || "N/A"}
               </Box>
-              {isSeller && (
+{showSapInfo && (
                 <>
                   <Box mb={2}>
                     <strong>DocEntry:</strong> {pedido.docEntry ?? "—"}
