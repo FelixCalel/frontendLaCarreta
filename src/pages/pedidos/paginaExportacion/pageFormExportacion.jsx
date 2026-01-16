@@ -20,14 +20,12 @@ import {
 } from "../../../store/Pedidos/thunks";
 import { removePedidos } from "../../../store/Pedidos/pedidoSlice";
 import { tablaEmpresa } from "../../../store/Empresa/thunks";
-//import { fetchUsuario } from "../../../store/usuarios/ususarios.thunks";
 import { selectPedidosEntrantesPorRuta } from "../pedidosEntrantes/componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useWebSocket } from "../../../providers/WebSocketProvider";
 import * as ExcelJS from "exceljs";
-//import { fetchCurrentUser } from "../../../store/auth/thunks";
 
 const AprobadosPage = () => {
   const { socket } = useWebSocket();
@@ -75,14 +73,12 @@ const AprobadosPage = () => {
     dispatch(tablaEmpresa());
   }, [dispatch]);
 
-  // [NEW] WebSocket Listener for Real-Time Updates
   useEffect(() => {
     if (!socket) return;
 
     const handleOrderStatusChange = (event) => {
         try {
             const data = JSON.parse(event.data);
-            // Verify if the message type matches what we expect
             if (data.type === 'on-order-status-changed') {
                 console.log("WebSocket event received:", data.payload);
                 dispatch(tablaPedidos());
@@ -92,7 +88,6 @@ const AprobadosPage = () => {
         }
     };
 
-    // Use native WebSocket event listener
     socket.addEventListener('message', handleOrderStatusChange);
 
     return () => {
@@ -119,9 +114,6 @@ const AprobadosPage = () => {
     try {
       await Promise.all(
         pedidos.map(async (pedido) => {
-          // await dispatch(
-          //   togglePedidoStatus({ id: pedido.id, estadoId: 5 })
-          // ).unwrap();
 
           await dispatch(
             updatePedidoActivacion({ id: pedido.id, isActive: false })
@@ -143,52 +135,6 @@ const AprobadosPage = () => {
       isClosable: true,
     });
 
-  // const handleExportConsolidadoFormato1 = async () => {
-  //   const ok = await pedirConfirmacion("f1");
-  //   if (!ok) return;
-
-  //   if (!pedidosAprobados.length) {
-  //     sinPedidosToast();
-  //     return;
-  //   }
-
-  //   setIsExporting(true);
-  //   try {
-  //     const sapResult = await dispatch(exportarPedidoSap()).unwrap();
-  //     if (sapResult.error) {
-  //       toast({
-  //         title: "Error al exportar a SAP",
-  //         description: sapResult.error,
-  //         status: "error",
-  //       });
-  //       return;
-  //     }
-
-  //     const pedidosConDetalles = await cargarDetallesPedidos(pedidosAprobados);
-  //     const workbook = new ExcelJS.Workbook();
-  //     const worksheet = workbook.addWorksheet("Consolidado");
-  //     const agrupado = agruparPedidosPorDeudor(pedidosConDetalles);
-  //     await addPedidosToWorksheetFormato1(worksheet, agrupado);
-  //     await descargarWorkbook(workbook, "pedidos_formato1.xlsx");
-
-  //     await actualizarEstadoPedidosExportados(pedidosAprobados);
-  //     toast({
-  //       title: "Exportación completada",
-  //       description: "SAP y Excel OK.",
-  //       status: "success",
-  //     });
-  //   } catch (err) {
-  //     console.error("Error exportando:", err);
-  //     toast({
-  //       title: "Error inesperado",
-  //       description: err.message,
-  //       status: "error",
-  //     });
-  //   } finally {
-  //     setIsExporting(false);
-  //   }
-  // };
-
   const handleExportConsolidadoFormato2 = async () => {
     if (pedidosAprobados.length === 0) {
       sinPedidosToast();
@@ -200,48 +146,51 @@ const AprobadosPage = () => {
 
     setIsExporting(true);
     
-    // [NEW] Optimistic UI: Immediately uncheck/hide orders or show processing state
-    // We can't easily "hide" them without modifying Redux state or local filter.
-    // But we can show a toast or rely on the fast re-fetch.
-    // Actually, the user asked for "se ve en pantalla que cuando se exporta se quita".
-    // We can force a local filter or just wait for the subsequent re-fetch which should be fast.
-    // However, if we want it *instant*, we might need to update Redux info locally.
-    // But let's rely on the WebSocket event which will come from backend SUCCESS.
-    // Optimization: Trigger a fetch immediately after success too.
-
     try {
       const sapResult = await dispatch(exportarPedidoSap()).unwrap();
-      if (sapResult.error) {
-        toast({
-          title: "Error al exportar a SAP",
-          description: sapResult.error,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
+      
+      const results = Array.isArray(sapResult) ? sapResult : [];
+      const successfulExports = results.filter(r => r.status === "SUCCESS");
+      const failedExports = results.filter(r => r.status === "ERROR");
+
+      if (failedExports.length > 0) {
+        failedExports.forEach(fail => {
+          toast({
+            title: `Error en Pedido #${fail.pedidoId}`,
+            description: fail.message || fail.sapResponse || "Error desconocido en SAP",
+            status: "warning",
+            duration: 6000,
+            isClosable: true,
+          });
         });
+      }
+
+      if (successfulExports.length === 0 && failedExports.length > 0) {
+        setIsExporting(false);
         return;
       }
 
-      const pedidosConDetalles = await cargarDetallesPedidos(pedidosAprobados);
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Pedidos Consolidados F2");
-      const pedidosPorDeudor = agruparPedidosPorDeudor(pedidosConDetalles);
-      await addPedidosToWorksheetFormato2(worksheet, pedidosPorDeudor);
-      await descargarWorkbook(workbook, "pedidos_consolidados_formato2.xlsx");
+      const successfulIds = successfulExports.map(r => r.pedidoId);
+      const successfulPedidos = pedidosAprobados.filter(p => successfulIds.includes(p.id));
 
-      await actualizarEstadoPedidosExportados(pedidosAprobados);
-      
-      // [NEW] Optimistic Update: Instantly remove exported orders from UI
-      const exportedIds = pedidosAprobados.map(p => p.id);
-      dispatch(removePedidos(exportedIds));
+      if (successfulPedidos.length > 0) {
+        const pedidosConDetalles = await cargarDetallesPedidos(successfulPedidos);
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Pedidos Consolidados F2");
+        const pedidosPorDeudor = agruparPedidosPorDeudor(pedidosConDetalles);
+        await addPedidosToWorksheetFormato2(worksheet, pedidosPorDeudor);
+        await descargarWorkbook(workbook, `pedidos_exportados_${new Date().getTime()}.xlsx`);
+        await actualizarEstadoPedidosExportados(successfulPedidos);
+        dispatch(removePedidos(successfulIds));
 
-      toast({
-        title: "Exportación completada",
-        description: "SAP y Excel generados correctamente.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+        toast({
+          title: "Exportación parcial",
+          description: `Se exportaron ${successfulPedidos.length} pedidos. ${failedExports.length} fallaron.`,
+          status: "success",
+          duration: 4000,
+          isClosable: true,
+        });
+      }
     } catch (err) {
       console.error("Error en exportación formato 2:", err);
       toast({
@@ -292,71 +241,6 @@ const AprobadosPage = () => {
     const [yyyy, mm, dd] = iso.slice(0, 10).split("-").map(Number);
     return new Date(yyyy, mm - 1, dd);
   };
-
-  // async function addPedidosToWorksheetFormato1(worksheet, pedidosPorDeudor) {
-  //   worksheet.mergeCells("A1:G1");
-  //   const titleCell = worksheet.getCell("A1");
-  //   titleCell.value = "PEDIDOS CONSOLIDADOS - FORMATO 1";
-  //   titleCell.font = { bold: true, size: 16 };
-  //   titleCell.alignment = { horizontal: "center", vertical: "middle" };
-  //   worksheet.addRow([]);
-  //   worksheet.columns = [
-  //     { header: "Pedido ID", key: "pedidoId", width: 12 },
-  //     { header: "Tienda", key: "tienda", width: 25 },
-  //     { header: "Código", key: "codigo", width: 15 },
-  //     { header: "Producto", key: "producto", width: 30 },
-  //     { header: "Cantidad", key: "cantidad", width: 12 },
-  //     { header: "Deudor", key: "deudor", width: 20 },
-  //     { header: "Pedido Consolidado", key: "fechaEntrega", width: 15 },
-  //   ];
-
-  //   const headerRowIndex = worksheet.addRow([
-  //     "Pedido ID",
-  //     "Tienda",
-  //     "Código",
-  //     "Producto",
-  //     "Cantidad",
-  //     "Deudor",
-  //     "Fecha Orden",
-  //   ]).number;
-  //   const headerRow = worksheet.getRow(headerRowIndex);
-  //   headerRow.font = { bold: true };
-  //   headerRow.alignment = { horizontal: "center", vertical: "middle" };
-
-  //   for (const deudor of Object.keys(pedidosPorDeudor)) {
-  //     const { pedidos } = pedidosPorDeudor[deudor];
-  //     for (const pedido of pedidos) {
-  //       const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
-  //       const fechaEntrega = isoToDMY(pedido.fechaOrden);
-
-  //       for (const detalle of detalles) {
-  //         worksheet.addRow({
-  //           pedidoId: `P-${pedido.id}`,
-  //           tienda: pedido.nombreTienda || "Sin tienda",
-  //           codigo: detalle.codigo || "Sin código",
-  //           producto: detalle.nombreProducto || "",
-  //           cantidad: detalle.cantidad || 0,
-  //           deudor: `${pedido.nombreCorrelativo || ""}${
-  //             pedido.nombreCorrelativo ? " - " : ""
-  //           }${pedido.nombreDeu || ""}`,
-  //           fechaEntrega,
-  //         });
-  //       }
-  //     }
-  //   }
-
-  //   worksheet.columns.forEach((col) => {
-  //     let maxLength = col.header.length;
-  //     col.eachCell?.((cell) => {
-  //       const cellValue = cell.value || "";
-  //       const valueLength = cellValue.toString().length;
-  //       if (valueLength > maxLength) {
-  //         maxLength = valueLength;
-  //       }
-  //     });
-  //     col.width = Math.max(col.width, maxLength + 2);
-  //   });
-  // }
 
   async function addPedidosToWorksheetFormato2(worksheet, pedidosPorDeudor) {
     worksheet.columns = [
@@ -475,7 +359,6 @@ const AprobadosPage = () => {
     try {
       const results = await Promise.allSettled(
         selectedPedidosToRevert.map((pedidoId) => {
-          // Encontrar el pedido completo para preservar sus datos
           const pedidoCompleto = pedidosAprobados.find(
             (p) => p.id === pedidoId
           );
@@ -484,7 +367,6 @@ const AprobadosPage = () => {
             togglePedidoStatus({
               id: pedidoId,
               estadoId: 2,
-              // Preservar los campos existentes del pedido
               comentario: pedidoCompleto?.comentario || "",
               comentarioDisplay: pedidoCompleto?.comentarioDisplay || "",
               fechaOrdenDisplay:
@@ -515,10 +397,8 @@ const AprobadosPage = () => {
           isClosable: true,
         });
 
-        // Limpiar selección después del éxito
         setSelectedPedidosToRevert([]);
 
-        // Recargar pedidos para refrescar la vista
         await dispatch(tablaPedidos());
       } else {
         toast({

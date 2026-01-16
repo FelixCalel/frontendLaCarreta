@@ -43,7 +43,9 @@ const PedidoInfoDisplay = ({ pedido }) => {
           {fechaDisplay && (
             <>
               <Icon as={FaCalendarAlt} />
-              <Text fontSize="sm">{fechaDisplay}</Text>
+              <Text fontSize="sm">
+                <b>Fecha Orden:</b> {fechaDisplay}
+              </Text>
             </>
           )}
         </Flex>

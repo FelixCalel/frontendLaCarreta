@@ -35,7 +35,6 @@ const pedidoSlice = createSlice({
       state.error = null;
     },
     removePedidos: (state, action) => {
-      // action.payload should be an array of IDs
       const idsToRemove = action.payload || [];
       state.data = state.data.filter((pedido) => !idsToRemove.includes(pedido.id));
       state.total = state.data.length;
@@ -129,7 +128,6 @@ const pedidoSlice = createSlice({
         );
       })
       .addCase(updatePedidoActivacion.rejected, (state, action) => {
-        //state.status = "failed";
         state.error = action.error.message;
       })
       .addCase(exportarPedidoSap.pending, (state) => {

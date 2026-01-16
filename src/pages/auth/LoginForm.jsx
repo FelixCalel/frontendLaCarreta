@@ -90,7 +90,6 @@ export const LoginForm = () => {
     try {
       const captchaToken = await executeRecaptcha("login");
       setRecaptchaStatus("success");
-      // Small delay to show success
       await new Promise((r) => setTimeout(r, 500));
 
       const action = await dispatch(
@@ -109,8 +108,6 @@ export const LoginForm = () => {
       } else {
         const errMsg = action.payload || "Error al iniciar sesión";
         setError(errMsg);
-        // If login failed, likely not a robot, but logic failed. Keep success or reset?
-        // Resetting to idle might be better so it doesn't stay green on error.
         setRecaptchaStatus("idle");
       }
     } catch (err) {
@@ -172,7 +169,6 @@ export const LoginForm = () => {
             error={error}
             recaptchaStatus={recaptchaStatus}
           />
-          {/* SEO Footer Links */}
           <Stack direction="row" spacing={4} mt={8}>
             <Button
               as="a"
@@ -192,7 +188,6 @@ export const LoginForm = () => {
         </Flex>
       </Stack>
 
-      {/* 2FA Modal */}
       <Modal
         isOpen={is2FAOpen}
         onClose={on2FAClose}
@@ -202,7 +197,6 @@ export const LoginForm = () => {
         <ModalOverlay backdropFilter="blur(5px)" />
         <ModalContent>
           <ModalHeader>Verificación en Dos Pasos</ModalHeader>
-          {/* Prevent closing if critical? Allows user to cancel if they want to retry login */}
           <ModalCloseButton />
           <ModalBody>
             <Text mb={4}>

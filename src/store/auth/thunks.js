@@ -176,24 +176,38 @@ export const fetchCurrentUser = createAsyncThunk(
       const { data } = await axios.get(`${BASE_URL}/login/me`);
       const me = data.user || data;
 
-      // If a new token is returned, update local storage and potentially axios headers
       if (data.token) {
         localStorage.setItem("access_token", data.token);
         localStorage.setItem("token", data.token);
       }
 
-      if (!me) throw new Error("No se pudo obtener la información del usuario");
+      if (me) {
+        localStorage.setItem("usuarioId", me.id);
+        localStorage.setItem("roleId", me.roleId);
+        if (me.nombre) {
+          localStorage.setItem("nombreUsuario", `${me.nombre} ${me.apellido || ""}`.trim());
+        }
+        if (me.correo) {
+          localStorage.setItem("correoUsuario", me.correo);
+        }
+        if (me.avatar) {
+          localStorage.setItem("avatar", me.avatar);
+        }
+        if (me.paisId) {
+          localStorage.setItem("paisId", me.paisId);
+        }
+        localStorage.setItem("isAuthenticated", "true");
+      }
 
-      // Pass token along with user data if available
-      return data.token ? { ...me, token: data.token } : me;
+      if (!me) throw new Error("No se pudo obtener la información del usuario");
+      
+      return data;
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        // console.warn("Session expired or invalid token");
       } else if (
         err.message === "Network Error" ||
         err.code === "ERR_NETWORK"
       ) {
-        // console.warn("Backend unavailable");
       } else {
         console.error("Error fetching current user:", err);
       }

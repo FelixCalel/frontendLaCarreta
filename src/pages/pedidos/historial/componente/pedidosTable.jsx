@@ -134,7 +134,6 @@ const PedidosTable = ({
         </Tbody>
       </Table>
 
-      {/* Mobile Card View */}
       <Box 
         display={{ base: "flex", md: "none" }} 
         flexDirection="column" 

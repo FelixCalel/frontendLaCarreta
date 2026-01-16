@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { login as loginAuth, checkingCredentials } from "../store/auth";
 import { fetchCurrentUser } from "../store/auth/thunks";
+import { fetchModulos } from "../store/RolPermisoUsuario/thunks";
 
 export const AuthWrapper = ({ children }) => {
   const dispatch = useDispatch();
@@ -16,9 +17,6 @@ export const AuthWrapper = ({ children }) => {
     const paisId = localStorage.getItem("paisId");
 
     if (token) {
-      // Restaurar el estado de autenticación pero mantener status 'checking'
-      // para que se muestre la pantalla de carga hasta que verifiquemos con el backend
-      // o decidimos que estamos en modo offline
       dispatch(
         loginAuth({
           uid,
@@ -31,29 +29,27 @@ export const AuthWrapper = ({ children }) => {
         })
       );
 
-      // Set status to checking AFTER restoring data
-      // This ensures we show the loading screen while verifying with backend
-      // dispatch(checkingCredentials());
-
-      // Función para intentar obtener datos del usuario con reintentos
       const fetchData = async () => {
         try {
-          const result = await dispatch(fetchCurrentUser()).unwrap();
-          // Si tiene éxito, no hacemos nada más
+          await dispatch(fetchCurrentUser()).unwrap();
+          if (uid) {
+            await dispatch(fetchModulos(uid)).unwrap();
+          }
         } catch (error) {
-          // Si falla por error de red, reintentar en 5 segundos
           if (
             error === "Network Error" ||
             error === "ERR_NETWORK" ||
             (typeof error === "string" && error.includes("Network"))
           ) {
-            // console.log("Backend no disponible, reintentando en 2s...");
             setTimeout(fetchData, 2000);
           }
         }
       };
 
       fetchData();
+
+      const interval = setInterval(fetchData, 15 * 60 * 1000);
+      return () => clearInterval(interval);
     }
   }, [dispatch]);
 
