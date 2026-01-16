@@ -18,16 +18,19 @@ import {
   updatePedidoActivacion,
   exportarPedidoSap,
 } from "../../../store/Pedidos/thunks";
+import { removePedidos } from "../../../store/Pedidos/pedidoSlice";
 import { tablaEmpresa } from "../../../store/Empresa/thunks";
 //import { fetchUsuario } from "../../../store/usuarios/ususarios.thunks";
 import { selectPedidosEntrantesPorRuta } from "../pedidosEntrantes/componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useWebSocket } from "../../../providers/WebSocketProvider";
 import * as ExcelJS from "exceljs";
 //import { fetchCurrentUser } from "../../../store/auth/thunks";
 
 const AprobadosPage = () => {
+  const { socket } = useWebSocket();
   const dispatch = useDispatch();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedPedido, setSelectedPedido] = useState(null);
@@ -71,6 +74,31 @@ const AprobadosPage = () => {
     dispatch(tablaTienda());
     dispatch(tablaEmpresa());
   }, [dispatch]);
+
+  // [NEW] WebSocket Listener for Real-Time Updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleOrderStatusChange = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            // Verify if the message type matches what we expect
+            if (data.type === 'on-order-status-changed') {
+                console.log("WebSocket event received:", data.payload);
+                dispatch(tablaPedidos());
+            }
+        } catch (error) {
+            console.error("Error processing WebSocket message:", error);
+        }
+    };
+
+    // Use native WebSocket event listener
+    socket.addEventListener('message', handleOrderStatusChange);
+
+    return () => {
+        socket.removeEventListener('message', handleOrderStatusChange);
+    };
+  }, [socket, dispatch]);
 
   const cargarDetallesPedidos = async (pedidos) => {
     const pedidosConDetalles = await Promise.all(
@@ -171,6 +199,16 @@ const AprobadosPage = () => {
     if (!ok) return;
 
     setIsExporting(true);
+    
+    // [NEW] Optimistic UI: Immediately uncheck/hide orders or show processing state
+    // We can't easily "hide" them without modifying Redux state or local filter.
+    // But we can show a toast or rely on the fast re-fetch.
+    // Actually, the user asked for "se ve en pantalla que cuando se exporta se quita".
+    // We can force a local filter or just wait for the subsequent re-fetch which should be fast.
+    // However, if we want it *instant*, we might need to update Redux info locally.
+    // But let's rely on the WebSocket event which will come from backend SUCCESS.
+    // Optimization: Trigger a fetch immediately after success too.
+
     try {
       const sapResult = await dispatch(exportarPedidoSap()).unwrap();
       if (sapResult.error) {
@@ -192,6 +230,11 @@ const AprobadosPage = () => {
       await descargarWorkbook(workbook, "pedidos_consolidados_formato2.xlsx");
 
       await actualizarEstadoPedidosExportados(pedidosAprobados);
+      
+      // [NEW] Optimistic Update: Instantly remove exported orders from UI
+      const exportedIds = pedidosAprobados.map(p => p.id);
+      dispatch(removePedidos(exportedIds));
+
       toast({
         title: "Exportación completada",
         description: "SAP y Excel generados correctamente.",

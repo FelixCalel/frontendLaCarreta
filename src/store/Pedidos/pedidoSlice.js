@@ -34,6 +34,12 @@ const pedidoSlice = createSlice({
       state.status = "idle";
       state.error = null;
     },
+    removePedidos: (state, action) => {
+      // action.payload should be an array of IDs
+      const idsToRemove = action.payload || [];
+      state.data = state.data.filter((pedido) => !idsToRemove.includes(pedido.id));
+      state.total = state.data.length;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -141,5 +147,5 @@ const pedidoSlice = createSlice({
   },
 });
 
-export const { clearPedidos } = pedidoSlice.actions;
+export const { clearPedidos, removePedidos } = pedidoSlice.actions;
 export default pedidoSlice.reducer;
