@@ -15,8 +15,6 @@ import {
   getDetalleOrdenByPedidoId,
   copiarDetallesUltimoPedido,
 } from "../../store/Pedidos/DetallePedidos/thunks";
-// import axios from "axios";
-//import ProductosTable from "./componentes/detallesPedidosTable";
 import { useLocation } from "react-router-dom";
 
 
@@ -74,7 +72,6 @@ const PageFormPedidos = () => {
     if (paisIdFromStorage) {
       setPaisId(parseInt(paisIdFromStorage, 10));
     } else {
-      // Intentar obtenerlo de userData (para usuarios que ya iniciaron sesión)
       try {
         const userData = JSON.parse(localStorage.getItem("userData"));
         if (userData && userData.paisId !== undefined) {
@@ -291,7 +288,6 @@ const PageFormPedidos = () => {
     });
     setIsTienda1Disabled(false);
     setIsTienda2Disabled(false);
-    //window.location.reload(true);
   };
 
   const toYMD = (v) => {

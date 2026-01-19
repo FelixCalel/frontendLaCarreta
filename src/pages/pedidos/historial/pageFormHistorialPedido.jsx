@@ -34,8 +34,10 @@ const HistorialPedidosPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
-  const roleId = parseInt(localStorage.getItem("roleId"), 10);
+  const { roleId: roleIdRedux, uid } = useSelector((state) => state.auth || {});
+  const roleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
+  const usuarioId = uid ? parseInt(uid, 10) : null;
+
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("teal.600", "teal.200");
   const noDataTextColor = useColorModeValue("gray.500", "gray.400");

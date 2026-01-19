@@ -48,7 +48,12 @@ const PedidosTable = ({
           }
         `}
       </style>
-      <Table variant="striped" colorScheme={stripe} size="md" sx={{ "--blink-color": blinkBg }}>
+      <Table
+        variant="striped"
+        colorScheme={stripe}
+        size="md"
+        sx={{ "--blink-color": blinkBg }}
+      >
         <Thead>
           <Tr>
             <Th>Seleccionar</Th>
@@ -71,11 +76,12 @@ const PedidosTable = ({
               ).toLowerCase();
 
               const coincide = hl && textoFila.includes(hl);
-              const isHighlighted = highlightedPedidoId && Number(highlightedPedidoId) === p.id;
+              const isHighlighted =
+                highlightedPedidoId && Number(highlightedPedidoId) === p.id;
 
               return (
-                <Tr 
-                  key={p.id} 
+                <Tr
+                  key={p.id}
                   bg={coincide ? hlBg : undefined}
                   animation={isHighlighted ? "blink 1s infinite" : undefined}
                   onClick={isHighlighted ? onClearHighlight : undefined}
@@ -97,9 +103,14 @@ const PedidosTable = ({
                   <Td>{p.nombreTienda}</Td>
                   <Td>{`${p.nombreUsuario} ${p.apellidoUsuario}`}</Td>
                   <Td>
-                    {format(new Date(p.fechaOrdenDisplay), "dd MMMM yyyy", {
-                      locale: es,
-                    })}
+                    {(() => {
+                      if (!p.fechaOrdenDisplay) return "";
+                      const [year, month, day] = p.fechaOrdenDisplay
+                        .slice(0, 10)
+                        .split("-");
+                      const localDate = new Date(year, month - 1, day);
+                      return format(localDate, "dd MMMM yyyy", { locale: es });
+                    })()}
                   </Td>
                   <Td>
                     <Tooltip label="Ver Detalles" hasArrow>
@@ -147,7 +158,10 @@ PedidosTable.propTypes = {
   setSelectedPedidos: PropTypes.func.isRequired,
   handleVerDetalles: PropTypes.func.isRequired,
   highlight: PropTypes.string,
-  highlightedPedidoId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  highlightedPedidoId: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number,
+  ]),
   onClearHighlight: PropTypes.func,
 };
 

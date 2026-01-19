@@ -28,10 +28,11 @@ export const MenuPerfil = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { displayName, photoURL, correo, user } = useSelector(
+  const { displayName, photoURL, correo, user, roleId: roleIdRedux } = useSelector(
     (state) => state.auth || {}
   );
-  const roleId = localStorage.getItem("roleId");
+  const roleId = roleIdRedux?.toString();
+  const rolNombre = user?.role?.nombre;
 
   const getValidValue = (val) => (val && val !== "null" ? val : null);
 
@@ -112,7 +113,7 @@ export const MenuPerfil = () => {
                 {userData.nombre || "Nombre Usuario"}
               </Text>
               <Text fontSize="sm" color="whiteAlpha.800">
-                {userData.correo || "usuario@correo.com"}
+                {rolNombre || "Rol"} | {userData.correo || "usuario@correo.com"}
               </Text>
             </Flex>
 
@@ -128,7 +129,7 @@ export const MenuPerfil = () => {
               Perfil
             </MenuItem>
 
-            {/* Solo para roles 1 y 3 */}
+            {/* Solo para Admin (1) o Ventas (3). Display (2) no debería ver Usuarios */}
             {["1", "3"].includes(roleId) && (
               <MenuItem
                 as={Link}
