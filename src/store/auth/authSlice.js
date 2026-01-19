@@ -181,18 +181,13 @@ export const authSlice = createSlice({
           payload?.code === "ERR_NETWORK" ||
           (typeof payload === "string" && payload.includes("Network"));
 
-        // Solo cerramos sesión si es un error de autenticación explícito (401).
-        // Si es un error de red o un error interno del servidor (500), mantendremos 
-        // el estado 'authenticated' para permitir reintentos automáticos.
         if (isAuthError) {
           state.status = "not-authenticated";
           state.errorMessage = payload?.message || payload;
           saveState(state);
         } else if (!isNetworkError) {
-          // Si no es red ni auth (ej: 500), registramos el error pero NO cerramos sesión
           console.warn("fetchCurrentUser falló, pero se mantiene la sesión activa:", payload);
           state.errorMessage = payload?.message || payload;
-          // No llamamos a saveState aquí para no persistir el mensaje de error de forma permanente
         }
       });
   },
