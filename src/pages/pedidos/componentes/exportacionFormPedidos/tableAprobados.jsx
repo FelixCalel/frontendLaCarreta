@@ -45,7 +45,7 @@ const AprobadosTable = ({
           <Th>ID</Th>
           <Th>Deudor</Th>
           <Th>Tienda</Th>
-          <Th>Fecha de creación</Th>
+          <Th>Fecha orden</Th>
           <Th>Acciones</Th>
         </Tr>
       </Thead>
@@ -66,7 +66,7 @@ const AprobadosTable = ({
               <Td>{pedido.nombreDeu}</Td>
               <Td>{pedido.nombreTienda}</Td>
               <Td>
-                {format(new Date(pedido.creadoEl), "dd 'de' MMMM 'de' yyyy", {
+                {format(new Date(pedido.fechaOrdenDisplay || pedido.fechaOrden), "dd 'de' MMMM 'de' yyyy", {
                   locale: es,
                 })}
               </Td>

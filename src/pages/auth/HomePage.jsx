@@ -49,6 +49,7 @@ const roleMap = {
 const roleColorMap = {
   Administrador: "red",
   Display: "blue",
+  Usuario: "blue", // Fallback for transition
   Ventas: "green",
   Supervisor: "pink",
   Compras: "orange",
@@ -60,6 +61,7 @@ const roleColorMap = {
 const roleIconMap = {
   Administrador: FaUserShield,
   Display: FaUserAlt,
+  Usuario: FaUserAlt, // Fallback
   Ventas: FaShoppingCart,
   Supervisor: FaUserTie,
   Compras: FaBox,
@@ -82,20 +84,25 @@ const HomePage = () => {
 
   const navigate = useNavigate();
 
-  const { displayName, roleId: roleIdRedux } = useSelector(
+  const { displayName, roleId: roleIdRedux, user } = useSelector(
     (state) => state.auth
   );
 
   useEffect(() => {
     setNombreUsuario(displayName || "Usuario");
 
+    // Prefer dynamic role name from backend user object
+    const dynamicRoleName = user?.role?.nombre;
     const currentRoleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
 
-    if (currentRoleId && roleMap[currentRoleId]) {
+    if (dynamicRoleName) {
+      setRolNombre(dynamicRoleName);
+      setRoleId(currentRoleId);
+    } else if (currentRoleId && roleMap[currentRoleId]) {
       setRolNombre(roleMap[currentRoleId]);
       setRoleId(currentRoleId);
     }
-  }, [displayName, roleIdRedux]);
+  }, [displayName, roleIdRedux, user]);
 
   const tipsMemo = useMemo(() => tips, []);
 

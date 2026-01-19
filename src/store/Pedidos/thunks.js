@@ -227,9 +227,24 @@ export const exportarPedidoSap = createAsyncThunk(
     try {
       await dispatch(tablaEmpresa()).unwrap();
       const empresas = getState().empresas.data;
-      const paisId = localStorage.getItem("paisId") || getState().auth.paisId;
+      let paisId = localStorage.getItem("paisId") || getState().auth.paisId;
+
       if (!paisId) {
-        return rejectWithValue("No se pudo obtener el paisId del usuario");
+        paisId = getState().auth.user?.paisId;
+      }
+
+      if (!paisId) {
+        try {
+          const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+          paisId = userData.paisId;
+        } catch (e) {
+          console.error("Error parsing userData from localStorage:", e);
+        }
+      }
+
+      if (!paisId) {
+        console.error("Export Error: paisId missing. Auth State:", getState().auth);
+        return rejectWithValue("No se pudo obtener el paisId del usuario. Intente cerrar sesión y volver a entrar.");
       }
       console.log({ paisId, empresas });
       const emp = empresas.find((e) => e.paisId == paisId && e.estaActivo);
