@@ -17,6 +17,9 @@ import {
   Text,
   useDisclosure,
   CircularProgress,
+  HStack,
+  PinInput,
+  PinInputField,
 } from "@chakra-ui/react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -60,7 +63,10 @@ export const LoginForm = () => {
           signal: ac.signal,
         })
         .then((otp) => {
-          if (otp) setVerifyCode(otp.code);
+          if (otp) {
+            setVerifyCode(otp.code);
+            setTimeout(() => handleVerifyCode(otp.code), 0);
+          }
         })
         .catch((err) => {
           console.log("WebOTP not used or aborted", err);
@@ -90,7 +96,6 @@ export const LoginForm = () => {
     try {
       const captchaToken = await executeRecaptcha("login");
       setRecaptchaStatus("success");
-      // Small delay to show success
       await new Promise((r) => setTimeout(r, 500));
 
       const action = await dispatch(
@@ -109,8 +114,6 @@ export const LoginForm = () => {
       } else {
         const errMsg = action.payload || "Error al iniciar sesión";
         setError(errMsg);
-        // If login failed, likely not a robot, but logic failed. Keep success or reset?
-        // Resetting to idle might be better so it doesn't stay green on error.
         setRecaptchaStatus("idle");
       }
     } catch (err) {
@@ -122,11 +125,12 @@ export const LoginForm = () => {
     }
   };
 
-  const handleVerifyCode = async () => {
+  const handleVerifyCode = async (codeToVerify) => {
+    const code = typeof codeToVerify === "string" ? codeToVerify : verifyCode;
     setIsVerifying(true);
     try {
       const action = await dispatch(
-        startVerifyLogin({ userId: verifyUserId, code: verifyCode })
+        startVerifyLogin({ userId: verifyUserId, code })
       );
 
       if (startVerifyLogin.fulfilled.match(action)) {
@@ -172,7 +176,6 @@ export const LoginForm = () => {
             error={error}
             recaptchaStatus={recaptchaStatus}
           />
-          {/* SEO Footer Links */}
           <Stack direction="row" spacing={4} mt={8}>
             <Button
               as="a"
@@ -192,7 +195,6 @@ export const LoginForm = () => {
         </Flex>
       </Stack>
 
-      {/* 2FA Modal */}
       <Modal
         isOpen={is2FAOpen}
         onClose={on2FAClose}
@@ -202,24 +204,66 @@ export const LoginForm = () => {
         <ModalOverlay backdropFilter="blur(5px)" />
         <ModalContent>
           <ModalHeader>Verificación en Dos Pasos</ModalHeader>
-          {/* Prevent closing if critical? Allows user to cancel if they want to retry login */}
           <ModalCloseButton />
           <ModalBody>
             <Text mb={4}>
               Hemos enviado un código de verificación a tu número terminación{" "}
               <b>{maskedPhone}</b>.
             </Text>
-            <Input
-              placeholder="Código de 6 dígitos"
-              value={verifyCode}
-              onChange={(e) => setVerifyCode(e.target.value)}
-              maxLength={6}
-              type="number"
-              autoComplete="one-time-code"
-              textAlign="center"
-              fontSize="2xl"
-              letterSpacing="widest"
-            />
+            <HStack justify="center" spacing={2} mb={4}>
+              <PinInput
+                otp
+                type="number"
+                size="lg"
+                value={verifyCode}
+                onChange={(value) => setVerifyCode(value)}
+                onComplete={(value) => handleVerifyCode(value)}
+                autoFocus
+              >
+                <PinInputField
+                  w={12}
+                  h={14}
+                  fontSize="2xl"
+                  rounded="lg"
+                  _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+                />
+                <PinInputField
+                  w={12}
+                  h={14}
+                  fontSize="2xl"
+                  rounded="lg"
+                  _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+                />
+                <PinInputField
+                  w={12}
+                  h={14}
+                  fontSize="2xl"
+                  rounded="lg"
+                  _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+                />
+                <PinInputField
+                  w={12}
+                  h={14}
+                  fontSize="2xl"
+                  rounded="lg"
+                  _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+                />
+                <PinInputField
+                  w={12}
+                  h={14}
+                  fontSize="2xl"
+                  rounded="lg"
+                  _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+                />
+                <PinInputField
+                  w={12}
+                  h={14}
+                  fontSize="2xl"
+                  rounded="lg"
+                  _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+                />
+              </PinInput>
+            </HStack>
             <Text fontSize="xs" color="gray.500" mt={2} textAlign="center">
               Detectando código automáticamente...
             </Text>

@@ -232,9 +232,10 @@ const RegisterForm = () => {
     }
   };
 
-  const handleVerifySMS = async () => {
+  const handleVerifySMS = async (codeToVerify) => {
     setIsLoading(true);
-    const res = await verifyRegistrationPhone(pendingPhone, verifyCode.trim());
+    const code = typeof codeToVerify === "string" ? codeToVerify : verifyCode;
+    const res = await verifyRegistrationPhone(pendingPhone, code.trim());
     setIsLoading(false);
 
     if (res.ok) {
