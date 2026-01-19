@@ -204,14 +204,19 @@ export const fetchCurrentUser = createAsyncThunk(
       return data;
     } catch (err) {
       if (err.response && err.response.status === 401) {
+        return rejectWithValue({ 
+          status: 401, 
+          message: err.response.data?.error || "Sesión expirada o no válida" 
+        });
       } else if (
         err.message === "Network Error" ||
         err.code === "ERR_NETWORK"
       ) {
+        // Silencioso en thunk, manejado en slice
       } else {
         console.error("Error fetching current user:", err);
       }
-      return rejectWithValue(err.message || err);
+      return rejectWithValue(err.response?.data?.error || err.message || err);
     }
   }
 );
