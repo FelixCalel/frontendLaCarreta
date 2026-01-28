@@ -36,7 +36,9 @@ const pedidoSlice = createSlice({
     },
     removePedidos: (state, action) => {
       const idsToRemove = action.payload || [];
-      state.data = state.data.filter((pedido) => !idsToRemove.includes(pedido.id));
+      state.data = state.data.filter(
+        (pedido) => !idsToRemove.includes(pedido.id),
+      );
       state.total = state.data.length;
     },
   },
@@ -54,7 +56,8 @@ const pedidoSlice = createSlice({
           "data" in action.payload
         ) {
           state.data = action.payload.data;
-          state.total = action.payload.total;
+          state.total =
+            typeof action.payload.total === "number" ? action.payload.total : 0;
         } else {
           state.data = Array.isArray(action.payload) ? action.payload : [];
           state.total = state.data.length;
@@ -79,13 +82,13 @@ const pedidoSlice = createSlice({
       })
       .addCase(deletePedido.fulfilled, (state, action) => {
         state.data = state.data.filter(
-          (pedido) => pedido.id !== action.payload
+          (pedido) => pedido.id !== action.payload,
         );
         state.data.sort((a, b) => a.id - b.id);
       })
       .addCase(updatePedido.fulfilled, (state, action) => {
         const index = state.data.findIndex(
-          (pedido) => pedido.id === action.payload.id
+          (pedido) => pedido.id === action.payload.id,
         );
         if (index !== -1) {
           state.data[index] = action.payload;
@@ -118,13 +121,13 @@ const pedidoSlice = createSlice({
       .addCase(updatePedidoActivacion.pending, (state, action) => {
         const { id, isActive } = action.meta.arg;
         state.data = state.data.map((p) =>
-          p.id === id ? { ...p, isActive } : p
+          p.id === id ? { ...p, isActive } : p,
         );
       })
       .addCase(updatePedidoActivacion.fulfilled, (state, action) => {
         const updated = action.payload;
         state.data = state.data.map((p) =>
-          p.id === updated.id ? { ...p, isActive: updated.isActive } : p
+          p.id === updated.id ? { ...p, isActive: updated.isActive } : p,
         );
       })
       .addCase(updatePedidoActivacion.rejected, (state, action) => {

@@ -110,7 +110,7 @@ const HistorialPedidosPage = () => {
           page: currentPage,
           limit: itemsPerPage,
           filters: filters,
-        })
+        }),
       );
     }
   }, [dispatch, usuarioId, roleId, currentPage, filters]);
@@ -126,12 +126,12 @@ const HistorialPedidosPage = () => {
     setSelectedPedido(pedido);
     try {
       const detalles = await dispatch(
-        getDetalleOrdenByPedidoId(pedido.id)
+        getDetalleOrdenByPedidoId(pedido.id),
       ).unwrap();
       const detallesOrdenados = detalles.slice().sort((a, b) =>
         a.nombreProducto.localeCompare(b.nombreProducto, undefined, {
           sensitivity: "base",
-        })
+        }),
       );
 
       setDetallesPedido(detallesOrdenados);
@@ -200,21 +200,26 @@ const HistorialPedidosPage = () => {
         </Box>
       ) : filteredPedidos.length > 0 ? (
         <>
-            <PedidosTable
-              pedidos={currentPedidos}
-              roleId={roleId}
-              onVerDetalles={handleVerDetalles}
-              highlightedPedidoId={highlightedPedidoId}
-              onClearHighlight={handleClearHighlight}
-            />
+          <PedidosTable
+            pedidos={currentPedidos}
+            roleId={roleId}
+            onVerDetalles={handleVerDetalles}
+            highlightedPedidoId={highlightedPedidoId}
+            onClearHighlight={handleClearHighlight}
+          />
           <Pagination
             currentPage={currentPage}
-            totalItems={total}
+            totalItems={
+              total > 0
+                ? total
+                : filteredPedidos.length > 0
+                  ? filteredPedidos.length
+                  : 0
+            }
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
           />
         </>
-
       ) : (
         <Box textAlign="center" color={noDataTextColor} mt={6}>
           No hay pedidos que coincidan con los filtros.
