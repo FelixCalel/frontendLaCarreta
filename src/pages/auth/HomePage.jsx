@@ -15,6 +15,10 @@ import {
   VStack,
   HStack,
   useColorModeValue,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from "@chakra-ui/react";
 import {
   FaUserShield,
@@ -45,6 +49,7 @@ const roleMap = {
 const roleColorMap = {
   Administrador: "red",
   Display: "blue",
+  Usuario: "blue", // Fallback for transition
   Ventas: "green",
   Supervisor: "pink",
   Compras: "orange",
@@ -56,6 +61,7 @@ const roleColorMap = {
 const roleIconMap = {
   Administrador: FaUserShield,
   Display: FaUserAlt,
+  Usuario: FaUserAlt, // Fallback
   Ventas: FaShoppingCart,
   Supervisor: FaUserTie,
   Compras: FaBox,
@@ -78,19 +84,25 @@ const HomePage = () => {
 
   const navigate = useNavigate();
 
-  const { displayName, roleId: roleIdRedux } = useSelector(
+  const { displayName, roleId: roleIdRedux, user } = useSelector(
     (state) => state.auth
   );
 
   useEffect(() => {
     setNombreUsuario(displayName || "Usuario");
+
+    // Prefer dynamic role name from backend user object
+    const dynamicRoleName = user?.role?.nombre;
     const currentRoleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
 
-    if (currentRoleId && roleMap[currentRoleId]) {
+    if (dynamicRoleName) {
+      setRolNombre(dynamicRoleName);
+      setRoleId(currentRoleId);
+    } else if (currentRoleId && roleMap[currentRoleId]) {
       setRolNombre(roleMap[currentRoleId]);
       setRoleId(currentRoleId);
     }
-  }, [displayName, roleIdRedux]);
+  }, [displayName, roleIdRedux, user]);
 
   const tipsMemo = useMemo(() => tips, []);
 
@@ -158,6 +170,31 @@ const HomePage = () => {
                   </Text>
                 </VStack>
               </Box>
+
+              {rolNombre === "Sin rol" && (
+                <Alert
+                  status="warning"
+                  variant="subtle"
+                  flexDirection="column"
+                  alignItems="center"
+                  justifyContent="center"
+                  textAlign="center"
+                  height="200px"
+                  borderRadius="lg"
+                  borderWidth="1px"
+                  borderColor="orange.200"
+                >
+                  <AlertIcon boxSize="40px" mr={0} />
+                  <AlertTitle mt={4} mb={1} fontSize="lg">
+                    Sin Rol Asignado
+                  </AlertTitle>
+                  <AlertDescription maxWidth="sm">
+                    No tienes un rol asignado actualmente. Por favor, contacta
+                    con un administrador para que te asignen un rol y puedas
+                    acceder a todas las funcionalidades del sistema.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {roleId === 2 && (
                 <Box

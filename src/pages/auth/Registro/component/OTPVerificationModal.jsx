@@ -9,7 +9,9 @@ import {
   ModalFooter,
   Button,
   Text,
-  Input,
+  PinInput,
+  PinInputField,
+  HStack,
 } from "@chakra-ui/react";
 
 const OTPVerificationModal = ({
@@ -33,6 +35,7 @@ const OTPVerificationModal = ({
         .then((otp) => {
           if (otp) {
             setVerifyCode(otp.code);
+            setTimeout(() => handleVerifySMS(otp.code), 0);
           }
         })
         .catch((err) => {
@@ -56,16 +59,60 @@ const OTPVerificationModal = ({
             Hemos enviado un SMS al <b>{pendingPhone}</b>. Ingresa el código
             para activar tu cuenta.
           </Text>
-          <Input
-            placeholder="Código SMS"
-            value={verifyCode}
-            onChange={(e) => setVerifyCode(e.target.value)}
-            textAlign="center"
-            fontSize="2xl"
-            letterSpacing="widest"
-            maxLength={6}
-            autoComplete="one-time-code"
-          />
+          <HStack justify="center" spacing={2} mb={3}>
+            <PinInput
+              otp
+              type="number"
+              size="lg"
+              value={verifyCode}
+              onChange={(value) => setVerifyCode(value)}
+              onComplete={(value) => handleVerifySMS(value)}
+              autoFocus
+            >
+              <PinInputField
+                w={12}
+                h={14}
+                fontSize="2xl"
+                rounded="lg"
+                _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+              />
+              <PinInputField
+                w={12}
+                h={14}
+                fontSize="2xl"
+                rounded="lg"
+                _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+              />
+              <PinInputField
+                w={12}
+                h={14}
+                fontSize="2xl"
+                rounded="lg"
+                _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+              />
+              <PinInputField
+                w={12}
+                h={14}
+                fontSize="2xl"
+                rounded="lg"
+                _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+              />
+              <PinInputField
+                w={12}
+                h={14}
+                fontSize="2xl"
+                rounded="lg"
+                _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+              />
+              <PinInputField
+                w={12}
+                h={14}
+                fontSize="2xl"
+                rounded="lg"
+                _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+              />
+            </PinInput>
+          </HStack>
           <Text fontSize="xs" color="gray.500">
             Detectando código automáticamente...
           </Text>

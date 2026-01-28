@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -17,6 +17,9 @@ import {
   Heading,
   useToast,
   VStack,
+  HStack,
+  PinInput,
+  PinInputField,
 } from "@chakra-ui/react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -37,10 +40,36 @@ export const RecuperarClave = () => {
   const [resetToken, setResetToken] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const toast = useToast();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (step === 2 && "OTPCredential" in window) {
+      const ac = new AbortController();
+      navigator.credentials
+        .get({
+          otp: { transport: ["sms"] },
+          signal: ac.signal,
+        })
+        .then((otp) => {
+          if (otp) {
+            setOtp(otp.code);
+            setTimeout(() => verifyCode(otp.code), 0);
+          }
+        })
+        .catch((err) => {
+          console.log("WebOTP Error or Timeout:", err);
+        });
+
+      return () => {
+        ac.abort();
+      };
+    }
+  }, [step]);
 
   const isEmail = (input) => /\S+@\S+\.\S+/.test(input);
 
@@ -49,7 +78,6 @@ export const RecuperarClave = () => {
     setIsLoading(true);
 
     if (isEmail(identifier)) {
-      // --- EMAIL FLOW (Existing) ---
       try {
         const resultAction = await dispatch(sendPasswordResetEmail(identifier));
         if (sendPasswordResetEmail.fulfilled.match(resultAction)) {
@@ -78,8 +106,6 @@ export const RecuperarClave = () => {
         setIsLoading(false);
       }
     } else {
-      // --- SMS FLOW (New) ---
-      // Basic phone validation logic could be improved here or rely on backend
       try {
         const resultAction = await dispatch(requestSmsRecovery(identifier));
         if (requestSmsRecovery.fulfilled.match(resultAction)) {
@@ -90,7 +116,7 @@ export const RecuperarClave = () => {
             duration: 3000,
             position: "top-right",
           });
-          setStep(2); // Move to OTP step
+          setStep(2);
         } else {
           throw new Error(resultAction.payload || "Error al enviar SMS.");
         }
@@ -109,12 +135,11 @@ export const RecuperarClave = () => {
     }
   };
 
-  const handleOtpSubmit = async (e) => {
-    e.preventDefault();
+  const verifyCode = async (code) => {
     setIsLoading(true);
     try {
       const resultAction = await dispatch(
-        verifySmsRecovery({ telefono: identifier, code: otp })
+        verifySmsRecovery({ telefono: identifier, code })
       );
       if (verifySmsRecovery.fulfilled.match(resultAction)) {
         setResetToken(resultAction.payload.token);
@@ -136,8 +161,16 @@ export const RecuperarClave = () => {
         duration: 4000,
         position: "top-right",
       });
+      setOtp("");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault();
+    if (otp.length === 6) {
+      verifyCode(otp);
     }
   };
 
@@ -202,8 +235,6 @@ export const RecuperarClave = () => {
   const inputBorder = useColorModeValue("gray.200", "whiteAlpha.100");
   const textColor = useColorModeValue("gray.800", "white");
   const subTextColor = useColorModeValue("gray.600", "gray.400");
-
-  // --- RENDER HELPERS ---
 
   const renderStep1 = () => (
     <VStack spacing={6} as="form" onSubmit={handleInitialSubmit} w="full">
@@ -280,32 +311,80 @@ export const RecuperarClave = () => {
         </Text>
       </VStack>
 
-      <FormControl isRequired>
-        <FormLabel color={textColor} fontWeight="medium">
-          Código PIN
-        </FormLabel>
-        <Input
-          type="text"
-          placeholder="123456"
-          maxLength={6}
-          textAlign="center"
-          letterSpacing="0.5em"
-          fontSize="2xl"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
-          bg={inputBg}
-          border="1px solid"
-          borderColor={inputBorder}
-          color={textColor}
-          _hover={{ borderColor: "green.400" }}
-          _focus={{
-            borderColor: "green.400",
-            boxShadow: "0 0 0 1px var(--chakra-colors-green-400)",
-          }}
-          size="lg"
-          rounded="xl"
-          autoComplete="one-time-code"
-        />
+      <FormControl isRequired display="flex" justifyContent="center">
+        <HStack spacing={2}>
+          <PinInput
+            otp
+            type="number"
+            size="lg"
+            value={otp}
+            onChange={(value) => setOtp(value)}
+            onComplete={(value) => verifyCode(value)}
+            isDisabled={isLoading}
+            autoFocus
+          >
+            <PinInputField
+              bg={inputBg}
+              borderColor={inputBorder}
+              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+              _hover={{ borderColor: "green.400" }}
+              w={12}
+              h={14}
+              fontSize="2xl"
+              rounded="lg"
+            />
+            <PinInputField
+              bg={inputBg}
+              borderColor={inputBorder}
+              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+              _hover={{ borderColor: "green.400" }}
+              w={12}
+              h={14}
+              fontSize="2xl"
+              rounded="lg"
+            />
+            <PinInputField
+              bg={inputBg}
+              borderColor={inputBorder}
+              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+              _hover={{ borderColor: "green.400" }}
+              w={12}
+              h={14}
+              fontSize="2xl"
+              rounded="lg"
+            />
+            <PinInputField
+              bg={inputBg}
+              borderColor={inputBorder}
+              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+              _hover={{ borderColor: "green.400" }}
+              w={12}
+              h={14}
+              fontSize="2xl"
+              rounded="lg"
+            />
+            <PinInputField
+              bg={inputBg}
+              borderColor={inputBorder}
+              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+              _hover={{ borderColor: "green.400" }}
+              w={12}
+              h={14}
+              fontSize="2xl"
+              rounded="lg"
+            />
+            <PinInputField
+              bg={inputBg}
+              borderColor={inputBorder}
+              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+              _hover={{ borderColor: "green.400" }}
+              w={12}
+              h={14}
+              fontSize="2xl"
+              rounded="lg"
+            />
+          </PinInput>
+        </HStack>
       </FormControl>
 
       <Button
@@ -370,7 +449,7 @@ export const RecuperarClave = () => {
             size="lg"
             rounded="xl"
           />
-          <InputLeftElement width="4.5rem">
+          <InputRightElement width="4.5rem">
             <Button
               h="1.75rem"
               size="sm"
@@ -379,7 +458,7 @@ export const RecuperarClave = () => {
             >
               {showPassword ? "Ocultar" : "Mostrar"}
             </Button>
-          </InputLeftElement>
+          </InputRightElement>
         </InputGroup>
       </FormControl>
 
@@ -405,7 +484,7 @@ export const RecuperarClave = () => {
             size="lg"
             rounded="xl"
           />
-          <InputLeftElement width="4.5rem">
+          <InputRightElement width="4.5rem">
             <Button
               h="1.75rem"
               size="sm"
@@ -414,7 +493,7 @@ export const RecuperarClave = () => {
             >
               {showConfirmPassword ? "Ocultar" : "Mostrar"}
             </Button>
-          </InputLeftElement>
+          </InputRightElement>
         </InputGroup>
       </FormControl>
 

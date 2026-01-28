@@ -176,21 +176,47 @@ export const fetchCurrentUser = createAsyncThunk(
       const { data } = await axios.get(`${BASE_URL}/login/me`);
       const me = data.user || data;
 
-      if (!me) throw new Error("No se pudo obtener la información del usuario");
+      if (data.token) {
+        localStorage.setItem("access_token", data.token);
+        localStorage.setItem("token", data.token);
+      }
 
-      return me;
+      if (me) {
+        localStorage.setItem("usuarioId", me.id);
+        localStorage.setItem("roleId", me.roleId);
+        if (me.nombre) {
+          localStorage.setItem("nombreUsuario", `${me.nombre} ${me.apellido || ""}`.trim());
+        }
+        if (me.correo) {
+          localStorage.setItem("correoUsuario", me.correo);
+        }
+        if (me.avatar) {
+          localStorage.setItem("avatar", me.avatar);
+        }
+        if (me.paisId) {
+          localStorage.setItem("paisId", me.paisId);
+        }
+        localStorage.setItem("isAuthenticated", "true");
+      }
+
+      if (!me) throw new Error("No se pudo obtener la información del usuario");
+      
+      return data;
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        // console.warn("Session expired or invalid token");
+        return rejectWithValue({ 
+          status: 401, 
+          message: err.response.data?.error || "Sesión expirada o no válida" 
+        });
       } else if (
         err.message === "Network Error" ||
         err.code === "ERR_NETWORK"
       ) {
-        // console.warn("Backend unavailable");
+        // Silencioso en thunk, manejado en slice
       } else {
         console.error("Error fetching current user:", err);
       }
-      return rejectWithValue(err.message || err);
+      return rejectWithValue(err.response?.data?.error || err.message || err);
     }
   }
 );
@@ -256,7 +282,10 @@ export const startLogin = createAsyncThunk(
             token: token,
             roleId: usuario.roleId,
             permissions: permissions,
+            roleId: usuario.roleId,
+            permissions: permissions,
             user: usuario,
+            photoURL: usuario.avatar,
           })
         );
 
@@ -320,7 +349,10 @@ export const startVerifyLogin = createAsyncThunk(
           token: token,
           roleId: usuario.roleId,
           permissions: permissions,
+          roleId: usuario.roleId,
+          permissions: permissions,
           user: usuario,
+          photoURL: usuario.avatar,
         })
       );
 

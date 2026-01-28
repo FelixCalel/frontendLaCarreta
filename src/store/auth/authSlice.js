@@ -164,9 +164,16 @@ export const authSlice = createSlice({
         state.displayName = payload.nombre || payload.user?.nombre;
         state.photoURL = payload.avatar || payload.user?.avatar;
         state.permissions = payload.permissions ?? state.permissions;
+        if (payload.token) {
+          state.token = payload.token;
+        }
         saveState(state);
       })
       .addCase(fetchCurrentUser.rejected, (state, { payload }) => {
+        const isAuthError =
+          payload?.status === 401 ||
+          (typeof payload === "string" && payload.includes("401"));
+
         const isNetworkError =
           payload === "Network Error" ||
           payload === "ERR_NETWORK" ||
@@ -174,10 +181,13 @@ export const authSlice = createSlice({
           payload?.code === "ERR_NETWORK" ||
           (typeof payload === "string" && payload.includes("Network"));
 
-        if (!isNetworkError) {
+        if (isAuthError) {
           state.status = "not-authenticated";
-          state.errorMessage = payload;
+          state.errorMessage = payload?.message || payload;
           saveState(state);
+        } else if (!isNetworkError) {
+          console.warn("fetchCurrentUser falló, pero se mantiene la sesión activa:", payload);
+          state.errorMessage = payload?.message || payload;
         }
       });
   },

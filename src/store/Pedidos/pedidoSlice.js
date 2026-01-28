@@ -34,6 +34,11 @@ const pedidoSlice = createSlice({
       state.status = "idle";
       state.error = null;
     },
+    removePedidos: (state, action) => {
+      const idsToRemove = action.payload || [];
+      state.data = state.data.filter((pedido) => !idsToRemove.includes(pedido.id));
+      state.total = state.data.length;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -123,7 +128,6 @@ const pedidoSlice = createSlice({
         );
       })
       .addCase(updatePedidoActivacion.rejected, (state, action) => {
-        //state.status = "failed";
         state.error = action.error.message;
       })
       .addCase(exportarPedidoSap.pending, (state) => {
@@ -141,5 +145,5 @@ const pedidoSlice = createSlice({
   },
 });
 
-export const { clearPedidos } = pedidoSlice.actions;
+export const { clearPedidos, removePedidos } = pedidoSlice.actions;
 export default pedidoSlice.reducer;

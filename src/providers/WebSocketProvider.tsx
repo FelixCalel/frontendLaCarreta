@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 // @ts-ignore
 import { fetchModulos } from "../store/RolPermisoUsuario/thunks";
 // @ts-ignore
-import { fetchCurrentUser } from "../store/auth/thunks";
+import { fetchCurrentUser, startLogout } from "../store/auth/thunks";
 
 interface IWebSocketContext {
   socket: WebSocket | null;
@@ -28,7 +28,7 @@ const createWebSocket = (
 ): WebSocket => {
   const ws = new WebSocket(url);
   ws.onopen = () => {
-    //console.log("Conectado al servidor WebSocket");
+    console.log("Conectado al servidor WebSocket en " + url);
     onOpen();
   };
   ws.onmessage = onMessage;
@@ -44,10 +44,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const wsUrl = useMemo(() => {
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-    return apiUrl.replace(/^http/, "ws").replace("/api", "");
+    const apiUrl = import.meta.env.VITE_API_URL;
+    return apiUrl.replace(/^http/, "ws").replace("/api", "") + "/ws";
   }, []);
-  const { status, uid } = useSelector((state: any) => state.auth);
+  const { status, uid, roleId } = useSelector((state: any) => state.auth);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -66,14 +66,29 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       ws = createWebSocket(
         wsUrl,
         (event) => {
-          // console.log("Mensaje recibido:", event.data);
           try {
             const data = JSON.parse(event.data);
             if (data.type === "permissions-updated") {
-              // console.log("Permisos actualizados, recargando...");
-              if (uid) {
-                dispatch(fetchModulos(uid) as any);
+              const targetId = data.payload?.id;
+              const targetRoleId = data.payload?.roleId;
+
+              console.log("WS Event Received:", {
+                type: data.type,
+                targetId,
+                targetRoleId,
+                currentUid: uid,
+                currentRoleId: roleId,
+                match: uid == targetId || roleId == targetRoleId,
+              });
+
+              if (uid == targetId || roleId == targetRoleId) {
+                console.log(
+                  "Permisos actualizados. Sincronizando datos y menú silenciosamente..."
+                );
                 dispatch(fetchCurrentUser() as any);
+                if (uid) {
+                  dispatch(fetchModulos(uid) as any);
+                }
               }
             } else if (data.type === "notification") {
               window.dispatchEvent(
@@ -100,8 +115,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
           reconnectTimeout = setTimeout(connect, 3000);
         },
         (error) => {
-          // Suppress connection errors to keep console clean
-          // console.warn("Advertencia en WebSocket:", error);
+          console.warn("Advertencia en WebSocket:", error);
         }
       );
     };
