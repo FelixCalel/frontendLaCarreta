@@ -23,12 +23,13 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import {
   registerUser,
   sendSMSCode,
   verifyRegistrationPhone,
 } from "../../../middleware/api";
+import { tablaPais } from "../../../store/pais/thunks";
 import Step1Account from "./component/Step1Account";
 import Step2Contact from "./component/Step2Contact";
 import Step3Security from "./component/Step3Security";
@@ -46,6 +47,7 @@ const steps = [
 
 const RegisterForm = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
   const { data: paises } = useSelector((state) => state.paises);
   const toast = useToast();
@@ -73,8 +75,9 @@ const RegisterForm = () => {
   const [recaptchaStatus, setRecaptchaStatus] = useState("idle");
 
   useEffect(() => {
+    dispatch(tablaPais());
     if (auth === "authenticated") navigate("/home", { replace: true });
-  }, [auth, navigate]);
+  }, [auth, navigate, dispatch]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -166,6 +169,12 @@ const RegisterForm = () => {
 
       let finalPhone = null;
       if (telefono) {
+        if (!dialCode) {
+          setErrors({ paisId: "Selecciona un país válido para el teléfono" });
+          setIsLoading(false);
+          setRecaptchaStatus("idle");
+          return;
+        }
         finalPhone = dialCode + telefono.replace(/\D+/g, "");
       }
 

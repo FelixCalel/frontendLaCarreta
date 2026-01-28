@@ -45,7 +45,7 @@ export const tablaPedidos = createAsyncThunk(
 
     if (resData.data && Array.isArray(resData.data)) {
       resultData = resData.data;
-      resultTotal = resData.total;
+      resultTotal = typeof resData.total === "number" ? resData.total : 0;
     } else if (Array.isArray(resData)) {
       resultData = resData;
       resultTotal = resData.length;
@@ -54,7 +54,7 @@ export const tablaPedidos = createAsyncThunk(
     resultData.sort((a, b) => a.id - b.id);
 
     return { data: resultData, total: resultTotal };
-  }
+  },
 );
 
 export const fetchIncomingPedidos = createAsyncThunk(
@@ -62,17 +62,17 @@ export const fetchIncomingPedidos = createAsyncThunk(
   async () => {
     const response = await axios.get(`${BASE_URL}/form/pedidos/estado/2`);
     return response.data;
-  }
+  },
 );
 
 export const fetchFilterOptions = createAsyncThunk(
   "pedidos/fetchFilterOptions",
   async ({ userId, roleId }) => {
     const response = await axios.get(
-      `${BASE_URL}/form/pedidos/historial/filtros/${userId}?roleId=${roleId}`
+      `${BASE_URL}/form/pedidos/historial/filtros/${userId}?roleId=${roleId}`,
     );
     return response.data;
-  }
+  },
 );
 
 export const addNewPedido = createAsyncThunk(
@@ -85,15 +85,15 @@ export const addNewPedido = createAsyncThunk(
     try {
       const response = await axios.post(
         `${BASE_URL}/form/pedidos/create`,
-        newPedido
+        newPedido,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data || "Error en la creación del pedido"
+        error.response?.data || "Error en la creación del pedido",
       );
     }
-  }
+  },
 );
 
 export const deletePedido = createAsyncThunk(
@@ -101,7 +101,7 @@ export const deletePedido = createAsyncThunk(
   async (id) => {
     await axios.delete(`${BASE_URL}/form/pedidos/eliminar/${id}`);
     return id;
-  }
+  },
 );
 
 export const updatePedido = createAsyncThunk(
@@ -109,17 +109,17 @@ export const updatePedido = createAsyncThunk(
   async (pedido) => {
     const response = await axios.put(
       `${BASE_URL}/form/pedido/actualizar/${pedido.id}`,
-      pedido
+      pedido,
     );
     return response.data;
-  }
+  },
 );
 
 export const togglePedidoStatus = createAsyncThunk(
   "pedidos/togglePedidoStatus",
   async (
     { id, estadoId, comentarioDisplay, fechaOrdenDisplay, comentario },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const toYMD = (v) => {
@@ -144,13 +144,13 @@ export const togglePedidoStatus = createAsyncThunk(
 
       const { data } = await axios.patch(
         `${BASE_URL}/form/pedidos/actualizar-estado/${id}`,
-        body
+        body,
       );
       return data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 export const tablaPedidosConDetalles = createAsyncThunk(
@@ -168,7 +168,7 @@ export const tablaPedidosConDetalles = createAsyncThunk(
       const pedidosConDetalles = await Promise.all(
         pedidos.map(async (pedido) => {
           const existingPedido = existingPedidos.find(
-            (p) => p.id === pedido.id
+            (p) => p.id === pedido.id,
           );
 
           if (
@@ -182,7 +182,7 @@ export const tablaPedidosConDetalles = createAsyncThunk(
 
           try {
             const detallesResponse = await axios.get(
-              `${BASE_URL}/detalle/pedido/listar/${pedido.id}`
+              `${BASE_URL}/detalle/pedido/listar/${pedido.id}`,
             );
             pedido.items = detallesResponse.data;
 
@@ -192,12 +192,12 @@ export const tablaPedidosConDetalles = createAsyncThunk(
           } catch (error) {
             console.error(
               `Error al obtener detalles del pedido ${pedido.id}:`,
-              error
+              error,
             );
             pedido.items = [];
           }
           return pedido;
-        })
+        }),
       );
 
       pedidosConDetalles.sort((a, b) => a.id - b.id);
@@ -207,7 +207,7 @@ export const tablaPedidosConDetalles = createAsyncThunk(
       console.error("Error al obtener pedidos con detalles:", error);
       throw error;
     }
-  }
+  },
 );
 
 export const updatePedidoActivacion = createAsyncThunk(
@@ -215,10 +215,10 @@ export const updatePedidoActivacion = createAsyncThunk(
   async ({ id, isActive }) => {
     const response = await axios.patch(
       `${BASE_URL}/form/pedidos/actualizar-activacion/${id}`,
-      { isActive }
+      { isActive },
     );
     return response.data;
-  }
+  },
 );
 
 export const exportarPedidoSap = createAsyncThunk(
@@ -243,8 +243,13 @@ export const exportarPedidoSap = createAsyncThunk(
       }
 
       if (!paisId) {
-        console.error("Export Error: paisId missing. Auth State:", getState().auth);
-        return rejectWithValue("No se pudo obtener el paisId del usuario. Intente cerrar sesión y volver a entrar.");
+        console.error(
+          "Export Error: paisId missing. Auth State:",
+          getState().auth,
+        );
+        return rejectWithValue(
+          "No se pudo obtener el paisId del usuario. Intente cerrar sesión y volver a entrar.",
+        );
       }
       console.log({ paisId, empresas });
       const emp = empresas.find((e) => e.paisId == paisId && e.estaActivo);
@@ -253,12 +258,12 @@ export const exportarPedidoSap = createAsyncThunk(
       }
       const { data } = await axios.post(
         `${BASE_URL}/sap/deus/exportarPedidos`,
-        { dbsap: emp.baseDatos, ipsap: emp.ipBaseDatos }
+        { dbsap: emp.baseDatos, ipsap: emp.ipBaseDatos },
       );
       return data.enviados || data;
     } catch (err) {
       const msg = err.response?.data || err.message || err;
       return rejectWithValue(msg);
     }
-  }
+  },
 );
