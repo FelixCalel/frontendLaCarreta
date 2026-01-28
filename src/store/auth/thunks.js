@@ -67,7 +67,7 @@ export const startCreatingUser = (
   empresa,
   nit,
   correo_electronico,
-  password
+  password,
 ) => {
   return async (dispatch) => {
     dispatch(checkingCredentials());
@@ -79,7 +79,7 @@ export const startCreatingUser = (
       empresa,
       nit,
       correo_electronico,
-      password
+      password,
     )
       .then((resp) => {
         console.log(resp);
@@ -115,7 +115,7 @@ export const startCreatingUserChildren = (
   correo_electronico,
   password,
   roleId,
-  parentId
+  parentId,
 ) => {
   return async (dispatch) => {
     const err = "";
@@ -127,7 +127,7 @@ export const startCreatingUserChildren = (
       correo_electronico,
       password,
       roleId,
-      parentId
+      parentId,
     )
       .then((resp) => {
         console.log(resp);
@@ -185,7 +185,10 @@ export const fetchCurrentUser = createAsyncThunk(
         localStorage.setItem("usuarioId", me.id);
         localStorage.setItem("roleId", me.roleId);
         if (me.nombre) {
-          localStorage.setItem("nombreUsuario", `${me.nombre} ${me.apellido || ""}`.trim());
+          localStorage.setItem(
+            "nombreUsuario",
+            `${me.nombre} ${me.apellido || ""}`.trim(),
+          );
         }
         if (me.correo) {
           localStorage.setItem("correoUsuario", me.correo);
@@ -200,13 +203,13 @@ export const fetchCurrentUser = createAsyncThunk(
       }
 
       if (!me) throw new Error("No se pudo obtener la información del usuario");
-      
+
       return data;
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        return rejectWithValue({ 
-          status: 401, 
-          message: err.response.data?.error || "Sesión expirada o no válida" 
+        return rejectWithValue({
+          status: 401,
+          message: err.response.data?.error || "Sesión expirada o no válida",
         });
       } else if (
         err.message === "Network Error" ||
@@ -218,7 +221,7 @@ export const fetchCurrentUser = createAsyncThunk(
       }
       return rejectWithValue(err.response?.data?.error || err.message || err);
     }
-  }
+  },
 );
 
 export const startLogin = createAsyncThunk(
@@ -246,12 +249,15 @@ export const startLogin = createAsyncThunk(
           resp.data;
 
         localStorage.setItem("access_token", token);
+        if (resp.data.refreshToken) {
+          localStorage.setItem("refresh_token", resp.data.refreshToken);
+        }
 
         if (trustToken) {
           if (usuario.correo)
             localStorage.setItem(
               `trust_token_${usuario.correo.toLowerCase()}`,
-              trustToken
+              trustToken,
             );
           if (usuario.telefono)
             localStorage.setItem(`trust_token_${usuario.telefono}`, trustToken);
@@ -286,7 +292,7 @@ export const startLogin = createAsyncThunk(
             permissions: permissions,
             user: usuario,
             photoURL: usuario.avatar,
-          })
+          }),
         );
 
         return { status: "authenticated" };
@@ -296,10 +302,10 @@ export const startLogin = createAsyncThunk(
     } catch (err) {
       console.error("Error al iniciar sesión:", err);
       return rejectWithValue(
-        err.response?.data?.error || "Error al iniciar sesión."
+        err.response?.data?.error || "Error al iniciar sesión.",
       );
     }
-  }
+  },
 );
 
 export const startVerifyLogin = createAsyncThunk(
@@ -315,11 +321,14 @@ export const startVerifyLogin = createAsyncThunk(
         resp.data;
 
       localStorage.setItem("access_token", token);
+      if (resp.data.refreshToken) {
+        localStorage.setItem("refresh_token", resp.data.refreshToken);
+      }
       if (trustToken) {
         if (usuario.correo)
           localStorage.setItem(
             `trust_token_${usuario.correo.toLowerCase()}`,
-            trustToken
+            trustToken,
           );
         if (usuario.telefono)
           localStorage.setItem(`trust_token_${usuario.telefono}`, trustToken);
@@ -353,14 +362,14 @@ export const startVerifyLogin = createAsyncThunk(
           permissions: permissions,
           user: usuario,
           photoURL: usuario.avatar,
-        })
+        }),
       );
 
       return { success: true };
     } catch (err) {
       return rejectWithValue(err.response?.data?.error || "Código inválido.");
     }
-  }
+  },
 );
 
 export const verifyEmailCode = createAsyncThunk(
@@ -395,7 +404,7 @@ export const verifyEmailCode = createAsyncThunk(
       }
       return rejectWithValue(errorMessage);
     }
-  }
+  },
 );
 
 export const sendPasswordResetEmail = createAsyncThunk(
@@ -421,7 +430,7 @@ export const sendPasswordResetEmail = createAsyncThunk(
       }
       return rejectWithValue(errorMessage);
     }
-  }
+  },
 );
 
 export const resetPasswordWithToken = createAsyncThunk(
@@ -440,10 +449,10 @@ export const resetPasswordWithToken = createAsyncThunk(
     } catch (error) {
       console.error("Error al enviar la contraseña:", error);
       return rejectWithValue(
-        "Hubo un error al cambiar la contraseña. Por favor, inténtalo de nuevo más tarde."
+        "Hubo un error al cambiar la contraseña. Por favor, inténtalo de nuevo más tarde.",
       );
     }
-  }
+  },
 );
 
 export const activateUserChild = createAsyncThunk(
@@ -452,7 +461,7 @@ export const activateUserChild = createAsyncThunk(
     try {
       const response = await axios.post(
         `${BASE_URL}/usuarios/activarUsuarioHijo`,
-        userData
+        userData,
       );
       if (response.status === 201) {
         return {
@@ -465,7 +474,7 @@ export const activateUserChild = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(`Hubo un error: ${error.message || error}`);
     }
-  }
+  },
 );
 
 export const startLogout = createAsyncThunk(
@@ -486,7 +495,7 @@ export const startLogout = createAsyncThunk(
     sessionStorage.removeItem("refresh_token");
     dispatch(clearPedidos());
     dispatch(logout());
-  }
+  },
 );
 export const startUpdateProfile = createAsyncThunk(
   "auth/startUpdateProfile",
@@ -500,17 +509,17 @@ export const startUpdateProfile = createAsyncThunk(
           apellido: userData.apellido,
           telefono: userData.telefono,
           avatar: userData.avatar,
-        })
+        }),
       );
 
       return { success: true, message: "Perfil actualizado correctamente." };
     } catch (error) {
       console.error("Error in startUpdateProfile:", error);
       return rejectWithValue(
-        error.response?.data?.message || "Error al actualizar el perfil."
+        error.response?.data?.message || "Error al actualizar el perfil.",
       );
     }
-  }
+  },
 );
 
 export const requestSmsRecovery = createAsyncThunk(
@@ -521,15 +530,15 @@ export const requestSmsRecovery = createAsyncThunk(
         `${BASE_URL}/usuarios/recuperar-clave-sms`,
         {
           telefono,
-        }
+        },
       );
       return resp.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || "Error al solicitar el código."
+        error.response?.data?.error || "Error al solicitar el código.",
       );
     }
-  }
+  },
 );
 
 export const verifySmsRecovery = createAsyncThunk(
@@ -541,15 +550,15 @@ export const verifySmsRecovery = createAsyncThunk(
         {
           telefono,
           code,
-        }
+        },
       );
       return resp.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || "Código inválido o expirado."
+        error.response?.data?.error || "Código inválido o expirado.",
       );
     }
-  }
+  },
 );
 
 export const resetPasswordSms = createAsyncThunk(
@@ -563,8 +572,8 @@ export const resetPasswordSms = createAsyncThunk(
       return resp.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || "Error al restablecer la contraseña."
+        error.response?.data?.error || "Error al restablecer la contraseña.",
       );
     }
-  }
+  },
 );

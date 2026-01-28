@@ -95,12 +95,12 @@ const EntrantesPage = () => {
           status: 2,
           page: currentPage,
           limit: itemsPerPage,
-        })
+        }),
       );
     } else {
       // Fallback for missing user context
       dispatch(
-        tablaPedidos({ status: 2, page: currentPage, limit: itemsPerPage })
+        tablaPedidos({ status: 2, page: currentPage, limit: itemsPerPage }),
       );
     }
   }, [dispatch, currentPage, usuarioId, roleId]);
@@ -120,12 +120,12 @@ const EntrantesPage = () => {
     setSelectedPedido(pedido);
     try {
       const detalles = await dispatch(
-        getDetalleOrdenByPedidoId(pedido.id)
+        getDetalleOrdenByPedidoId(pedido.id),
       ).unwrap();
       const detallesOrdenados = detalles.slice().sort((a, b) =>
         a.nombreProducto.localeCompare(b.nombreProducto, undefined, {
           sensitivity: "base",
-        })
+        }),
       );
       setDetallesPedido(detallesOrdenados);
       setIsModalOpen(true);
@@ -202,9 +202,9 @@ const EntrantesPage = () => {
               comentarioDisplay: comentarioDisplay,
               comentario: comentario,
               fechaOrdenDisplay: fecha,
-            })
+            }),
           ).unwrap();
-        })
+        }),
       );
       toast({ title: "Pedidos aprobados correctamente", status: "success" });
       setSelectedPedidos([]);
@@ -217,7 +217,7 @@ const EntrantesPage = () => {
           status: 2,
           page: currentPage,
           limit: itemsPerPage,
-        })
+        }),
       );
 
       onApproveClose();
@@ -245,15 +245,18 @@ const EntrantesPage = () => {
     setIsProcessing(true);
     try {
       await Promise.all(
-        selectedPedidos.map((id) =>
-          dispatch(
+        selectedPedidos.map((id) => {
+          const pedido = pedidosEntrantes.find((p) => p.id === id);
+          return dispatch(
             togglePedidoStatus({
               id,
               estadoId: 4,
               comentario: cancelComment,
-            })
-          ).unwrap()
-        )
+              comentarioDisplay: pedido ? pedido.comentarioDisplay : undefined,
+              fechaOrdenDisplay: pedido ? pedido.fechaOrdenDisplay : undefined,
+            }),
+          ).unwrap();
+        }),
       );
       toast({ title: "Pedidos cancelados correctamente", status: "info" });
       setSelectedPedidos([]);
@@ -267,7 +270,7 @@ const EntrantesPage = () => {
           status: 2,
           page: currentPage,
           limit: itemsPerPage,
-        })
+        }),
       );
     } catch (err) {
       toast({

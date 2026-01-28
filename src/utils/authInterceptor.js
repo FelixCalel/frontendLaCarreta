@@ -47,7 +47,7 @@ export const setupAxiosInterceptors = () => {
       }
       return config;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
   );
 
   axios.interceptors.response.use(
@@ -87,10 +87,11 @@ export const setupAxiosInterceptors = () => {
       isRefreshing = true;
       try {
         const baseUrl = import.meta.env.VITE_API_URL;
+        const storedRefreshToken = localStorage.getItem("refresh_token");
         const resp = await axios.post(
           `${baseUrl}/login/refresh-token`,
-          {},
-          { withCredentials: true }
+          { refreshToken: storedRefreshToken },
+          { withCredentials: true },
         );
 
         const newAccessToken =
@@ -119,6 +120,6 @@ export const setupAxiosInterceptors = () => {
       } finally {
         isRefreshing = false;
       }
-    }
+    },
   );
 };
