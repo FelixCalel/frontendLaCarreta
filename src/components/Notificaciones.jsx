@@ -23,6 +23,7 @@ import {
   markAsRead,
   markAllAsRead,
 } from "../store/Notificaciones/thunks";
+import { fetchCurrentUser } from "../store/auth/thunks";
 import {
   addNotificacion,
   removeNotificacion,
@@ -37,9 +38,13 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
   const roleId = localStorage.getItem("roleId");
 
   const { notificaciones = [], unreadCount } = useSelector(
-    (state) => state.notificaciones || {}
+    (state) => state.notificaciones || {},
   );
-  const { token, user, rutas: userRutasIds } = useSelector((state) => state.auth || {});
+  const {
+    token,
+    user,
+    rutas: userRutasIds,
+  } = useSelector((state) => state.auth || {});
   const rolNombre = user?.role?.nombre || localStorage.getItem("rolNombre");
 
   const colors = {
@@ -53,6 +58,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
 
   useEffect(() => {
     if (usuarioId) {
+      dispatch(fetchCurrentUser());
       dispatch(getNotificaciones(usuarioId));
     }
 
@@ -63,26 +69,23 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
         ? parseInt(newNotification.usuarioId, 10)
         : null;
       if (!notifUserId || notifUserId !== usuarioId) {
-        // If it's not a direct targeted notification, check if it's a route-based one
-        const tiendaId = newNotification.tiendaId || (newNotification.data && newNotification.data.tiendaId);
-        const rutaId = newNotification.rutaId || (newNotification.data && newNotification.data.rutaId);
+        const tiendaId =
+          newNotification.tiendaId ||
+          (newNotification.data && newNotification.data.tiendaId);
+        const rutaId =
+          newNotification.rutaId ||
+          (newNotification.data && newNotification.data.rutaId);
 
-        // If we are "Ventas" or "Display", we must check route permissions
         if (rolNombre === "Ventas" || rolNombre === "Display") {
-           // If we have route info, we check if it belongs to our assigned routes
-           if (rutaId && userRutasIds && userRutasIds.length > 0) {
-             if (!userRutasIds.includes(parseInt(rutaId, 10))) {
-               return;
-             }
-           } else if (!notifUserId) {
-             // If no route info and not targeted to us, we skip global ones we shouldn't see
-             // (unless they are truly global, but here we expect route-based)
-             return;
-           }
+          if (rutaId && userRutasIds && userRutasIds.length > 0) {
+            if (!userRutasIds.includes(parseInt(rutaId, 10))) {
+              return;
+            }
+          } else if (!notifUserId) {
+            return;
+          }
         } else if (!notifUserId) {
-           // Not targeted and not a role that handles routes? 
-           // If it's not targeted to us, we probably shouldn't see it
-           return;
+          return;
         }
       }
 
@@ -99,7 +102,6 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
         const estadoId =
           newNotification.estadoId ||
           (newNotification.data && newNotification.data.estadoId);
-        // Display only sees Approved (3), Cancelled (4), or Exported (5)
         if (estadoId && ![3, 4, 5].includes(parseInt(estadoId))) {
           return;
         }
@@ -132,7 +134,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
       window.removeEventListener("notification-received", handleNotification);
       window.removeEventListener(
         "notification-deleted",
-        handleNotificationDeleted
+        handleNotificationDeleted,
       );
     };
   }, [dispatch, usuarioId, roleId]);
@@ -153,11 +155,12 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
 
     if (pedidoId) {
       const navigationState = { state: { highlightedPedidoId: pedidoId } };
-      console.log("Navigating to historial with state:", navigationState);
-      if (rolNombre === "Ventas") {
+      console.log("Navigating with state:", navigationState);
+
+      const userRoleId = parseInt(roleId, 10);
+
+      if (userRoleId === 3) {
         navigate(`/pedidos/entrantes`, navigationState);
-      } else if (rolNombre === "Display") {
-        navigate(`/historialPedido/listar`, navigationState);
       } else {
         navigate(`/historialPedido/listar`, navigationState);
       }
@@ -172,46 +175,46 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     dispatch(markAsRead(id));
   };
 
-  const filteredNotificaciones = notificaciones.filter((n) => {
-    const nUsuarioId = n.usuarioId || (n.data && n.data.usuarioId);
+  const rawRutas = user?.rutas || userRutasIds || [];
 
-    if (!nUsuarioId || parseInt(nUsuarioId) !== usuarioId) {
+  const rutasSet = new Set(
+    Array.isArray(rawRutas)
+      ? rawRutas.map((r) => (typeof r === "object" ? +r.id : +r))
+      : [],
+  );
+
+  const filteredNotificaciones = notificaciones.filter((n) => {
+    const userRoleId = parseInt(roleId, 10);
+    const isVentasOrDisplay = userRoleId === 3 || userRoleId === 2;
+    const hasPedidoId = n.pedidoId || (n.data && n.data.pedidoId);
+
+    if (isVentasOrDisplay && hasPedidoId) {
+      if (rutasSet.size === 0) return false;
+
+      const nRutaId = n.rutaId || (n.data && n.data.rutaId);
+      if (nRutaId) {
+        return rutasSet.has(parseInt(nRutaId, 10));
+      }
       return false;
     }
 
-    if (rolNombre === "Ventas") {
-      const estadoId = n.estadoId || (n.data && n.data.estadoId);
-      if (estadoId !== undefined && estadoId !== null) {
-        return parseInt(estadoId) === 2;
-      }
-      return true;
-    }
-
-    if (rolNombre === "Display") {
-      const estadoId = n.estadoId || (n.data && n.data.estadoId);
-      if (estadoId !== undefined && estadoId !== null) {
-        return [3, 4, 5].includes(parseInt(estadoId));
-      }
-      return true;
-    }
-
+    const nUsuarioId = n.usuarioId || (n.data && n.data.usuarioId);
     if (nUsuarioId && parseInt(nUsuarioId) === usuarioId) {
       return true;
     }
 
-    // Additional route-level check for Sales/Display if not already matched by ID
-    if (rolNombre === "Ventas" || rolNombre === "Display") {
-      const nRutaId = n.rutaId || (n.data && n.data.rutaId);
-      if (nRutaId && userRutasIds && userRutasIds.length > 0) {
-        return userRutasIds.includes(parseInt(nRutaId, 10));
-      }
+    if (rutasSet.size === 0) return false;
+
+    const nRutaId = n.rutaId || (n.data && n.data.rutaId);
+    if (nRutaId) {
+      return rutasSet.has(parseInt(nRutaId, 10));
     }
 
     return false;
   });
 
   const displayUnreadCount = filteredNotificaciones.filter(
-    (n) => !n.leido
+    (n) => !n.leido,
   ).length;
 
   return (
@@ -278,7 +281,12 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
             >
               <HStack spacing={2}>
                 <Text fontWeight="bold" fontSize="md">
-                  Notificaciones {rolNombre === "Ventas" ? "de Pedidos" : rolNombre === "Display" ? "de Display" : ""}
+                  Notificaciones{" "}
+                  {rolNombre === "Ventas"
+                    ? "de Pedidos"
+                    : rolNombre === "Display"
+                      ? "de Display"
+                      : ""}
                 </Text>
                 {displayUnreadCount > 0 && (
                   <Badge colorScheme="blue" borderRadius="full" px={2}>

@@ -25,6 +25,7 @@ import {
   tablaPedidos,
   togglePedidoStatus,
 } from "../../../store/Pedidos/thunks";
+import { fetchCurrentUser } from "../../../store/auth/thunks";
 import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 import Pagination from "../../../components/pagination";
@@ -37,7 +38,6 @@ const EntrantesPage = () => {
   const location = useLocation();
   const toast = useToast();
   const { query } = useSearch();
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [detallesPedido, setDetallesPedido] = useState([]);
@@ -45,8 +45,6 @@ const EntrantesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
-
-  // Get User Context
   const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
   const roleId = parseInt(localStorage.getItem("roleId"), 10);
 
@@ -76,17 +74,43 @@ const EntrantesPage = () => {
   const textColor = useColorModeValue("gray.800", "white");
   const calendarFilter = useColorModeValue("none", "invert(1)");
 
-  // Selectors
   const {
-    data: pedidosEntrantes,
+    data: pedidosEntrantesRaw,
     status,
     total,
   } = useSelector((state) => state.pedidos);
+  const tiendas = useSelector((state) => state.tiendas.data);
+  const user = useSelector((state) => state.auth.user);
+
+  const pedidosEntrantes = useMemo(() => {
+    if (!pedidosEntrantesRaw || !tiendas || !user) return [];
+
+    const rutasUsuario = user.rutas || [];
+    const rutasSet = new Set(
+      Array.isArray(rutasUsuario)
+        ? rutasUsuario.map((r) => (typeof r === "object" ? +r.id : +r))
+        : [],
+    );
+    const tiendaRutaMap = new Map(tiendas.map((t) => [t.id, +t.rutaId]));
+
+    const userId =
+      user.id || user.uid || (user.usuarioId ? parseInt(user.usuarioId) : null);
+
+    return pedidosEntrantesRaw.filter((p) => {
+      if (userId && p.usuarioId === userId) return true;
+
+      if (!rutasUsuario.length) return false;
+
+      const rutaTienda = tiendaRutaMap.get(p.tiendaId);
+      return rutasSet.has(rutaTienda);
+    });
+  }, [pedidosEntrantesRaw, tiendas, user]);
+
   const isLoading = status === "loading";
 
   useEffect(() => {
+    dispatch(fetchCurrentUser());
     dispatch(tablaTienda());
-    // Dispatch with User Context and Status 2 (Entrantes) + Pagination
     if (usuarioId && roleId) {
       dispatch(
         tablaPedidos({
@@ -98,9 +122,12 @@ const EntrantesPage = () => {
         }),
       );
     } else {
-      // Fallback for missing user context
       dispatch(
-        tablaPedidos({ status: 2, page: currentPage, limit: itemsPerPage }),
+        tablaPedidos({
+          status: 2,
+          page: currentPage,
+          limit: itemsPerPage,
+        }),
       );
     }
   }, [dispatch, currentPage, usuarioId, roleId]);
@@ -111,6 +138,24 @@ const EntrantesPage = () => {
       window.history.replaceState({}, document.title);
     }
   }, [location]);
+
+  useEffect(() => {
+    if (highlightedPedidoId && pedidosEntrantes.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(
+          `pedido-${highlightedPedidoId}`,
+        );
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100);
+
+      const timer = setTimeout(() => {
+        setHighlightedPedidoId(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedPedidoId, pedidosEntrantes]);
 
   const handleClearHighlight = useCallback(() => {
     setHighlightedPedidoId(null);
@@ -209,7 +254,6 @@ const EntrantesPage = () => {
       toast({ title: "Pedidos aprobados correctamente", status: "success" });
       setSelectedPedidos([]);
 
-      // Refresh list after approval
       dispatch(
         tablaPedidos({
           userId: usuarioId,
@@ -262,7 +306,6 @@ const EntrantesPage = () => {
       setSelectedPedidos([]);
       setCancelComment("");
       onCancelClose();
-      // Refresh list
       dispatch(
         tablaPedidos({
           userId: usuarioId,
@@ -303,7 +346,6 @@ const EntrantesPage = () => {
     });
   }, [pedidosEntrantes, query]);
 
-  // removed client side slicing since backend does it
   const pedidosPaginados = filteredPedidos;
 
   return (
@@ -486,17 +528,6 @@ const EntrantesPage = () => {
                   borderColor={borderColor}
                   color={textColor}
                 />
-
-                {/* <Text mb={1} fontWeight="bold" fontSize="sm">Comentario de Ventas (Interno)</Text>
-                <Textarea
-                  placeholder="Comentario interno de ventas..."
-                  value={approveData.comentario}
-                  onChange={(e) => setApproveData({ ...approveData, comentario: e.target.value })}
-                  mb={4}
-                  bg={inputBg}
-                  borderColor={borderColor}
-                  color={textColor}
-                /> */}
               </>
             ) : (
               <Text color="gray.500" mb={4}>

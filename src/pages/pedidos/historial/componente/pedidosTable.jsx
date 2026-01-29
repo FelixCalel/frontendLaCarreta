@@ -21,7 +21,6 @@ const PedidosTable = ({
   highlightedPedidoId = null,
   onClearHighlight = () => {},
 }) => {
-  // Show SAP info (DocEntry/DocNum) for Admin (1) and Seller (3)
   const showSapInfo = roleId === 1 || roleId === 3;
   const blinkBg = useColorModeValue("orange.100", "orange.700");
 
@@ -39,7 +38,7 @@ const PedidosTable = ({
       <Table
         variant="striped"
         colorScheme="gray"
-        sx={{ "--blink-color": blinkBg }}
+        style={{ "--blink-color": blinkBg }}
         display={{ base: "none", md: "table" }}
       >
         <Thead>
@@ -64,6 +63,8 @@ const PedidosTable = ({
                 id={`pedido-${pedido.id}`}
                 key={pedido.id}
                 animation={isHighlighted ? "blink 1s infinite" : undefined}
+                bg={isHighlighted ? blinkBg : undefined}
+                border={isHighlighted ? "2px solid teal" : undefined}
                 onClick={isHighlighted ? onClearHighlight : undefined}
                 cursor={isHighlighted ? "pointer" : "default"}
               >
@@ -78,30 +79,30 @@ const PedidosTable = ({
                       pedido.estadoId === 5
                         ? "blue.600"
                         : pedido.estadoId === 3
-                        ? "green.600"
-                        : pedido.estadoId === 2
-                        ? "yellow.600"
-                        : pedido.estadoId === 4
-                        ? "red.600"
-                        : "gray.600"
+                          ? "green.600"
+                          : pedido.estadoId === 2
+                            ? "yellow.600"
+                            : pedido.estadoId === 4
+                              ? "red.600"
+                              : "gray.600"
                     }
                     fontWeight="bold"
                   >
                     {pedido.estadoId === 5
                       ? "Exportado"
                       : pedido.estadoId === 4
-                      ? "Cancelado"
-                      : pedido.estadoId === 3
-                      ? "Aprobado"
-                      : pedido.estadoId === 2
-                      ? "Pendiente"
-                      : pedido.estadoId === 1
-                      ? "Creado"
-                      : "Desconocido"}
+                        ? "Cancelado"
+                        : pedido.estadoId === 3
+                          ? "Aprobado"
+                          : pedido.estadoId === 2
+                            ? "Pendiente"
+                            : pedido.estadoId === 1
+                              ? "Creado"
+                              : "Desconocido"}
                   </Box>
                 </Td>
 
-{showSapInfo && <Td>{pedido.docEntry ?? "—"}</Td>}
+                {showSapInfo && <Td>{pedido.docEntry ?? "—"}</Td>}
                 {showSapInfo && <Td>{pedido.docNum ?? "—"}</Td>}
 
                 <Td>
@@ -134,10 +135,10 @@ const PedidosTable = ({
         </Tbody>
       </Table>
 
-      <Box 
-        display={{ base: "flex", md: "none" }} 
-        flexDirection="column" 
-        gap={4} 
+      <Box
+        display={{ base: "flex", md: "none" }}
+        flexDirection="column"
+        gap={4}
         width="100%"
         maxW="100%"
         overflowX="hidden"
@@ -161,9 +162,13 @@ const PedidosTable = ({
               sx={{ "--blink-color": blinkBg }}
               width="100%"
               maxW="100%"
-              
             >
-              <Box display="flex" justifyContent="space-between" mb={2} alignItems="flex-start">
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                mb={2}
+                alignItems="flex-start"
+              >
                 <Box fontWeight="bold" fontSize="lg">
                   ID: {pedido.id}
                 </Box>
@@ -173,35 +178,36 @@ const PedidosTable = ({
                     pedido.estadoId === 5
                       ? "blue.600"
                       : pedido.estadoId === 3
-                      ? "green.600"
-                      : pedido.estadoId === 2
-                      ? "yellow.600"
-                      : pedido.estadoId === 4
-                      ? "red.600"
-                      : "gray.600"
+                        ? "green.600"
+                        : pedido.estadoId === 2
+                          ? "yellow.600"
+                          : pedido.estadoId === 4
+                            ? "red.600"
+                            : "gray.600"
                   }
                 >
                   {pedido.estadoId === 5
                     ? "Exportado"
                     : pedido.estadoId === 4
-                    ? "Cancelado"
-                    : pedido.estadoId === 3
-                    ? "Aprobado"
-                    : pedido.estadoId === 2
-                    ? "Pendiente"
-                    : pedido.estadoId === 1
-                    ? "Creado"
-                    : "Desconocido"}
+                      ? "Cancelado"
+                      : pedido.estadoId === 3
+                        ? "Aprobado"
+                        : pedido.estadoId === 2
+                          ? "Pendiente"
+                          : pedido.estadoId === 1
+                            ? "Creado"
+                            : "Desconocido"}
                 </Box>
               </Box>
 
               <Box mb={2}>
-                <strong>Deudor:</strong> {pedido.nombreCorrelativo} - {pedido.nombreDeu || "N/A"}
+                <strong>Deudor:</strong> {pedido.nombreCorrelativo} -{" "}
+                {pedido.nombreDeu || "N/A"}
               </Box>
               <Box mb={2}>
                 <strong>Tienda:</strong> {pedido.nombreTienda || "N/A"}
               </Box>
-{showSapInfo && (
+              {showSapInfo && (
                 <>
                   <Box mb={2}>
                     <strong>DocEntry:</strong> {pedido.docEntry ?? "—"}
@@ -257,7 +263,7 @@ PedidosTable.propTypes = {
       nombreUsuario: PropTypes.string,
       docNum: PropTypes.number,
       docEntry: PropTypes.number,
-    })
+    }),
   ).isRequired,
   roleId: PropTypes.number.isRequired,
   onVerDetalles: PropTypes.func.isRequired,

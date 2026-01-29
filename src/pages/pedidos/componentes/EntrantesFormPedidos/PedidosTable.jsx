@@ -34,7 +34,7 @@ const PedidosTable = ({
     setSelectedPedidos(
       selectedPedidos.includes(id)
         ? selectedPedidos.filter((pid) => pid !== id)
-        : [...selectedPedidos, id]
+        : [...selectedPedidos, id],
     );
 
   return (
@@ -52,11 +52,41 @@ const PedidosTable = ({
         variant="striped"
         colorScheme={stripe}
         size="md"
-        sx={{ "--blink-color": blinkBg }}
+        style={{ "--blink-color": blinkBg }}
       >
         <Thead>
           <Tr>
-            <Th>Seleccionar</Th>
+            <Th>
+              <Checkbox
+                size="lg"
+                borderColor={borderColor}
+                isChecked={
+                  pedidosEntrantes.length > 0 &&
+                  pedidosEntrantes.every((p) => selectedPedidos.includes(p.id))
+                }
+                isIndeterminate={
+                  selectedPedidos.length > 0 &&
+                  !pedidosEntrantes.every((p) => selectedPedidos.includes(p.id))
+                }
+                onChange={() => {
+                  const visibleIds = pedidosEntrantes.map((p) => p.id);
+                  const allSelected = visibleIds.every((id) =>
+                    selectedPedidos.includes(id),
+                  );
+
+                  if (allSelected) {
+                    setSelectedPedidos(
+                      selectedPedidos.filter((id) => !visibleIds.includes(id)),
+                    );
+                  } else {
+                    const newIds = visibleIds.filter(
+                      (id) => !selectedPedidos.includes(id),
+                    );
+                    setSelectedPedidos([...selectedPedidos, ...newIds]);
+                  }
+                }}
+              />
+            </Th>
             <Th>ID</Th>
             <Th>Deudor</Th>
             <Th>Tienda</Th>
@@ -81,8 +111,10 @@ const PedidosTable = ({
 
               return (
                 <Tr
+                  id={`pedido-${p.id}`}
                   key={p.id}
-                  bg={coincide ? hlBg : undefined}
+                  bg={isHighlighted ? hlBg : coincide ? hlBg : undefined}
+                  border={isHighlighted ? "2px solid teal" : undefined}
                   animation={isHighlighted ? "blink 1s infinite" : undefined}
                   onClick={isHighlighted ? onClearHighlight : undefined}
                   cursor={isHighlighted ? "pointer" : "default"}
@@ -152,7 +184,7 @@ PedidosTable.propTypes = {
       nombreUsuario: PropTypes.string,
       apellidoUsuario: PropTypes.string,
       creadoEl: PropTypes.string.isRequired,
-    })
+    }),
   ).isRequired,
   selectedPedidos: PropTypes.arrayOf(PropTypes.number).isRequired,
   setSelectedPedidos: PropTypes.func.isRequired,

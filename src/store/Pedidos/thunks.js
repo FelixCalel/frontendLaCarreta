@@ -13,7 +13,7 @@ export const tablaPedidos = createAsyncThunk(
       const { userId, roleId, status, page, limit } = arg;
       if (userId) {
         const p = page || 1;
-        const l = limit || 200;
+        const l = limit || 10;
         url = `${BASE_URL}/form/pedidos/historial/${userId}?roleId=${roleId}&page=${p}&limit=${l}`;
         if (status) {
           url += `&status=${status}`;
@@ -223,7 +223,7 @@ export const updatePedidoActivacion = createAsyncThunk(
 
 export const exportarPedidoSap = createAsyncThunk(
   "sap/exportarPedidos",
-  async (_, { getState, dispatch, rejectWithValue }) => {
+  async (ids, { getState, dispatch, rejectWithValue }) => {
     try {
       await dispatch(tablaEmpresa()).unwrap();
       const empresas = getState().empresas.data;
@@ -258,7 +258,7 @@ export const exportarPedidoSap = createAsyncThunk(
       }
       const { data } = await axios.post(
         `${BASE_URL}/sap/deus/exportarPedidos`,
-        { dbsap: emp.baseDatos, ipsap: emp.ipBaseDatos },
+        { dbsap: emp.baseDatos, ipsap: emp.ipBaseDatos, ids },
       );
       return data.enviados || data;
     } catch (err) {
