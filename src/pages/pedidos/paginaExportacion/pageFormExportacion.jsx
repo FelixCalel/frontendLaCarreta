@@ -20,7 +20,6 @@ import {
 } from "../../../store/Pedidos/thunks";
 import { removePedidos } from "../../../store/Pedidos/pedidoSlice";
 import { tablaEmpresa } from "../../../store/Empresa/thunks";
-import { selectPedidosEntrantesPorRuta } from "../pedidosEntrantes/componentes/rutaSelectors";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -38,11 +37,37 @@ const AprobadosPage = () => {
   const [isReverting, setIsReverting] = useState(false);
   const toast = useToast();
   const pedidos = useSelector((state) => state.pedidos.data);
-  const selectAprobadosPorRuta = useMemo(
-    () => selectPedidosEntrantesPorRuta([3]),
-    []
-  );
-  const pedidosAprobados = useSelector(selectAprobadosPorRuta);
+  const tiendas = useSelector((state) => state.tiendas.data);
+  const user = useSelector((state) => state.auth.user);
+
+  const pedidosAprobados = useMemo(() => {
+    if (!pedidos || !tiendas || !user) return [];
+
+    const rutasUsuario = user.rutas || [];
+
+    const rutasSet = new Set(
+      Array.isArray(rutasUsuario)
+        ? rutasUsuario.map((r) => (typeof r === "object" ? +r.id : +r))
+        : [],
+    );
+    const tiendaRutaMap = new Map(tiendas.map((t) => [t.id, +t.rutaId]));
+
+    const userId =
+      user.id || user.uid || (user.usuarioId ? parseInt(user.usuarioId) : null);
+
+    return pedidos
+      .filter((p) => {
+        if (p.estadoId !== 3) return false;
+
+        if (userId && p.usuarioId === userId) return true;
+
+        if (!rutasUsuario.length) return false;
+
+        const rutaTienda = tiendaRutaMap.get(p.tiendaId);
+        return rutasSet.has(rutaTienda);
+      })
+      .sort((a, b) => b.id - a.id);
+  }, [pedidos, tiendas, user]);
   const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
   const {
@@ -77,21 +102,21 @@ const AprobadosPage = () => {
     if (!socket) return;
 
     const handleOrderStatusChange = (event) => {
-        try {
-            const data = JSON.parse(event.data);
-            if (data.type === 'on-order-status-changed') {
-                console.log("WebSocket event received:", data.payload);
-                dispatch(tablaPedidos());
-            }
-        } catch (error) {
-            console.error("Error processing WebSocket message:", error);
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "on-order-status-changed") {
+          console.log("WebSocket event received:", data.payload);
+          dispatch(tablaPedidos());
         }
+      } catch (error) {
+        console.error("Error processing WebSocket message:", error);
+      }
     };
 
-    socket.addEventListener('message', handleOrderStatusChange);
+    socket.addEventListener("message", handleOrderStatusChange);
 
     return () => {
-        socket.removeEventListener('message', handleOrderStatusChange);
+      socket.removeEventListener("message", handleOrderStatusChange);
     };
   }, [socket, dispatch]);
 
@@ -99,13 +124,13 @@ const AprobadosPage = () => {
     const pedidosConDetalles = await Promise.all(
       pedidos.map(async (pedido) => {
         const detalles = await dispatch(
-          getDetalleOrdenByPedidoId(pedido.id)
+          getDetalleOrdenByPedidoId(pedido.id),
         ).unwrap();
         return {
           ...pedido,
           detalles: detalles || [],
         };
-      })
+      }),
     );
     return pedidosConDetalles;
   };
@@ -114,11 +139,10 @@ const AprobadosPage = () => {
     try {
       await Promise.all(
         pedidos.map(async (pedido) => {
-
           await dispatch(
-            updatePedidoActivacion({ id: pedido.id, isActive: false })
+            updatePedidoActivacion({ id: pedido.id, isActive: false }),
           ).unwrap();
-        })
+        }),
       );
       console.log("Pedidos exportados y desactivados correctamente.");
     } catch (error) {
@@ -145,19 +169,24 @@ const AprobadosPage = () => {
     if (!ok) return;
 
     setIsExporting(true);
-    
+
     try {
-      const sapResult = await dispatch(exportarPedidoSap()).unwrap();
-      
+      const idsToExport =
+        selectedPedidosToRevert.length > 0
+          ? selectedPedidosToRevert
+          : undefined;
+      const sapResult = await dispatch(exportarPedidoSap(idsToExport)).unwrap();
+
       const results = Array.isArray(sapResult) ? sapResult : [];
-      const successfulExports = results.filter(r => r.status === "SUCCESS");
-      const failedExports = results.filter(r => r.status === "ERROR");
+      const successfulExports = results.filter((r) => r.status === "SUCCESS");
+      const failedExports = results.filter((r) => r.status === "ERROR");
 
       if (failedExports.length > 0) {
-        failedExports.forEach(fail => {
+        failedExports.forEach((fail) => {
           toast({
             title: `Error en Pedido #${fail.pedidoId}`,
-            description: fail.message || fail.sapResponse || "Error desconocido en SAP",
+            description:
+              fail.message || fail.sapResponse || "Error desconocido en SAP",
             status: "warning",
             duration: 6000,
             isClosable: true,
@@ -170,16 +199,22 @@ const AprobadosPage = () => {
         return;
       }
 
-      const successfulIds = successfulExports.map(r => r.pedidoId);
-      const successfulPedidos = pedidosAprobados.filter(p => successfulIds.includes(p.id));
+      const successfulIds = successfulExports.map((r) => r.pedidoId);
+      const successfulPedidos = pedidosAprobados.filter((p) =>
+        successfulIds.includes(p.id),
+      );
 
       if (successfulPedidos.length > 0) {
-        const pedidosConDetalles = await cargarDetallesPedidos(successfulPedidos);
+        const pedidosConDetalles =
+          await cargarDetallesPedidos(successfulPedidos);
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Pedidos Consolidados F2");
         const pedidosPorDeudor = agruparPedidosPorDeudor(pedidosConDetalles);
         await addPedidosToWorksheetFormato2(worksheet, pedidosPorDeudor);
-        await descargarWorkbook(workbook, `pedidos_exportados_${new Date().getTime()}.xlsx`);
+        await descargarWorkbook(
+          workbook,
+          `pedidos_exportados_${new Date().getTime()}.xlsx`,
+        );
         await actualizarEstadoPedidosExportados(successfulPedidos);
         dispatch(removePedidos(successfulIds));
 
@@ -319,7 +354,7 @@ const AprobadosPage = () => {
         ...worksheet
           .getColumn(column.key)
           .values.filter((value) => value)
-          .map((value) => String(value).length)
+          .map((value) => String(value).length),
       );
     });
   }
@@ -360,7 +395,7 @@ const AprobadosPage = () => {
       const results = await Promise.allSettled(
         selectedPedidosToRevert.map((pedidoId) => {
           const pedidoCompleto = pedidosAprobados.find(
-            (p) => p.id === pedidoId
+            (p) => p.id === pedidoId,
           );
 
           return dispatch(
@@ -371,16 +406,16 @@ const AprobadosPage = () => {
               comentarioDisplay: pedidoCompleto?.comentarioDisplay || "",
               fechaOrdenDisplay:
                 pedidoCompleto?.fechaOrdenDisplay || pedidoCompleto?.fechaOrden,
-            })
+            }),
           ).unwrap();
-        })
+        }),
       );
 
       const successful = results.filter(
-        (result) => result.status === "fulfilled"
+        (result) => result.status === "fulfilled",
       ).length;
       const failed = results.filter(
-        (result) => result.status === "rejected"
+        (result) => result.status === "rejected",
       ).length;
 
       if (successful > 0) {
@@ -426,10 +461,10 @@ const AprobadosPage = () => {
   const handleVerDetalles = async (pedidoId) => {
     try {
       const detalles = await dispatch(
-        getDetalleOrdenByPedidoId(pedidoId)
+        getDetalleOrdenByPedidoId(pedidoId),
       ).unwrap();
       detalles.sort(
-        (a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion)
+        (a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion),
       );
       setDetallesPedido(detalles);
 
@@ -449,7 +484,7 @@ const AprobadosPage = () => {
     } catch (error) {
       console.error(
         `Error al obtener los detalles del pedido ${pedidoId}:`,
-        error
+        error,
       );
       toast({
         title: "Error",
@@ -471,7 +506,11 @@ const AprobadosPage = () => {
           loadingText="Exportando..."
           disabled={pedidosAprobados.length === 0}
         >
-          Exportar a SAP
+          Exportar a SAP (
+          {selectedPedidosToRevert.length > 0
+            ? selectedPedidosToRevert.length
+            : pedidosAprobados.length}
+          )
         </Button>
 
         <Button

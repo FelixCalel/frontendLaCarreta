@@ -37,7 +37,6 @@ const HistorialPedidosPage = () => {
   const { roleId: roleIdRedux, uid } = useSelector((state) => state.auth || {});
   const roleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
   const usuarioId = uid ? parseInt(uid, 10) : null;
-
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("teal.600", "teal.200");
   const noDataTextColor = useColorModeValue("gray.500", "gray.400");
@@ -53,39 +52,74 @@ const HistorialPedidosPage = () => {
 
   useEffect(() => {
     if (location.state?.highlightedPedidoId) {
+      console.log(
+        "History Page received highlightedPedidoId:",
+        location.state.highlightedPedidoId,
+      );
       setHighlightedPedidoId(location.state.highlightedPedidoId);
-      window.history.replaceState({}, document.title);
     }
   }, [location]);
 
   const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
-
-  useEffect(() => {
-    if (highlightedPedidoId) {
-      const element = document.getElementById(`pedido-${highlightedPedidoId}`);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-      const timer = setTimeout(() => {
-        setHighlightedPedidoId(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [highlightedPedidoId]);
 
   const handleClearHighlight = useCallback(() => {
     setHighlightedPedidoId(null);
   }, []);
 
   const {
-    data: todosLosPedidos = [],
+    data: todosLosPedidosRaw = [],
     status,
     total,
     filterOptions,
   } = useSelector((state) => state.pedidos);
+  const tiendas = useSelector((state) => state.tiendas.data);
+  const user = useSelector((state) => state.auth.user);
 
-  const filteredPedidos = todosLosPedidos.filter((p) => p.estadoId !== 1);
+  const filteredPedidos = useMemo(() => {
+    if (!todosLosPedidosRaw || !tiendas || !user) return [];
+
+    const rutasUsuario = user.rutas || [];
+
+    const rutasSet = new Set(
+      Array.isArray(rutasUsuario)
+        ? rutasUsuario.map((r) => (typeof r === "object" ? +r.id : +r))
+        : [],
+    );
+    const tiendaRutaMap = new Map(
+      (tiendas || []).map((t) => [t.id, +t.rutaId]),
+    );
+
+    const userId =
+      user.id || user.uid || (user.usuarioId ? parseInt(user.usuarioId) : null);
+
+    return todosLosPedidosRaw.filter((p) => {
+      if (userId && p.usuarioId === userId) return true;
+
+      if (!rutasUsuario.length) return false;
+
+      const rutaTienda = tiendaRutaMap.get(p.tiendaId);
+      return rutasSet.has(rutaTienda);
+    });
+  }, [todosLosPedidosRaw, tiendas, user]);
+
   const currentPedidos = filteredPedidos;
+
+  useEffect(() => {
+    if (highlightedPedidoId && filteredPedidos.length > 0) {
+      const element = document.getElementById(`pedido-${highlightedPedidoId}`);
+      setTimeout(() => {
+        const el = document.getElementById(`pedido-${highlightedPedidoId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100);
+
+      const timer = setTimeout(() => {
+        setHighlightedPedidoId(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedPedidoId, filteredPedidos]);
 
   useEffect(() => {
     if (usuarioId && roleId) {
