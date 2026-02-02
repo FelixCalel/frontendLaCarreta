@@ -32,6 +32,7 @@ import Pagination from "../../../components/pagination";
 import PedidosTable from "../componentes/EntrantesFormPedidos/PedidosTable";
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
 import { useSearch } from "../../../components/component/SearchContext";
+import { useWebSocket } from "../../../providers/WebSocketProvider";
 
 const EntrantesPage = () => {
   const dispatch = useDispatch();
@@ -131,6 +132,41 @@ const EntrantesPage = () => {
       );
     }
   }, [dispatch, currentPage, usuarioId, roleId]);
+
+  const { socket } = useWebSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleSocketMessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (
+          data.type === "notification" ||
+          data.type === "on-order-status-changed"
+        ) {
+          console.log("WebSocket event received:", data.payload);
+          dispatch(
+            tablaPedidos({
+              userId: usuarioId,
+              roleId: roleId,
+              status: 2,
+              page: currentPage,
+              limit: itemsPerPage,
+            })
+          );
+        }
+      } catch (error) {
+        console.error("Error processing WebSocket message:", error);
+      }
+    };
+
+    socket.addEventListener("message", handleSocketMessage);
+
+    return () => {
+      socket.removeEventListener("message", handleSocketMessage);
+    };
+  }, [socket, dispatch, currentPage, usuarioId, roleId]);
 
   useEffect(() => {
     if (location.state?.highlightedPedidoId) {

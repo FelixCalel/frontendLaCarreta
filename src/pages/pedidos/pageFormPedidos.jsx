@@ -98,9 +98,13 @@ const PageFormPedidos = () => {
     }
   }, [authRutas]);
 
+  const roleId = Number(localStorage.getItem("roleId")) || 0;
+
   useEffect(() => {
-    dispatch(tablaPedidos());
-  }, [dispatch]);
+    if (usuarioId && roleId) {
+      dispatch(tablaPedidos({ userId: usuarioId, roleId: roleId, status: 1, limit: 20 }));
+    }
+  }, [dispatch, usuarioId, roleId]);
 
   useEffect(() => {
     const message = sessionStorage.getItem("showToastAfterReload");
@@ -153,7 +157,7 @@ const PageFormPedidos = () => {
         copiarDetallesUltimoPedido(payload)
       ).unwrap();
 
-      await dispatch(tablaPedidos());
+      await dispatch(tablaPedidos({ userId: usuarioId, roleId: roleId, status: 1, limit: 100 }));
       setPedidoIdGuardado(pedido.id);
       setIsDetailsOpen(pedido.id);
 
@@ -253,7 +257,7 @@ const PageFormPedidos = () => {
       setPedidoIdGuardado(pedidoGuardado.id);
       setIsDetailsOpen(pedidoGuardado.id);
 
-      dispatch(tablaPedidos());
+      dispatch(tablaPedidos({ userId: usuarioId, roleId: roleId, status: 1, limit: 100 }));
 
       toast({
         title: "Pedido creado",
@@ -326,7 +330,7 @@ const PageFormPedidos = () => {
         })
       ).unwrap();
 
-      dispatch(tablaPedidos());
+      dispatch(tablaPedidos({ userId: usuarioId, roleId: roleId, status: 1, limit: 100 }));
       toast({
         title: "Pedido realizado",
         description: "El pedido está en revisión.",

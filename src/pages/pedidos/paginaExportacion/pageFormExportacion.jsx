@@ -88,7 +88,7 @@ const AprobadosPage = () => {
 
   useEffect(() => {
     const fetchPedidos = async () => {
-      await dispatch(tablaPedidos());
+      await dispatch(tablaPedidos({ status: 3, limit: 20 }));
     };
     fetchPedidos();
   }, [dispatch]);
@@ -106,7 +106,7 @@ const AprobadosPage = () => {
         const data = JSON.parse(event.data);
         if (data.type === "on-order-status-changed") {
           console.log("WebSocket event received:", data.payload);
-          dispatch(tablaPedidos());
+          dispatch(tablaPedidos({ status: 3, limit: 20 }));
         }
       } catch (error) {
         console.error("Error processing WebSocket message:", error);
@@ -434,7 +434,7 @@ const AprobadosPage = () => {
 
         setSelectedPedidosToRevert([]);
 
-        await dispatch(tablaPedidos());
+        await dispatch(tablaPedidos({ status: 3, limit: 20 }));
       } else {
         toast({
           title: "Error",
