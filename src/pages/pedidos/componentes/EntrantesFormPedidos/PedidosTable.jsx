@@ -14,6 +14,9 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import PropTypes from "prop-types";
+import { AnimatePresence, motion } from "framer-motion";
+
+const MotionTr = motion(Tr);
 
 const PedidosTable = ({
   pedidosEntrantes,
@@ -97,77 +100,90 @@ const PedidosTable = ({
         </Thead>
 
         <Tbody>
-          {pedidosEntrantes.length ? (
-            pedidosEntrantes.map((p) => {
-              const textoFila = (
-                `${p.nombreCorrelativo} ${p.nombreDeu} ` +
-                `${p.nombreTienda} ` +
-                `${p.nombreUsuario} ${p.apellidoUsuario}`
-              ).toLowerCase();
+          <AnimatePresence mode="wait">
+            {pedidosEntrantes.length > 0 ? (
+              pedidosEntrantes.map((p) => {
+                const textoFila = (
+                  `${p.nombreCorrelativo} ${p.nombreDeu} ` +
+                  `${p.nombreTienda} ` +
+                  `${p.nombreUsuario} ${p.apellidoUsuario}`
+                ).toLowerCase();
 
-              const coincide = hl && textoFila.includes(hl);
-              const isHighlighted =
-                highlightedPedidoId && Number(highlightedPedidoId) === p.id;
+                const coincide = hl && textoFila.includes(hl);
+                const isHighlighted =
+                  highlightedPedidoId && Number(highlightedPedidoId) === p.id;
 
-              return (
-                <Tr
-                  id={`pedido-${p.id}`}
-                  key={p.id}
-                  bg={isHighlighted ? hlBg : coincide ? hlBg : undefined}
-                  border={isHighlighted ? "2px solid teal" : undefined}
-                  animation={isHighlighted ? "blink 1s infinite" : undefined}
-                  onClick={isHighlighted ? onClearHighlight : undefined}
-                  cursor={isHighlighted ? "pointer" : "default"}
-                >
-                  <Td w="50px">
-                    <Checkbox
-                      size="lg"
-                      borderColor={borderColor}
-                      isChecked={selectedPedidos.includes(p.id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleSelect(p.id);
-                      }}
-                    />
-                  </Td>
-                  <Td>{p.id}</Td>
-                  <Td>{`${p.nombreCorrelativo} - ${p.nombreDeu}`}</Td>
-                  <Td>{p.nombreTienda}</Td>
-                  <Td>{`${p.nombreUsuario} ${p.apellidoUsuario}`}</Td>
-                  <Td>
-                    {(() => {
-                      if (!p.fechaOrdenDisplay) return "";
-                      const [year, month, day] = p.fechaOrdenDisplay
-                        .slice(0, 10)
-                        .split("-");
-                      const localDate = new Date(year, month - 1, day);
-                      return format(localDate, "dd MMMM yyyy", { locale: es });
-                    })()}
-                  </Td>
-                  <Td>
-                    <Tooltip label="Ver Detalles" hasArrow>
-                      <Button
-                        colorScheme="blue"
-                        size="sm"
-                        onClick={(e) => {
+                return (
+                  <MotionTr
+                    id={`pedido-${p.id}`}
+                    key={p.id}
+                    bg={isHighlighted ? hlBg : coincide ? hlBg : undefined}
+                    border={isHighlighted ? "2px solid teal" : undefined}
+                    animation={isHighlighted ? "blink 1s infinite" : undefined}
+                    onClick={isHighlighted ? onClearHighlight : undefined}
+                    cursor={isHighlighted ? "pointer" : "default"}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Td w="50px">
+                      <Checkbox
+                        size="lg"
+                        borderColor={borderColor}
+                        isChecked={selectedPedidos.includes(p.id)}
+                        onChange={(e) => {
                           e.stopPropagation();
-                          handleVerDetalles(p);
+                          toggleSelect(p.id);
                         }}
-                      >
-                        Ver Detalles
-                      </Button>
-                    </Tooltip>
-                  </Td>
-                </Tr>
-              );
-            })
-          ) : (
-            <Tr>
-              <Td colSpan={7} textAlign="center">
-                No hay pedidos
-              </Td>
-            </Tr>
-          )}
+                      />
+                    </Td>
+                    <Td>{p.id}</Td>
+                    <Td>{`${p.nombreCorrelativo} - ${p.nombreDeu}`}</Td>
+                    <Td>{p.nombreTienda}</Td>
+                    <Td>{`${p.nombreUsuario} ${p.apellidoUsuario}`}</Td>
+                    <Td>
+                      {(() => {
+                        if (!p.fechaOrdenDisplay) return "";
+                        const [year, month, day] = p.fechaOrdenDisplay
+                          .slice(0, 10)
+                          .split("-");
+                        const localDate = new Date(year, month - 1, day);
+                        return format(localDate, "dd MMMM yyyy", { locale: es });
+                      })()}
+                    </Td>
+                    <Td>
+                      <Tooltip label="Ver Detalles" hasArrow>
+                        <Button
+                          colorScheme="blue"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleVerDetalles(p);
+                          }}
+                        >
+                          Ver Detalles
+                        </Button>
+                      </Tooltip>
+                    </Td>
+                  </MotionTr>
+                );
+              })
+            ) : (
+              <MotionTr
+                key="no-data"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Td colSpan={7} textAlign="center">
+                  No hay pedidos
+                </Td>
+              </MotionTr>
+            )}
+          </AnimatePresence>
         </Tbody>
       </Table>
     </>
