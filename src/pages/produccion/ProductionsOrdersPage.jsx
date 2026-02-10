@@ -29,7 +29,7 @@ const ProductionOrdersPage = () => {
   const [selectedPedidoId, setSelectedPedidoId] = useState(null);
   const [syncReady, setSyncReady] = useState(false);
   const [procesarEstado5] = useProcesarEstado5Mutation();
-  const [viewMode, setViewMode] = useState("byOrder"); // 'byOrder' or 'consolidated'
+  const [viewMode, setViewMode] = useState("byOrder");
 
   useEffect(() => {
     const runProcess = async () => {
@@ -39,8 +39,6 @@ const ProductionOrdersPage = () => {
           console.log("No hay pedidos en estado 5 para procesar.");
         }
       } catch (error) {
-        // El error 400 del backend ya no debería ocurrir para este caso,
-        // pero mantenemos el catch para otros posibles errores (red, etc.)
         console.error("Error al intentar procesar el estado 5:", error);
       } finally {
         setSyncReady(true);
@@ -54,7 +52,7 @@ const ProductionOrdersPage = () => {
     data: agrupados = [],
     isLoading,
     error,
-  } = useGetPedidosAgrupadosQuery(undefined, { skip: !syncReady });
+  } = useGetPedidosAgrupadosQuery({ etapaId: 1 }, { skip: !syncReady });
 
   const cardBg = useColorModeValue("white", "gray.700");
   const cardBorder = useColorModeValue("gray.200", "gray.600");
@@ -66,30 +64,28 @@ const ProductionOrdersPage = () => {
           pedidoId: g.pedidoId,
           tienda: g.tienda,
           pais: g.pais,
-          items: g.items
-            .filter((i) => i.etapaId === 1)
-            .map((item) => ({
-              ...item,
-              pedidoId: g.pedidoId,
-              tienda: g.tienda,
-              cantidadUnidad: Number(item.cantidadUnidad) || 0,
-            })),
+          items: g.items.map((item) => ({
+            ...item,
+            pedidoId: g.pedidoId,
+            tienda: g.tienda,
+            cantidadUnidad: Number(item.cantidadUnidad) || 0,
+          })),
         }))
         .filter((g) => g.items.length > 0),
-    [agrupados]
+    [agrupados],
   );
 
   const allItems = useMemo(
     () => mesaGroups.flatMap((g) => g.items),
-    [mesaGroups]
+    [mesaGroups],
   );
   const countries = useMemo(
     () => Array.from(new Set(allItems.map((i) => i.pais))),
-    [allItems]
+    [allItems],
   );
   const clients = useMemo(
     () => Array.from(new Set(allItems.map((i) => i.tienda))),
-    [allItems]
+    [allItems],
   );
 
   const filteredGroups = useMemo(() => {
@@ -106,7 +102,7 @@ const ProductionOrdersPage = () => {
           .sort((a, b) =>
             a.productoNombre.localeCompare(b.productoNombre, undefined, {
               sensitivity: "base",
-            })
+            }),
           );
 
         return {
@@ -127,8 +123,8 @@ const ProductionOrdersPage = () => {
             doneCount === total
               ? "Completado"
               : anyProgress
-              ? "En Proceso"
-              : "Pendiente";
+                ? "En Proceso"
+                : "Pendiente";
           if (groupStatus !== stateFilter) return false;
         }
 
@@ -164,7 +160,7 @@ const ProductionOrdersPage = () => {
     return Array.from(itemsMap.values()).sort((a, b) =>
       a.productoNombre.localeCompare(b.productoNombre, undefined, {
         sensitivity: "base",
-      })
+      }),
     );
   }, [filteredGroups, viewMode]);
 
@@ -196,7 +192,6 @@ const ProductionOrdersPage = () => {
           mb={4}
           gap={4}
         >
-          {/* Left: View Mode Buttons */}
           <ButtonGroup isAttached variant="outline">
             <Tooltip label="Ver pedidos individuales" placement="top">
               <Button
@@ -223,7 +218,6 @@ const ProductionOrdersPage = () => {
             </Tooltip>
           </ButtonGroup>
 
-          {/* Right: Filters */}
           <Box w={{ base: "100%", lg: "auto" }}>
             <FilterPanel
               countryFilter={countryFilter}
@@ -292,7 +286,7 @@ const ProductionOrdersPage = () => {
   }
 
   const selectedGroup = filteredGroups.find(
-    (g) => g.pedidoId === selectedPedidoId
+    (g) => g.pedidoId === selectedPedidoId,
   );
   if (!selectedGroup) {
     setSelectedPedidoId(null);

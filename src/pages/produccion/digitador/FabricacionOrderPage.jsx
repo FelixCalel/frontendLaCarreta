@@ -43,7 +43,13 @@ const FabricacionPage = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { data: groups = [], isLoading, error } = useGetPedidosAgrupadosQuery();
+  const {
+    data: groups = [],
+    isLoading,
+    error,
+  } = useGetPedidosAgrupadosQuery({
+    etapaId: 3,
+  });
 
   const headBg = useColorModeValue("gray.50", "gray.800");
   const tableBorder = useColorModeValue("gray.200", "gray.700");
@@ -56,16 +62,13 @@ const FabricacionPage = () => {
 
   const group = useMemo(
     () => groups.find((g) => g.pedidoId === pedidoId),
-    [groups, pedidoId]
+    [groups, pedidoId],
   );
 
   const { data: receta = [], isLoading: cargandoReceta } =
     useGetRecetaByPedidoQuery({ pedidoId });
 
-  const baseItems = useMemo(
-    () => (group?.items ?? []).filter((it) => it.etapaId === 2),
-    [group]
-  );
+  const baseItems = useMemo(() => group?.items ?? [], [group]);
 
   const [term, setTerm] = useState("");
   const [estado, setEstado] = useState("");
@@ -96,7 +99,7 @@ const FabricacionPage = () => {
       .sort((a, b) =>
         a.productoNombre.localeCompare(b.productoNombre, "es", {
           sensitivity: "base",
-        })
+        }),
       );
   }, [baseItems, term, estado, mesa]);
 
@@ -131,7 +134,7 @@ const FabricacionPage = () => {
     const detalleIds = filtered.map((o) => o.id_detallePedido);
     const pedidoId = Number(filtered[0]?.pedidoId ?? 0);
 
-    const nuevaEtapaId = 3;
+    const nuevaEtapaId = 4;
 
     try {
       if (detalleIds.length) {

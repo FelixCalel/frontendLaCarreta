@@ -77,7 +77,7 @@ const SupervisorOrdersPage = () => {
     data: agrupados = [],
     isLoading,
     error,
-  } = useGetPedidosAgrupadosQuery(undefined, { skip: !syncReady });
+  } = useGetPedidosAgrupadosQuery({ etapaId: 2 }, { skip: !syncReady });
 
   const cardBg = useColorModeValue("white", "gray.700");
   const cardBorder = useColorModeValue("gray.200", "gray.600");
@@ -93,7 +93,6 @@ const SupervisorOrdersPage = () => {
             ...item,
             pedidoId: g.pedidoId,
             tienda: g.tienda,
-            // Ensure all numeric fields are numbers
             cantidadUnidad: Number(item.cantidadUnidad ?? 0),
             cantidad: Number(item.cantidad ?? 0),
             faltante: Number(item.faltante ?? 0),
@@ -107,20 +106,20 @@ const SupervisorOrdersPage = () => {
           })),
         }))
         .filter((g) => g.items.length > 0),
-    [agrupados]
+    [agrupados],
   );
 
   const allItems = useMemo(
     () => pedidoGroups.flatMap((g) => g.items),
-    [pedidoGroups]
+    [pedidoGroups],
   );
   const countries = useMemo(
     () => Array.from(new Set(allItems.map((i) => i.pais))),
-    [allItems]
+    [allItems],
   );
   const clients = useMemo(
     () => Array.from(new Set(allItems.map((i) => i.tienda))),
-    [allItems]
+    [allItems],
   );
 
   const filteredGroups = useMemo(() => {
@@ -137,7 +136,7 @@ const SupervisorOrdersPage = () => {
           .sort((a, b) =>
             a.productoNombre.localeCompare(b.productoNombre, undefined, {
               sensitivity: "base",
-            })
+            }),
           );
 
         return {
@@ -158,8 +157,8 @@ const SupervisorOrdersPage = () => {
             doneCount === total
               ? "Completado"
               : anyProgress
-              ? "En Proceso"
-              : "Pendiente";
+                ? "En Proceso"
+                : "Pendiente";
           if (groupStatus !== stateFilter) return false;
         }
 
@@ -195,7 +194,7 @@ const SupervisorOrdersPage = () => {
     return Array.from(itemsMap.values()).sort((a, b) =>
       a.productoNombre.localeCompare(b.productoNombre, undefined, {
         sensitivity: "base",
-      })
+      }),
     );
   }, [filteredGroups, viewMode]);
 
@@ -292,7 +291,6 @@ const SupervisorOrdersPage = () => {
             </Flex>
           </Flex>
 
-          {/* Right: Filters */}
           <Box w={{ base: "100%", lg: "auto" }}>
             <FilterPanel
               countryFilter={countryFilter}
@@ -361,7 +359,7 @@ const SupervisorOrdersPage = () => {
   }
 
   const selectedGroup = filteredGroups.find(
-    (g) => g.pedidoId === selectedPedidoId
+    (g) => g.pedidoId === selectedPedidoId,
   );
 
   if (!selectedGroup) {

@@ -21,7 +21,6 @@ import { parseNumericFields } from "../utils/data-parser";
 export interface ProdAlmacen {
   id: number | string;
   nombre: string;
-  // Agrega otros campos si tu modelo los requiere
 }
 
 export const pedidoProduccionApi = createApi({
@@ -93,13 +92,31 @@ export const pedidoProduccionApi = createApi({
       }),
       invalidatesTags: (_res, _err, { id }) => [
         { type: "PedidoProduccion", id },
-        // **muy importante**: invalida la lista de grupos
         { type: "PedidoAgrupado", id: "LIST" },
       ],
     }),
 
-    getPedidosAgrupados: builder.query<PedidoAgrupado[], void>({
-      query: () => "/pedidoProduccion/agrupados",
+    getPedidosAgrupados: builder.query<
+      PedidoAgrupado[],
+      { etapaId?: number; completed?: boolean } | void
+    >({
+      query: (params) => {
+        let url = "/pedidoProduccion/agrupados";
+        if (params) {
+          const queryParams = new URLSearchParams();
+          if (params.etapaId !== undefined) {
+            queryParams.append("etapaId", params.etapaId.toString());
+          }
+          if (params.completed !== undefined) {
+            queryParams.append("completed", params.completed.toString());
+          }
+          const queryString = queryParams.toString();
+          if (queryString) {
+            url += `?${queryString}`;
+          }
+        }
+        return url;
+      },
       providesTags: (result) =>
         result
           ? [
