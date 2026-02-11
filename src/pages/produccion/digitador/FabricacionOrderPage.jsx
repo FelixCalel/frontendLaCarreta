@@ -232,6 +232,7 @@ const FabricacionPage = () => {
               receta={receta}
               cargandoReceta={cargandoReceta}
               mostrarReceta={idx === 0}
+              index={idx}
             />
           ))}
         </Tbody>

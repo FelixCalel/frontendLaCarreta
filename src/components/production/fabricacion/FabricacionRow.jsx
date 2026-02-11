@@ -29,7 +29,7 @@ import { RechazoModal } from "../../modals/RechazoModal";
 const clamp = (v, min, max) => Math.max(min, Math.min(v, max));
 const numOrEmpty = (v) => (v === null || v === undefined ? "" : v);
 
-export const FabricacionRow = ({ order }) => {
+export const FabricacionRow = ({ order, index = 0 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const maxPedido = order.cantidadUnidad ?? 0;
@@ -39,7 +39,10 @@ export const FabricacionRow = ({ order }) => {
 
   const [updatePedido] = useUpdatePedidoProduccionMutation();
 
-  const stripeBg = useColorModeValue("gray.50", "gray.800");
+  const bgOdd = useColorModeValue("white", "gray.900");
+  const bgEven = useColorModeValue("gray.50", "gray.800");
+  const rowBg = index % 2 === 0 ? bgOdd : bgEven;
+
   const hoverBg = useColorModeValue("gray.200", "gray.600");
   const panelBg = useColorModeValue("white", "gray.700");
   const panelBorder = useColorModeValue("gray.200", "gray.600");
@@ -85,7 +88,7 @@ export const FabricacionRow = ({ order }) => {
 
   return (
     <Fragment>
-      <Tr bg={stripeBg} _hover={{ bg: hoverBg }} transition="background 0.2s">
+      <Tr bg={rowBg} _hover={{ bg: hoverBg }} transition="background 0.2s">
         <Td px={2} py={1}>
           <IconButton
             size="sm"

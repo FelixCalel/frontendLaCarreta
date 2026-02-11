@@ -15,6 +15,7 @@ import {
   Rechazo,
   CreateRechazoDto,
   UpdateRechazoDto,
+  CreateRecetaLineaDto,
 } from "../models/pedidoProduction";
 import { parseNumericFields } from "../utils/data-parser";
 
@@ -180,6 +181,37 @@ export const pedidoProduccionApi = createApi({
       ],
     }),
 
+
+
+    createRecetaLinea: builder.mutation<
+      RecetaLinea,
+      { data: CreateRecetaLineaDto }
+    >({
+      query: ({ data }) => ({
+        url: "/receta",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: (_res, _err, { data }) => [
+        { type: "RecetaPedido", id: data.pedido_produccionid },
+        { type: "RecetaPedido", id: "LIST" },
+      ],
+    }),
+
+    getItems: builder.query<
+      { items: any[]; totalItems: number },
+      { page: number; pageSize: number; nombre?: string; codigo?: string }
+    >({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        queryParams.append("page", params.page.toString());
+        queryParams.append("pageSize", params.pageSize.toString());
+        if (params.nombre) queryParams.append("nombre", params.nombre);
+        if (params.codigo) queryParams.append("codigo", params.codigo);
+        return `/items/todos?${queryParams.toString()}`;
+      },
+    }),
+
     getRecetaByPedido: builder.query<RecetaLinea[], { pedidoId: number; id_almacen?: number }>({
       query: ({ pedidoId, id_almacen }) => {
         let url = `/receta/pedido/${pedidoId}`;
@@ -299,4 +331,6 @@ export const {
   useUpdateRechazoMutation,
   useGetRechazoByPedidoProduccionIdQuery,
   useGetAlmacenesQuery,
+  useCreateRecetaLineaMutation,
+  useLazyGetItemsQuery,
 } = pedidoProduccionApi;

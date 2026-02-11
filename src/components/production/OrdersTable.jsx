@@ -56,6 +56,7 @@ export const OrdersTable = ({ data = [] }) => {
                 isExpanded={!!expandedRows[order.id]}
                 onToggle={toggleRow}
                 almacenes={almacenes}
+                index={idx}
               />
 
               {idx < data.length - 1 && <Tr></Tr>}

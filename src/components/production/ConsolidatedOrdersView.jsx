@@ -84,7 +84,7 @@ export const ConsolidatedOrdersView = ({ data }) => {
       "Enviando a SAP:",
       Array.from(selectedItems),
       "Comentario:",
-      comment
+      comment,
     );
     toast({
       title: "Enviado a SAP",
@@ -114,7 +114,7 @@ export const ConsolidatedOrdersView = ({ data }) => {
 
   const allSelected = useMemo(
     () => data.length > 0 && selectedItems.size === data.length,
-    [selectedItems, data]
+    [selectedItems, data],
   );
 
   return (
@@ -184,7 +184,7 @@ export const ConsolidatedOrdersView = ({ data }) => {
                 item.originalItems.length > 0 &&
                 item.originalItems.every((order) => order.completo);
               const uniqueClients = new Set(
-                item.originalItems.map((i) => i.tienda)
+                item.originalItems.map((i) => i.tienda),
               ).size;
               const isSelected = selectedItems.has(item.productoNombre);
 
@@ -253,13 +253,14 @@ export const ConsolidatedOrdersView = ({ data }) => {
                   </Tr>
 
                   {isProductExpanded &&
-                    item.originalItems.map((order) => (
+                    item.originalItems.map((order, i) => (
                       <OrderRow
                         key={order.id}
                         order={order}
                         isExpanded={!!expandedState[order.id]}
                         onToggle={() => toggleExpansion(order.id)}
                         sx={childRowOptions}
+                        index={i}
                       />
                     ))}
                 </Fragment>

@@ -116,9 +116,20 @@ export type UpdateRecetaLineaDto = Partial<
   >
 >;
 
+export interface CreateRecetaLineaDto {
+  pedido_produccionid: number;
+  item: string;
+  descripcion: string;
+  cantidad_base: number;
+  cantidad_requerida: number;
+  nombre_unidad: string;
+  id_almacen: number;
+  mpUtilizada?: number | null;
+}
+
 export interface Rechazo {
   id: number;
-  fechaRechazo: string; // Dates are strings in JSON
+  fechaRechazo: string;
   cantidadRechazada: number;
   comentario: string | null;
   usuarioId: number;
