@@ -23,6 +23,7 @@ import {
   useDisclosure,
   useToast,
   useColorModeValue,
+  Input,
 } from "@chakra-ui/react";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
@@ -75,6 +76,7 @@ const FabricacionPage = () => {
   const [mesa, setMesa] = useState("");
   const [comment, setComment] = useState("");
   const [noComment, setNoComment] = useState(false);
+  const [dateSAP, setDateSAP] = useState("");
   const isSending = sendingPedido || sendingDetalles;
 
   console.log({ pedidoId });
@@ -124,10 +126,22 @@ const FabricacionPage = () => {
     }
     setComment("");
     setNoComment(false);
+    setDateSAP("");
     onOpen();
   };
 
   const handleCargarSAP = async () => {
+    if (!dateSAP) {
+      toast({
+        title: "Falta fecha",
+        description: "Debe seleccionar una fecha de orden para cargar a SAP.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     const usuarioId = Number(localStorage.getItem("usuarioId") ?? 1);
     const comentario = noComment ? null : comment.trim();
 
@@ -143,6 +157,7 @@ const FabricacionPage = () => {
           usuarioId,
           nuevaEtapaId,
           comentario,
+          fechaOrden: dateSAP,
         }).unwrap();
       }
 
@@ -151,6 +166,7 @@ const FabricacionPage = () => {
         usuarioId,
         nuevaEtapaId,
         comentario,
+        fechaOrden: dateSAP,
       }).unwrap();
 
       toast({
@@ -271,6 +287,15 @@ const FabricacionPage = () => {
           <ModalHeader>Cargar a SAP</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
+            <Text mb={2} fontWeight="bold">
+              Fecha de Orden (Obligatorio):
+            </Text>
+            <Input
+              type="date"
+              value={dateSAP}
+              onChange={(e) => setDateSAP(e.target.value)}
+              mb={4}
+            />
             <Text mb={2}>Comentario:</Text>
             <Textarea
               value={comment}
@@ -294,6 +319,7 @@ const FabricacionPage = () => {
               colorScheme="green"
               onClick={handleCargarSAP}
               isLoading={isSending}
+              isDisabled={!dateSAP}
             >
               Aceptar
             </Button>

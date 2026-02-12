@@ -25,16 +25,22 @@ import {
   Textarea,
   useDisclosure,
   Text,
+  Input,
 } from "@chakra-ui/react";
 import { ChevronRightIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { OrderRow } from "./OrderRow";
+import { useAvanzarMultiEtapaDetalleMutation } from "../../services/pedidoProductionApi";
 
 export const ConsolidatedOrdersView = ({ data }) => {
   const [expandedState, setExpandedState] = useState({});
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [comment, setComment] = useState("");
+  const [dateSAP, setDateSAP] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+
+  const [avanzarMultiDetalle, { isLoading: isSending }] =
+    useAvanzarMultiEtapaDetalleMutation();
 
   const toggleExpansion = (id) => {
     setExpandedState((prev) => ({
@@ -78,29 +84,79 @@ export const ConsolidatedOrdersView = ({ data }) => {
     onOpen();
   };
 
-  const confirmSendToSap = () => {
-    // Lógica para enviar a SAP
-    console.log(
-      "Enviando a SAP:",
-      Array.from(selectedItems),
-      "Comentario:",
-      comment,
-    );
-    toast({
-      title: "Enviado a SAP",
-      description: `${selectedItems.size} items han sido enviados a SAP.`,
-      status: "success",
-      duration: 5000,
-      isClosable: true,
+  const confirmSendToSap = async () => {
+    if (!dateSAP) {
+      toast({
+        title: "Falta fecha",
+        description: "Debe seleccionar una fecha de orden.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const detailsToSend = [];
+    data.forEach((group) => {
+      if (selectedItems.has(group.productoNombre)) {
+        group.originalItems.forEach((item) => {
+          if (item.id_detallePedido) {
+            detailsToSend.push(item.id_detallePedido);
+          }
+        });
+      }
     });
-    setSelectedItems(new Set());
-    setComment("");
-    onClose();
+
+    if (detailsToSend.length === 0) {
+      toast({
+        title: "Error",
+        description: "No se encontraron detalles para enviar.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      await avanzarMultiDetalle({
+        detalleOrdenIds: detailsToSend,
+        usuarioId: Number(localStorage.getItem("usuarioId") ?? 1),
+        nuevaEtapaId: 4,
+        comentario: comment || null,
+        fechaOrden: dateSAP,
+      }).unwrap();
+
+      toast({
+        title: "Enviado a SAP",
+        description: `${selectedItems.size} productos (${detailsToSend.length} items) han sido enviados a SAP.`,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+      setSelectedItems(new Set());
+      setComment("");
+      setDateSAP("");
+      onClose();
+    } catch (error) {
+      console.error("Error sending to SAP:", error);
+      toast({
+        title: "Error",
+        description: "Hubo un error al enviar a SAP.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   const headerBg = useColorModeValue("gray.100", "gray.700");
   const summaryRowBg = useColorModeValue("gray.50", "gray.900");
   const summaryRowHoverBg = useColorModeValue("gray.200", "gray.700");
+  const rowHoverBg = useColorModeValue("gray.50", "gray.600");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const modalBg = useColorModeValue("white", "gray.800");
+  // Modal background color
   const summaryRowBorderColor = useColorModeValue("gray.200", "gray.700");
   const detailsTextColor = useColorModeValue("gray.600", "gray.400");
   const childRowOptions = {
@@ -119,28 +175,40 @@ export const ConsolidatedOrdersView = ({ data }) => {
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Confirmar Envío a Digitador</ModalHeader>
+        <ModalContent bg={modalBg}>
+          <ModalHeader>Cargar a SAP</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Text mb={4}>
-              Se enviarán {selectedItems.size} items al Digitador. ¿Desea
-              continuar?
+            <Text mb={2} fontWeight="bold">
+              Fecha de Orden (Obligatorio):
             </Text>
+            <Input
+              type="date"
+              value={dateSAP}
+              onChange={(e) => setDateSAP(e.target.value)}
+              mb={4}
+            />
+            <Text mb={2}>Comentario:</Text>
             <Textarea
-              placeholder="Agregar un comentario (opcional)"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
+              placeholder="Escribe un comentario..."
+              mb={3}
             />
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
+            <Button mr={3} onClick={onClose}>
               Cancelar
             </Button>
-            <Button colorScheme="blue" onClick={confirmSendToSap}>
-              Confirmar Envío
+            <Button
+              colorScheme="green"
+              onClick={confirmSendToSap}
+              isLoading={isSending}
+              isDisabled={!dateSAP}
+            >
+              Cargar a SAP
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -276,7 +344,7 @@ export const ConsolidatedOrdersView = ({ data }) => {
           onClick={handleSendToSap}
           disabled={selectedItems.size === 0}
         >
-          Confirmar ({selectedItems.size})
+          Cargar a SAP ({selectedItems.size})
         </Button>
       </Flex>
     </>

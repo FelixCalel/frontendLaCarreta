@@ -5,11 +5,7 @@ export interface Metadata {
   defaultValue: string | null;
 }
 
-export interface AvanzarEtapaPayload {
-  pedidoId: number;
-  usuarioId: number;
-  comentario?: string | null;
-}
+
 
 export interface PedidoProduccion {
   id: number;
@@ -63,6 +59,8 @@ export interface AvanzarEtapaPayload {
   pedidoId: number;
   usuarioId: number;
   comentario?: string | null;
+  fechaOrden?: string;
+  nuevaEtapaId?: number;
 }
 
 export interface AvanzarEtapaDetallePayload {
@@ -73,6 +71,9 @@ export interface AvanzarEtapaDetallePayload {
 export interface AvanzarMultiEtapaDetallePayload {
   detalleOrdenIds: number[];
   usuarioId: number;
+  comentario?: string | null;
+  fechaOrden?: string;
+  nuevaEtapaId?: number;
 }
 
 export interface AvanceOK {

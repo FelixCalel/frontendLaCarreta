@@ -137,13 +137,7 @@ const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
             {r.item}
           </Text>
           {r.descripcion && (
-            <Text
-              fontSize="2xs"
-              color="gray.500"
-              isTruncated
-              maxW="200px"
-              title={r.descripcion}
-            >
+            <Text fontSize="2xs" color="gray.500" title={r.descripcion}>
               {r.descripcion}
             </Text>
           )}
@@ -170,32 +164,39 @@ const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
           />
         </Td>
       ))}
-      <Td px={1} py={2} isNumeric>
+      <Td px={1} py={2} textAlign="center">
         <Text fontSize="xs" color="gray.600">
           {r.cantidad_base}
         </Text>
       </Td>
-      <Td px={1} py={2} isNumeric>
+      <Td px={1} py={2} textAlign="center">
         <Text fontSize="xs" fontWeight="bold" color="blue.600">
           {r.cantidad_requerida}
         </Text>
       </Td>
-      <Td px={2} py={2}>
-        <Box
-          as="span"
-          px={1.5}
-          py={0.5}
+      <Td px={1} py={2}>
+        <Select
+          size="xs"
+          h="24px"
+          fontSize="xs"
+          value={r.nombre_unidad}
+          onChange={(e) => updateField(r.id, "nombre_unidad", e.target.value)}
+          bg={useColorModeValue("white", "gray.700")}
           borderRadius="md"
-          bg={useColorModeValue("gray.100", "gray.700")}
-          color={useColorModeValue("gray.600", "gray.300")}
-          fontSize="2xs"
-          fontWeight="bold"
-          whiteSpace="nowrap"
+          variant="filled"
+          _focus={{ borderColor: "blue.400" }}
+          width="70px"
         >
-          {r.nombre_unidad}
-        </Box>
+          {["Unidad", "Libra", "KG", "Gramos", "Litro", "ML", "Onza"].map(
+            (unit) => (
+              <option key={unit} value={unit}>
+                {unit}
+              </option>
+            ),
+          )}
+        </Select>
       </Td>
-      <Td px={2} py={2} textAlign="center">
+      <Td px={1} py={2} textAlign="center">
         <Select
           size="xs"
           h="24px"
@@ -400,7 +401,7 @@ export const RecetaTable = ({
                   py={2}
                   color={headColor}
                   fontSize="2xs"
-                  isNumeric
+                  textAlign="center"
                 >
                   C. Base
                 </Th>
@@ -410,16 +411,16 @@ export const RecetaTable = ({
                   py={2}
                   color={headColor}
                   fontSize="2xs"
-                  isNumeric
+                  textAlign="center"
                 >
                   C. Req.
                 </Th>
-                <Th w="100px" px={2} py={2} color={headColor} fontSize="2xs">
+                <Th w="0px" px={2} py={2} color={headColor} fontSize="2xs">
                   Unidad
                 </Th>
                 <Th
                   w="100px"
-                  px={2}
+                  px={0}
                   py={2}
                   color={headColor}
                   fontSize="2xs"

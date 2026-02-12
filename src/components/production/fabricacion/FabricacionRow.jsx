@@ -186,15 +186,6 @@ export const FabricacionRow = ({ order, index = 0 }) => {
               <FabricacionDetailsTable details={order.details || []} />
 
               <Box mt={-14}>
-                <Text
-                  fontSize="sm"
-                  fontWeight="semibold"
-                  color={titleColor}
-                  mb={2}
-                >
-                  Receta
-                </Text>
-
                 {loadingReceta ? (
                   <Center py={2}>
                     <Spinner size="sm" />
