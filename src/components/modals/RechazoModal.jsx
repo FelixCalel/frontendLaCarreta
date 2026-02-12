@@ -13,9 +13,13 @@ import {
   Alert,
   AlertIcon,
   Box,
+  Select,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
-import { useGetRechazoByPedidoProduccionIdQuery } from "../../services/pedidoProductionApi";
+import {
+  useGetRechazoByPedidoProduccionIdQuery,
+  useGetAlmacenesQuery,
+} from "../../services/pedidoProductionApi";
 import PropTypes from "prop-types";
 
 export const RechazoModal = ({
@@ -30,7 +34,7 @@ export const RechazoModal = ({
     "[RechazoModal] isOpen:",
     isOpen,
     "pedidoProduccionId:",
-    pedidoProduccionId
+    pedidoProduccionId,
   );
   const [formData, setFormData] = useState({
     fechaRechazo: "",
@@ -38,8 +42,11 @@ export const RechazoModal = ({
     comentario: "",
     trazabilidad: trazabilidadPadre || "",
     usuarioId: 1,
+    almacenId: "",
   });
   const [error, setError] = useState(null);
+
+  const { data: almacenes = [] } = useGetAlmacenesQuery();
 
   const {
     data: rechazoData,
@@ -55,6 +62,7 @@ export const RechazoModal = ({
     comentario: "",
     trazabilidad: trazabilidadPadre || "",
     usuarioId: 1,
+    almacenId: "",
   };
 
   useEffect(() => {
@@ -68,6 +76,7 @@ export const RechazoModal = ({
         comentario: rechazoData.comentario || "",
         trazabilidad: trazabilidadPadre || rechazoData.trazabilidad || "",
         usuarioId: rechazoData.usuarioId,
+        almacenId: rechazoData.almacenId || "",
       });
     } else {
       setFormData(initialFormData);
@@ -78,8 +87,15 @@ export const RechazoModal = ({
     e.preventDefault();
     setError(null);
 
-    if (!formData.fechaRechazo || !formData.cantidadRechazada) {
-      setError("Fecha de Rechazo and Cantidad Rechazada are required");
+    // Validar campos requeridos
+    if (
+      !formData.fechaRechazo ||
+      !formData.cantidadRechazada ||
+      !formData.almacenId
+    ) {
+      setError(
+        "Fecha, Cantidad y Almacén son obligatorios. Por favor completa todos los campos requeridos.",
+      );
       return;
     }
 
@@ -122,6 +138,23 @@ export const RechazoModal = ({
                   value={formData.fechaRechazo}
                 />
               </FormControl>
+
+              <FormControl isRequired mb={3}>
+                <FormLabel>Almacén Destino</FormLabel>
+                <Select
+                  placeholder="-- Seleccionar --"
+                  name="almacenId"
+                  onChange={handleChange}
+                  value={formData.almacenId}
+                >
+                  {almacenes.map((almacen) => (
+                    <option key={almacen.id} value={almacen.id}>
+                      {almacen.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+
               <FormControl isRequired mb={3}>
                 <FormLabel>Cantidad Rechazada</FormLabel>
                 <Input

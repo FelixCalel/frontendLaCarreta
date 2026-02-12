@@ -34,15 +34,24 @@ const FIELD_LABELS = {
   mpSobrante: "MP Sobrante",
   basura: "Basura",
   trazabilidad_Prod: "Trazabilidad",
+  mp1ra: "MP 1ra",
+  mp2da: "MP 2da",
+  mp3ra: "MP 3ra",
 };
 
 const FIELD_SPECS = {
-  mpUtilizada: { w: "70px", type: "number" },
+  mpUtilizada: { w: "51px", type: "number" },
 
-  mpSobrante: { w: "70px", type: "number" },
-  basura: { w: "70px", type: "number" },
-  trazabilidad_Prod: { w: "70px", type: "text" },
+  mpSobrante: { w: "51px", type: "number" },
+  basura: { w: "51px", type: "number" },
+  trazabilidad_Prod: { w: "65px", type: "text" },
+  mp1ra: { w: "51px", type: "number" },
+  mp2da: { w: "51px", type: "number" },
+  mp3ra: { w: "51px", type: "number" },
 };
+
+const ROW_1 = ["mpUtilizada", "mpSobrante", "basura", "trazabilidad_Prod"];
+const ROW_2 = ["mp1ra", "mp2da", "mp3ra"];
 
 export const OrderRow = ({
   order,
@@ -90,13 +99,13 @@ export const OrderRow = ({
     mpSobrante: Number(order.mpSobrante) || 0,
     basura: Number(order.basura) || 0,
     trazabilidad_Prod: order.trazabilidad_Prod ?? "",
+    mp1ra: Number(order.mp1ra) || 0,
+    mp2da: Number(order.mp2da) || 0,
+    mp3ra: Number(order.mp3ra) || 0,
   });
-  // Inicializa almacenId correctamente desde order.id_almacen
   const [almacenId, setAlmacenId] = useState(
     order.id_almacen ? String(order.id_almacen) : "",
   );
-
-  // Sincroniza almacenId local si cambia el pedido (por recarga o actualización)
   useEffect(() => {
     setAlmacenId(order.id_almacen ? String(order.id_almacen) : "");
   }, [order.id_almacen]);
@@ -147,6 +156,9 @@ export const OrderRow = ({
       mpSobrante: Number(order.mpSobrante) || 0,
       basura: Number(order.basura) || 0,
       trazabilidad_Prod: order.trazabilidad_Prod ?? "",
+      mp1ra: Number(order.mp1ra) || 0,
+      mp2da: Number(order.mp2da) || 0,
+      mp3ra: Number(order.mp3ra) || 0,
     });
   }, [
     order.mpUtilizada,
@@ -154,13 +166,23 @@ export const OrderRow = ({
     order.mpSobrante,
     order.basura,
     order.trazabilidad_Prod,
+    order.mp1ra,
+    order.mp2da,
+    order.mp3ra,
   ]);
 
   const handleFieldChange = (field, raw) => {
     const isText = field === "trazabilidad_Prod";
     let value = isText ? raw : Number(raw);
 
-    const fieldsToValidate = ["mpUtilizada", "mpSobrante", "basura"];
+    const fieldsToValidate = [
+      "mpUtilizada",
+      "mpSobrante",
+      "basura",
+      "mp1ra",
+      "mp2da",
+      "mp3ra",
+    ];
 
     if (!isText) {
       if (Number.isNaN(value) || value < 0) {
@@ -217,7 +239,6 @@ export const OrderRow = ({
       });
   };
 
-  // Optimistic state for "Completo"
   const [completoLocal, setCompletoLocal] = useState(order.completo);
 
   useEffect(() => {
@@ -225,10 +246,10 @@ export const OrderRow = ({
   }, [order.completo]);
 
   const handleCompletoChange = (checked) => {
-    setCompletoLocal(checked); // Update visual immediately
+    setCompletoLocal(checked);
     updatePedido({ id: order.id, data: { completo: checked } })
       .unwrap()
-      .catch(() => setCompletoLocal(!checked)); // Revert on error
+      .catch(() => setCompletoLocal(!checked));
   };
 
   const handleSaveRechazo = async ({ formData, existingRechazo }) => {
@@ -250,7 +271,7 @@ export const OrderRow = ({
 
   const stripeColor = useColorModeValue("gray.50", "gray.800");
   const bgOdd = useColorModeValue("white", "gray.900");
-  const bgEven = useColorModeValue("gray.50", "gray.800");
+  const bgEven = useColorModeValue("gray.100", "gray.800");
   const rowBg = index % 2 === 0 ? bgOdd : bgEven;
 
   const hoverBg = useColorModeValue("gray.200", "gray.600");
@@ -427,15 +448,16 @@ export const OrderRow = ({
         <Td colSpan={8} p={0} border="none">
           <Collapse in={isExpanded} animateOpacity>
             <Box
-              px={4}
-              py={3}
+              pl={2}
+              pr={1}
+              py={2}
               bg={useColorModeValue("gray.50", "gray.900")}
               borderBottomWidth="1px"
               borderColor="gray.200"
             >
               <Flex gap={4} direction={{ base: "column", xl: "row" }}>
                 {/* Left Column: Production Register & Details */}
-                <Box flex="1" maxW={{ xl: "400px" }}>
+                <Box width="fit-content">
                   {/* Registro de Producción Compacto */}
                   <Box
                     bg={useColorModeValue("white", "gray.800")}
@@ -446,9 +468,9 @@ export const OrderRow = ({
                     borderColor="gray.200"
                     mb={3}
                   >
-                    <Flex justify="space-between" align="center" mb={2}>
+                    <Flex align="right" mb={2} gap={24}>
                       <Text fontSize="sm" fontWeight="bold" color="blue.600">
-                        📋 Registro
+                        Registro
                       </Text>
                       <Button
                         size="xs"
@@ -463,20 +485,65 @@ export const OrderRow = ({
                       </Button>
                     </Flex>
 
-                    <Flex gap={2} wrap="wrap">
-                      {Object.entries(prodFields).map(([field, value]) => {
+                    <Flex gap={2} wrap="wrap" mb={2}>
+                      {ROW_1.map((field) => {
+                        const value = prodFields[field];
                         const spec = FIELD_SPECS[field] ?? {
                           w: "80px",
                           type: "number",
                         };
                         return (
-                          <Box key={field}>
+                          <Flex key={field} direction="column" align="center">
                             <Text
                               fontSize="10px"
                               fontWeight="bold"
                               color="gray.500"
                               mb={0.5}
                               textTransform="uppercase"
+                              textAlign="center"
+                            >
+                              {FIELD_LABELS[field]}
+                            </Text>
+                            <Input
+                              size="xs"
+                              w={spec.w}
+                              type={spec.type}
+                              value={
+                                spec.type === "number" && value === 0
+                                  ? ""
+                                  : value
+                              }
+                              placeholder={spec.type === "number" ? "0" : ""}
+                              onChange={(e) =>
+                                handleFieldChange(field, e.target.value)
+                              }
+                              focusBorderColor="blue.400"
+                              borderRadius="sm"
+                              bg={useColorModeValue("gray.50", "gray.700")}
+                              textAlign="center"
+                            />
+                          </Flex>
+                        );
+                      })}
+                    </Flex>
+
+                    {/* Fila 2: MP 1ra, 2da, 3ra */}
+                    {/*  <Flex gap={2} wrap="wrap" justify="center">
+                      {ROW_2.map((field) => {
+                        const value = prodFields[field];
+                        const spec = FIELD_SPECS[field] ?? {
+                          w: "80px",
+                          type: "number",
+                        };
+                        return (
+                          <Flex key={field} direction="column" align="center">
+                            <Text
+                              fontSize="10px"
+                              fontWeight="bold"
+                              color="gray.500"
+                              mb={0.5}
+                              textTransform="uppercase"
+                              textAlign="center"
                             >
                               {FIELD_LABELS[field]}
                             </Text>
@@ -491,14 +558,14 @@ export const OrderRow = ({
                               focusBorderColor="blue.400"
                               borderRadius="sm"
                               bg={useColorModeValue("gray.50", "gray.700")}
+                              textAlign="center"
                             />
-                          </Box>
+                          </Flex>
                         );
                       })}
-                    </Flex>
+                    </Flex>*/}
                   </Box>
 
-                  {/* Detalles del Pedido (PTMQ / Sin Receta) */}
                   <Box>
                     <OrderDetailsTable
                       details={details}
@@ -510,7 +577,6 @@ export const OrderRow = ({
                   </Box>
                 </Box>
 
-                {/* Right Column: Recipe Table (takes remaining space) */}
                 <Box flex="1">{memoizedRecetaTable}</Box>
               </Flex>
             </Box>

@@ -47,7 +47,12 @@ const CustomInput = memo(function CustomInput({
 
   return (
     <Input
-      value={internalValue ?? ""}
+      value={
+        internalValue === 0 || internalValue === "0"
+          ? ""
+          : (internalValue ?? "")
+      }
+      placeholder="0"
       onChange={handleChange}
       onBlur={onBlur}
       {...props}
@@ -117,11 +122,11 @@ const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
           }}
         />
       </Td>
-      <Td px={1} py={2} textAlign="center">
+      {/* <Td px={1} py={2} textAlign="center">
         <Text fontSize="xs" fontWeight="bold" color="gray.500">
           {idx + 1}
         </Text>
-      </Td>
+      </Td> */}
       <Td px={2} py={2}>
         <Box>
           <Text
@@ -158,9 +163,10 @@ const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
             value={r[field]}
             onChange={(e) => handleLocalChange(r.id, field, e.target.value)}
             onBlur={(e) => updateField(r.id, field, e.target.value)}
-            textAlign="right"
+            textAlign="center"
             focusBorderColor="blue.400"
             fontWeight="medium"
+            w="56px"
           />
         </Td>
       ))}
@@ -189,7 +195,7 @@ const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
           {r.nombre_unidad}
         </Box>
       </Td>
-      <Td px={2} py={2}>
+      <Td px={2} py={2} textAlign="center">
         <Select
           size="xs"
           h="24px"
@@ -201,6 +207,8 @@ const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
           borderRadius="md"
           variant="filled"
           _focus={{ bg: optionBg, borderColor: "blue.400" }}
+          textAlign="center"
+          sx={{ textAlignLast: "center" }}
         >
           {almacenes.map((almacen) => (
             <option key={almacen.id} value={almacen.id}>
@@ -234,7 +242,6 @@ export const RecetaTable = ({
   const [updateLinea] = useUpdateRecetaLineaMutation();
   const toast = useToast();
   const dispatch = useDispatch();
-
   const headBg = useColorModeValue("gray.100", "gray.700");
   const inputBorderColor = useColorModeValue("gray.300", "gray.600");
   const headColor = useColorModeValue("gray.700", "gray.200");
@@ -352,7 +359,7 @@ export const RecetaTable = ({
                 <Th w="40px" px={2} py={2} color={headColor} fontSize="2xs">
                   Activo
                 </Th>
-                <Th
+                {/* <Th
                   w="40px"
                   px={1}
                   py={2}
@@ -361,26 +368,28 @@ export const RecetaTable = ({
                   textAlign="center"
                 >
                   #
-                </Th>
+                </Th> */}
                 <Th minW="180px" px={2} py={2} color={headColor} fontSize="2xs">
                   Material
                 </Th>
                 <Th
-                  w="90px"
+                  w="65px"
                   px={1}
                   py={2}
                   color={headColor}
                   fontSize="2xs"
+                  textAlign="center"
                   isNumeric
                 >
                   MP Utilizada
                 </Th>
                 <Th
-                  w="90px"
+                  w="65px"
                   px={1}
                   py={2}
                   color={headColor}
                   fontSize="2xs"
+                  textAlign="center"
                   isNumeric
                 >
                   Cant. Real
@@ -408,7 +417,14 @@ export const RecetaTable = ({
                 <Th w="100px" px={2} py={2} color={headColor} fontSize="2xs">
                   Unidad
                 </Th>
-                <Th w="140px" px={2} py={2} color={headColor} fontSize="2xs">
+                <Th
+                  w="100px"
+                  px={2}
+                  py={2}
+                  color={headColor}
+                  fontSize="2xs"
+                  textAlign="center"
+                >
                   Almacén MP
                 </Th>
               </Tr>
@@ -416,7 +432,7 @@ export const RecetaTable = ({
             <Tbody>
               {receta.length === 0 ? (
                 <Tr>
-                  <Td colSpan={9} textAlign="center" py={4} color="gray.500">
+                  <Td colSpan={8} textAlign="center" py={4} color="gray.500">
                     <Text fontSize="sm">
                       No hay materiales registrados en la receta.
                     </Text>
