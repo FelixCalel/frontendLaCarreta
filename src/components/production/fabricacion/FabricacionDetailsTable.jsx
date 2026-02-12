@@ -11,7 +11,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 
-export const FabricacionDetailsTable = ({ details }) => {
+export const FabricacionDetailsTable = ({ details = [] }) => {
   const headerBg = useColorModeValue("green.100", "green.800");
 
   if (!details || details.length === 0) {
@@ -57,10 +57,6 @@ FabricacionDetailsTable.propTypes = {
       nombreUnidad: PropTypes.string,
       almacen: PropTypes.string,
       checked: PropTypes.bool,
-    })
+    }),
   ),
-};
-
-FabricacionDetailsTable.defaultProps = {
-  details: [],
 };

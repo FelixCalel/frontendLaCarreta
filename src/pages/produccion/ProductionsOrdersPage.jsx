@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useTransition } from "react";
 import {
   Box,
   Spinner,
@@ -13,6 +13,7 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import { CheckCircleIcon, ViewIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useGetPedidosAgrupadosQuery,
   useProcesarEstado5Mutation,
@@ -22,14 +23,15 @@ import { OrdersTable } from "../../components/production/OrdersTable";
 import { ConsolidatedOrdersView } from "../../components/production/ConsolidatedOrdersView";
 
 const ProductionOrdersPage = () => {
+  const navigate = useNavigate();
+  const { pedidoId } = useParams();
   const [countryFilter, setCountryFilter] = useState("");
   const [itemFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
-  const [selectedPedidoId, setSelectedPedidoId] = useState(null);
   const [syncReady, setSyncReady] = useState(false);
   const [procesarEstado5] = useProcesarEstado5Mutation();
-  const [viewMode, setViewMode] = useState("byOrder"); // 'byOrder' or 'consolidated'
+  const [viewMode, setViewMode] = useState("byOrder");
 
   useEffect(() => {
     const runProcess = async () => {
@@ -39,8 +41,6 @@ const ProductionOrdersPage = () => {
           console.log("No hay pedidos en estado 5 para procesar.");
         }
       } catch (error) {
-        // El error 400 del backend ya no debería ocurrir para este caso,
-        // pero mantenemos el catch para otros posibles errores (red, etc.)
         console.error("Error al intentar procesar el estado 5:", error);
       } finally {
         setSyncReady(true);
@@ -54,7 +54,7 @@ const ProductionOrdersPage = () => {
     data: agrupados = [],
     isLoading,
     error,
-  } = useGetPedidosAgrupadosQuery(undefined, { skip: !syncReady });
+  } = useGetPedidosAgrupadosQuery({ etapaId: 1 }, { skip: !syncReady });
 
   const cardBg = useColorModeValue("white", "gray.700");
   const cardBorder = useColorModeValue("gray.200", "gray.600");
@@ -66,77 +66,133 @@ const ProductionOrdersPage = () => {
           pedidoId: g.pedidoId,
           tienda: g.tienda,
           pais: g.pais,
-          items: g.items
-            .filter((i) => i.etapaId === 1)
-            .map((item) => ({
-              ...item,
-              pedidoId: g.pedidoId,
-              tienda: g.tienda,
-              cantidadUnidad: Number(item.cantidadUnidad) || 0,
-            })),
+          items: g.items.map((item) => ({
+            ...item,
+            pedidoId: g.pedidoId,
+            tienda: g.tienda,
+            deudorCodigo: g.deudorCodigo,
+            deudorNombre: g.deudorNombre,
+            cantidadUnidad: Number(item.cantidadUnidad) || 0,
+          })),
         }))
         .filter((g) => g.items.length > 0),
-    [agrupados]
+    [agrupados],
   );
 
   const allItems = useMemo(
     () => mesaGroups.flatMap((g) => g.items),
-    [mesaGroups]
+    [mesaGroups],
   );
+  const [deuFilter, setDeuFilter] = useState("");
+
+  // Use transition to make filter updates non-blocking
+  const [isPending, startTransition] = useTransition();
+
+  // Wrapped setters that use startTransition
+  const handleCountryFilterChange = (value) => {
+    startTransition(() => {
+      setCountryFilter(value);
+    });
+  };
+
+  const handleClientFilterChange = (value) => {
+    startTransition(() => {
+      setClientFilter(value);
+    });
+  };
+
+  const handleStateFilterChange = (value) => {
+    startTransition(() => {
+      setStateFilter(value);
+    });
+  };
+
+  const handleDeuFilterChange = (value) => {
+    startTransition(() => {
+      setDeuFilter(value);
+    });
+  };
+
   const countries = useMemo(
     () => Array.from(new Set(allItems.map((i) => i.pais))),
-    [allItems]
+    [allItems],
   );
   const clients = useMemo(
     () => Array.from(new Set(allItems.map((i) => i.tienda))),
-    [allItems]
+    [allItems],
+  );
+
+  const deudores = useMemo(
+    () =>
+      Array.from(new Set(allItems.map((i) => i.deudorCodigo)))
+        .filter(Boolean)
+        .sort(),
+    [allItems],
   );
 
   const filteredGroups = useMemo(() => {
-    return mesaGroups
-      .map((g) => {
-        const filteredItems = g.items
-          .filter((i) => {
-            if (!itemFilter) return true;
-            return i.productoNombre
-              .toLowerCase()
-              .includes(itemFilter.toLowerCase());
-          })
-          .slice()
-          .sort((a, b) =>
-            a.productoNombre.localeCompare(b.productoNombre, undefined, {
-              sensitivity: "base",
+    return (
+      mesaGroups
+        // Filtro DEU al inicio para optimizar
+        .filter((g) => {
+          if (!deuFilter) return true;
+          // Si el grupo tiene items con ese DEU, lo mantenemos (y filtramos items despues)
+          return g.items.some((i) => i.deudorCodigo === deuFilter);
+        })
+        .map((g) => {
+          const filteredItems = g.items
+            .filter((i) => {
+              if (deuFilter && i.deudorCodigo !== deuFilter) return false; // Filtro por DEU activo
+              if (!itemFilter) return true;
+              return i.productoNombre
+                .toLowerCase()
+                .includes(itemFilter.toLowerCase());
             })
-          );
+            .slice()
+            .sort((a, b) =>
+              a.productoNombre.localeCompare(b.productoNombre, undefined, {
+                sensitivity: "base",
+              }),
+            );
 
-        return {
-          ...g,
-          items: filteredItems,
-        };
-      })
-      .filter((g) => g.items.length > 0)
-      .filter((g) => {
-        if (countryFilter && g.pais !== countryFilter) return false;
-        if (clientFilter && g.tienda !== clientFilter) return false;
+          return {
+            ...g,
+            items: filteredItems,
+          };
+        })
+        .filter((g) => g.items.length > 0)
+        .filter((g) => {
+          if (countryFilter && g.pais !== countryFilter) return false;
+          if (clientFilter && g.tienda !== clientFilter) return false;
 
-        if (stateFilter) {
-          const total = g.items.length;
-          const doneCount = g.items.filter((i) => i.completo).length;
-          const anyProgress = g.items.some((i) => Number(i.cantidad ?? 0) > 0);
-          const groupStatus =
-            doneCount === total
-              ? "Completado"
-              : anyProgress
-              ? "En Proceso"
-              : "Pendiente";
-          if (groupStatus !== stateFilter) return false;
-        }
+          if (stateFilter) {
+            const total = g.items.length;
+            const doneCount = g.items.filter((i) => i.completo).length;
+            const anyProgress = g.items.some(
+              (i) => Number(i.cantidad ?? 0) > 0,
+            );
+            const groupStatus =
+              doneCount === total
+                ? "Completado"
+                : anyProgress
+                  ? "En Proceso"
+                  : "Pendiente";
+            if (groupStatus !== stateFilter) return false;
+          }
 
-        return true;
-      })
-      .slice()
-      .sort((a, b) => a.pedidoId - b.pedidoId);
-  }, [mesaGroups, itemFilter, countryFilter, clientFilter, stateFilter]);
+          return true;
+        })
+        .slice()
+        .sort((a, b) => a.pedidoId - b.pedidoId)
+    );
+  }, [
+    mesaGroups,
+    itemFilter,
+    countryFilter,
+    clientFilter,
+    stateFilter,
+    deuFilter,
+  ]);
 
   const consolidatedItems = useMemo(() => {
     if (viewMode !== "consolidated") return [];
@@ -145,7 +201,8 @@ const ProductionOrdersPage = () => {
     const itemsMap = new Map();
 
     allFilteredItems.forEach((item) => {
-      const key = item.productoNombre;
+      const deuCode = item.deudorCodigo || "";
+      const key = `${deuCode}|${item.productoNombre}`;
       if (itemsMap.has(key)) {
         const existing = itemsMap.get(key);
         existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
@@ -161,11 +218,19 @@ const ProductionOrdersPage = () => {
       }
     });
 
-    return Array.from(itemsMap.values()).sort((a, b) =>
-      a.productoNombre.localeCompare(b.productoNombre, undefined, {
+    return Array.from(itemsMap.values()).sort((a, b) => {
+      const deuCompare = (a.deudorCodigo || "").localeCompare(
+        b.deudorCodigo || "",
+        undefined,
+        {
+          sensitivity: "base",
+        },
+      );
+      if (deuCompare !== 0) return deuCompare;
+      return a.productoNombre.localeCompare(b.productoNombre, undefined, {
         sensitivity: "base",
-      })
-    );
+      });
+    });
   }, [filteredGroups, viewMode]);
 
   if (isLoading || !syncReady) {
@@ -183,7 +248,7 @@ const ProductionOrdersPage = () => {
     );
   }
 
-  if (selectedPedidoId === null) {
+  if (!pedidoId) {
     return (
       <Box p={0} m={0}>
         <Heading size="lg" mb={4} textAlign="center">
@@ -196,7 +261,6 @@ const ProductionOrdersPage = () => {
           mb={4}
           gap={4}
         >
-          {/* Left: View Mode Buttons */}
           <ButtonGroup isAttached variant="outline">
             <Tooltip label="Ver pedidos individuales" placement="top">
               <Button
@@ -223,17 +287,19 @@ const ProductionOrdersPage = () => {
             </Tooltip>
           </ButtonGroup>
 
-          {/* Right: Filters */}
           <Box w={{ base: "100%", lg: "auto" }}>
             <FilterPanel
               countryFilter={countryFilter}
-              onCountryChange={setCountryFilter}
+              onCountryChange={handleCountryFilterChange}
               clientFilter={clientFilter}
-              onClientChange={setClientFilter}
+              onClientChange={handleClientFilterChange}
               stateFilter={stateFilter}
-              onStateChange={setStateFilter}
+              onStateChange={handleStateFilterChange}
               countries={countries}
               clients={clients}
+              deuFilter={deuFilter}
+              onDeuChange={handleDeuFilterChange}
+              deudores={deudores}
             />
           </Box>
         </Flex>
@@ -253,7 +319,7 @@ const ProductionOrdersPage = () => {
                   borderRadius="md"
                   cursor="pointer"
                   _hover={{ shadow: "md" }}
-                  onClick={() => setSelectedPedidoId(g.pedidoId)}
+                  onClick={() => navigate(`/mesa/produccion/${g.pedidoId}`)}
                 >
                   <Icon
                     as={CheckCircleIcon}
@@ -292,16 +358,16 @@ const ProductionOrdersPage = () => {
   }
 
   const selectedGroup = filteredGroups.find(
-    (g) => g.pedidoId === selectedPedidoId
+    (g) => g.pedidoId === Number(pedidoId),
   );
   if (!selectedGroup) {
-    setSelectedPedidoId(null);
+    navigate("/mesa/produccion");
     return null;
   }
   return (
     <Box p={6}>
       <Flex mb={4} align="center" justify="space-between">
-        <Button onClick={() => setSelectedPedidoId(null)}>← Volver</Button>
+        <Button onClick={() => navigate("/mesa/produccion")}>← Volver</Button>
         <Heading size="md">
           Pedido #{selectedGroup.pedidoId} – {selectedGroup.tienda}
         </Heading>

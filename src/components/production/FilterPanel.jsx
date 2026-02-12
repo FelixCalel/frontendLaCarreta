@@ -10,6 +10,9 @@ export const FilterPanel = ({
   onStateChange,
   countries,
   clients,
+  deuFilter = "",
+  onDeuChange,
+  deudores = [],
 }) => {
   const fieldBg = useColorModeValue("white", "gray.700");
   const fieldBorder = useColorModeValue("gray.300", "gray.600");
@@ -62,6 +65,22 @@ export const FilterPanel = ({
       <Box>
         <Select
           {...commonProps}
+          placeholder="DEU"
+          maxW="130px"
+          value={deuFilter}
+          onChange={(e) => onDeuChange(e.target.value)}
+        >
+          {deudores.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </Select>
+      </Box>
+
+      <Box>
+        <Select
+          {...commonProps}
           placeholder="Estado del pedido"
           maxW="200px"
           value={stateFilter}
@@ -85,6 +104,7 @@ FilterPanel.propTypes = {
   onStateChange: PropTypes.func.isRequired,
   countries: PropTypes.arrayOf(PropTypes.string).isRequired,
   clients: PropTypes.arrayOf(PropTypes.string).isRequired,
+  deuFilter: PropTypes.string,
+  onDeuChange: PropTypes.func,
+  deudores: PropTypes.arrayOf(PropTypes.string),
 };
-
-

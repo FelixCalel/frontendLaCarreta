@@ -17,10 +17,16 @@ const DigitadorOrderDetailPage = () => {
   const { pedidoId } = useParams();
   const navigate = useNavigate();
 
-  const { data: groups = [], isLoading, error } = useGetPedidosAgrupadosQuery();
+  const {
+    data: groups = [],
+    isLoading,
+    error,
+  } = useGetPedidosAgrupadosQuery({
+    etapaId: 3,
+  });
   const group = useMemo(
     () => groups.find((g) => g.pedidoId === Number(pedidoId)),
-    [groups, pedidoId]
+    [groups, pedidoId],
   );
 
   const [term, setTerm] = useState("");
@@ -44,9 +50,9 @@ const DigitadorOrderDetailPage = () => {
         .sort((a, b) =>
           a.productoNombre.localeCompare(b.productoNombre, undefined, {
             sensitivity: "base",
-          })
+          }),
         ),
-    [items, term, stateFilter]
+    [items, term, stateFilter],
   );
 
   if (isLoading)

@@ -23,6 +23,7 @@ import {
   useDisclosure,
   useToast,
   useColorModeValue,
+  Input,
 } from "@chakra-ui/react";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
@@ -43,7 +44,13 @@ const FabricacionPage = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { data: groups = [], isLoading, error } = useGetPedidosAgrupadosQuery();
+  const {
+    data: groups = [],
+    isLoading,
+    error,
+  } = useGetPedidosAgrupadosQuery({
+    etapaId: 3,
+  });
 
   const headBg = useColorModeValue("gray.50", "gray.800");
   const tableBorder = useColorModeValue("gray.200", "gray.700");
@@ -56,22 +63,20 @@ const FabricacionPage = () => {
 
   const group = useMemo(
     () => groups.find((g) => g.pedidoId === pedidoId),
-    [groups, pedidoId]
+    [groups, pedidoId],
   );
 
   const { data: receta = [], isLoading: cargandoReceta } =
     useGetRecetaByPedidoQuery({ pedidoId });
 
-  const baseItems = useMemo(
-    () => (group?.items ?? []).filter((it) => it.etapaId === 2),
-    [group]
-  );
+  const baseItems = useMemo(() => group?.items ?? [], [group]);
 
   const [term, setTerm] = useState("");
   const [estado, setEstado] = useState("");
   const [mesa, setMesa] = useState("");
   const [comment, setComment] = useState("");
   const [noComment, setNoComment] = useState(false);
+  const [dateSAP, setDateSAP] = useState("");
   const isSending = sendingPedido || sendingDetalles;
 
   console.log({ pedidoId });
@@ -96,7 +101,7 @@ const FabricacionPage = () => {
       .sort((a, b) =>
         a.productoNombre.localeCompare(b.productoNombre, "es", {
           sensitivity: "base",
-        })
+        }),
       );
   }, [baseItems, term, estado, mesa]);
 
@@ -121,17 +126,29 @@ const FabricacionPage = () => {
     }
     setComment("");
     setNoComment(false);
+    setDateSAP("");
     onOpen();
   };
 
   const handleCargarSAP = async () => {
+    if (!dateSAP) {
+      toast({
+        title: "Falta fecha",
+        description: "Debe seleccionar una fecha de orden para cargar a SAP.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     const usuarioId = Number(localStorage.getItem("usuarioId") ?? 1);
     const comentario = noComment ? null : comment.trim();
 
     const detalleIds = filtered.map((o) => o.id_detallePedido);
     const pedidoId = Number(filtered[0]?.pedidoId ?? 0);
 
-    const nuevaEtapaId = 3;
+    const nuevaEtapaId = 4;
 
     try {
       if (detalleIds.length) {
@@ -140,6 +157,7 @@ const FabricacionPage = () => {
           usuarioId,
           nuevaEtapaId,
           comentario,
+          fechaOrden: dateSAP,
         }).unwrap();
       }
 
@@ -148,6 +166,7 @@ const FabricacionPage = () => {
         usuarioId,
         nuevaEtapaId,
         comentario,
+        fechaOrden: dateSAP,
       }).unwrap();
 
       toast({
@@ -229,6 +248,7 @@ const FabricacionPage = () => {
               receta={receta}
               cargandoReceta={cargandoReceta}
               mostrarReceta={idx === 0}
+              index={idx}
             />
           ))}
         </Tbody>
@@ -267,6 +287,15 @@ const FabricacionPage = () => {
           <ModalHeader>Cargar a SAP</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
+            <Text mb={2} fontWeight="bold">
+              Fecha de Orden (Obligatorio):
+            </Text>
+            <Input
+              type="date"
+              value={dateSAP}
+              onChange={(e) => setDateSAP(e.target.value)}
+              mb={4}
+            />
             <Text mb={2}>Comentario:</Text>
             <Textarea
               value={comment}
@@ -290,6 +319,7 @@ const FabricacionPage = () => {
               colorScheme="green"
               onClick={handleCargarSAP}
               isLoading={isSending}
+              isDisabled={!dateSAP}
             >
               Aceptar
             </Button>

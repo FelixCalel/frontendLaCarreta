@@ -66,9 +66,12 @@ const AprobadosTable = ({
               <Td>{pedido.nombreDeu}</Td>
               <Td>{pedido.nombreTienda}</Td>
               <Td>
-                {format(new Date(pedido.fechaOrdenDisplay || pedido.fechaOrden), "dd 'de' MMMM 'de' yyyy", {
-                  locale: es,
-                })}
+                {(() => {
+                  const fechaStr = pedido.fechaOrdenDisplay || pedido.fechaOrden;
+                  if (!fechaStr) return "Sin fecha";
+                  const [yyyy, mm, dd] = fechaStr.slice(0, 10).split("-");
+                  return format(new Date(yyyy, mm - 1, dd), "dd 'de' MMMM 'de' yyyy", { locale: es });
+                })()}
               </Td>
               <Td>
                 <Tooltip label="Ver Detalles" hasArrow>

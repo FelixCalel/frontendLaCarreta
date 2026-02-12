@@ -18,6 +18,7 @@ import {
   HamburgerIcon,
   RepeatClockIcon,
 } from "@chakra-ui/icons";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useGetPedidosAgrupadosQuery,
   useProcesarEstado5Mutation,
@@ -32,6 +33,8 @@ import { selectRecetasState } from "../../../store/Empresa";
 import AcceptOrderButton from "../../../components/production/AcceptOrderButton";
 
 const SupervisorOrdersPage = () => {
+  const navigate = useNavigate();
+  const { pedidoId } = useParams();
   const dispatch = useDispatch();
   const { data: empresas, paises } = useSelector((state) => state.empresas);
   const { lastSync } = useSelector(selectRecetasState);
@@ -39,7 +42,6 @@ const SupervisorOrdersPage = () => {
   const [itemFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
-  const [selectedPedidoId, setSelectedPedidoId] = useState(null);
   const [syncReady, setSyncReady] = useState(false);
   const [procesarEstado5] = useProcesarEstado5Mutation();
   const [viewMode, setViewMode] = useState("byOrder");
@@ -77,7 +79,18 @@ const SupervisorOrdersPage = () => {
     data: agrupados = [],
     isLoading,
     error,
-  } = useGetPedidosAgrupadosQuery(undefined, { skip: !syncReady });
+  } = useGetPedidosAgrupadosQuery({ etapaId: 2 }, { skip: !syncReady });
+
+  // DEBUG: Ver qué datos están llegando del backend
+  useEffect(() => {
+    if (agrupados.length > 0) {
+      console.log("🔍 Primer pedido agrupado:", agrupados[0]);
+      console.log(
+        "🔍 Primer item del primer pedido:",
+        agrupados[0]?.items?.[0],
+      );
+    }
+  }, [agrupados]);
 
   const cardBg = useColorModeValue("white", "gray.700");
   const cardBorder = useColorModeValue("gray.200", "gray.600");
@@ -93,7 +106,8 @@ const SupervisorOrdersPage = () => {
             ...item,
             pedidoId: g.pedidoId,
             tienda: g.tienda,
-            // Ensure all numeric fields are numbers
+            deudorCodigo: g.deudorCodigo,
+            deudorNombre: g.deudorNombre,
             cantidadUnidad: Number(item.cantidadUnidad ?? 0),
             cantidad: Number(item.cantidad ?? 0),
             faltante: Number(item.faltante ?? 0),
@@ -107,20 +121,20 @@ const SupervisorOrdersPage = () => {
           })),
         }))
         .filter((g) => g.items.length > 0),
-    [agrupados]
+    [agrupados],
   );
 
   const allItems = useMemo(
     () => pedidoGroups.flatMap((g) => g.items),
-    [pedidoGroups]
+    [pedidoGroups],
   );
   const countries = useMemo(
     () => Array.from(new Set(allItems.map((i) => i.pais))),
-    [allItems]
+    [allItems],
   );
   const clients = useMemo(
     () => Array.from(new Set(allItems.map((i) => i.tienda))),
-    [allItems]
+    [allItems],
   );
 
   const filteredGroups = useMemo(() => {
@@ -137,7 +151,7 @@ const SupervisorOrdersPage = () => {
           .sort((a, b) =>
             a.productoNombre.localeCompare(b.productoNombre, undefined, {
               sensitivity: "base",
-            })
+            }),
           );
 
         return {
@@ -158,8 +172,8 @@ const SupervisorOrdersPage = () => {
             doneCount === total
               ? "Completado"
               : anyProgress
-              ? "En Proceso"
-              : "Pendiente";
+                ? "En Proceso"
+                : "Pendiente";
           if (groupStatus !== stateFilter) return false;
         }
 
@@ -176,7 +190,9 @@ const SupervisorOrdersPage = () => {
     const itemsMap = new Map();
 
     allFilteredItems.forEach((item) => {
-      const key = item.productoNombre;
+      // Agrupar por código DEU Y producto
+      const deuCode = item.deudorCodigo || "";
+      const key = `${deuCode}|${item.productoNombre}`;
       if (itemsMap.has(key)) {
         const existing = itemsMap.get(key);
         existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
@@ -192,11 +208,20 @@ const SupervisorOrdersPage = () => {
       }
     });
 
-    return Array.from(itemsMap.values()).sort((a, b) =>
-      a.productoNombre.localeCompare(b.productoNombre, undefined, {
+    // Ordenar primero por código DEU, luego por producto
+    return Array.from(itemsMap.values()).sort((a, b) => {
+      const deuCompare = (a.deudorCodigo || "").localeCompare(
+        b.deudorCodigo || "",
+        undefined,
+        {
+          sensitivity: "base",
+        },
+      );
+      if (deuCompare !== 0) return deuCompare;
+      return a.productoNombre.localeCompare(b.productoNombre, undefined, {
         sensitivity: "base",
-      })
-    );
+      });
+    });
   }, [filteredGroups, viewMode]);
 
   if (isLoading || !syncReady) {
@@ -214,7 +239,7 @@ const SupervisorOrdersPage = () => {
     );
   }
 
-  if (selectedPedidoId === null) {
+  if (!pedidoId) {
     return (
       <Box p={2}>
         <Flex justifyContent="space-between" alignItems="center" mb={4}>
@@ -292,7 +317,6 @@ const SupervisorOrdersPage = () => {
             </Flex>
           </Flex>
 
-          {/* Right: Filters */}
           <Box w={{ base: "100%", lg: "auto" }}>
             <FilterPanel
               countryFilter={countryFilter}
@@ -322,7 +346,7 @@ const SupervisorOrdersPage = () => {
                   borderRadius="md"
                   cursor="pointer"
                   _hover={{ shadow: "md" }}
-                  onClick={() => setSelectedPedidoId(g.pedidoId)}
+                  onClick={() => navigate(`/produccion/orden/${g.pedidoId}`)}
                 >
                   <Icon
                     as={CheckCircleIcon}
@@ -361,18 +385,18 @@ const SupervisorOrdersPage = () => {
   }
 
   const selectedGroup = filteredGroups.find(
-    (g) => g.pedidoId === selectedPedidoId
+    (g) => g.pedidoId === Number(pedidoId),
   );
 
   if (!selectedGroup) {
-    setSelectedPedidoId(null);
+    navigate("/produccion/orden");
     return null;
   }
 
   return (
     <Box p={6}>
       <Flex mb={4} align="center" justify="space-between">
-        <Button onClick={() => setSelectedPedidoId(null)}>← Volver</Button>
+        <Button onClick={() => navigate("/produccion/orden")}>← Volver</Button>
         <Box flex="1" display="flex" justifyContent="center">
           <Heading size="md">
             Pedido #{selectedGroup.pedidoId} – {selectedGroup.tienda}
@@ -381,7 +405,7 @@ const SupervisorOrdersPage = () => {
         <Box>
           <AcceptOrderButton
             order={selectedGroup}
-            onSuccess={() => setSelectedPedidoId(null)}
+            onSuccess={() => navigate("/produccion/orden")}
           />
         </Box>
       </Flex>

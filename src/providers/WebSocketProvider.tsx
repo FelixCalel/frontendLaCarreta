@@ -91,12 +91,20 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
                 }
               }
             } else if (data.type === "notification") {
+              if (data.payload.usuarioId && data.payload.usuarioId != uid) {
+                 return;
+              }
+
               window.dispatchEvent(
                 new CustomEvent("notification-received", {
                   detail: data.payload,
                 })
               );
             } else if (data.type === "notification-deleted") {
+               if (data.payload.usuarioId && data.payload.usuarioId != uid) {
+                  return;
+               }
+
               window.dispatchEvent(
                 new CustomEvent("notification-deleted", {
                   detail: data.payload,
