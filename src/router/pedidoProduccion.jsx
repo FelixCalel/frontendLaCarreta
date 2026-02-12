@@ -9,8 +9,8 @@ export const produccionOrden = () => {
     <Routes>
       <Route path="/*" element={<RootLayout />}>
         <Route index element={<Dashboard />} />
-        <Route path="produccion" element={<PagePedidoSuper />} />{" "}
-        {/* <Route path="produccion/:pedidoId" element={<SupervisorPageDetail />} /> */}
+        <Route path="produccion" element={<PagePedidoSuper />} />
+        <Route path="produccion/:pedidoId" element={<PagePedidoSuper />} />
       </Route>
     </Routes>
   );

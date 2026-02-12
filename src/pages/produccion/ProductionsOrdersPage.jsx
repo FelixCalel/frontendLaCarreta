@@ -13,6 +13,7 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import { CheckCircleIcon, ViewIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useGetPedidosAgrupadosQuery,
   useProcesarEstado5Mutation,
@@ -22,11 +23,12 @@ import { OrdersTable } from "../../components/production/OrdersTable";
 import { ConsolidatedOrdersView } from "../../components/production/ConsolidatedOrdersView";
 
 const ProductionOrdersPage = () => {
+  const navigate = useNavigate();
+  const { pedidoId } = useParams();
   const [countryFilter, setCountryFilter] = useState("");
   const [itemFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
-  const [selectedPedidoId, setSelectedPedidoId] = useState(null);
   const [syncReady, setSyncReady] = useState(false);
   const [procesarEstado5] = useProcesarEstado5Mutation();
   const [viewMode, setViewMode] = useState("byOrder");
@@ -179,7 +181,7 @@ const ProductionOrdersPage = () => {
     );
   }
 
-  if (selectedPedidoId === null) {
+  if (!pedidoId) {
     return (
       <Box p={0} m={0}>
         <Heading size="lg" mb={4} textAlign="center">
@@ -247,7 +249,7 @@ const ProductionOrdersPage = () => {
                   borderRadius="md"
                   cursor="pointer"
                   _hover={{ shadow: "md" }}
-                  onClick={() => setSelectedPedidoId(g.pedidoId)}
+                  onClick={() => navigate(`/mesa/produccion/${g.pedidoId}`)}
                 >
                   <Icon
                     as={CheckCircleIcon}
@@ -286,16 +288,16 @@ const ProductionOrdersPage = () => {
   }
 
   const selectedGroup = filteredGroups.find(
-    (g) => g.pedidoId === selectedPedidoId,
+    (g) => g.pedidoId === Number(pedidoId),
   );
   if (!selectedGroup) {
-    setSelectedPedidoId(null);
+    navigate("/mesa/produccion");
     return null;
   }
   return (
     <Box p={6}>
       <Flex mb={4} align="center" justify="space-between">
-        <Button onClick={() => setSelectedPedidoId(null)}>← Volver</Button>
+        <Button onClick={() => navigate("/mesa/produccion")}>← Volver</Button>
         <Heading size="md">
           Pedido #{selectedGroup.pedidoId} – {selectedGroup.tienda}
         </Heading>
