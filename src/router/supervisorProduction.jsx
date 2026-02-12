@@ -10,8 +10,6 @@ export const produccionOrdenSuper = () => {
         <Route index element={<Dashboard />} />
         <Route path="orden" element={<SupervisorOrdersPage />} />
         <Route path="orden/:pedidoId" element={<SupervisorOrdersPage />} />{" "}
-        {/* Cambiamos la ruta a Item */}
-        {/* Más rutas anidadas si es necesario */}
       </Route>
     </Routes>
   );

@@ -40,6 +40,8 @@ export interface PedidoProduccion {
   productoNombre: string;
   tienda: string;
   pais: string;
+  deudorCodigo: string;
+  deudorNombre: string;
   unidadMedida: string;
 }
 
@@ -51,6 +53,8 @@ export interface PedidoAgrupado {
   pedidoId: number;
   tienda: string;
   pais: string;
+  deudorCodigo: string;
+  deudorNombre: string;
   items: PedidoProduccion[];
 }
 export type UpdatePedidoDto = Partial<Omit<PedidoProduccion, "id">>;

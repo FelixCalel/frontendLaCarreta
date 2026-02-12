@@ -91,8 +91,47 @@ export const pedidoProduccionApi = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: (_res, _err, { id }) => [
+      invalidatesTags: (result, error, { id }) => [
         { type: "PedidoProduccion", id },
+        { type: "PedidoProduccion", id: "LIST" },
+        { type: "PedidoProduccion", id: "AGRUPADOS" },
+      ],
+    }),
+
+    updateMultiplePedidosProduccion: builder.mutation<void, { ids: number[]; data: UpdatePedidoDto }>({
+      query: ({ ids, data }) => ({
+        url: `/pedidoProduccion/multiple`,
+        method: "PUT",
+        body: { ids, data },
+      }),
+      async onQueryStarted({ ids, data }, { dispatch, queryFulfilled }) {
+        if (data.completo === undefined) return;
+
+        const patchResult = dispatch(
+          pedidoProduccionApi.util.updateQueryData(
+            "getPedidosAgrupados",
+            { etapaId: 1 },
+            (draft: PedidoAgrupado[]) => {
+              if (data.completo !== undefined) {
+                draft.forEach(group => {
+                  group.items.forEach(item => {
+                    if (ids.includes(item.id)) {
+                      item.completo = data.completo!;
+                    }
+                  });
+                });
+              }
+            }
+          )
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
+      invalidatesTags: [
+        { type: "PedidoProduccion", id: "LIST" },
         { type: "PedidoAgrupado", id: "LIST" },
       ],
     }),
@@ -330,6 +369,7 @@ export const {
   useCreateRechazoMutation,
   useUpdateRechazoMutation,
   useGetRechazoByPedidoProduccionIdQuery,
+  useUpdateMultiplePedidosProduccionMutation,
   useGetAlmacenesQuery,
   useCreateRecetaLineaMutation,
   useLazyGetItemsQuery,

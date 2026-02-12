@@ -87,7 +87,6 @@ export const RechazoModal = ({
     e.preventDefault();
     setError(null);
 
-    // Validar campos requeridos
     if (
       !formData.fechaRechazo ||
       !formData.cantidadRechazada ||

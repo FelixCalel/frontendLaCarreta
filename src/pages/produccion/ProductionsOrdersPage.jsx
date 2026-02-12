@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useTransition } from "react";
 import {
   Box,
   Spinner,
@@ -70,6 +70,8 @@ const ProductionOrdersPage = () => {
             ...item,
             pedidoId: g.pedidoId,
             tienda: g.tienda,
+            deudorCodigo: g.deudorCodigo,
+            deudorNombre: g.deudorNombre,
             cantidadUnidad: Number(item.cantidadUnidad) || 0,
           })),
         }))
@@ -81,6 +83,36 @@ const ProductionOrdersPage = () => {
     () => mesaGroups.flatMap((g) => g.items),
     [mesaGroups],
   );
+  const [deuFilter, setDeuFilter] = useState("");
+
+  // Use transition to make filter updates non-blocking
+  const [isPending, startTransition] = useTransition();
+
+  // Wrapped setters that use startTransition
+  const handleCountryFilterChange = (value) => {
+    startTransition(() => {
+      setCountryFilter(value);
+    });
+  };
+
+  const handleClientFilterChange = (value) => {
+    startTransition(() => {
+      setClientFilter(value);
+    });
+  };
+
+  const handleStateFilterChange = (value) => {
+    startTransition(() => {
+      setStateFilter(value);
+    });
+  };
+
+  const handleDeuFilterChange = (value) => {
+    startTransition(() => {
+      setDeuFilter(value);
+    });
+  };
+
   const countries = useMemo(
     () => Array.from(new Set(allItems.map((i) => i.pais))),
     [allItems],
@@ -90,51 +122,77 @@ const ProductionOrdersPage = () => {
     [allItems],
   );
 
+  const deudores = useMemo(
+    () =>
+      Array.from(new Set(allItems.map((i) => i.deudorCodigo)))
+        .filter(Boolean)
+        .sort(),
+    [allItems],
+  );
+
   const filteredGroups = useMemo(() => {
-    return mesaGroups
-      .map((g) => {
-        const filteredItems = g.items
-          .filter((i) => {
-            if (!itemFilter) return true;
-            return i.productoNombre
-              .toLowerCase()
-              .includes(itemFilter.toLowerCase());
-          })
-          .slice()
-          .sort((a, b) =>
-            a.productoNombre.localeCompare(b.productoNombre, undefined, {
-              sensitivity: "base",
-            }),
-          );
+    return (
+      mesaGroups
+        // Filtro DEU al inicio para optimizar
+        .filter((g) => {
+          if (!deuFilter) return true;
+          // Si el grupo tiene items con ese DEU, lo mantenemos (y filtramos items despues)
+          return g.items.some((i) => i.deudorCodigo === deuFilter);
+        })
+        .map((g) => {
+          const filteredItems = g.items
+            .filter((i) => {
+              if (deuFilter && i.deudorCodigo !== deuFilter) return false; // Filtro por DEU activo
+              if (!itemFilter) return true;
+              return i.productoNombre
+                .toLowerCase()
+                .includes(itemFilter.toLowerCase());
+            })
+            .slice()
+            .sort((a, b) =>
+              a.productoNombre.localeCompare(b.productoNombre, undefined, {
+                sensitivity: "base",
+              }),
+            );
 
-        return {
-          ...g,
-          items: filteredItems,
-        };
-      })
-      .filter((g) => g.items.length > 0)
-      .filter((g) => {
-        if (countryFilter && g.pais !== countryFilter) return false;
-        if (clientFilter && g.tienda !== clientFilter) return false;
+          return {
+            ...g,
+            items: filteredItems,
+          };
+        })
+        .filter((g) => g.items.length > 0)
+        .filter((g) => {
+          if (countryFilter && g.pais !== countryFilter) return false;
+          if (clientFilter && g.tienda !== clientFilter) return false;
 
-        if (stateFilter) {
-          const total = g.items.length;
-          const doneCount = g.items.filter((i) => i.completo).length;
-          const anyProgress = g.items.some((i) => Number(i.cantidad ?? 0) > 0);
-          const groupStatus =
-            doneCount === total
-              ? "Completado"
-              : anyProgress
-                ? "En Proceso"
-                : "Pendiente";
-          if (groupStatus !== stateFilter) return false;
-        }
+          if (stateFilter) {
+            const total = g.items.length;
+            const doneCount = g.items.filter((i) => i.completo).length;
+            const anyProgress = g.items.some(
+              (i) => Number(i.cantidad ?? 0) > 0,
+            );
+            const groupStatus =
+              doneCount === total
+                ? "Completado"
+                : anyProgress
+                  ? "En Proceso"
+                  : "Pendiente";
+            if (groupStatus !== stateFilter) return false;
+          }
 
-        return true;
-      })
-      .slice()
-      .sort((a, b) => a.pedidoId - b.pedidoId);
-  }, [mesaGroups, itemFilter, countryFilter, clientFilter, stateFilter]);
+          return true;
+        })
+        .slice()
+        .sort((a, b) => a.pedidoId - b.pedidoId)
+    );
+  }, [
+    mesaGroups,
+    itemFilter,
+    countryFilter,
+    clientFilter,
+    stateFilter,
+    deuFilter,
+  ]);
 
   const consolidatedItems = useMemo(() => {
     if (viewMode !== "consolidated") return [];
@@ -143,7 +201,8 @@ const ProductionOrdersPage = () => {
     const itemsMap = new Map();
 
     allFilteredItems.forEach((item) => {
-      const key = item.productoNombre;
+      const deuCode = item.deudorCodigo || "";
+      const key = `${deuCode}|${item.productoNombre}`;
       if (itemsMap.has(key)) {
         const existing = itemsMap.get(key);
         existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
@@ -159,11 +218,19 @@ const ProductionOrdersPage = () => {
       }
     });
 
-    return Array.from(itemsMap.values()).sort((a, b) =>
-      a.productoNombre.localeCompare(b.productoNombre, undefined, {
+    return Array.from(itemsMap.values()).sort((a, b) => {
+      const deuCompare = (a.deudorCodigo || "").localeCompare(
+        b.deudorCodigo || "",
+        undefined,
+        {
+          sensitivity: "base",
+        },
+      );
+      if (deuCompare !== 0) return deuCompare;
+      return a.productoNombre.localeCompare(b.productoNombre, undefined, {
         sensitivity: "base",
-      }),
-    );
+      });
+    });
   }, [filteredGroups, viewMode]);
 
   if (isLoading || !syncReady) {
@@ -223,13 +290,16 @@ const ProductionOrdersPage = () => {
           <Box w={{ base: "100%", lg: "auto" }}>
             <FilterPanel
               countryFilter={countryFilter}
-              onCountryChange={setCountryFilter}
+              onCountryChange={handleCountryFilterChange}
               clientFilter={clientFilter}
-              onClientChange={setClientFilter}
+              onClientChange={handleClientFilterChange}
               stateFilter={stateFilter}
-              onStateChange={setStateFilter}
+              onStateChange={handleStateFilterChange}
               countries={countries}
               clients={clients}
+              deuFilter={deuFilter}
+              onDeuChange={handleDeuFilterChange}
+              deudores={deudores}
             />
           </Box>
         </Flex>

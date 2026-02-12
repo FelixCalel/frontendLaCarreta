@@ -81,6 +81,17 @@ const SupervisorOrdersPage = () => {
     error,
   } = useGetPedidosAgrupadosQuery({ etapaId: 2 }, { skip: !syncReady });
 
+  // DEBUG: Ver qué datos están llegando del backend
+  useEffect(() => {
+    if (agrupados.length > 0) {
+      console.log("🔍 Primer pedido agrupado:", agrupados[0]);
+      console.log(
+        "🔍 Primer item del primer pedido:",
+        agrupados[0]?.items?.[0],
+      );
+    }
+  }, [agrupados]);
+
   const cardBg = useColorModeValue("white", "gray.700");
   const cardBorder = useColorModeValue("gray.200", "gray.600");
 
@@ -95,6 +106,8 @@ const SupervisorOrdersPage = () => {
             ...item,
             pedidoId: g.pedidoId,
             tienda: g.tienda,
+            deudorCodigo: g.deudorCodigo,
+            deudorNombre: g.deudorNombre,
             cantidadUnidad: Number(item.cantidadUnidad ?? 0),
             cantidad: Number(item.cantidad ?? 0),
             faltante: Number(item.faltante ?? 0),
@@ -177,7 +190,9 @@ const SupervisorOrdersPage = () => {
     const itemsMap = new Map();
 
     allFilteredItems.forEach((item) => {
-      const key = item.productoNombre;
+      // Agrupar por código DEU Y producto
+      const deuCode = item.deudorCodigo || "";
+      const key = `${deuCode}|${item.productoNombre}`;
       if (itemsMap.has(key)) {
         const existing = itemsMap.get(key);
         existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
@@ -193,11 +208,20 @@ const SupervisorOrdersPage = () => {
       }
     });
 
-    return Array.from(itemsMap.values()).sort((a, b) =>
-      a.productoNombre.localeCompare(b.productoNombre, undefined, {
+    // Ordenar primero por código DEU, luego por producto
+    return Array.from(itemsMap.values()).sort((a, b) => {
+      const deuCompare = (a.deudorCodigo || "").localeCompare(
+        b.deudorCodigo || "",
+        undefined,
+        {
+          sensitivity: "base",
+        },
+      );
+      if (deuCompare !== 0) return deuCompare;
+      return a.productoNombre.localeCompare(b.productoNombre, undefined, {
         sensitivity: "base",
-      }),
-    );
+      });
+    });
   }, [filteredGroups, viewMode]);
 
   if (isLoading || !syncReady) {
