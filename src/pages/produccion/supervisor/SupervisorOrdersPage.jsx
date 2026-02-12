@@ -18,6 +18,7 @@ import {
   HamburgerIcon,
   RepeatClockIcon,
 } from "@chakra-ui/icons";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useGetPedidosAgrupadosQuery,
   useProcesarEstado5Mutation,
@@ -32,6 +33,8 @@ import { selectRecetasState } from "../../../store/Empresa";
 import AcceptOrderButton from "../../../components/production/AcceptOrderButton";
 
 const SupervisorOrdersPage = () => {
+  const navigate = useNavigate();
+  const { pedidoId } = useParams();
   const dispatch = useDispatch();
   const { data: empresas, paises } = useSelector((state) => state.empresas);
   const { lastSync } = useSelector(selectRecetasState);
@@ -39,7 +42,6 @@ const SupervisorOrdersPage = () => {
   const [itemFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
-  const [selectedPedidoId, setSelectedPedidoId] = useState(null);
   const [syncReady, setSyncReady] = useState(false);
   const [procesarEstado5] = useProcesarEstado5Mutation();
   const [viewMode, setViewMode] = useState("byOrder");
@@ -213,7 +215,7 @@ const SupervisorOrdersPage = () => {
     );
   }
 
-  if (selectedPedidoId === null) {
+  if (!pedidoId) {
     return (
       <Box p={2}>
         <Flex justifyContent="space-between" alignItems="center" mb={4}>
@@ -320,7 +322,7 @@ const SupervisorOrdersPage = () => {
                   borderRadius="md"
                   cursor="pointer"
                   _hover={{ shadow: "md" }}
-                  onClick={() => setSelectedPedidoId(g.pedidoId)}
+                  onClick={() => navigate(`/produccion/orden/${g.pedidoId}`)}
                 >
                   <Icon
                     as={CheckCircleIcon}
@@ -359,18 +361,18 @@ const SupervisorOrdersPage = () => {
   }
 
   const selectedGroup = filteredGroups.find(
-    (g) => g.pedidoId === selectedPedidoId,
+    (g) => g.pedidoId === Number(pedidoId),
   );
 
   if (!selectedGroup) {
-    setSelectedPedidoId(null);
+    navigate("/produccion/orden");
     return null;
   }
 
   return (
     <Box p={6}>
       <Flex mb={4} align="center" justify="space-between">
-        <Button onClick={() => setSelectedPedidoId(null)}>← Volver</Button>
+        <Button onClick={() => navigate("/produccion/orden")}>← Volver</Button>
         <Box flex="1" display="flex" justifyContent="center">
           <Heading size="md">
             Pedido #{selectedGroup.pedidoId} – {selectedGroup.tienda}
@@ -379,7 +381,7 @@ const SupervisorOrdersPage = () => {
         <Box>
           <AcceptOrderButton
             order={selectedGroup}
-            onSuccess={() => setSelectedPedidoId(null)}
+            onSuccess={() => navigate("/produccion/orden")}
           />
         </Box>
       </Flex>
