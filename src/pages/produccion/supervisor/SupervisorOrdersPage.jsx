@@ -11,6 +11,10 @@ import {
   useColorModeValue,
   ButtonGroup,
   Tooltip,
+  VStack,
+  Badge,
+  Divider,
+  HStack,
 } from "@chakra-ui/react";
 import {
   CheckCircleIcon,
@@ -30,7 +34,7 @@ import BotonSincronizarReceta from "../../../components/empresa/BotonSincronizar
 import { useSelector, useDispatch } from "react-redux";
 import { tablaEmpresa, tablaPais } from "../../../store/Empresa/thunks";
 import { selectRecetasState } from "../../../store/Empresa";
-import AcceptOrderButton from "../../../components/production/AcceptOrderButton";
+import AdvanceOrderButton from "../../../components/production/AdvanceOrderButton";
 
 const SupervisorOrdersPage = () => {
   const navigate = useNavigate();
@@ -94,6 +98,7 @@ const SupervisorOrdersPage = () => {
 
   const cardBg = useColorModeValue("white", "gray.700");
   const cardBorder = useColorModeValue("gray.200", "gray.600");
+  const cardHoverShadow = useColorModeValue("lg", "dark-lg");
 
   const pedidoGroups = useMemo(
     () =>
@@ -102,6 +107,8 @@ const SupervisorOrdersPage = () => {
           pedidoId: g.pedidoId,
           tienda: g.tienda,
           pais: g.pais,
+          deudorCodigo: g.deudorCodigo,
+          deudorNombre: g.deudorNombre,
           items: g.items.map((item) => ({
             ...item,
             pedidoId: g.pedidoId,
@@ -197,12 +204,16 @@ const SupervisorOrdersPage = () => {
         const existing = itemsMap.get(key);
         existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
         existing.cantidad += Number(item.cantidad ?? 0);
+        existing.mpUtilizada += Number(item.mpUtilizada ?? 0);
+        existing.rechazo += Number(item.rechazo ?? 0);
         existing.originalItems.push(item);
       } else {
         itemsMap.set(key, {
           ...item,
           cantidadUnidad: Number(item.cantidadUnidad ?? 0),
           cantidad: Number(item.cantidad ?? 0),
+          mpUtilizada: Number(item.mpUtilizada ?? 0),
+          rechazo: Number(item.rechazo ?? 0),
           originalItems: [item],
         });
       }
@@ -335,50 +346,89 @@ const SupervisorOrdersPage = () => {
             {filteredGroups.map((g) => {
               const doneCount = g.items.filter((i) => i.completo).length;
               const allDone = doneCount === g.items.length;
+              const statusColor = allDone ? "green.400" : "yellow.400";
+              const deudorCode = g.deudorCodigo || "N/A";
+
               return (
                 <Box
                   key={g.pedidoId}
                   position="relative"
-                  p={4}
                   bg={cardBg}
                   border="1px solid"
                   borderColor={cardBorder}
-                  borderRadius="md"
+                  borderRadius="lg"
+                  overflow="hidden"
                   cursor="pointer"
-                  _hover={{ shadow: "md" }}
+                  transition="all 0.2s"
+                  _hover={{
+                    shadow: cardHoverShadow,
+                    transform: "translateY(-2px)",
+                  }}
                   onClick={() => navigate(`/produccion/orden/${g.pedidoId}`)}
+                  role="group"
                 >
-                  <Icon
-                    as={CheckCircleIcon}
-                    position="absolute"
-                    top="4px"
-                    right="4px"
-                    boxSize={6}
-                    color={allDone ? "green.400" : "yellow.400"}
-                  />
-                  <Text fontWeight="bold">Pedido #{g.pedidoId}</Text>
-                  <Text fontSize="sm">{g.tienda}</Text>
-                  <Text fontSize="sm" color="gray.500">
-                    {g.pais}
-                  </Text>
-                  <Box
-                    mt={2}
-                    px={2}
-                    py={1}
-                    bg="blue.500"
-                    color="white"
-                    fontSize="xs"
-                    borderRadius="sm"
-                    display="inline-block"
-                  >
-                    {g.items.length} ÍTEM{g.items.length > 1 ? "S" : ""}
+                  <Box h="4px" bg={statusColor} w="100%" />
+                  <Box p={4}>
+                    <Flex justify="space-between" align="start" mb={2}>
+                      <VStack align="start" spacing={0}>
+                        <Text
+                          fontSize="xs"
+                          color="gray.500"
+                          fontWeight="bold"
+                          letterSpacing="wide"
+                          textTransform="uppercase"
+                        >
+                          Pedido #{g.pedidoId}
+                        </Text>
+                        <Heading size="sm" noOfLines={2} title={g.tienda}>
+                          {g.tienda}
+                        </Heading>
+                      </VStack>
+                      <Icon
+                        as={CheckCircleIcon}
+                        color={statusColor}
+                        boxSize={5}
+                      />
+                    </Flex>
+
+                    <HStack mt={2} mb={3}>
+                      <Badge
+                        colorScheme="blue"
+                        variant="subtle"
+                        fontSize="0.7em"
+                      >
+                        DEU: {deudorCode}
+                      </Badge>
+                      <Badge variant="outline" fontSize="0.7em">
+                        {g.pais}
+                      </Badge>
+                    </HStack>
+
+                    <Divider mb={3} borderColor="gray.100" />
+
+                    <Flex justify="space-between" align="center">
+                      <Text fontSize="xs" color="gray.500">
+                        {doneCount} / {g.items.length} Completados
+                      </Text>
+                      <Badge
+                        colorScheme={allDone ? "green" : "gray"}
+                        variant="solid"
+                        borderRadius="full"
+                        px={2}
+                      >
+                        {g.items.length} ÍTEM{g.items.length !== 1 ? "S" : ""}
+                      </Badge>
+                    </Flex>
                   </Box>
                 </Box>
               );
             })}
           </SimpleGrid>
         ) : (
-          <ConsolidatedOrdersView data={consolidatedItems} />
+          <ConsolidatedOrdersView
+            data={consolidatedItems}
+            actionLabel="Pasar a Digitador"
+          />
         )}
       </Box>
     );
@@ -403,9 +453,10 @@ const SupervisorOrdersPage = () => {
           </Heading>
         </Box>
         <Box>
-          <AcceptOrderButton
+          <AdvanceOrderButton
             order={selectedGroup}
             onSuccess={() => navigate("/produccion/orden")}
+            label="Pasar a Digitador"
           />
         </Box>
       </Flex>

@@ -130,14 +130,14 @@ const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
       <Td px={2} py={2}>
         <Box>
           <Text
-            fontSize="xs"
+            fontSize="sm"
             fontWeight="semibold"
             color={useColorModeValue("gray.700", "white")}
           >
             {r.item}
           </Text>
           {r.descripcion && (
-            <Text fontSize="2xs" color="gray.500" title={r.descripcion}>
+            <Text fontSize="xs" color="gray.500" title={r.descripcion}>
               {r.descripcion}
             </Text>
           )}
@@ -325,7 +325,7 @@ export const RecetaTable = ({
     <Box mt={2}>
       <Flex justify="space-between" align="center" mb={2}>
         <Text
-          fontSize="xs"
+          fontSize="sm"
           fontWeight="bold"
           color="gray.500"
           textTransform="uppercase"
@@ -357,7 +357,7 @@ export const RecetaTable = ({
           <Table size="sm" variant="simple">
             <Thead bg={headBg} position="sticky" top={0} zIndex={10}>
               <Tr>
-                <Th w="40px" px={2} py={2} color={headColor} fontSize="2xs">
+                <Th w="40px" px={2} py={2} color={headColor} fontSize="xs">
                   Activo
                 </Th>
                 {/* <Th
@@ -365,12 +365,12 @@ export const RecetaTable = ({
                   px={1}
                   py={2}
                   color={headColor}
-                  fontSize="2xs"
+                  fontSize="xs"
                   textAlign="center"
                 >
                   #
                 </Th> */}
-                <Th minW="180px" px={2} py={2} color={headColor} fontSize="2xs">
+                <Th minW="180px" px={2} py={2} color={headColor} fontSize="xs">
                   Material
                 </Th>
                 <Th
@@ -378,7 +378,7 @@ export const RecetaTable = ({
                   px={1}
                   py={2}
                   color={headColor}
-                  fontSize="2xs"
+                  fontSize="xs"
                   textAlign="center"
                   isNumeric
                 >
@@ -389,7 +389,7 @@ export const RecetaTable = ({
                   px={1}
                   py={2}
                   color={headColor}
-                  fontSize="2xs"
+                  fontSize="xs"
                   textAlign="center"
                   isNumeric
                 >
@@ -400,7 +400,7 @@ export const RecetaTable = ({
                   px={1}
                   py={2}
                   color={headColor}
-                  fontSize="2xs"
+                  fontSize="xs"
                   textAlign="center"
                 >
                   C. Base
@@ -410,12 +410,12 @@ export const RecetaTable = ({
                   px={1}
                   py={2}
                   color={headColor}
-                  fontSize="2xs"
+                  fontSize="xs"
                   textAlign="center"
                 >
                   C. Req.
                 </Th>
-                <Th w="0px" px={2} py={2} color={headColor} fontSize="2xs">
+                <Th w="0px" px={2} py={2} color={headColor} fontSize="xs">
                   Unidad
                 </Th>
                 <Th
@@ -423,7 +423,7 @@ export const RecetaTable = ({
                   px={0}
                   py={2}
                   color={headColor}
-                  fontSize="2xs"
+                  fontSize="xs"
                   textAlign="center"
                 >
                   Almacén MP

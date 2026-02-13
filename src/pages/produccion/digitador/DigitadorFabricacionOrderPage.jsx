@@ -205,7 +205,10 @@ const DigitadorFabricacionOrdersPage = () => {
           title="Orden de fabricación"
         />
       ) : (
-        <ConsolidatedOrdersView data={consolidatedItems} />
+        <ConsolidatedOrdersView
+          data={consolidatedItems}
+          actionLabel="Cargar a SAP"
+        />
       )}
     </Box>
   );

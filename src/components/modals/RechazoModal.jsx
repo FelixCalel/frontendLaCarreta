@@ -14,6 +14,11 @@ import {
   AlertIcon,
   Box,
   Select,
+  SimpleGrid,
+  Flex,
+  Spinner,
+  Text,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import {
@@ -29,13 +34,9 @@ export const RechazoModal = ({
   onSave,
   isLoading,
   trazabilidadPadre,
+  maxQuantity,
+  currentMpUtilizada,
 }) => {
-  console.log(
-    "[RechazoModal] isOpen:",
-    isOpen,
-    "pedidoProduccionId:",
-    pedidoProduccionId,
-  );
   const [formData, setFormData] = useState({
     fechaRechazo: "",
     cantidadRechazada: "",
@@ -65,24 +66,6 @@ export const RechazoModal = ({
     almacenId: "",
   };
 
-  useEffect(() => {
-    console.log("[RechazoModal] rechazoData changed:", rechazoData);
-    if (rechazoData) {
-      setFormData({
-        fechaRechazo: new Date(rechazoData.fechaRechazo)
-          .toISOString()
-          .split("T")[0],
-        cantidadRechazada: rechazoData.cantidadRechazada,
-        comentario: rechazoData.comentario || "",
-        trazabilidad: trazabilidadPadre || rechazoData.trazabilidad || "",
-        usuarioId: rechazoData.usuarioId,
-        almacenId: rechazoData.almacenId || "",
-      });
-    } else {
-      setFormData(initialFormData);
-    }
-  }, [rechazoData, isOpen, trazabilidadPadre]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -94,6 +77,31 @@ export const RechazoModal = ({
     ) {
       setError(
         "Fecha, Cantidad y Almacén son obligatorios. Por favor completa todos los campos requeridos.",
+      );
+      return;
+    }
+
+    const totalProcesado =
+      Number(currentMpUtilizada || 0) + Number(formData.cantidadRechazada);
+
+    console.log("[RechazoModal] Validation:", {
+      currentMpUtilizada,
+      cantidadRechazada: formData.cantidadRechazada,
+      totalProcesado,
+      maxQuantity,
+    });
+
+    if (
+      maxQuantity !== undefined &&
+      maxQuantity !== null &&
+      totalProcesado > maxQuantity
+    ) {
+      setError(
+        `No se puede guardar: La cantidad total procesada (MP Utilizada: ${
+          currentMpUtilizada || 0
+        } + Rechazo: ${
+          formData.cantidadRechazada
+        } = ${totalProcesado}) excede la cantidad solicitada (${maxQuantity}).`,
       );
       return;
     }
@@ -116,89 +124,111 @@ export const RechazoModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent borderRadius="lg">
         <ModalHeader>
-          {rechazoData ? "Editar Rechazo" : "Nuevo Rechazo"}
+          <Flex align="center" gap={2}>
+            {rechazoData ? "Editar Rechazo" : "Registrar Rechazo"}
+          </Flex>
         </ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
+        <ModalBody pb={6}>
           {isFetching ? (
-            <p>Loading...</p>
+            <Flex justify="center" align="center" py={10}>
+              <Spinner color="blue.500" thickness="4px" size="xl" />
+            </Flex>
           ) : (
             <form onSubmit={handleSubmit}>
-              <FormControl isRequired mb={3}>
-                <FormLabel>Fecha de Rechazo</FormLabel>
-                <Input
-                  type="date"
-                  name="fechaRechazo"
-                  onChange={handleChange}
-                  value={formData.fechaRechazo}
-                />
-              </FormControl>
-
-              <FormControl isRequired mb={3}>
-                <FormLabel>Almacén Destino</FormLabel>
-                <Select
-                  placeholder="-- Seleccionar --"
-                  name="almacenId"
-                  onChange={handleChange}
-                  value={formData.almacenId}
+              <Box
+                bg={useColorModeValue("gray.50", "gray.700")}
+                p={3}
+                borderRadius="md"
+                mb={4}
+              >
+                <Text
+                  fontSize="sm"
+                  color={useColorModeValue("gray.600", "gray.300")}
+                  mb={1}
                 >
-                  {almacenes.map((almacen) => (
-                    <option key={almacen.id} value={almacen.id}>
-                      {almacen.name}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
+                  Trazabilidad ID
+                </Text>
+                <Text
+                  fontWeight="bold"
+                  fontSize="md"
+                  color={useColorModeValue("gray.800", "white")}
+                >
+                  {formData.trazabilidad || "N/A"}
+                </Text>
+              </Box>
 
-              <FormControl isRequired mb={3}>
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mb={4}>
+                <FormControl isRequired>
+                  <FormLabel>Fecha de Rechazo</FormLabel>
+                  <Input
+                    type="date"
+                    name="fechaRechazo"
+                    onChange={handleChange}
+                    value={formData.fechaRechazo}
+                  />
+                </FormControl>
+
+                <FormControl isRequired>
+                  <FormLabel>Almacén Destino</FormLabel>
+                  <Select
+                    placeholder="-- Seleccionar --"
+                    name="almacenId"
+                    onChange={handleChange}
+                    value={formData.almacenId}
+                  >
+                    {almacenes.map((almacen) => (
+                      <option key={almacen.id} value={almacen.id}>
+                        {almacen.name}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+              </SimpleGrid>
+
+              <FormControl isRequired mb={4}>
                 <FormLabel>Cantidad Rechazada</FormLabel>
                 <Input
                   type="number"
                   name="cantidadRechazada"
                   onChange={handleChange}
                   value={formData.cantidadRechazada}
+                  placeholder="0"
                 />
               </FormControl>
-              <FormControl mb={3}>
+
+              <FormControl mb={6}>
                 <FormLabel>Comentario</FormLabel>
                 <Textarea
                   name="comentario"
                   onChange={handleChange}
                   value={formData.comentario}
-                />
-              </FormControl>
-              <FormControl mb={3}>
-                <FormLabel>Trazabilidad:</FormLabel>
-                <Input
-                  name="trazabilidad"
-                  value={formData.trazabilidad}
-                  isReadOnly
-                  variant="unstyled"
+                  placeholder="Opcional..."
+                  rows={3}
                 />
               </FormControl>
 
               {error && (
-                <Box width="full" pb={4} pt={4}>
-                  <Alert status="error" variant="subtle">
+                <Box width="full" pb={4}>
+                  <Alert status="error" borderRadius="md">
                     <AlertIcon />
                     {error}
                   </Alert>
                 </Box>
               )}
 
-              <Button
-                colorScheme="teal"
-                mr={3}
-                type="submit"
-                isLoading={isLoading}
-              >
-                Guardar
-              </Button>
-              <Button onClick={onClose}>Cancelar</Button>
+              <Flex justify="end" gap={3}>
+                <Button onClick={onClose} variant="ghost">
+                  Cancelar
+                </Button>
+                <Button colorScheme="blue" type="submit" isLoading={isLoading}>
+                  Guardar
+                </Button>
+              </Flex>
             </form>
           )}
         </ModalBody>
@@ -214,4 +244,6 @@ RechazoModal.propTypes = {
   onSave: PropTypes.func.isRequired,
   isLoading: PropTypes.bool.isRequired,
   trazabilidadPadre: PropTypes.string,
+  maxQuantity: PropTypes.number,
+  currentMpUtilizada: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };

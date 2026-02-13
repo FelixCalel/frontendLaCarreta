@@ -33,17 +33,32 @@ export const OrdersTable = ({ data = [] }) => {
       fontSize="md"
       p={2}
     >
-      <Table variant="simple" size="md" tablelayout="fixed" w="100%">
+      <Table variant="simple" size="sm" tablelayout="fixed" w="100%">
         <Thead bg={headerBg} position="sticky" top={0} zIndex={1}>
           <Tr>
-            <Th w="36px" px={2} />
-            <Th px={2}>Producto</Th>
-            <Th px={2}>País</Th>
-            <Th px={2}>Cliente</Th>
-            <Th px={2}>Solic. ventas</Th>
-            <Th px={2}>Completado</Th>
-            <Th px={2}>Cantidad Procesada</Th>
-            <Th px={2}>Faltante</Th>
+            <Th w="36px" px={2} py={2} />
+            <Th px={2} py={2} fontSize="xs">
+              Producto
+            </Th>
+            <Th px={2} py={2} fontSize="xs">
+              País
+            </Th>
+            <Th px={2} py={2} fontSize="xs">
+              Cliente
+            </Th>
+            <Th px={2} py={2} fontSize="xs" textAlign="center">
+              Solic. ventas
+            </Th>
+            <Th px={2} py={2} fontSize="xs" textAlign="center">
+              Completado
+            </Th>
+            <Th px={2} py={2} fontSize="xs" textAlign="center">
+              Cantidad Procesada
+            </Th>
+            <Th px={2} py={2} fontSize="xs" textAlign="center">
+              Faltante
+            </Th>
+            {/* Note: I added textAlign center to match the rows which have center alignment for numbers */}
           </Tr>
         </Thead>
 

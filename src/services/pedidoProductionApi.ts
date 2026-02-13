@@ -92,9 +92,9 @@ export const pedidoProduccionApi = createApi({
         body: data,
       }),
       invalidatesTags: (result, error, { id }) => [
-        { type: "PedidoProduccion", id },
-        { type: "PedidoProduccion", id: "LIST" },
-        { type: "PedidoProduccion", id: "AGRUPADOS" },
+        { type: "PedidoProduccion" as const, id },
+        { type: "PedidoProduccion" as const, id: "LIST" },
+        { type: "PedidoAgrupado" as const, id: "LIST" },
       ],
     }),
 

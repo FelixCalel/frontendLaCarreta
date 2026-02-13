@@ -22,6 +22,7 @@ import {
   useGetRecetaByPedidoQuery,
   useCreateRechazoMutation,
   useUpdateRechazoMutation,
+  useGetRechazoByPedidoProduccionIdQuery,
 } from "../../services/pedidoProductionApi";
 import { OrderDetailsTable } from "./OrderDetailsTable";
 import { RecetaTable } from "./RecetaTable";
@@ -64,6 +65,14 @@ export const OrderRow = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const shouldFetch = isExpanded;
+
+  const { data: rechazoData } = useGetRechazoByPedidoProduccionIdQuery(
+    order.id,
+    {
+      skip: !order.id,
+    },
+  );
+  const rechazoQty = rechazoData?.cantidadRechazada || 0;
 
   const recetaArg = shouldFetch ? { pedidoId: Number(order.id) } : skipToken;
 
@@ -120,11 +129,16 @@ export const OrderRow = ({
   }, [isSuccess, isError, receta, error]);
 
   useEffect(() => {
-    setCantidadLocal(Number(order.cantidad) || 0);
+    /*
+     Lógica para "Reducir del faltante" y "Reducir de procesado":
+     - Procesado (Visual) = Cantidad Total - Rechazo. (Mostrar solo lo bueno).
+     - Faltante = Solicitado - (Cantidad Total + Rechazo). (Considerar rechazo como "ya atendido" para bajar el faltante).
+    */
+    setCantidadLocal((order.cantidad ?? 0) + rechazoQty);
     setFaltanteLocal(
-      (Number(order.cantidadUnidad) || 0) - (Number(order.cantidad) || 0),
+      (order.cantidadUnidad ?? 0) - ((order.cantidad ?? 0) + rechazoQty),
     );
-  }, [order.cantidad, order.cantidadUnidad]);
+  }, [order.cantidad, order.cantidadUnidad, rechazoQty]);
 
   useEffect(() => setIsPTMQ(order.ptmq), [order.ptmq]);
 
@@ -191,10 +205,21 @@ export const OrderRow = ({
 
       if (fieldsToValidate.includes(field)) {
         const maxAllowed = Number(order.cantidadUnidad) || 0;
-        if (value > maxAllowed) {
+        let totalCheck = value;
+
+        if (field === "mpUtilizada") {
+          totalCheck = value + rechazoQty;
+        }
+
+        if (totalCheck > maxAllowed) {
+          const errorMsg =
+            field === "mpUtilizada"
+              ? `No se puede guardar: La cantidad total procesada (MP Utilizada: ${value} + Rechazo: ${rechazoQty} = ${totalCheck}) excede la cantidad solicitada (${maxAllowed}).`
+              : `El valor no puede ser mayor que "Solic. Ventas" (${maxAllowed}).`;
+
           toast({
             title: "Valor inválido",
-            description: `El valor no puede ser mayor que "Solic. Ventas" (${maxAllowed}).`,
+            description: errorMsg,
             status: "error",
             duration: 4000,
             isClosable: true,
@@ -210,9 +235,10 @@ export const OrderRow = ({
 
     if (field === "mpUtilizada") {
       const nuevaCantidad = value;
-      const nuevoFaltante = (Number(order.cantidadUnidad) || 0) - nuevaCantidad;
+      const nuevoFaltante =
+        (Number(order.cantidadUnidad) || 0) - (nuevaCantidad + rechazoQty);
 
-      setCantidadLocal(nuevaCantidad);
+      setCantidadLocal(nuevaCantidad + rechazoQty);
       setFaltanteLocal(nuevoFaltante);
 
       updateData.cantidad = nuevaCantidad;
@@ -299,14 +325,14 @@ export const OrderRow = ({
         borderBottomWidth="1px"
         borderColor={useColorModeValue("gray.100", "gray.700")}
       >
-        <Td px={2} py={4}>
+        <Td px={2} py={2}>
           <IconButton
-            size="sm"
+            size="xs"
             icon={
               isExpanded ? (
-                <ChevronDownIcon boxSize={5} />
+                <ChevronDownIcon boxSize={4} />
               ) : (
-                <ChevronRightIcon boxSize={5} />
+                <ChevronRightIcon boxSize={4} />
               )
             }
             aria-label="Expandir"
@@ -316,11 +342,11 @@ export const OrderRow = ({
             borderRadius="full"
           />
         </Td>
-        <Td px={2} py={4}>
+        <Td px={2} py={2}>
           <Box>
             <Text
               fontWeight="bold"
-              fontSize="md"
+              fontSize="sm"
               color={useColorModeValue("gray.700", "white")}
             >
               {order.productoNombre}
@@ -330,9 +356,9 @@ export const OrderRow = ({
             </Text>
           </Box>
         </Td>
-        <Td px={2} py={4}>
+        <Td px={2} py={2}>
           <Box>
-            <Text fontSize="sm" fontWeight="medium">
+            <Text fontSize="xs" fontWeight="medium">
               {order.pais}
             </Text>
             <Text fontSize="xs" color="gray.500">
@@ -340,58 +366,57 @@ export const OrderRow = ({
             </Text>
           </Box>
         </Td>
-        <Td px={2} py={4} textAlign="center">
+        <Td px={2} py={2} textAlign="center">
           <Box>
-            <Text fontWeight="bold" fontSize="lg" color="blue.500">
+            <Text fontWeight="bold" fontSize="md" color="blue.500">
               {order.cantidadUnidad ?? "-"}
             </Text>
-            <Text fontSize="xs" color="gray.400" textTransform="uppercase">
+            <Text fontSize="2xs" color="gray.400" textTransform="uppercase">
               Solicita
             </Text>
           </Box>
         </Td>
-        <Td px={2} py={4} textAlign="center">
+        <Td px={2} py={2} textAlign="center">
           <Checkbox
             isChecked={completoLocal}
-            size="lg"
+            size="md"
             colorScheme="green"
             onChange={(e) => handleCompletoChange(e.target.checked)}
           />
         </Td>
-        <Td px={2} py={4} textAlign="center">
+        <Td px={2} py={2} textAlign="center">
           <Box>
-            <Text fontWeight="bold" fontSize="lg" color="green.500">
+            <Text fontWeight="bold" fontSize="md" color="green.500">
               {cantidadLocal}
             </Text>
-            <Text fontSize="xs" color="gray.400" textTransform="uppercase">
+            <Text fontSize="2xs" color="gray.400" textTransform="uppercase">
               Procesado
             </Text>
           </Box>
         </Td>
-        <Td px={2} py={4} textAlign="center">
+        <Td px={2} py={2} textAlign="center">
           <Box>
             <Text
               fontWeight="bold"
-              fontSize="lg"
+              fontSize="md"
               color={faltanteLocal > 0 ? "red.400" : "gray.400"}
             >
               {faltanteLocal}
             </Text>
-            <Text fontSize="xs" color="gray.400" textTransform="uppercase">
+            <Text fontSize="2xs" color="gray.400" textTransform="uppercase">
               Faltante
             </Text>
           </Box>
         </Td>
-        <Td px={2} py={4} textAlign="right">
-          {/* Selector de almacén */}
+        <Td px={2} py={2} textAlign="right">
           <Box
             display="inline-flex"
             flexDirection="column"
             alignItems="flex-end"
           >
             <Text
-              fontSize="xs"
-              mb={1}
+              fontSize="2xs"
+              mb={0.5}
               fontWeight="bold"
               color="gray.500"
               textTransform="uppercase"
@@ -415,9 +440,9 @@ export const OrderRow = ({
                 }
               }}
               style={{
-                fontSize: "13px",
-                padding: "4px 8px",
-                borderRadius: "6px",
+                fontSize: "12px",
+                padding: "2px 6px",
+                borderRadius: "4px",
                 border: "1px solid",
                 borderColor: useColorModeValue("#E2E8F0", "#4A5568"),
                 color: useColorModeValue("#2D3748", "#EDF2F7"),
@@ -456,36 +481,34 @@ export const OrderRow = ({
               borderColor="gray.200"
             >
               <Flex gap={4} direction={{ base: "column", xl: "row" }}>
-                {/* Left Column: Production Register & Details */}
                 <Box width="fit-content">
-                  {/* Registro de Producción Compacto */}
                   <Box
                     bg={useColorModeValue("white", "gray.800")}
-                    p={3}
+                    p={1.5}
                     borderRadius="md"
                     shadow="sm"
                     borderWidth="1px"
                     borderColor="gray.200"
-                    mb={3}
+                    mb={2}
                   >
-                    <Flex align="right" mb={2} gap={24}>
+                    <Flex align="center" justify="space-between" mb={1}>
                       <Text fontSize="sm" fontWeight="bold" color="blue.600">
                         Registro
                       </Text>
                       <Button
                         size="xs"
-                        h="24px"
+                        h="20px"
                         onClick={onOpen}
                         colorScheme="red"
                         variant="ghost"
-                        leftIcon={<ChevronRightIcon />}
+                        leftIcon={<ChevronRightIcon boxSize={3} />}
                         fontSize="xs"
                       >
                         Registrar Rechazo
                       </Button>
                     </Flex>
 
-                    <Flex gap={2} wrap="wrap" mb={2}>
+                    <Flex gap={2} wrap="wrap" align="center">
                       {ROW_1.map((field) => {
                         const value = prodFields[field];
                         const spec = FIELD_SPECS[field] ?? {
@@ -506,6 +529,7 @@ export const OrderRow = ({
                             </Text>
                             <Input
                               size="xs"
+                              h="24px"
                               w={spec.w}
                               type={spec.type}
                               value={
@@ -521,6 +545,7 @@ export const OrderRow = ({
                               borderRadius="sm"
                               bg={useColorModeValue("gray.50", "gray.700")}
                               textAlign="center"
+                              fontSize="xs"
                             />
                           </Flex>
                         );
@@ -589,6 +614,8 @@ export const OrderRow = ({
               onSave={handleSaveRechazo}
               isLoading={isCreatingRechazo || isUpdatingRechazo}
               trazabilidadPadre={prodFields.trazabilidad_Prod}
+              maxQuantity={Number(order.cantidadUnidad) || 0}
+              currentMpUtilizada={prodFields.mpUtilizada}
             />
           )}
         </Td>

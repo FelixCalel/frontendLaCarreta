@@ -1,11 +1,4 @@
-import {
-  useState,
-  Fragment,
-  useMemo,
-  memo,
-  useCallback,
-  useEffect,
-} from "react";
+import { useState, Fragment, useMemo, useCallback, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
   Table,
@@ -16,8 +9,6 @@ import {
   Td,
   TableContainer,
   useColorModeValue,
-  Icon,
-  Tag,
   Checkbox,
   Button,
   Flex,
@@ -33,386 +24,15 @@ import {
   useDisclosure,
   Text,
   Input,
-  SimpleGrid,
-  FormControl,
   Center,
-  Spinner,
-  FormLabel,
-  Box,
 } from "@chakra-ui/react";
-import { ChevronRightIcon, ChevronDownIcon } from "@chakra-ui/icons";
-import { OrderRow } from "./OrderRow";
-import {
-  useAvanzarMultiEtapaDetalleMutation,
-  useGetRecetaByPedidoQuery,
-  useGetAlmacenesQuery,
-  useUpdatePedidoProduccionMutation,
-  useCreateRechazoMutation,
-  useUpdateRechazoMutation,
-  useUpdateMultiplePedidosProduccionMutation,
-} from "../../services/pedidoProductionApi";
-import { RecetaTable } from "./RecetaTable";
-import { OrderDetailsTable } from "./OrderDetailsTable";
-import { skipToken } from "@reduxjs/toolkit/query";
-import { debounce } from "lodash";
+import { useAvanzarMultiEtapaDetalleMutation } from "../../services/pedidoProductionApi";
+import { ConsolidatedOrderRow } from "./ConsolidatedOrderRow";
 
-const FIELD_LABELS = {
-  mpUtilizada: "MP Utilizada",
-  mpSobrante: "MP Sobrante",
-  basura: "Basura",
-  trazabilidad_Prod: "Trazabilidad",
-};
-
-const FIELD_SPECS = {
-  mpUtilizada: { w: "51px", type: "number" },
-  mpSobrante: { w: "51px", type: "number" },
-  basura: { w: "51px", type: "number" },
-  trazabilidad_Prod: { w: "65px", type: "text" },
-};
-
-const ROW_1 = ["mpUtilizada", "mpSobrante", "basura", "trazabilidad_Prod"];
-
-const ConsolidatedExpandedRow = memo(({ item, isExpanded }) => {
-  const panelBg = useColorModeValue("white", "gray.700");
-  const panelBorder = useColorModeValue("gray.200", "gray.600");
-  const [updatePedido] = useUpdatePedidoProduccionMutation();
-  const toast = useToast();
-  const primaryOrder = item.originalItems[0];
-  const pedidoId = primaryOrder?.id;
-  const recetaArg = isExpanded && pedidoId ? { pedidoId } : skipToken;
-  const { data: receta = [], isLoading: loadingReceta } =
-    useGetRecetaByPedidoQuery(recetaArg);
-  const hasReceta = receta && receta.length > 0;
-  const { data: almacenes = [] } = useGetAlmacenesQuery(undefined, {
-    skip: !isExpanded,
-  });
-  const isPTMQ = primaryOrder?.ptmq ?? false;
-  const allDetails = item.originalItems.flatMap((o) => o.details || []);
-
-  const handleUpdate = useCallback(
-    (field, value) => {
-      if (!pedidoId) return;
-      let finalValue = field === "trazabilidad_Prod" ? value : Number(value);
-      if (
-        typeof finalValue === "number" &&
-        (isNaN(finalValue) || finalValue < 0)
-      ) {
-        finalValue = 0;
-      }
-
-      updatePedido({
-        id: pedidoId,
-        data: { [field]: finalValue },
-      })
-        .unwrap()
-        .catch((err) => console.error("Error updating pedido:", err));
-    },
-    [pedidoId, updatePedido],
-  );
-
-  const handlePTMQToggle = useCallback(
-    async (checked) => {
-      if (!pedidoId) return;
-      try {
-        await updatePedido({ id: pedidoId, data: { ptmq: checked } }).unwrap();
-      } catch (err) {
-        console.error("Error updating PTMQ:", err);
-        toast({
-          title: "Error",
-          description: "No se pudo actualizar el estado PTMQ",
-          status: "error",
-        });
-      }
-    },
-    [pedidoId, updatePedido, toast],
-  );
-
-  const debouncedUpdate = useMemo(
-    () => debounce(handleUpdate, 500),
-    [handleUpdate],
-  );
-
-  const inputBg = useColorModeValue("gray.50", "gray.700");
-
-  if (!isExpanded) return null;
-
-  return (
-    <Box
-      pl={2}
-      pr={1}
-      py={2}
-      bg={useColorModeValue("gray.50", "gray.900")}
-      borderBottomWidth="1px"
-      borderColor="gray.200"
-    >
-      <Flex gap={4} direction={{ base: "column", xl: "row" }}>
-        <Box width="fit-content">
-          {primaryOrder && (
-            <Box
-              bg={useColorModeValue("white", "gray.800")}
-              p={3}
-              borderRadius="md"
-              shadow="sm"
-              borderWidth="1px"
-              borderColor="gray.200"
-              mb={3}
-            >
-              <Flex align="center" justify="space-between" mb={2}>
-                <Text fontSize="sm" fontWeight="bold" color="blue.600">
-                  Registro
-                </Text>
-                <Button
-                  size="xs"
-                  h="24px"
-                  colorScheme="red"
-                  variant="ghost"
-                  leftIcon={<ChevronRightIcon />}
-                  fontSize="xs"
-                  isDisabled={true}
-                  title="Disponible en vista individual"
-                >
-                  Registrar Rechazo
-                </Button>
-              </Flex>
-
-              <Flex gap={2} wrap="wrap" mb={2}>
-                {ROW_1.map((field) => {
-                  const currentValue = item.originalItems[0][field];
-                  const spec = FIELD_SPECS[field];
-                  return (
-                    <Flex key={field} direction="column" align="center">
-                      <Text
-                        fontSize="10px"
-                        fontWeight="bold"
-                        color="gray.500"
-                        mb={0.5}
-                        textTransform="uppercase"
-                        textAlign="center"
-                      >
-                        {FIELD_LABELS[field]}
-                      </Text>
-                      <Input
-                        size="xs"
-                        w={spec.w}
-                        type={spec.type}
-                        defaultValue={
-                          currentValue ?? (spec.type === "number" ? 0 : "")
-                        }
-                        placeholder={spec.type === "number" ? "0" : ""}
-                        onChange={(e) => debouncedUpdate(field, e.target.value)}
-                        focusBorderColor="blue.400"
-                        borderRadius="sm"
-                        bg={inputBg}
-                        textAlign="center"
-                      />
-                    </Flex>
-                  );
-                })}
-              </Flex>
-            </Box>
-          )}
-
-          <Box>
-            <OrderDetailsTable
-              details={allDetails}
-              isLoading={false}
-              showPTMQ={!hasReceta}
-              isPTMQ={isPTMQ}
-              onTogglePTMQ={handlePTMQToggle}
-            />
-          </Box>
-        </Box>
-        <Box flex="1">
-          {loadingReceta ? (
-            <Center py={2}>
-              <Spinner size="sm" />
-            </Center>
-          ) : (
-            <RecetaTable
-              pedidoId={pedidoId}
-              receta={receta}
-              almacenes={almacenes}
-            />
-          )}
-        </Box>
-      </Flex>
-    </Box>
-  );
-});
-
-const ConsolidatedOrderRow = memo(
-  ({
-    item,
-    isExpanded,
-    onToggleExpand,
-    isSelected,
-    onToggleSelection,
-    summaryRowBg,
-    summaryRowHoverBg,
-    summaryRowBorderColor,
-  }) => {
-    const [updatePedido] = useUpdatePedidoProduccionMutation();
-    const [updateMultiplePedidos] =
-      useUpdateMultiplePedidosProduccionMutation();
-    const toast = useToast();
-
-    const primaryOrder = item.originalItems[0];
-    const pedidoId = primaryOrder?.id;
-
-    const handleTrazabilidadUpdate = useCallback(
-      (value) => {
-        if (!pedidoId) return;
-        updatePedido({
-          id: pedidoId,
-          data: { trazabilidad_Prod: value },
-        })
-          .unwrap()
-          .catch((err) => {
-            console.error("Error updating trazabilidad:", err);
-            toast({
-              title: "Error",
-              description: "No se pudo actualizar la trazabilidad",
-              status: "error",
-            });
-          });
-      },
-      [pedidoId, updatePedido, toast],
-    );
-
-    const debouncedTrazabilidadUpdate = useMemo(
-      () => debounce(handleTrazabilidadUpdate, 500),
-      [handleTrazabilidadUpdate],
-    );
-
-    const inputBg = useColorModeValue("white", "gray.800");
-    const inputBorder = useColorModeValue("gray.300", "gray.600");
-
-    const isGroupComplete =
-      item.originalItems.length > 0 &&
-      item.originalItems.every((i) => i.completo);
-
-    const handleCheckboxChange = async (e) => {
-      const newCheckedState = e.target.checked;
-      const idsToUpdate = item.originalItems.map((subItem) => subItem.id);
-
-      try {
-        await updateMultiplePedidos({
-          ids: idsToUpdate,
-          data: { completo: newCheckedState },
-        }).unwrap();
-      } catch (err) {
-        console.error("Error updating completion status:", err);
-        toast({
-          title: "Error",
-          description: "No se pudo actualizar el estado de completado",
-          status: "error",
-        });
-      }
-    };
-
-    const solicitud = item.cantidadUnidad;
-    const procesado = item.cantidad;
-    const faltante = solicitud - procesado;
-
-    return (
-      <Fragment>
-        <Tr
-          bg={isExpanded ? summaryRowHoverBg : summaryRowBg}
-          _hover={{ bg: summaryRowHoverBg }}
-          borderBottom="1px solid"
-          borderColor={summaryRowBorderColor}
-          transition="background 0.2s"
-        >
-          <Td w="36px" px={2}>
-            <Checkbox
-              isChecked={isSelected}
-              onChange={() => onToggleSelection(item.productoNombre)}
-              size="lg"
-              colorScheme="green"
-              borderColor="gray.500"
-            />
-          </Td>
-          <Td w="36px" px={2}>
-            <Icon
-              as={isExpanded ? ChevronDownIcon : ChevronRightIcon}
-              boxSize={6}
-              cursor="pointer"
-              onClick={() => onToggleExpand(item.id)}
-              color="gray.500"
-            />
-          </Td>
-          <Td px={2} fontWeight="bold">
-            {item.productoNombre}
-          </Td>
-          <Td px={2}>
-            <Input
-              size="sm"
-              width="80px"
-              defaultValue={primaryOrder?.trazabilidad_Prod || ""}
-              placeholder="-"
-              onChange={(e) => debouncedTrazabilidadUpdate(e.target.value)}
-              bg={inputBg}
-              borderColor={inputBorder}
-            />
-          </Td>
-          <Td px={2} textAlign="center">
-            <Box>
-              <Text fontWeight="bold" fontSize="lg" color="blue.500">
-                {solicitud ?? "-"}
-              </Text>
-              <Text fontSize="xs" color="gray.400" textTransform="uppercase">
-                Solicita
-              </Text>
-            </Box>
-          </Td>
-          <Td px={2} textAlign="center">
-            <Checkbox
-              isChecked={isGroupComplete}
-              onChange={handleCheckboxChange}
-              size="lg"
-              colorScheme="green"
-              cursor="pointer"
-              borderColor="gray.500"
-            />
-          </Td>
-          <Td px={2} textAlign="center">
-            <Box>
-              <Text fontWeight="bold" fontSize="lg" color="green.500">
-                {procesado}
-              </Text>
-              <Text fontSize="xs" color="gray.400" textTransform="uppercase">
-                Procesado
-              </Text>
-            </Box>
-          </Td>
-          <Td px={2} textAlign="center">
-            <Box>
-              <Text
-                fontWeight="bold"
-                fontSize="lg"
-                color={faltante > 0 ? "red.400" : "gray.400"}
-              >
-                {faltante}
-              </Text>
-              <Text fontSize="xs" color="gray.400" textTransform="uppercase">
-                Faltante
-              </Text>
-            </Box>
-          </Td>
-        </Tr>
-        {isExpanded && (
-          <Tr>
-            <Td colSpan={9} p={0} border="none">
-              <ConsolidatedExpandedRow item={item} isExpanded={isExpanded} />
-            </Td>
-          </Tr>
-        )}
-      </Fragment>
-    );
-  },
-);
-
-export const ConsolidatedOrdersView = ({ data }) => {
+export const ConsolidatedOrdersView = ({
+  data,
+  actionLabel = "Cargar a SAP",
+}) => {
   const [visibleLimit, setVisibleLimit] = useState(20);
 
   useEffect(() => {
@@ -478,6 +98,23 @@ export const ConsolidatedOrdersView = ({ data }) => {
       });
       return;
     }
+    // Pre-fill data if available
+    let existingDate = "";
+    let existingComment = "";
+
+    // Find the first selected item to get existing data
+    for (const group of data) {
+      if (selectedItems.has(group.productoNombre)) {
+        const firstItem = group.originalItems[0];
+        if (firstItem) {
+          if (firstItem.fechaOrden) existingDate = firstItem.fechaOrden;
+        }
+        break;
+      }
+    }
+
+    setDateSAP(existingDate || new Date().toISOString().split("T")[0]);
+    setComment(existingComment);
     onOpen();
   };
 
@@ -552,7 +189,6 @@ export const ConsolidatedOrdersView = ({ data }) => {
   const summaryRowHoverBg = useColorModeValue("gray.200", "gray.700");
   const modalBg = useColorModeValue("white", "gray.800");
   const summaryRowBorderColor = useColorModeValue("gray.200", "gray.700");
-  const detailsTextColor = useColorModeValue("gray.600", "gray.400");
 
   const allSelected = useMemo(
     () => data.length > 0 && selectedItems.size === data.length,
@@ -566,12 +202,14 @@ export const ConsolidatedOrdersView = ({ data }) => {
 
   let currentDeu = null;
 
+  const actionButtonText = actionLabel;
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent bg={modalBg}>
-          <ModalHeader>Cargar a SAP</ModalHeader>
+          <ModalHeader>{actionButtonText}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Text mb={2} fontWeight="bold">
@@ -601,7 +239,7 @@ export const ConsolidatedOrdersView = ({ data }) => {
               isLoading={isSending}
               isDisabled={!dateSAP}
             >
-              Cargar a SAP
+              {actionButtonText}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -617,23 +255,35 @@ export const ConsolidatedOrdersView = ({ data }) => {
         fontSize="md"
         p={2}
       >
-        <Table variant="simple" size="md" tablelayout="fixed" w="100%">
+        <Table variant="simple" size="sm" tablelayout="fixed" w="100%">
           <Thead bg={headerBg} position="sticky" top={0} zIndex={1}>
             <Tr>
-              <Th w="36px" px={2}>
+              <Th w="36px" px={2} py={2}>
                 <Checkbox
                   isChecked={allSelected}
                   onChange={handleSelectAll}
                   aria-label="Select all rows"
                 />
               </Th>
-              <Th w="36px" px={2} />
-              <Th px={2}>Producto</Th>
-              <Th px={2}>Trazabilidad</Th>
-              <Th px={2}>Solic. ventas</Th>
-              <Th px={2}>Completado</Th>
-              <Th px={2}>Cantidad Procesada</Th>
-              <Th px={2}>Faltante</Th>
+              <Th w="36px" px={2} py={2} />
+              <Th px={2} py={2} fontSize="xs">
+                Producto
+              </Th>
+              <Th px={2} py={2} fontSize="xs">
+                Trazabilidad
+              </Th>
+              <Th px={2} py={2} fontSize="xs" textAlign="center">
+                Solic. ventas
+              </Th>
+              <Th px={2} py={2} fontSize="xs" textAlign="center">
+                Completado
+              </Th>
+              <Th px={2} py={2} fontSize="xs" textAlign="center">
+                Cantidad Procesada
+              </Th>
+              <Th px={2} py={2} fontSize="xs" textAlign="center">
+                Faltante
+              </Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -695,7 +345,7 @@ export const ConsolidatedOrdersView = ({ data }) => {
           onClick={handleSendToSap}
           isDisabled={selectedItems.size === 0}
         >
-          Cargar a SAP ({selectedItems.size})
+          {actionButtonText} ({selectedItems.size})
         </Button>
       </Flex>
     </>
