@@ -1,4 +1,10 @@
-import { useState, useMemo, useEffect, useTransition } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useTransition,
+  useCallback,
+} from "react";
 import {
   Box,
   Spinner,
@@ -96,30 +102,42 @@ const ProductionOrdersPage = () => {
   // Use transition to make filter updates non-blocking
   const [isPending, startTransition] = useTransition();
 
-  // Wrapped setters that use startTransition
-  const handleCountryFilterChange = (value) => {
-    startTransition(() => {
-      setCountryFilter(value);
-    });
-  };
+  // Wrapped setters that use startTransition with useCallback for stability
+  const handleCountryFilterChange = useCallback(
+    (value) => {
+      startTransition(() => {
+        setCountryFilter(value);
+      });
+    },
+    [startTransition],
+  );
 
-  const handleClientFilterChange = (value) => {
-    startTransition(() => {
-      setClientFilter(value);
-    });
-  };
+  const handleClientFilterChange = useCallback(
+    (value) => {
+      startTransition(() => {
+        setClientFilter(value);
+      });
+    },
+    [startTransition],
+  );
 
-  const handleStateFilterChange = (value) => {
-    startTransition(() => {
-      setStateFilter(value);
-    });
-  };
+  const handleStateFilterChange = useCallback(
+    (value) => {
+      startTransition(() => {
+        setStateFilter(value);
+      });
+    },
+    [startTransition],
+  );
 
-  const handleDeuFilterChange = (value) => {
-    startTransition(() => {
-      setDeuFilter(value);
-    });
-  };
+  const handleDeuFilterChange = useCallback(
+    (value) => {
+      startTransition(() => {
+        setDeuFilter(value);
+      });
+    },
+    [startTransition],
+  );
 
   const countries = useMemo(
     () => Array.from(new Set(allItems.map((i) => i.pais))),
@@ -139,60 +157,61 @@ const ProductionOrdersPage = () => {
   );
 
   const filteredGroups = useMemo(() => {
-    return (
-      mesaGroups
-        // Filtro DEU al inicio para optimizar
-        .filter((g) => {
-          if (!deuFilter) return true;
-          // Si el grupo tiene items con ese DEU, lo mantenemos (y filtramos items despues)
-          return g.items.some((i) => i.deudorCodigo === deuFilter);
-        })
-        .map((g) => {
-          const filteredItems = g.items
-            .filter((i) => {
-              if (deuFilter && i.deudorCodigo !== deuFilter) return false; // Filtro por DEU activo
-              if (!itemFilter) return true;
-              return i.productoNombre
-                .toLowerCase()
-                .includes(itemFilter.toLowerCase());
-            })
-            .slice()
-            .sort((a, b) =>
-              a.productoNombre.localeCompare(b.productoNombre, undefined, {
-                sensitivity: "base",
-              }),
-            );
+    // 1. First pass: Filter GROUPS by top-level attributes (Country, Client)
+    // This reduces the number of groups we need to map/filter items for.
+    let groups = mesaGroups;
 
-          return {
-            ...g,
-            items: filteredItems,
-          };
-        })
-        .filter((g) => g.items.length > 0)
-        .filter((g) => {
-          if (countryFilter && g.pais !== countryFilter) return false;
-          if (clientFilter && g.tienda !== clientFilter) return false;
+    if (countryFilter) {
+      groups = groups.filter((g) => g.pais === countryFilter);
+    }
+    if (clientFilter) {
+      groups = groups.filter((g) => g.tienda === clientFilter);
+    }
 
-          if (stateFilter) {
-            const total = g.items.length;
-            const doneCount = g.items.filter((i) => i.completo).length;
-            const anyProgress = g.items.some(
-              (i) => Number(i.cantidad ?? 0) > 0,
-            );
-            const groupStatus =
-              doneCount === total
-                ? "Completado"
-                : anyProgress
-                  ? "En Proceso"
-                  : "Pendiente";
-            if (groupStatus !== stateFilter) return false;
-          }
+    return groups
+      .map((g) => {
+        // 2. Filter items within each remaining group
+        const filteredItems = g.items.filter((i) => {
+          if (deuFilter && i.deudorCodigo !== deuFilter) return false;
+          if (!itemFilter) return true;
+          return i.productoNombre
+            .toLowerCase()
+            .includes(itemFilter.toLowerCase());
+        });
 
-          return true;
-        })
-        .slice()
-        .sort((a, b) => a.pedidoId - b.pedidoId)
-    );
+        if (filteredItems.length === 0) return null;
+
+        // Only sort if we have items and it's the view that needs it
+        // Note: consolidation recreates item list anyway
+        filteredItems.sort((a, b) =>
+          a.productoNombre.localeCompare(b.productoNombre, undefined, {
+            sensitivity: "base",
+          }),
+        );
+
+        // 3. Filter group by state based on filtered items
+        if (stateFilter) {
+          const total = filteredItems.length;
+          const doneCount = filteredItems.filter((i) => i.completo).length;
+          const anyProgress = filteredItems.some(
+            (i) => Number(i.cantidad ?? 0) > 0,
+          );
+          const groupStatus =
+            doneCount === total
+              ? "Completado"
+              : anyProgress
+                ? "En Proceso"
+                : "Pendiente";
+          if (groupStatus !== stateFilter) return false;
+        }
+
+        return {
+          ...g,
+          items: filteredItems,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.pedidoId - b.pedidoId);
   }, [
     mesaGroups,
     itemFilter,
@@ -205,34 +224,36 @@ const ProductionOrdersPage = () => {
   const consolidatedItems = useMemo(() => {
     if (viewMode !== "consolidated") return [];
 
-    const allFilteredItems = filteredGroups.flatMap((g) => g.items);
     const itemsMap = new Map();
 
-    allFilteredItems.forEach((item) => {
-      const deuCode = item.deudorCodigo || "";
-      const key = `${deuCode}|${item.productoNombre}`;
-      if (itemsMap.has(key)) {
-        const existing = itemsMap.get(key);
-        existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
-        existing.cantidad += Number(item.cantidad ?? 0);
-        existing.originalItems.push(item);
-      } else {
-        itemsMap.set(key, {
-          ...item,
-          cantidadUnidad: Number(item.cantidadUnidad ?? 0),
-          cantidad: Number(item.cantidad ?? 0),
-          originalItems: [item],
-        });
-      }
-    });
+    // Use a single loop instead of flatMap + forEach
+    for (const group of filteredGroups) {
+      for (const item of group.items) {
+        const deuCode = item.deudorCodigo || "";
+        const key = `${deuCode}|${item.productoNombre}`;
 
+        const existing = itemsMap.get(key);
+        if (existing) {
+          existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
+          existing.cantidad += Number(item.cantidad ?? 0);
+          existing.originalItems.push(item);
+        } else {
+          itemsMap.set(key, {
+            ...item,
+            cantidadUnidad: Number(item.cantidadUnidad ?? 0),
+            cantidad: Number(item.cantidad ?? 0),
+            originalItems: [item],
+          });
+        }
+      }
+    }
+
+    // Sort the final consolidated list
     return Array.from(itemsMap.values()).sort((a, b) => {
       const deuCompare = (a.deudorCodigo || "").localeCompare(
         b.deudorCodigo || "",
         undefined,
-        {
-          sensitivity: "base",
-        },
+        { sensitivity: "base" },
       );
       if (deuCompare !== 0) return deuCompare;
       return a.productoNombre.localeCompare(b.productoNombre, undefined, {
