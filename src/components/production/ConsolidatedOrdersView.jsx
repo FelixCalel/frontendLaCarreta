@@ -98,11 +98,9 @@ export const ConsolidatedOrdersView = ({
       });
       return;
     }
-    // Pre-fill data if available
     let existingDate = "";
     let existingComment = "";
 
-    // Find the first selected item to get existing data
     for (const group of data) {
       if (selectedItems.has(group.productoNombre)) {
         const firstItem = group.originalItems[0];
