@@ -1,4 +1,3 @@
-// src/pages/produccion/MesaPage.jsx
 import { useState } from "react";
 import {
   Box,
@@ -11,6 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { useGetPedidosAgrupadosQuery } from "../../services/pedidoProductionApi";
 import { OrdersTable } from "../../components/production/OrdersTable";
+import AcceptOrderButton from "./AcceptOrderButton";
 
 export const MesaPage = () => {
   const { data: agrupados = [], isLoading } = useGetPedidosAgrupadosQuery();
@@ -56,6 +56,12 @@ export const MesaPage = () => {
 
       {selectedPedido && (
         <Box>
+          <Box mb={4} display="flex" justifyContent="flex-end">
+            <AcceptOrderButton
+              order={agrupados.find((g) => g.pedidoId === selectedPedido)}
+              onSuccess={() => setSelectedPedido(null)}
+            />
+          </Box>
           <OrdersTable
             data={
               agrupados.find((g) => g.pedidoId === selectedPedido)?.items ?? []

@@ -16,14 +16,18 @@ import {
   useToast,
   Text,
   Select,
+  useDisclosure,
+  Flex,
+  Button,
 } from "@chakra-ui/react";
 import { useDispatch } from "react-redux";
+import { AddIcon } from "@chakra-ui/icons";
 import {
   pedidoProduccionApi,
   useUpdateRecetaLineaMutation,
 } from "../../services/pedidoProductionApi";
+import AddMaterialModal from "./modals/AddMaterialModal";
 
-// Componente de Input Memoizado
 const CustomInput = memo(function CustomInput({
   value,
   onChange,
@@ -43,7 +47,12 @@ const CustomInput = memo(function CustomInput({
 
   return (
     <Input
-      value={internalValue ?? ""}
+      value={
+        internalValue === 0 || internalValue === "0"
+          ? ""
+          : (internalValue ?? "")
+      }
+      placeholder="0"
       onChange={handleChange}
       onBlur={onBlur}
       {...props}
@@ -58,7 +67,31 @@ CustomInput.propTypes = {
 };
 CustomInput.displayName = "CustomInput";
 
-// Componente de Fila de Tabla Memoizado
+const OptimisticCheckbox = memo(({ isChecked, onChange }) => {
+  const [checked, setChecked] = useState(isChecked);
+
+  useEffect(() => {
+    setChecked(isChecked);
+  }, [isChecked]);
+
+  const handleChange = (e) => {
+    const newValue = e.target.checked;
+    setChecked(newValue);
+    onChange(newValue);
+  };
+
+  return (
+    <Checkbox
+      isChecked={checked}
+      onChange={handleChange}
+      size="sm"
+      colorScheme="green"
+      borderColor={useColorModeValue("gray.300", "gray.500")}
+    />
+  );
+});
+OptimisticCheckbox.displayName = "OptimisticCheckbox";
+
 const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
   r,
   idx,
@@ -73,57 +106,110 @@ const MemoizedRecetaRow = memo(function MemoizedRecetaRow({
 
   return (
     <Tr bg={idx % 2 === 0 ? "transparent" : stripeBg} _hover={{ bg: hoverBg }}>
-      <Td px={2} textAlign="center">
-        <Checkbox
+      <Td px={2} py={2} textAlign="center">
+        <OptimisticCheckbox
           isChecked={!!r.state}
-          onChange={(e) => updateField(r.id, "state", e.target.checked)}
-          size="sm"
-          colorScheme="green"
+          onChange={(newValue) => {
+            setTimeout(() => {
+              console.log(
+                "[RecetaTable] Optimistic update for:",
+                r.id,
+                newValue,
+              );
+              handleLocalChange(r.id, "state", newValue);
+              updateField(r.id, "state", newValue);
+            }, 50);
+          }}
         />
       </Td>
-      <Td px={4}>{r.item}</Td>
-      <Td px={4}>{r.descripcion || "-"}</Td>
-      {["mpUtilizada", "mp1ra", "mp2da", "mp3ra", "cantidad_real"].map(
-        (field) => (
-          <Td key={field} px={4} isNumeric>
-            <CustomInput
-              size="sm"
-              variant="outline"
-              borderWidth="1px"
-              borderColor={inputBorderColor}
-              borderRadius="sm"
-              _hover={{ borderColor: "green.400" }}
-              type="number"
-              value={r[field]}
-              onChange={(e) => handleLocalChange(r.id, field, e.target.value)}
-              onBlur={(e) => updateField(r.id, field, e.target.value)}
-              textAlign="center"
-              focusBorderColor="green.400"
-            />
-          </Td>
-        )
-      )}
-      <Td px={4} isNumeric>
-        <Text textAlign="center">{r.cantidad_base}</Text>
+      {/* <Td px={1} py={2} textAlign="center">
+        <Text fontSize="xs" fontWeight="bold" color="gray.500">
+          {idx + 1}
+        </Text>
+      </Td> */}
+      <Td px={2} py={2}>
+        <Box>
+          <Text
+            fontSize="sm"
+            fontWeight="semibold"
+            color={useColorModeValue("gray.700", "white")}
+          >
+            {r.item}
+          </Text>
+          {r.descripcion && (
+            <Text fontSize="xs" color="gray.500" title={r.descripcion}>
+              {r.descripcion}
+            </Text>
+          )}
+        </Box>
       </Td>
-      <Td px={4} isNumeric>
-        <Text textAlign="center">{r.cantidad_requerida}</Text>
+      {["mpUtilizada", "cantidad_real"].map((field) => (
+        <Td key={field} px={1} py={2} isNumeric>
+          <CustomInput
+            size="xs"
+            variant="outline"
+            bg={useColorModeValue("white", "gray.800")}
+            borderWidth="1px"
+            borderColor={inputBorderColor}
+            borderRadius="sm"
+            _hover={{ borderColor: "blue.400" }}
+            type="number"
+            value={r[field]}
+            onChange={(e) => handleLocalChange(r.id, field, e.target.value)}
+            onBlur={(e) => updateField(r.id, field, e.target.value)}
+            textAlign="center"
+            focusBorderColor="blue.400"
+            fontWeight="medium"
+            w="56px"
+          />
+        </Td>
+      ))}
+      <Td px={1} py={2} textAlign="center">
+        <Text fontSize="xs" color="gray.600">
+          {r.cantidad_base}
+        </Text>
       </Td>
-      <Td px={4}>
-        <Text textAlign="center">{r.nombre_unidad}</Text>
+      <Td px={1} py={2} textAlign="center">
+        <Text fontSize="xs" fontWeight="bold" color="blue.600">
+          {r.cantidad_requerida}
+        </Text>
       </Td>
-      <Td px={4}>
+      <Td px={1} py={2}>
         <Select
-          size="sm"
+          size="xs"
+          h="24px"
+          fontSize="xs"
+          value={r.nombre_unidad}
+          onChange={(e) => updateField(r.id, "nombre_unidad", e.target.value)}
+          bg={useColorModeValue("white", "gray.700")}
+          borderRadius="md"
+          variant="filled"
+          _focus={{ borderColor: "blue.400" }}
+          width="70px"
+        >
+          {["Unidad", "Libra", "KG", "Gramos", "Litro", "ML", "Onza"].map(
+            (unit) => (
+              <option key={unit} value={unit}>
+                {unit}
+              </option>
+            ),
+          )}
+        </Select>
+      </Td>
+      <Td px={1} py={2} textAlign="center">
+        <Select
+          size="xs"
+          h="24px"
+          fontSize="xs"
           value={r.id_almacen}
           onChange={(e) => updateField(r.id, "id_almacen", e.target.value)}
           isDisabled={!almacenes.length}
           bg={optionBg}
-          sx={{
-            "& option": {
-              bg: optionBg,
-            },
-          }}
+          borderRadius="md"
+          variant="filled"
+          _focus={{ bg: optionBg, borderColor: "blue.400" }}
+          textAlign="center"
+          sx={{ textAlignLast: "center" }}
         >
           {almacenes.map((almacen) => (
             <option key={almacen.id} value={almacen.id}>
@@ -148,16 +234,20 @@ MemoizedRecetaRow.propTypes = {
 };
 MemoizedRecetaRow.displayName = "MemoizedRecetaRow";
 
-export const RecetaTable = ({ pedidoId, receta, isLoading = false, almacenes = [] }) => {
+export const RecetaTable = ({
+  pedidoId,
+  receta,
+  isLoading = false,
+  almacenes = [],
+}) => {
   const [updateLinea] = useUpdateRecetaLineaMutation();
   const toast = useToast();
   const dispatch = useDispatch();
-
-  const headBg = useColorModeValue("green.100", "green.700");
+  const headBg = useColorModeValue("gray.100", "gray.700");
   const inputBorderColor = useColorModeValue("gray.300", "gray.600");
-  const headColor = useColorModeValue("gray.800", "whiteAlpha.900");
+  const headColor = useColorModeValue("gray.700", "gray.200");
   const stripeBg = useColorModeValue("gray.50", "gray.800");
-  const hoverBg = useColorModeValue("gray.100", "gray.600");
+  const hoverBg = useColorModeValue("blue.50", "gray.700");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
   const handleLocalChange = useCallback(
@@ -165,17 +255,25 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false, almacenes = [
       dispatch(
         pedidoProduccionApi.util.updateQueryData(
           "getRecetaByPedido",
-          pedidoId,
+          { pedidoId: Number(pedidoId) },
           (draft) => {
+            console.log("[RecetaTable] Updating cache for pedido:", pedidoId);
             const line = draft.find((line) => line.id === id);
             if (line) {
-              line[field] = value === "" ? null : Number(value);
+              console.log("[RecetaTable] Found line:", id, "Setting:", value);
+              if (typeof value === "boolean") {
+                line[field] = value;
+              } else {
+                line[field] = value === "" ? null : Number(value);
+              }
+            } else {
+              console.warn("[RecetaTable] Line not found in cache:", id);
             }
-          }
-        )
+          },
+        ),
       );
     },
-    [dispatch, pedidoId]
+    [dispatch, pedidoId],
   );
 
   const updateField = useCallback(
@@ -184,9 +282,6 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false, almacenes = [
         "cantidad_base",
         "cantidad_real",
         "mpUtilizada",
-        "mp1ra",
-        "mp2da",
-        "mp3ra",
       ].includes(field);
 
       const value = isNumeric ? (raw === "" ? null : Number(raw)) : raw;
@@ -206,170 +301,163 @@ export const RecetaTable = ({ pedidoId, receta, isLoading = false, almacenes = [
           duration: 3000,
           isClosable: true,
         });
-        // Revert optimistic update on error
         dispatch(
           pedidoProduccionApi.util.invalidateTags([
             { type: "Receta", id: pedidoId },
-          ])
+          ]),
         );
       }
     },
-    [dispatch, pedidoId, toast, updateLinea]
+    [dispatch, pedidoId, toast, updateLinea],
   );
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   if (isLoading) {
     return (
       <Box py={4} textAlign="center">
-        <Spinner />
+        <Spinner size="sm" />
       </Box>
     );
   }
 
   return (
-    <Box
-      border="1px solid"
-      borderColor={borderColor}
-      borderRadius="md"
-      overflow="hidden"
-      mt={4}
-    >
-      <TableContainer maxH="360px" overflowY="auto">
-        <Table size="sm" variant="striped" sx={{ tableLayout: "fixed" }}>
-          <Thead
-            bg={headBg}
-            color={headColor}
-            position="sticky"
-            top={0}
-            zIndex={1}
-            style={{ wordWrap: "break-word", whiteSpace: "normal" }}
-          >
-            <Tr>
-              <Th w="40px" px={2} />
-              <Th
-                w="90px"
-                px={4}
-                textTransform="uppercase"
-                fontWeight="bold"
-                isTruncated
-              >
-                No.
-              </Th>
-              <Th
-                minW="250px"
-                px={4}
-                textTransform="uppercase"
-                fontWeight="bold"
-                isTruncated
-              >
-                Descripción
-              </Th>
-              <Th
-                w="85px"
-                px={0}
-                textTransform="uppercase"
-                fontWeight="bold"
-                isNumeric
-                isTruncated
-              >
-                MP Utilizada
-              </Th>
-              <Th
-                w="85px"
-                px={2}
-                textTransform="uppercase"
-                fontWeight="bold"
-                isNumeric
-                isTruncated
-              >
-                MP 1ra
-              </Th>
-              <Th
-                w="85px"
-                px={2}
-                textTransform="uppercase"
-                fontWeight="bold"
-                isNumeric
-                isTruncated
-              >
-                MP 2da
-              </Th>
-              <Th
-                w="85px"
-                px={2}
-                textTransform="uppercase"
-                fontWeight="bold"
-                isNumeric
-                isTruncated
-              >
-                MP 3ra
-              </Th>
-              <Th
-                w="85px"
-                px={1}
-                textTransform="uppercase"
-                fontWeight="bold"
-                isNumeric
-                isTruncated
-              >
-                Cant. real
-              </Th>
-              <Th
-                w="85px"
-                px={1}
-                textTransform="uppercase"
-                fontWeight="bold"
-                isNumeric
-                isTruncated
-              >
-                Cant. base
-              </Th>
-              <Th
-                w="85px"
-                px={2}
-                textTransform="uppercase"
-                fontWeight="bold"
-                isNumeric
-                isTruncated
-              >
-                Ctd. req.
-              </Th>
-              <Th
-                w="80px"
-                px={2}
-                textTransform="uppercase"
-                fontWeight="bold"
-                isTruncated
-              >
-                Unidad
-              </Th>
-              <Th
-                w="150px"
-                px={4}
-                textTransform="uppercase"
-                fontWeight="bold"
-                isTruncated
-              >
-                Almacén
-              </Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {receta.map((r, idx) => (
-              <MemoizedRecetaRow
-                key={r.id}
-                r={r}
-                idx={idx}
-                stripeBg={stripeBg}
-                hoverBg={hoverBg}
-                inputBorderColor={inputBorderColor}
-                handleLocalChange={handleLocalChange}
-                updateField={updateField}
-                almacenes={almacenes}
-              />
-            ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
+    <Box mt={2}>
+      <Flex justify="space-between" align="center" mb={2}>
+        <Text
+          fontSize="sm"
+          fontWeight="bold"
+          color="gray.500"
+          textTransform="uppercase"
+          letterSpacing="wide"
+        >
+          Lista de Materiales (Receta)
+        </Text>
+        <Button
+          size="xs"
+          colorScheme="blue"
+          variant="outline"
+          leftIcon={<AddIcon />}
+          onClick={onOpen}
+        >
+          Agregar
+        </Button>
+      </Flex>
+
+      <AddMaterialModal isOpen={isOpen} onClose={onClose} pedidoId={pedidoId} />
+
+      <Box
+        borderWidth="1px"
+        borderColor={borderColor}
+        borderRadius="md"
+        overflow="hidden"
+        bg={useColorModeValue("white", "gray.800")}
+      >
+        <TableContainer maxH="400px" overflowY="auto">
+          <Table size="sm" variant="simple">
+            <Thead bg={headBg} position="sticky" top={0} zIndex={10}>
+              <Tr>
+                <Th w="40px" px={2} py={2} color={headColor} fontSize="xs">
+                  Activo
+                </Th>
+                {/* <Th
+                  w="40px"
+                  px={1}
+                  py={2}
+                  color={headColor}
+                  fontSize="xs"
+                  textAlign="center"
+                >
+                  #
+                </Th> */}
+                <Th minW="180px" px={2} py={2} color={headColor} fontSize="xs">
+                  Material
+                </Th>
+                <Th
+                  w="65px"
+                  px={1}
+                  py={2}
+                  color={headColor}
+                  fontSize="xs"
+                  textAlign="center"
+                  isNumeric
+                >
+                  MP Utilizada
+                </Th>
+                <Th
+                  w="65px"
+                  px={1}
+                  py={2}
+                  color={headColor}
+                  fontSize="xs"
+                  textAlign="center"
+                  isNumeric
+                >
+                  Cant. Real
+                </Th>
+                <Th
+                  w="80px"
+                  px={1}
+                  py={2}
+                  color={headColor}
+                  fontSize="xs"
+                  textAlign="center"
+                >
+                  C. Base
+                </Th>
+                <Th
+                  w="80px"
+                  px={1}
+                  py={2}
+                  color={headColor}
+                  fontSize="xs"
+                  textAlign="center"
+                >
+                  C. Req.
+                </Th>
+                <Th w="0px" px={2} py={2} color={headColor} fontSize="xs">
+                  Unidad
+                </Th>
+                <Th
+                  w="100px"
+                  px={0}
+                  py={2}
+                  color={headColor}
+                  fontSize="xs"
+                  textAlign="center"
+                >
+                  Almacén MP
+                </Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {receta.length === 0 ? (
+                <Tr>
+                  <Td colSpan={8} textAlign="center" py={4} color="gray.500">
+                    <Text fontSize="sm">
+                      No hay materiales registrados en la receta.
+                    </Text>
+                  </Td>
+                </Tr>
+              ) : (
+                receta.map((r, idx) => (
+                  <MemoizedRecetaRow
+                    key={r.id}
+                    r={r}
+                    idx={idx}
+                    stripeBg={stripeBg}
+                    hoverBg={hoverBg}
+                    inputBorderColor={inputBorderColor}
+                    handleLocalChange={handleLocalChange}
+                    updateField={updateField}
+                    almacenes={almacenes}
+                  />
+                ))
+              )}
+            </Tbody>
+          </Table>
+        </TableContainer>
+      </Box>
     </Box>
   );
 };
@@ -394,7 +482,7 @@ RecetaTable.propTypes = {
       almacen_name: PropTypes.string,
       state: PropTypes.bool,
       id_almacen: PropTypes.number,
-    })
+    }),
   ).isRequired,
   isLoading: PropTypes.bool,
   almacenes: PropTypes.arrayOf(PropTypes.object).isRequired,

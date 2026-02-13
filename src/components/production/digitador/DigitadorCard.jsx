@@ -4,14 +4,14 @@ import { CheckIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import { FaTruckLoading } from "react-icons/fa";
 
-const countStage2 = (items) => items.filter((it) => it.etapaId === 2).length;
+const countStage2 = (items) => items.filter((it) => it.etapaId === 3).length;
 
 export const GroupCard = ({ group }) => {
   const { pedidoId, tienda, pais, items } = group;
   const navigate = useNavigate();
   const stage2Items = countStage2(items);
   const allStage2Complete = items
-    .filter((it) => it.etapaId === 2)
+    .filter((it) => it.etapaId === 3)
     .every((it) => it.completo);
   const cardBg = useColorModeValue("gray.100", "gray.700");
   const hoverBg = useColorModeValue("gray.200", "gray.600");
@@ -24,7 +24,7 @@ export const GroupCard = ({ group }) => {
       bg={cardBg}
       borderRadius="md"
       cursor="pointer"
-      onClick={() => navigate(`/detalle/orden/${pedidoId}`)}
+      onClick={() => navigate(`/detalleFabricacion/${pedidoId}`)}
       _hover={{
         bg: hoverBg,
         transform: "translateY(-2px)",
@@ -72,7 +72,7 @@ export const GroupCard = ({ group }) => {
       </Text>
 
       <Badge mt={2} px={2} colorScheme="green">
-        {stage2Items} {stage2Items === 1 ? "ítem" : "ítems"} en etapa&nbsp;2
+        {stage2Items} {stage2Items === 1 ? "ítem" : "ítems"} en etapa&nbsp;3
       </Badge>
     </Box>
   );

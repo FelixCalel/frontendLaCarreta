@@ -5,12 +5,15 @@ import { FilterPanel } from "../../../components/production/FilterPanel";
 import { GroupCardGrid } from "../../../components/production/digitador/DigitadorCardGrid";
 
 const DigitadorOrdersPage = () => {
-  const { data: groups = [], isLoading, error } = useGetPedidosAgrupadosQuery();
+  const {
+    data: groups = [],
+    isLoading,
+    error,
+  } = useGetPedidosAgrupadosQuery({
+    etapaId: 3,
+  });
 
-  const base = useMemo(
-    () => groups.filter((g) => g.items.some((it) => it.etapaId === 2)),
-    [groups]
-  );
+  const base = useMemo(() => groups, [groups]);
 
   const [term, setTerm] = useState("");
   const [country, setCountry] = useState("");
@@ -18,11 +21,11 @@ const DigitadorOrdersPage = () => {
 
   const countries = useMemo(
     () => [...new Set(base.map((g) => g.pais).filter(Boolean))],
-    [base]
+    [base],
   );
   const clients = useMemo(
     () => [...new Set(base.map((g) => g.tienda).filter(Boolean))],
-    [base]
+    [base],
   );
 
   const filtered = useMemo(
@@ -36,7 +39,7 @@ const DigitadorOrdersPage = () => {
         const byClient = !client || g.tienda === client;
         return byText && byCountry && byClient;
       }),
-    [base, term, country, client]
+    [base, term, country, client],
   );
 
   if (isLoading) {
