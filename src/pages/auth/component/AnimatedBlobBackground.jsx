@@ -1,5 +1,6 @@
-import { Box, keyframes, useColorModeValue } from '@chakra-ui/react';
-import React from 'react';
+import { Box, useColorModeValue } from "@chakra-ui/react";
+import { keyframes } from "@emotion/react";
+import React from "react";
 
 const blobAnimation = keyframes`
   0% { transform: translate(0%, 0%) scale(1); }
@@ -9,9 +10,9 @@ const blobAnimation = keyframes`
 `;
 
 const AnimatedBlobBackground = () => {
-  const color1 = useColorModeValue('teal.200', 'teal.700');
-  const color2 = useColorModeValue('green.200', 'green.700');
-  const color3 = useColorModeValue('blue.200', 'blue.700');
+  const color1 = useColorModeValue("teal.200", "teal.700");
+  const color2 = useColorModeValue("green.200", "green.700");
+  const color3 = useColorModeValue("blue.200", "blue.700");
 
   return (
     <Box
@@ -22,7 +23,7 @@ const AnimatedBlobBackground = () => {
       bottom="0"
       overflow="hidden"
       zIndex="-1"
-      bg={useColorModeValue('gray.50', 'gray.800')} // Base background color
+      bg={useColorModeValue("gray.50", "gray.800")} // Base background color
     >
       <Box
         position="absolute"
