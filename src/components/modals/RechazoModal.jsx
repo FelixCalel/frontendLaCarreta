@@ -66,6 +66,21 @@ export const RechazoModal = ({
     almacenId: "",
   };
 
+  useEffect(() => {
+    if (rechazoData) {
+      setFormData({
+        fechaRechazo: rechazoData.fechaRechazo
+          ? new Date(rechazoData.fechaRechazo).toISOString().split("T")[0]
+          : "",
+        cantidadRechazada: rechazoData.cantidadRechazada || "",
+        comentario: rechazoData.comentario || "",
+        trazabilidad: rechazoData.trazabilidad || trazabilidadPadre || "",
+        usuarioId: rechazoData.usuarioId || 1,
+        almacenId: rechazoData.almacenId || "",
+      });
+    }
+  }, [rechazoData, trazabilidadPadre]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);

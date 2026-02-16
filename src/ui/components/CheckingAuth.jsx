@@ -5,8 +5,8 @@ import {
   VStack,
   Progress,
   useColorModeValue,
-  keyframes,
 } from "@chakra-ui/react";
+import { keyframes } from "@emotion/react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 
 const spin = keyframes`
@@ -53,7 +53,7 @@ const CheckingAuth = () => {
         justifyContent="center"
         bgGradient={useColorModeValue(
           "linear(to-br, green.50, green.100)",
-          "linear(to-br, gray.700, gray.900)"
+          "linear(to-br, gray.700, gray.900)",
         )}
       >
         <MotionBox
