@@ -17,6 +17,7 @@ import {
   useToast,
   Box,
   Text,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { AsyncPaginate } from "react-select-async-paginate";
 import {
@@ -37,6 +38,61 @@ const AddMaterialModal = ({ isOpen, onClose, pedidoId }) => {
   const [createRecetaLinea, { isLoading }] = useCreateRecetaLineaMutation();
   const [triggerGetItems] = useLazyGetItemsQuery();
   const { data: almacenes } = useGetAlmacenesQuery();
+
+  const selectBg = useColorModeValue("white", "#2D3748");
+  const selectColor = useColorModeValue("black", "white");
+  const selectBorderColor = useColorModeValue("#E2E8F0", "#4A5568");
+  const selectHoverBg = useColorModeValue("#EDF2F7", "#4A5568");
+  const selectActiveBg = useColorModeValue("#EBF8FF", "#2C5282");
+
+  const customStyles = {
+    control: (provided) => ({
+      ...provided,
+      backgroundColor: selectBg,
+      borderColor: selectBorderColor,
+      color: selectColor,
+      minHeight: "40px",
+    }),
+    menu: (provided) => ({
+      ...provided,
+      backgroundColor: selectBg,
+      zIndex: 9999,
+      border: `1px solid ${selectBorderColor}`,
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      backgroundColor: selectBg,
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isFocused
+        ? selectHoverBg
+        : state.isSelected
+          ? selectActiveBg
+          : selectBg,
+      color: selectColor,
+      cursor: "pointer",
+      "&:active": {
+        backgroundColor: selectActiveBg,
+      },
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: selectColor,
+    }),
+    input: (provided) => ({
+      ...provided,
+      color: selectColor,
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: useColorModeValue("#A0AEC0", "#718096"),
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      color: selectColor,
+    }),
+  };
 
   const loadOptions = async (search, loadedOptions, { page }) => {
     try {
@@ -138,6 +194,7 @@ const AddMaterialModal = ({ isOpen, onClose, pedidoId }) => {
                 loadOptions={loadOptions}
                 onChange={handleItemChange}
                 placeholder="Escriba nombre o código..."
+                styles={customStyles}
                 additional={{
                   page: 1,
                 }}

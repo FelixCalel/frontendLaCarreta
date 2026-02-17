@@ -226,8 +226,7 @@ const FabricacionPage = () => {
         <Thead bg={headBg}>
           <Tr>
             <Th />
-            <Th>ITEM</Th>
-            <Th>Descripción artículo/serv</Th>
+            <Th>PRODUCTO</Th>
             <Th>Pedido</Th>
             <Th>Completar despacho</Th>
             <Th>Despacho</Th>
