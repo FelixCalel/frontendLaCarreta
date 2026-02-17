@@ -233,20 +233,31 @@ const ProductionOrdersPage = () => {
         const key = `${deuCode}|${item.productoNombre}`;
 
         const existing = itemsMap.get(key);
-        if (existing) {
-          existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
-          existing.cantidad += Number(item.cantidad ?? 0);
-          existing.originalItems.push(item);
-        } else {
-          itemsMap.set(key, {
-            ...item,
-            cantidadUnidad: Number(item.cantidadUnidad ?? 0),
-            cantidad: Number(item.cantidad ?? 0),
-            originalItems: [item],
-          });
-        }
+        existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
+        existing.cantidad += Number(item.cantidad ?? 0);
+        existing.mpUtilizada =
+          (existing.mpUtilizada || 0) + Number(item.mpUtilizada ?? 0);
+        existing.mpSobrante =
+          (existing.mpSobrante || 0) + Number(item.mpSobrante ?? 0);
+        existing.basura = (existing.basura || 0) + Number(item.basura ?? 0);
+        existing.cantidadRechazada =
+          (existing.cantidadRechazada || 0) +
+          Number(item.cantidadRechazada ?? 0);
+
+        existing.originalItems.push(item);
+      } else {
+        itemsMap.set(key, {
+          ...item,
+          cantidadUnidad: Number(item.cantidadUnidad ?? 0),
+          cantidad: Number(item.cantidad ?? 0),
+          mpUtilizada: Number(item.mpUtilizada ?? 0),
+          mpSobrante: Number(item.mpSobrante ?? 0),
+          basura: Number(item.basura ?? 0),
+          cantidadRechazada: Number(item.cantidadRechazada ?? 0),
+          originalItems: [item],
+        });
       }
-    }
+    });
 
     // Sort the final consolidated list
     return Array.from(itemsMap.values()).sort((a, b) => {

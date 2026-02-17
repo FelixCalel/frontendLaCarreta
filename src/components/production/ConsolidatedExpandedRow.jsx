@@ -34,10 +34,10 @@ const FIELD_LABELS = {
 };
 
 const FIELD_SPECS = {
-  mpUtilizada: { w: "51px", type: "number" },
-  mpSobrante: { w: "51px", type: "number" },
-  basura: { w: "51px", type: "number" },
-  trazabilidad_Prod: { w: "65px", type: "text" },
+  mpUtilizada: { w: "55px", type: "number" },
+  mpSobrante: { w: "55px", type: "number" },
+  basura: { w: "55px", type: "number" },
+  trazabilidad_Prod: { w: "70px", type: "text" },
 };
 
 const ROW_1 = ["mpUtilizada", "mpSobrante", "basura", "trazabilidad_Prod"];
@@ -73,7 +73,11 @@ export const ConsolidatedExpandedRow = memo(
           finalValue = 0;
         }
 
-        if (field !== "mpUtilizada") {
+        if (
+          field !== "mpUtilizada" &&
+          field !== "mpSobrante" &&
+          field !== "basura"
+        ) {
           if (!pedidoId) return;
           try {
             await updatePedido({
@@ -89,7 +93,7 @@ export const ConsolidatedExpandedRow = memo(
         const solicitudTotal = Number(item.cantidadUnidad) || 0;
         const totalCheck = finalValue + Number(rechazoQty || 0);
 
-        if (totalCheck > solicitudTotal) {
+        if (field === "mpUtilizada" && totalCheck > solicitudTotal) {
           toast({
             title: "Valor inválido",
             description: `No se puede guardar: La cantidad total procesada (MP Utilizada: ${finalValue} + Rechazo: ${rechazoQty} = ${totalCheck}) excede la cantidad solicitada (${solicitudTotal}).`,
@@ -100,35 +104,44 @@ export const ConsolidatedExpandedRow = memo(
           return;
         }
 
-        let remainingToAllocate = finalValue;
-        const updatePromises = item.originalItems.map((order) => {
-          const orderSolicitud = Number(order.cantidadUnidad) || 0;
-          const allocation = Math.min(orderSolicitud, remainingToAllocate);
-          remainingToAllocate -= allocation;
-          const newFaltante = orderSolicitud - allocation;
+        if (field === "mpUtilizada") {
+          let remainingToAllocate = finalValue;
+          const updatePromises = item.originalItems.map((order) => {
+            const orderSolicitud = Number(order.cantidadUnidad) || 0;
+            const allocation = Math.min(orderSolicitud, remainingToAllocate);
+            remainingToAllocate -= allocation;
+            const newFaltante = orderSolicitud - allocation;
 
-          return updatePedido({
-            id: order.id,
-            data: {
-              mpUtilizada: allocation,
-              cantidad: allocation,
-              faltante: newFaltante,
-            },
-          }).unwrap();
-        });
-
-        try {
-          await Promise.all(updatePromises);
-        } catch (err) {
-          console.error("Error distributing mpUtilizada:", err);
-          toast({
-            title: "Error",
-            description: "Hubo un error al distribuir la cantidad.",
-            status: "error",
+            return updatePedido({
+              id: order.id,
+              data: {
+                mpUtilizada: allocation,
+                cantidad: allocation,
+                faltante: newFaltante,
+              },
+            }).unwrap();
           });
+
+          try {
+            await Promise.all(updatePromises);
+          } catch (err) {
+            console.error("Error distributing mpUtilizada:", err);
+            toast({
+              title: "Error",
+              description: "Hubo un error al distribuir la cantidad.",
+              status: "error",
+            });
+          }
         }
       },
-      [pedidoId, updatePedido, item.cantidadUnidad, item.originalItems, toast],
+      [
+        pedidoId,
+        updatePedido,
+        item.cantidadUnidad,
+        item.originalItems,
+        rechazoQty,
+        toast,
+      ],
     );
 
     const [ptmqOptimistic, setPtmqOptimistic] = useState(null);
@@ -207,14 +220,19 @@ export const ConsolidatedExpandedRow = memo(
                 <Flex gap={2} wrap="wrap" align="center">
                   {ROW_1.map((field) => {
                     let currentValue;
-                    if (field === "mpUtilizada") {
+                    const isReadOnly = FIELD_SPECS[field]?.isReadOnly;
+
+                    if (
+                      ["mpUtilizada", "mpSobrante", "basura"].includes(field)
+                    ) {
                       currentValue = item.originalItems.reduce(
-                        (sum, order) => sum + (Number(order.mpUtilizada) || 0),
+                        (sum, order) => sum + (Number(order[field]) || 0),
                         0,
                       );
                     } else {
                       currentValue = item.originalItems[0][field];
                     }
+
                     const spec = FIELD_SPECS[field];
                     return (
                       <Flex key={field} direction="column" align="center">
@@ -230,23 +248,19 @@ export const ConsolidatedExpandedRow = memo(
                         </Text>
                         <Input
                           size="xs"
-                          h="24px"
-                          w={spec.w}
-                          type={spec.type}
-                          defaultValue={
-                            currentValue === 0 || currentValue === "0"
-                              ? ""
-                              : currentValue
-                          }
-                          placeholder="0"
-                          onChange={(e) =>
-                            debouncedUpdate(field, e.target.value)
-                          }
-                          focusBorderColor="blue.400"
-                          borderRadius="sm"
-                          bg={inputBg}
+                          width={spec.w}
                           textAlign="center"
-                          fontSize="xs"
+                          bg={isReadOnly ? "red.50" : inputBg}
+                          color={isReadOnly ? "red.600" : "inherit"}
+                          borderColor={isReadOnly ? "red.200" : "inherit"}
+                          value={currentValue}
+                          isReadOnly={isReadOnly}
+                          onChange={(e) => {
+                            if (!isReadOnly)
+                              debouncedUpdate(field, e.target.value);
+                          }}
+                          onClick={field === "rechazo" ? onOpen : undefined}
+                          cursor={field === "rechazo" ? "pointer" : "text"}
                         />
                       </Flex>
                     );
@@ -284,23 +298,37 @@ export const ConsolidatedExpandedRow = memo(
             isOpen={isOpen}
             onClose={onClose}
             pedidoProduccionId={primaryOrder?.id}
-            onSave={async ({ formData, existingRechazo }) => {
+            onSave={async ({ formData }) => {
               try {
-                if (existingRechazo) {
-                  await updateRechazo({
-                    id: existingRechazo.id,
-                    data: formData,
-                    id_pedidoProd: primaryOrder?.id,
-                  }).unwrap();
-                } else {
-                  await createRechazo({
-                    ...formData,
-                    id_pedidoProd: primaryOrder?.id,
-                  }).unwrap();
+                const totalRejection = Number(formData.cantidadRechazada) || 0;
+                let remainingRejection = totalRejection;
+
+                for (const order of item.originalItems) {
+                  const orderCapacity = Number(order.cantidadUnidad) || 0;
+                  const currentMp = Number(order.mpUtilizada) || 0;
+                  const availableSpace = Math.max(0, orderCapacity - currentMp);
+                  const amount = Math.min(remainingRejection, availableSpace);
+                  const currentRejection = Number(order.cantidadRechazada) || 0;
+
+                  if (amount !== currentRejection) {
+                    await createRechazo({
+                      ...formData,
+                      cantidadRechazada: amount,
+                      id_pedidoProd: order.id,
+                    }).unwrap();
+
+                    remainingRejection -= amount;
+                  }
                 }
+
                 onClose();
               } catch (err) {
                 console.error("Failed to save rechazo:", err);
+                toast({
+                  title: "Error",
+                  description: "Hubo un error al distribuir el rechazo.",
+                  status: "error",
+                });
               }
             }}
             isLoading={isCreatingRechazo || isUpdatingRechazo}
@@ -310,6 +338,7 @@ export const ConsolidatedExpandedRow = memo(
               (sum, order) => sum + (Number(order.mpUtilizada) || 0),
               0,
             )}
+            initialQuantity={rechazoQty}
           />
         )}
       </Box>
