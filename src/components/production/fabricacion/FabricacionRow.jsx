@@ -100,10 +100,14 @@ export const FabricacionRow = ({ order, index = 0 }) => {
         </Td>
 
         <Td px={2} py={1}>
-          {order.itemCode}
-        </Td>
-        <Td px={2} py={1}>
-          {order.productoNombre}
+          <Box>
+            <Text fontWeight="bold" fontSize="sm">
+              {order.productoNombre}
+            </Text>
+            <Text fontSize="xs" color="gray.500" mt={0.5}>
+              {order.itemCode || "N/A"}
+            </Text>
+          </Box>
         </Td>
         <Td px={2} py={1} isNumeric>
           {maxPedido}

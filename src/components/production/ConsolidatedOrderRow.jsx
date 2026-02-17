@@ -130,8 +130,15 @@ export const ConsolidatedOrderRow = memo(
               color="gray.500"
             />
           </Td>
-          <Td px={2} py={2} fontWeight="bold" fontSize="sm">
-            {item.productoNombre}
+          <Td px={2} py={2}>
+            <Box>
+              <Text fontWeight="bold" fontSize="sm">
+                {item.productoNombre}
+              </Text>
+              <Text fontSize="xs" color="gray.500" mt={0.5}>
+                {item.itemCode || "N/A"}
+              </Text>
+            </Box>
           </Td>
           <Td px={2} py={2}>
             <Input
