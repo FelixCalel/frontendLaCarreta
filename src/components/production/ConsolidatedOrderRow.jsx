@@ -39,14 +39,14 @@ export const ConsolidatedOrderRow = memo(
     const primaryOrder = item.originalItems[0];
     const pedidoId = primaryOrder?.id;
 
-    const { data: rechazoData } = useGetRechazoByPedidoProduccionIdQuery(
-      pedidoId,
-      {
-        skip: !pedidoId,
-      },
+    const rechazoQty = useMemo(
+      () =>
+        item.originalItems.reduce(
+          (sum, i) => sum + (Number(i.cantidadRechazada) || 0),
+          0,
+        ),
+      [item.originalItems],
     );
-
-    const rechazoQty = rechazoData?.cantidadRechazada || 0;
 
     const handleTrazabilidadUpdate = useCallback(
       (value) => {

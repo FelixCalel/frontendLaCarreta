@@ -36,6 +36,7 @@ export const RechazoModal = ({
   trazabilidadPadre,
   maxQuantity,
   currentMpUtilizada,
+  initialQuantity,
 }) => {
   const [formData, setFormData] = useState({
     fechaRechazo: "",
@@ -57,29 +58,28 @@ export const RechazoModal = ({
     skip: !pedidoProduccionId,
   });
 
-  const initialFormData = {
-    fechaRechazo: "",
-    cantidadRechazada: "",
-    comentario: "",
-    trazabilidad: trazabilidadPadre || "",
-    usuarioId: 1,
-    almacenId: "",
-  };
-
   useEffect(() => {
     if (rechazoData) {
       setFormData({
         fechaRechazo: rechazoData.fechaRechazo
           ? new Date(rechazoData.fechaRechazo).toISOString().split("T")[0]
           : "",
-        cantidadRechazada: rechazoData.cantidadRechazada || "",
+        cantidadRechazada:
+          initialQuantity !== undefined
+            ? initialQuantity
+            : rechazoData.cantidadRechazada || "",
         comentario: rechazoData.comentario || "",
         trazabilidad: rechazoData.trazabilidad || trazabilidadPadre || "",
         usuarioId: rechazoData.usuarioId || 1,
         almacenId: rechazoData.almacenId || "",
       });
+    } else if (initialQuantity !== undefined && initialQuantity > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        cantidadRechazada: initialQuantity,
+      }));
     }
-  }, [rechazoData, trazabilidadPadre]);
+  }, [rechazoData, trazabilidadPadre, initialQuantity]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
