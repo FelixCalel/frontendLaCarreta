@@ -53,7 +53,15 @@ const BloqueComentario = ({ titulo, fecha, comentario, iconColor }) => {
         <Flex align="center" mb={2} gap={2}>
           <Icon as={FaRegClock} color="teal.400" />
           <Text fontSize="sm">
-            {format(new Date(fecha), "dd MMM yyyy HH:mm", { locale: es })}
+            {format(
+              new Date(
+                fecha.includes("T")
+                  ? fecha.split("T")[0] + "T12:00:00"
+                  : fecha + "T12:00:00",
+              ),
+              "dd MMM yyyy",
+              { locale: es },
+            )}
           </Text>
         </Flex>
       )}
@@ -218,7 +226,7 @@ DetallesPedidoModal.propTypes = {
       codigo: PropTypes.string,
       nombreProducto: PropTypes.string.isRequired,
       cantidad: PropTypes.number.isRequired,
-    })
+    }),
   ),
   isLoading: PropTypes.bool,
 };
