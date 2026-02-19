@@ -9,7 +9,6 @@ import {
   Box,
   Flex,
   Text,
-  Input,
   useColorModeValue,
   Button,
   useDisclosure,
@@ -28,31 +27,8 @@ import { OrderDetailsTable } from "./OrderDetailsTable";
 import { RecetaTable } from "./RecetaTable";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { RechazoModal } from "../modals/RechazoModal";
-
-const FIELD_LABELS = {
-  mpUtilizada: "MP Utilizada",
-
-  mpSobrante: "MP Sobrante",
-  basura: "Basura",
-  trazabilidad_Prod: "Trazabilidad",
-  mp1ra: "MP 1ra",
-  mp2da: "MP 2da",
-  mp3ra: "MP 3ra",
-};
-
-const FIELD_SPECS = {
-  mpUtilizada: { w: "51px", type: "number" },
-
-  mpSobrante: { w: "51px", type: "number" },
-  basura: { w: "51px", type: "number" },
-  trazabilidad_Prod: { w: "65px", type: "text" },
-  mp1ra: { w: "51px", type: "number" },
-  mp2da: { w: "51px", type: "number" },
-  mp3ra: { w: "51px", type: "number" },
-};
-
-const ROW_1 = ["mpUtilizada", "mpSobrante", "basura", "trazabilidad_Prod"];
-const ROW_2 = ["mp1ra", "mp2da", "mp3ra"];
+import { OrderProductionRegistry } from "./OrderProductionRegistry";
+import { OrderWarehouseSelector } from "./OrderWarehouseSelector";
 
 export const OrderRow = ({
   order,
@@ -79,7 +55,6 @@ export const OrderRow = ({
   const {
     data: receta = [],
     isLoading: loadingReceta,
-    isFetching,
     isSuccess,
     isError,
     error,
@@ -102,22 +77,6 @@ export const OrderRow = ({
     isLoading: loadingDetalles,
     refetch: refetchDetalles,
   } = useGetDetallesYProduccionQuery(shouldFetch ? order.id : skipToken);
-  const [prodFields, setProdFields] = useState({
-    mpUtilizada: Number(order.mpUtilizada) || 0,
-
-    mpSobrante: Number(order.mpSobrante) || 0,
-    basura: Number(order.basura) || 0,
-    trazabilidad_Prod: order.trazabilidad_Prod ?? "",
-    mp1ra: Number(order.mp1ra) || 0,
-    mp2da: Number(order.mp2da) || 0,
-    mp3ra: Number(order.mp3ra) || 0,
-  });
-  const [almacenId, setAlmacenId] = useState(
-    order.id_almacen ? String(order.id_almacen) : "",
-  );
-  useEffect(() => {
-    setAlmacenId(order.id_almacen ? String(order.id_almacen) : "");
-  }, [order.id_almacen]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -129,11 +88,6 @@ export const OrderRow = ({
   }, [isSuccess, isError, receta, error]);
 
   useEffect(() => {
-    /*
-     Lógica para "Reducir del faltante" y "Reducir de procesado":
-     - Procesado (Visual) = Cantidad Total - Rechazo. (Mostrar solo lo bueno).
-     - Faltante = Solicitado - (Cantidad Total + Rechazo). (Considerar rechazo como "ya atendido" para bajar el faltante).
-    */
     setCantidadLocal((order.cantidad ?? 0) + rechazoQty);
     setFaltanteLocal(
       (order.cantidadUnidad ?? 0) - ((order.cantidad ?? 0) + rechazoQty),
@@ -163,106 +117,9 @@ export const OrderRow = ({
     }
   };
 
-  useEffect(() => {
-    setProdFields({
-      mpUtilizada: Number(order.mpUtilizada) || 0,
-
-      mpSobrante: Number(order.mpSobrante) || 0,
-      basura: Number(order.basura) || 0,
-      trazabilidad_Prod: order.trazabilidad_Prod ?? "",
-      mp1ra: Number(order.mp1ra) || 0,
-      mp2da: Number(order.mp2da) || 0,
-      mp3ra: Number(order.mp3ra) || 0,
-    });
-  }, [
-    order.mpUtilizada,
-
-    order.mpSobrante,
-    order.basura,
-    order.trazabilidad_Prod,
-    order.mp1ra,
-    order.mp2da,
-    order.mp3ra,
-  ]);
-
-  const handleFieldChange = (field, raw) => {
-    const isText = field === "trazabilidad_Prod";
-    let value = isText ? raw : Number(raw);
-
-    const fieldsToValidate = [
-      "mpUtilizada",
-      "mpSobrante",
-      "basura",
-      "mp1ra",
-      "mp2da",
-      "mp3ra",
-    ];
-
-    if (!isText) {
-      if (Number.isNaN(value) || value < 0) {
-        value = 0;
-      }
-
-      if (fieldsToValidate.includes(field)) {
-        const maxAllowed = Number(order.cantidadUnidad) || 0;
-        let totalCheck = value;
-
-        if (field === "mpUtilizada") {
-          totalCheck = value + rechazoQty;
-        }
-
-        if (totalCheck > maxAllowed) {
-          const errorMsg =
-            field === "mpUtilizada"
-              ? `No se puede guardar: La cantidad total procesada (MP Utilizada: ${value} + Rechazo: ${rechazoQty} = ${totalCheck}) excede la cantidad solicitada (${maxAllowed}).`
-              : `El valor no puede ser mayor que "Solic. Ventas" (${maxAllowed}).`;
-
-          toast({
-            title: "Valor inválido",
-            description: errorMsg,
-            status: "error",
-            duration: 4000,
-            isClosable: true,
-          });
-          return;
-        }
-      }
-    }
-
-    setProdFields((prev) => ({ ...prev, [field]: value }));
-
-    const updateData = { [field]: value };
-
-    if (field === "mpUtilizada") {
-      const nuevaCantidad = value;
-      const nuevoFaltante =
-        (Number(order.cantidadUnidad) || 0) - (nuevaCantidad + rechazoQty);
-
-      setCantidadLocal(nuevaCantidad + rechazoQty);
-      setFaltanteLocal(nuevoFaltante);
-
-      updateData.cantidad = nuevaCantidad;
-      updateData.faltante = nuevoFaltante;
-    }
-
-    updatePedido({
-      id: order.id,
-      data: updateData,
-    })
-      .unwrap()
-      .catch(() => {
-        setProdFields((prev) => ({
-          ...prev,
-          [field]: order[field] ?? (isText ? "" : 0),
-        }));
-        if (field === "mpUtilizada") {
-          const revertCantidad = Number(order.cantidad) || 0;
-          setCantidadLocal(revertCantidad);
-          setFaltanteLocal(
-            (Number(order.cantidadUnidad) || 0) - revertCantidad,
-          );
-        }
-      });
+  const handleUpdateStats = (newCantidad, newFaltante) => {
+    setCantidadLocal(newCantidad + rechazoQty);
+    setFaltanteLocal(newFaltante);
   };
 
   const [completoLocal, setCompletoLocal] = useState(order.completo);
@@ -409,63 +266,7 @@ export const OrderRow = ({
           </Box>
         </Td>
         <Td px={2} py={2} textAlign="right">
-          <Box
-            display="inline-flex"
-            flexDirection="column"
-            alignItems="flex-end"
-          >
-            <Text
-              fontSize="2xs"
-              mb={0.5}
-              fontWeight="bold"
-              color="gray.500"
-              textTransform="uppercase"
-            >
-              Almacén Destino
-            </Text>
-            <select
-              value={almacenId}
-              onChange={async (e) => {
-                const newId = e.target.value;
-                setAlmacenId(newId);
-                try {
-                  await updatePedido({
-                    id: order.id,
-                    data: { id_almacen: newId ? Number(newId) : null },
-                  }).unwrap();
-                } catch {
-                  setAlmacenId(
-                    order.id_almacen ? String(order.id_almacen) : "",
-                  );
-                }
-              }}
-              style={{
-                fontSize: "12px",
-                padding: "2px 6px",
-                borderRadius: "4px",
-                border: "1px solid",
-                borderColor: useColorModeValue("#E2E8F0", "#4A5568"),
-                color: useColorModeValue("#2D3748", "#EDF2F7"),
-                background: useColorModeValue("#fff", "#2D3748"),
-                cursor: "pointer",
-                outline: "none",
-              }}
-            >
-              <option value="">-- Seleccionar --</option>
-              {almacenes.map((almacen) => (
-                <option
-                  key={almacen.id}
-                  value={almacen.id}
-                  style={{
-                    color: useColorModeValue("#222", "#fff"),
-                    background: useColorModeValue("#fff", "#222"),
-                  }}
-                >
-                  {almacen.nombre || almacen.name}
-                </option>
-              ))}
-            </select>
-          </Box>
+          <OrderWarehouseSelector order={order} almacenes={almacenes} />
         </Td>
       </Tr>
 
@@ -482,114 +283,12 @@ export const OrderRow = ({
             >
               <Flex gap={4} direction={{ base: "column", xl: "row" }}>
                 <Box width="fit-content">
-                  <Box
-                    bg={useColorModeValue("white", "gray.800")}
-                    p={1.5}
-                    borderRadius="md"
-                    shadow="sm"
-                    borderWidth="1px"
-                    borderColor="gray.200"
-                    mb={2}
-                  >
-                    <Flex align="center" justify="space-between" mb={1}>
-                      <Text fontSize="sm" fontWeight="bold" color="blue.600">
-                        Registro
-                      </Text>
-                      <Button
-                        size="xs"
-                        h="20px"
-                        onClick={onOpen}
-                        colorScheme="red"
-                        variant="ghost"
-                        leftIcon={<ChevronRightIcon boxSize={3} />}
-                        fontSize="xs"
-                      >
-                        Registrar Rechazo
-                      </Button>
-                    </Flex>
-
-                    <Flex gap={2} wrap="wrap" align="center">
-                      {ROW_1.map((field) => {
-                        const value = prodFields[field];
-                        const spec = FIELD_SPECS[field] ?? {
-                          w: "80px",
-                          type: "number",
-                        };
-                        return (
-                          <Flex key={field} direction="column" align="center">
-                            <Text
-                              fontSize="10px"
-                              fontWeight="bold"
-                              color="gray.500"
-                              mb={0.5}
-                              textTransform="uppercase"
-                              textAlign="center"
-                            >
-                              {FIELD_LABELS[field]}
-                            </Text>
-                            <Input
-                              size="xs"
-                              h="24px"
-                              w={spec.w}
-                              type={spec.type}
-                              value={
-                                spec.type === "number" && value === 0
-                                  ? ""
-                                  : value
-                              }
-                              placeholder={spec.type === "number" ? "0" : ""}
-                              onChange={(e) =>
-                                handleFieldChange(field, e.target.value)
-                              }
-                              focusBorderColor="blue.400"
-                              borderRadius="sm"
-                              bg={useColorModeValue("gray.50", "gray.700")}
-                              textAlign="center"
-                              fontSize="xs"
-                            />
-                          </Flex>
-                        );
-                      })}
-                    </Flex>
-
-                    {/* Fila 2: MP 1ra, 2da, 3ra */}
-                    {/*  <Flex gap={2} wrap="wrap" justify="center">
-                      {ROW_2.map((field) => {
-                        const value = prodFields[field];
-                        const spec = FIELD_SPECS[field] ?? {
-                          w: "80px",
-                          type: "number",
-                        };
-                        return (
-                          <Flex key={field} direction="column" align="center">
-                            <Text
-                              fontSize="10px"
-                              fontWeight="bold"
-                              color="gray.500"
-                              mb={0.5}
-                              textTransform="uppercase"
-                              textAlign="center"
-                            >
-                              {FIELD_LABELS[field]}
-                            </Text>
-                            <Input
-                              size="xs"
-                              w={spec.w}
-                              type={spec.type}
-                              value={value}
-                              onChange={(e) =>
-                                handleFieldChange(field, e.target.value)
-                              }
-                              focusBorderColor="blue.400"
-                              borderRadius="sm"
-                              bg={useColorModeValue("gray.50", "gray.700")}
-                              textAlign="center"
-                            />
-                          </Flex>
-                        );
-                      })}
-                    </Flex>*/}
-                  </Box>
+                  <OrderProductionRegistry
+                    order={order}
+                    rechazoQty={rechazoQty}
+                    onUpdateStats={handleUpdateStats}
+                    onOpenRechazo={onOpen}
+                  />
 
                   <Box>
                     <OrderDetailsTable
@@ -613,9 +312,9 @@ export const OrderRow = ({
               pedidoProduccionId={order.id}
               onSave={handleSaveRechazo}
               isLoading={isCreatingRechazo || isUpdatingRechazo}
-              trazabilidadPadre={prodFields.trazabilidad_Prod}
+              trazabilidadPadre={order.trazabilidad_Prod}
               maxQuantity={Number(order.cantidadUnidad) || 0}
-              currentMpUtilizada={prodFields.mpUtilizada}
+              currentMpUtilizada={Number(order.mpUtilizada) || 0}
             />
           )}
         </Td>
@@ -644,6 +343,10 @@ OrderRow.propTypes = {
     trazabilidad_Prod: PropTypes.string,
     ptmq: PropTypes.bool,
     almacenId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    itemCode: PropTypes.string,
+    codigoAlmacen: PropTypes.string,
+    almacen: PropTypes.object,
+    id_almacen: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   }).isRequired,
   isExpanded: PropTypes.bool.isRequired,
   onToggle: PropTypes.func.isRequired,
