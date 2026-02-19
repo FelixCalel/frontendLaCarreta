@@ -251,6 +251,17 @@ export const pedidoProduccionApi = createApi({
       },
     }),
 
+    getStockSAP: builder.query<
+      any,
+      { itemcode: string; pedidoId: number }
+    >({
+      query: (body) => ({
+        url: "/sap/items/stock",
+        method: "POST",
+        body,
+      }),
+    }),
+
     getRecetaByPedido: builder.query<RecetaLinea[], { pedidoId: number; id_almacen?: number }>({
       query: ({ pedidoId, id_almacen }) => {
         let url = `/receta/pedido/${pedidoId}`;
@@ -373,4 +384,5 @@ export const {
   useGetAlmacenesQuery,
   useCreateRecetaLineaMutation,
   useLazyGetItemsQuery,
+  useLazyGetStockSAPQuery,
 } = pedidoProduccionApi;
