@@ -41,6 +41,8 @@ export const OrderProductionRegistry = ({
 }) => {
   const [updatePedido] = useUpdatePedidoProduccionMutation();
   const toast = useToast();
+  const boxBg = useColorModeValue("white", "gray.800");
+  const inputBg = useColorModeValue("gray.50", "gray.700");
 
   const [prodFields, setProdFields] = useState({
     mpUtilizada: Number(order.mpUtilizada) || 0,
@@ -154,7 +156,7 @@ export const OrderProductionRegistry = ({
 
   return (
     <Box
-      bg={useColorModeValue("white", "gray.800")}
+      bg={boxBg}
       p={1.5}
       borderRadius="md"
       shadow="sm"
@@ -210,7 +212,7 @@ export const OrderProductionRegistry = ({
                 onChange={(e) => handleFieldChange(field, e.target.value)}
                 focusBorderColor="blue.400"
                 borderRadius="sm"
-                bg={useColorModeValue("gray.50", "gray.700")}
+                bg={inputBg}
                 textAlign="center"
                 fontSize="xs"
               />

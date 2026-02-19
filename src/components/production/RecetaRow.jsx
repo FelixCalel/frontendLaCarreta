@@ -141,14 +141,25 @@ export const RecetaRow = memo(function RecetaRow({
         )
       : [];
 
+  const redBg = useColorModeValue("red.50", "rgba(227, 83, 83, 0.12)");
+  const greenBg = useColorModeValue("green.50", "rgba(72, 187, 120, 0.12)");
+
   let rowBg = baseBg;
   if (!isFetching && selectedWarehouse && currentStockInfo) {
     if (stockOnHand <= 0 || (reqQty > 0 && stockOnHand < reqQty)) {
-      rowBg = useColorModeValue("red.50", "rgba(227, 83, 83, 0.12)");
+      rowBg = redBg;
     } else {
-      rowBg = useColorModeValue("green.50", "rgba(72, 187, 120, 0.12)");
+      rowBg = greenBg;
     }
   }
+
+  const dimStyle = r.state
+    ? {}
+    : {
+        opacity: 0.7,
+        filter: "grayscale(20%)",
+        transition: "all 0.2s",
+      };
 
   return (
     <Tr bg={rowBg} _hover={{ bg: hoverBg }} transition="all 0.2s">
@@ -163,7 +174,7 @@ export const RecetaRow = memo(function RecetaRow({
           }}
         />
       </Td>
-      <Td px={2} py={2}>
+      <Td px={2} py={2} {...dimStyle}>
         <Box>
           <Text
             fontSize="sm"
@@ -189,7 +200,7 @@ export const RecetaRow = memo(function RecetaRow({
         </Box>
       </Td>
       {["mpUtilizada", "cantidad_real"].map((field) => (
-        <Td key={field} px={1} py={2} isNumeric>
+        <Td key={field} px={1} py={2} isNumeric {...dimStyle}>
           <CustomInput
             inputBorderColor={inputBorderColor}
             value={r[field]}
@@ -198,17 +209,17 @@ export const RecetaRow = memo(function RecetaRow({
           />
         </Td>
       ))}
-      <Td px={1} py={2} textAlign="center">
+      <Td px={1} py={2} textAlign="center" {...dimStyle}>
         <Text fontSize="xs" color="gray.600">
           {r.cantidad_base}
         </Text>
       </Td>
-      <Td px={1} py={2} textAlign="center">
+      <Td px={1} py={2} textAlign="center" {...dimStyle}>
         <Text fontSize="xs" fontWeight="bold" color="blue.600">
           {r.cantidad_requerida}
         </Text>
       </Td>
-      <Td px={1} py={2}>
+      <Td px={1} py={2} {...dimStyle}>
         <Select
           size="xs"
           h="24px"
@@ -230,7 +241,7 @@ export const RecetaRow = memo(function RecetaRow({
           )}
         </Select>
       </Td>
-      <Td px={1} py={2} textAlign="center">
+      <Td px={1} py={2} textAlign="center" {...dimStyle}>
         <Select
           size="xs"
           h="24px"

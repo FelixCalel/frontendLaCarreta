@@ -105,6 +105,11 @@ export const ConsolidatedOrderRow = memo(
 
     const inputBg = useColorModeValue("white", "gray.800");
     const inputBorder = useColorModeValue("gray.300", "gray.600");
+    const selectBorderColor = useColorModeValue("#E2E8F0", "#4A5568");
+    const selectColor = useColorModeValue("#2D3748", "#EDF2F7");
+    const selectBg = useColorModeValue("#fff", "#2D3748");
+    const optionColor = useColorModeValue("#222", "#fff");
+    const optionBg = useColorModeValue("#fff", "#222");
 
     const isGroupComplete =
       item.originalItems.length > 0 &&
@@ -261,9 +266,9 @@ export const ConsolidatedOrderRow = memo(
                   padding: "2px 6px",
                   borderRadius: "4px",
                   border: "1px solid",
-                  borderColor: useColorModeValue("#E2E8F0", "#4A5568"),
-                  color: useColorModeValue("#2D3748", "#EDF2F7"),
-                  background: useColorModeValue("#fff", "#2D3748"),
+                  borderColor: selectBorderColor,
+                  color: selectColor,
+                  background: selectBg,
                   cursor: "pointer",
                   outline: "none",
                   width: "100%",
@@ -276,8 +281,8 @@ export const ConsolidatedOrderRow = memo(
                     key={almacen.id}
                     value={almacen.id}
                     style={{
-                      color: useColorModeValue("#222", "#fff"),
-                      background: useColorModeValue("#fff", "#222"),
+                      color: optionColor,
+                      background: optionBg,
                     }}
                   >
                     {almacen.nombre || almacen.name}

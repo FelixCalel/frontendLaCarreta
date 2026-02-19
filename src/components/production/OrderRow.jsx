@@ -159,6 +159,8 @@ export const OrderRow = ({
 
   const hoverBg = useColorModeValue("gray.200", "gray.600");
   const panelBg = useColorModeValue("gray.50", "gray.800");
+  const borderColor = useColorModeValue("gray.100", "gray.700");
+  const collapseBg = useColorModeValue("gray.50", "gray.900");
 
   const memoizedRecetaTable = useMemo(
     () => (
@@ -180,7 +182,7 @@ export const OrderRow = ({
         transition="all 0.2s"
         sx={sx}
         borderBottomWidth="1px"
-        borderColor={useColorModeValue("gray.100", "gray.700")}
+        borderColor={borderColor}
       >
         <Td px={2} py={2}>
           <IconButton
@@ -277,7 +279,7 @@ export const OrderRow = ({
               pl={2}
               pr={1}
               py={2}
-              bg={useColorModeValue("gray.50", "gray.900")}
+              bg={collapseBg}
               borderBottomWidth="1px"
               borderColor="gray.200"
             >

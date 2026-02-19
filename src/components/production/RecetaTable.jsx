@@ -38,6 +38,7 @@ export const RecetaTable = memo(
     const stripeBg = useColorModeValue("gray.50", "gray.800");
     const hoverBg = useColorModeValue("blue.50", "gray.700");
     const borderColor = useColorModeValue("gray.200", "gray.700");
+    const tableContainerBg = useColorModeValue("white", "gray.800");
 
     const handleLocalChange = useCallback(
       (id, field, value) => {
@@ -143,7 +144,7 @@ export const RecetaTable = memo(
           borderColor={borderColor}
           borderRadius="md"
           overflow="hidden"
-          bg={useColorModeValue("white", "gray.800")}
+          bg={tableContainerBg}
         >
           <TableContainer maxH="400px" overflowY="auto">
             <Table size="sm" variant="simple">

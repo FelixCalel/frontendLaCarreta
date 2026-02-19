@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import PropTypes from "prop-types";
 import {
   Modal,
@@ -19,7 +19,7 @@ import {
   Text,
   HStack,
   Badge,
-  useColorModeValue,
+  useColorMode,
   Flex,
   Spinner,
 } from "@chakra-ui/react";
@@ -47,60 +47,80 @@ const AddMaterialModal = ({ isOpen, onClose, pedidoId }) => {
   const [triggerGetStockSAP, { data: stockData, isFetching: isFetchingStock }] =
     useLazyGetStockSAPQuery();
 
-  const selectBg = useColorModeValue("white", "#2D3748");
-  const selectColor = useColorModeValue("black", "white");
-  const selectBorderColor = useColorModeValue("#E2E8F0", "#4A5568");
-  const selectHoverBg = useColorModeValue("#EDF2F7", "#4A5568");
-  const selectActiveBg = useColorModeValue("#EBF8FF", "#2C5282");
+  const { colorMode } = useColorMode();
+  const isDark = colorMode === "dark";
 
-  const customStyles = {
-    control: (provided) => ({
-      ...provided,
-      backgroundColor: selectBg,
-      borderColor: selectBorderColor,
-      color: selectColor,
-      minHeight: "40px",
+  const selectBg = isDark ? "#2D3748" : "white";
+  const selectColor = isDark ? "white" : "black";
+  const selectBorderColor = isDark ? "#4A5568" : "#E2E8F0";
+  const selectHoverBg = isDark ? "#4A5568" : "#EDF2F7";
+  const selectActiveBg = isDark ? "#2C5282" : "#EBF8FF";
+  const greenHoverBg = isDark ? "green.900" : "green.50";
+  const subTextColor = isDark ? "gray.300" : "gray.600";
+  const placeholderColor = isDark ? "#718096" : "#A0AEC0";
+
+  const stockRedBg = isDark ? "rgba(227, 83, 83, 0.12)" : "red.50";
+  const stockGreenBg = isDark ? "rgba(72, 187, 120, 0.12)" : "green.50";
+  const stockGrayBg = isDark ? "rgba(160, 174, 192, 0.12)" : "gray.50";
+
+  const customStyles = useMemo(
+    () => ({
+      control: (provided) => ({
+        ...provided,
+        backgroundColor: selectBg,
+        borderColor: selectBorderColor,
+        color: selectColor,
+        minHeight: "40px",
+      }),
+      menu: (provided) => ({
+        ...provided,
+        backgroundColor: selectBg,
+        zIndex: 9999,
+        border: `1px solid ${selectBorderColor}`,
+      }),
+      menuList: (provided) => ({
+        ...provided,
+        backgroundColor: selectBg,
+      }),
+      option: (provided, state) => ({
+        ...provided,
+        backgroundColor: state.isFocused
+          ? selectHoverBg
+          : state.isSelected
+            ? selectActiveBg
+            : selectBg,
+        color: selectColor,
+        cursor: "pointer",
+        "&:active": {
+          backgroundColor: selectActiveBg,
+        },
+      }),
+      singleValue: (provided) => ({
+        ...provided,
+        color: selectColor,
+      }),
+      input: (provided) => ({
+        ...provided,
+        color: selectColor,
+      }),
+      placeholder: (provided) => ({
+        ...provided,
+        color: placeholderColor,
+      }),
+      dropdownIndicator: (provided) => ({
+        ...provided,
+        color: selectColor,
+      }),
     }),
-    menu: (provided) => ({
-      ...provided,
-      backgroundColor: selectBg,
-      zIndex: 9999,
-      border: `1px solid ${selectBorderColor}`,
-    }),
-    menuList: (provided) => ({
-      ...provided,
-      backgroundColor: selectBg,
-    }),
-    option: (provided, state) => ({
-      ...provided,
-      backgroundColor: state.isFocused
-        ? selectHoverBg
-        : state.isSelected
-          ? selectActiveBg
-          : selectBg,
-      color: selectColor,
-      cursor: "pointer",
-      "&:active": {
-        backgroundColor: selectActiveBg,
-      },
-    }),
-    singleValue: (provided) => ({
-      ...provided,
-      color: selectColor,
-    }),
-    input: (provided) => ({
-      ...provided,
-      color: selectColor,
-    }),
-    placeholder: (provided) => ({
-      ...provided,
-      color: useColorModeValue("#A0AEC0", "#718096"),
-    }),
-    dropdownIndicator: (provided) => ({
-      ...provided,
-      color: selectColor,
-    }),
-  };
+    [
+      selectBg,
+      selectBorderColor,
+      selectColor,
+      selectHoverBg,
+      selectActiveBg,
+      placeholderColor,
+    ],
+  );
 
   const loadOptions = async (search, loadedOptions, { page }) => {
     try {
@@ -291,7 +311,7 @@ const AddMaterialModal = ({ isOpen, onClose, pedidoId }) => {
                     <Text
                       fontSize="sm"
                       fontWeight="semibold"
-                      color={useColorModeValue("gray.600", "gray.300")}
+                      color={subTextColor}
                     >
                       Opciones de Almacén desde SAP:
                     </Text>
@@ -339,7 +359,7 @@ const AddMaterialModal = ({ isOpen, onClose, pedidoId }) => {
                             _hover={{
                               bg:
                                 hasStock && !isSelected
-                                  ? useColorModeValue("green.50", "green.900")
+                                  ? greenHoverBg
                                   : undefined,
                             }}
                             h="auto"
@@ -377,14 +397,13 @@ const AddMaterialModal = ({ isOpen, onClose, pedidoId }) => {
                 borderWidth="1px"
                 borderRadius="lg"
                 borderColor={`${stockStatus}.300`}
-                bg={useColorModeValue(
-                  `${stockStatus}.50`,
+                bg={
                   stockStatus === "red"
-                    ? "rgba(227, 83, 83, 0.12)"
+                    ? stockRedBg
                     : stockStatus === "green"
-                      ? "rgba(72, 187, 120, 0.12)"
-                      : "rgba(160, 174, 192, 0.12)",
-                )}
+                      ? stockGreenBg
+                      : stockGrayBg
+                }
                 w="100%"
                 shadow="sm"
                 transition="all 0.2s"
