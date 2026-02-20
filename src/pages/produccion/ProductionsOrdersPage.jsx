@@ -218,7 +218,7 @@ const ProductionOrdersPage = () => {
     deuFilter,
   ]);
 
-  const consolidatedItems = useMemo(() => {
+const consolidatedItems = useMemo(() => {
     if (viewMode !== "consolidated") return [];
 
     const itemsMap = new Map();
@@ -232,14 +232,10 @@ const ProductionOrdersPage = () => {
           const existing = itemsMap.get(key);
           existing.cantidadUnidad += Number(item.cantidadUnidad || 0);
           existing.cantidad += Number(item.cantidad || 0);
-          existing.mpUtilizada =
-            (existing.mpUtilizada || 0) + Number(item.mpUtilizada || 0);
-          existing.mpSobrante =
-            (existing.mpSobrante || 0) + Number(item.mpSobrante || 0);
+          existing.mpUtilizada = (existing.mpUtilizada || 0) + Number(item.mpUtilizada || 0);
+          existing.mpSobrante = (existing.mpSobrante || 0) + Number(item.mpSobrante || 0);
           existing.basura = (existing.basura || 0) + Number(item.basura || 0);
-          existing.cantidadRechazada =
-            (existing.cantidadRechazada || 0) +
-            Number(item.cantidadRechazada || 0);
+          existing.cantidadRechazada = (existing.cantidadRechazada || 0) + Number(item.cantidadRechazada || 0);
           existing.originalItems.push(item);
         } else {
           itemsMap.set(key, {
@@ -257,15 +253,9 @@ const ProductionOrdersPage = () => {
     });
 
     return Array.from(itemsMap.values()).sort((a, b) => {
-      const deuCompare = (a.deudorCodigo || "").localeCompare(
-        b.deudorCodigo || "",
-        undefined,
-        { sensitivity: "base" },
-      );
+      const deuCompare = (a.deudorCodigo || "").localeCompare(b.deudorCodigo || "", undefined, { sensitivity: "base" });
       if (deuCompare !== 0) return deuCompare;
-      return a.productoNombre.localeCompare(b.productoNombre, undefined, {
-        sensitivity: "base",
-      });
+      return a.productoNombre.localeCompare(b.productoNombre, undefined, { sensitivity: "base" });
     });
   }, [filteredGroups, viewMode]);
 
