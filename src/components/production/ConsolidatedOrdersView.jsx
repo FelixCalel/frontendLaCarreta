@@ -282,6 +282,9 @@ export const ConsolidatedOrdersView = ({
               <Th px={2} py={2} fontSize="xs" textAlign="center">
                 Faltante
               </Th>
+              <Th px={2} py={2} fontSize="xs" textAlign="center">
+                Almacén Destino
+              </Th>
             </Tr>
           </Thead>
           <Tbody>

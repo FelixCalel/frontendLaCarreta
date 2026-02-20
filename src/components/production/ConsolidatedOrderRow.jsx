@@ -1,4 +1,11 @@
-import { memo, useCallback, useMemo, Fragment } from "react";
+import {
+  memo,
+  useCallback,
+  useMemo,
+  Fragment,
+  useState,
+  useEffect,
+} from "react";
 import PropTypes from "prop-types";
 import {
   Tr,
@@ -16,6 +23,7 @@ import {
   useUpdatePedidoProduccionMutation,
   useUpdateMultiplePedidosProduccionMutation,
   useGetRechazoByPedidoProduccionIdQuery,
+  useGetAlmacenesQuery,
 } from "../../services/pedidoProductionApi";
 import { debounce } from "lodash";
 import { ConsolidatedExpandedRow } from "./ConsolidatedExpandedRow";
@@ -34,10 +42,32 @@ export const ConsolidatedOrderRow = memo(
     const [updatePedido] = useUpdatePedidoProduccionMutation();
     const [updateMultiplePedidos] =
       useUpdateMultiplePedidosProduccionMutation();
+    const { data: almacenes = [] } = useGetAlmacenesQuery();
     const toast = useToast();
 
     const primaryOrder = item.originalItems[0];
     const pedidoId = primaryOrder?.id;
+
+    const defaultAlmacenId = useMemo(() => {
+      if (primaryOrder?.id_almacen) return String(primaryOrder.id_almacen);
+      if (primaryOrder?.almacen?.id) return String(primaryOrder.almacen.id);
+
+      if (primaryOrder?.codigoAlmacen && almacenes.length > 0) {
+        const code = String(primaryOrder.codigoAlmacen).trim();
+        const match = almacenes.find(
+          (a) =>
+            String(a.name).trim() === code || String(a.name).includes(code),
+        );
+        if (match) return String(match.id);
+      }
+      return "";
+    }, [primaryOrder, almacenes]);
+
+    const [almacenId, setAlmacenId] = useState(defaultAlmacenId);
+
+    useEffect(() => {
+      setAlmacenId(defaultAlmacenId);
+    }, [defaultAlmacenId]);
 
     const rechazoQty = useMemo(
       () =>
@@ -75,6 +105,11 @@ export const ConsolidatedOrderRow = memo(
 
     const inputBg = useColorModeValue("white", "gray.800");
     const inputBorder = useColorModeValue("gray.300", "gray.600");
+    const selectBorderColor = useColorModeValue("#E2E8F0", "#4A5568");
+    const selectColor = useColorModeValue("#2D3748", "#EDF2F7");
+    const selectBg = useColorModeValue("#fff", "#2D3748");
+    const optionColor = useColorModeValue("#222", "#fff");
+    const optionBg = useColorModeValue("#fff", "#222");
 
     const isGroupComplete =
       item.originalItems.length > 0 &&
@@ -94,6 +129,28 @@ export const ConsolidatedOrderRow = memo(
         toast({
           title: "Error",
           description: "No se pudo actualizar el estado de completado",
+          status: "error",
+        });
+      }
+    };
+
+    const handleAlmacenChange = async (newId) => {
+      setAlmacenId(newId);
+      const idsToUpdate = item.originalItems.map((subItem) => subItem.id);
+
+      try {
+        await updateMultiplePedidos({
+          ids: idsToUpdate,
+          data: { id_almacen: newId ? Number(newId) : null },
+        }).unwrap();
+      } catch (err) {
+        console.error("Error updating warehouse:", err);
+        setAlmacenId(
+          primaryOrder?.id_almacen ? String(primaryOrder.id_almacen) : "",
+        );
+        toast({
+          title: "Error",
+          description: "No se pudo actualizar el almacén",
           status: "error",
         });
       }
@@ -195,10 +252,49 @@ export const ConsolidatedOrderRow = memo(
               </Text>
             </Box>
           </Td>
+          <Td px={2} py={2} textAlign="right">
+            <Box
+              display="inline-flex"
+              flexDirection="column"
+              alignItems="flex-end"
+            >
+              <select
+                value={almacenId}
+                onChange={(e) => handleAlmacenChange(e.target.value)}
+                style={{
+                  fontSize: "12px",
+                  padding: "2px 6px",
+                  borderRadius: "4px",
+                  border: "1px solid",
+                  borderColor: selectBorderColor,
+                  color: selectColor,
+                  background: selectBg,
+                  cursor: "pointer",
+                  outline: "none",
+                  width: "100%",
+                  minWidth: "120px",
+                }}
+              >
+                <option value="">-- Seleccionar --</option>
+                {almacenes.map((almacen) => (
+                  <option
+                    key={almacen.id}
+                    value={almacen.id}
+                    style={{
+                      color: optionColor,
+                      background: optionBg,
+                    }}
+                  >
+                    {almacen.nombre || almacen.name}
+                  </option>
+                ))}
+              </select>
+            </Box>
+          </Td>
         </Tr>
         {isExpanded && (
           <Tr>
-            <Td colSpan={9} p={0} border="none">
+            <Td colSpan={10} p={0} border="none">
               <ConsolidatedExpandedRow
                 item={item}
                 isExpanded={isExpanded}

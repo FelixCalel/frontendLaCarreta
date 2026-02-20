@@ -14,8 +14,6 @@ const FilterPanelFabricacion = ({
   onTermChange,
   estado,
   onEstadoChange,
-  // mesa,
-  // onMesaChange,
 }) => {
   const bg = useColorModeValue("white", "gray.700");
   const border = useColorModeValue("gray.300", "gray.600");
@@ -30,7 +28,7 @@ const FilterPanelFabricacion = ({
   };
 
   return (
-    <Flex wrap="wrap" gap={4} mb={6} align="center">
+    <Flex wrap="wrap" gap={4} mb={4} align="center">
       <InputGroup maxW="240px">
         <InputLeftElement pointerEvents="none">
           <SearchIcon color="gray.300" />
