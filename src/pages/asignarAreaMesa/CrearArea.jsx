@@ -19,7 +19,7 @@ import {
 import { MdAddBusiness } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchOpciones, crearAreaThunk } from "../../store/areas/thunks";
+import { crearAreaThunk } from "../../store/areas/thunks";
 import { fetchUsuarios } from "../../store/usuarios/usuariosSlice";
 
 const CrearArea = () => {
@@ -29,25 +29,21 @@ const CrearArea = () => {
 
   const [nombre, setNombre] = useState("");
   const [encargadoId, setEncargadoId] = useState("");
-  const [opcionId, setOpcionId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { opciones } = useSelector((state) => state.areas);
   const { items } = useSelector((state) => state.usuarios);
   const usuarios = items || [];
 
   useEffect(() => {
-    dispatch(fetchOpciones());
     dispatch(fetchUsuarios());
   }, [dispatch]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!nombre || !opcionId) {
+    if (!nombre) {
       toast({
         title: "Campos obligatorios",
-        description:
-          "Por favor, ingresa el nombre y selecciona la Opción Base.",
+        description: "Por favor, ingresa el nombre del área.",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -61,7 +57,6 @@ const CrearArea = () => {
     const nuevaArea = {
       nombre,
       encargado: encargadoId ? Number(encargadoId) : null,
-      opcion: Number(opcionId),
       create_by: usuarioId,
       state: true,
     };
@@ -147,30 +142,6 @@ const CrearArea = () => {
                   bg={useColorModeValue("white", "gray.700")}
                   color={useColorModeValue("gray.800", "white")}
                 />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel fontWeight="medium" color={labelColor}>
-                  Opción Base (Referencia del Menú)
-                </FormLabel>
-                <Select
-                  placeholder="Selecciona la opción a la que pertenece"
-                  value={opcionId}
-                  onChange={(e) => setOpcionId(e.target.value)}
-                  focusBorderColor="green.400"
-                  size="lg"
-                  bg={useColorModeValue("white", "gray.700")}
-                  color={useColorModeValue("gray.800", "white")}
-                >
-                  {(opciones || []).map((op) => (
-                    <option key={op.id} value={op.id}>
-                      {op.nombre}
-                    </option>
-                  ))}
-                </Select>
-                <Text fontSize="xs" color={textColor} mt={1}>
-                  Toda área requiere estar enlazada a una Opción del sistema.
-                </Text>
               </FormControl>
 
               <FormControl>

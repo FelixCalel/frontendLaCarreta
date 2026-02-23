@@ -55,7 +55,7 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
     setIsLoadingProducts(true);
     try {
       const res = await axios.get(
-        `${BASE_URL}/items/todos?page=${currentPage}&pageSize=50&nombre=${search}`,
+        `${BASE_URL}/items/todos?page=${currentPage}&pageSize=10&nombre=${search}`,
       );
       const newItems = res.data.items || res.data;
 
@@ -70,7 +70,7 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
         setProductOptions((prev) => [...prev, ...newOptions]);
       }
 
-      if (newItems.length < 50) setHasMore(false);
+      if (newItems.length < 10) setHasMore(false);
       else setHasMore(true);
     } catch (err) {
       console.error("Error cargando productos paginados:", err);

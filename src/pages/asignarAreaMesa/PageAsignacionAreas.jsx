@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Box,
+  Flex,
   Heading,
   Text,
   Spinner,
@@ -13,20 +14,16 @@ import {
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
-import { fetchAreas, fetchOpciones } from "../../store/areas/thunks";
+import { fetchAreas } from "../../store/areas/thunks";
 import { fetchUsuarios } from "../../store/usuarios/usuariosSlice";
-import { MdAdd, MdWorkspaces } from "react-icons/md";
+import { MdAdd, MdWorkspaces, MdChevronRight } from "react-icons/md";
 
 const PageAsignacionAreas = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const {
-    areas,
-    opciones,
-    loading: areasLoading,
-  } = useSelector((state) => state.areas);
+  const { areas, loading: areasLoading } = useSelector((state) => state.areas);
   const { items, status: usuariosStatus } = useSelector(
     (state) => state.usuarios,
   );
@@ -37,11 +34,7 @@ const PageAsignacionAreas = () => {
 
   useEffect(() => {
     const loadInitials = async () => {
-      await Promise.all([
-        dispatch(fetchAreas()),
-        dispatch(fetchOpciones()),
-        dispatch(fetchUsuarios()),
-      ]);
+      await Promise.all([dispatch(fetchAreas()), dispatch(fetchUsuarios())]);
       setIsInitialLoad(false);
     };
     loadInitials();
@@ -51,13 +44,13 @@ const PageAsignacionAreas = () => {
   const sidebarBorder = useColorModeValue("gray.200", "gray.700");
   const mainBg = useColorModeValue("gray.50", "gray.900");
   const headingColor = useColorModeValue("gray.700", "whiteAlpha.900");
-  const activeBg = useColorModeValue("green.50", "green.900");
-  const activeHoverBg = useColorModeValue("green.100", "green.800");
-  const inactiveHoverBg = useColorModeValue("gray.50", "whiteAlpha.50");
-  const activeBorderColor = useColorModeValue("green.200", "green.700");
-  const activeTextColor = useColorModeValue("green.700", "green.300");
-  const inactiveTextColor = useColorModeValue("gray.800", "whiteAlpha.800");
-  const activeSubtextColor = useColorModeValue("green.600", "green.400");
+  const activeBg = useColorModeValue("green.100", "green.900");
+  const activeHoverBg = useColorModeValue("green.200", "green.800");
+  const inactiveHoverBg = useColorModeValue("gray.50", "whiteAlpha.100");
+  const activeBorderColor = useColorModeValue("green.400", "green.600");
+  const activeTextColor = useColorModeValue("green.800", "green.200");
+  const inactiveTextColor = useColorModeValue("gray.700", "whiteAlpha.800");
+  const activeSubtextColor = useColorModeValue("green.700", "green.400");
   const inactiveSubtextColor = useColorModeValue("gray.500", "whiteAlpha.500");
 
   if (isInitialLoad && (areasLoading || usuariosLoading)) {
@@ -76,19 +69,13 @@ const PageAsignacionAreas = () => {
   }
 
   const areasEnriquecidas = (areas || []).map((area) => {
-    const opcionAsociada = (opciones || []).find(
-      (op) => op.id === area.opcion_id,
-    );
     const encargado = (usuarios || []).find((u) => u.id === area.encargado_id);
     return {
       ...area,
-      nombreOpcion: opcionAsociada ? opcionAsociada.nombre : "Área Inicial",
       nombreFinal:
         area.nombre && area.nombre !== "Área Sin Nombre"
           ? area.nombre
-          : opcionAsociada
-            ? opcionAsociada.nombre
-            : "Área Sin Nombre",
+          : "Área Sin Nombre",
       encargadoNombre: encargado
         ? `${encargado.nombre} ${encargado.apellido}`
         : "Sin encargado",
@@ -155,21 +142,33 @@ const PageAsignacionAreas = () => {
                     onClick={() => navigate(`/asignacion-areas/${area.id}`)}
                     transition="all 0.2s"
                   >
-                    <Text
-                      fontWeight={isActive ? "bold" : "medium"}
-                      color={isActive ? activeTextColor : inactiveTextColor}
-                    >
-                      {area.nombreFinal}
-                    </Text>
-                    <Text
-                      fontSize="sm"
-                      color={
-                        isActive ? activeSubtextColor : inactiveSubtextColor
-                      }
-                      mt={1}
-                    >
-                      {area.encargadoNombre}
-                    </Text>
+                    <Flex justify="space-between" align="center">
+                      <Box>
+                        <Text
+                          fontWeight={isActive ? "extrabold" : "medium"}
+                          color={isActive ? activeTextColor : inactiveTextColor}
+                          fontSize={isActive ? "md" : "sm"}
+                        >
+                          {area.nombreFinal}
+                        </Text>
+                        <Text
+                          fontSize="xs"
+                          color={
+                            isActive ? activeSubtextColor : inactiveSubtextColor
+                          }
+                          mt={0.5}
+                        >
+                          {area.encargadoNombre}
+                        </Text>
+                      </Box>
+                      {isActive && (
+                        <Icon
+                          as={MdChevronRight}
+                          color={activeTextColor}
+                          boxSize={5}
+                        />
+                      )}
+                    </Flex>
                   </Box>
                 );
               })

@@ -44,11 +44,7 @@ const PageAsignacion = () => {
   const toast = useToast();
   const dispatch = useDispatch();
 
-  const {
-    areas,
-    opciones,
-    loading: areasLoading,
-  } = useSelector((state) => state.areas);
+  const { areas, loading: areasLoading } = useSelector((state) => state.areas);
   const { items, status: usuariosStatus } = useSelector(
     (state) => state.usuarios,
   );
@@ -58,11 +54,6 @@ const PageAsignacion = () => {
   const area = useMemo(
     () => (areas || []).find((a) => a.id === Number(id)),
     [areas, id],
-  );
-
-  const opcion = useMemo(
-    () => (area ? (opciones || []).find((o) => o.id === area.opcion_id) : null),
-    [area, opciones],
   );
 
   const encargado = useMemo(
@@ -77,10 +68,8 @@ const PageAsignacion = () => {
     if (!area) return "Área Sin Nombre";
     return area.nombre && area.nombre !== "Área Sin Nombre"
       ? area.nombre
-      : opcion
-        ? opcion.nombre
-        : "Área Sin Nombre";
-  }, [area, opcion]);
+      : "Área Sin Nombre";
+  }, [area]);
 
   const cardBg = useColorModeValue("white", "gray.800");
   const cardBorderColor = useColorModeValue("gray.100", "gray.700");
