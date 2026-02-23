@@ -111,7 +111,7 @@ export const fetchUsuariosEncargadosThunk = createAsyncThunk(
     try {
       const response = await axios.get(`${BASE_URL}/usuarios/todos`);
       return response.data.usuarios.filter(
-        (u) => u.estaActivo && u.roleId === 10,
+        (u) => u.estaActivo && [1, 9, 10].includes(u.roleId),
       );
     } catch (error) {
       console.error("Error fetching encargados:", error);

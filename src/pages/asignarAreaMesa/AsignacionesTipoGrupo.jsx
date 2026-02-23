@@ -244,8 +244,9 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
                   </TagLabel>
                   <TagCloseButton
                     ml={3}
-                    color="red.400"
-                    _hover={{ bg: "red.50", color: "red.600" }}
+                    color="red.600"
+                    _hover={{ bg: "red.600", color: "white" }}
+                    opacity={1}
                     onClick={() => handleDesasignar(a.id)}
                   >
                     <Icon as={MdDelete} />

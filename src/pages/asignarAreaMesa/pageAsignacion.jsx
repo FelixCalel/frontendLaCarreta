@@ -146,16 +146,6 @@ const PageAsignacion = () => {
                 <Heading size="lg" color="green.700">
                   {nombreArea}
                 </Heading>
-                <Badge
-                  colorScheme="green"
-                  variant="subtle"
-                  fontSize="0.8em"
-                  px={2}
-                  py={1}
-                  borderRadius="md"
-                >
-                  Área {area.id}
-                </Badge>
               </Flex>
               <Text color="gray.500" fontSize="sm">
                 Administración de mesas y líneas de producción asignadas
@@ -206,11 +196,12 @@ const PageAsignacion = () => {
                   aria-label="Eliminar área"
                   icon={<MdDelete />}
                   colorScheme="red"
-                  variant="ghost"
+                  variant="solid"
                   onClick={onDeleteOpen}
                   size="sm"
                   ml={2}
-                  _hover={{ bg: "red.50", color: "red.600" }}
+                  boxShadow="sm"
+                  _hover={{ bg: "red.600" }}
                 />
               </Tooltip>
             </Flex>
