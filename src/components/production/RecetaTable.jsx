@@ -208,8 +208,10 @@ export const RecetaTable = memo(
                     Unidad
                   </Th>
                   <Th
-                    w="100px"
-                    px={0}
+                    w="auto"
+                    minW="100px"
+                    maxW="90px"
+                    px={1}
                     py={2}
                     color={headColor}
                     fontSize="xs"

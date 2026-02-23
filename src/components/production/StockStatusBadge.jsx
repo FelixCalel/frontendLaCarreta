@@ -28,7 +28,10 @@ export const StockStatusBadge = ({
     );
   }
 
-  if (!selectedWarehouse || !currentStockInfo) {
+  if (
+    !selectedWarehouse ||
+    (!currentStockInfo && alternativeWarehouses.length === 0)
+  ) {
     const mainLabel =
       "No hay compras ni registros previos en SAP para este almacén.";
     const mainText = "Sin Entradas SAP";
@@ -88,19 +91,24 @@ export const StockStatusBadge = ({
     .map((s) => `${s.almacen}: ${Number(s.stock).toFixed(2)}`)
     .join(" | ");
 
-  let mainLabel =
-    reqQty > stockOnHand
+  let mainLabel = !currentStockInfo
+    ? "No hay compras ni registros previos en SAP para este almacén."
+    : reqQty > stockOnHand
       ? `Total físico: ${stockOnHand.toFixed(2)}`
       : `No hay inventario en ${selectedWarehouse}`;
 
-  let mainText =
-    reqQty > stockOnHand
+  let mainText = !currentStockInfo
+    ? "Sin Entradas SAP"
+    : reqQty > stockOnHand
       ? `Faltan: ${(reqQty > stockOnHand ? reqQty - stockOnHand : 0).toFixed(2)}`
       : `Sin Stock`;
 
   if (hasAlts) {
     mainLabel += `\n Disponible en: ${altsText}`;
-    mainText += ` (Hay en otros)`;
+    mainText =
+      !currentStockInfo && reqQty <= 0
+        ? `Sin Entradas SAP (Hay en otros)`
+        : `Faltan: ${(reqQty > stockOnHand ? reqQty - stockOnHand : 0).toFixed(2)} (Hay en otros)`;
   } else {
     mainLabel += `\n Agotado en todos los almacenes`;
     mainText =
