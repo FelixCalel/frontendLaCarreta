@@ -18,6 +18,7 @@ import {
   fetchUsuariosEncargadosThunk,
   actualizarEncargadoThunk,
 } from "../../store/asignacionAM/thunks";
+import { fetchAreas } from "../../store/areas/thunks";
 import PropTypes from "prop-types";
 
 const EncargadoModal = ({ isOpen, onClose, areaId, currentEncargado }) => {
@@ -25,23 +26,22 @@ const EncargadoModal = ({ isOpen, onClose, areaId, currentEncargado }) => {
   const dispatch = useDispatch();
   const toast = useToast();
 
-  const { usuariosEncargados } = useSelector((state) => state.AsignacionAreaMesa);
+  const { usuariosEncargados } = useSelector(
+    (state) => state.AsignacionAreaMesa,
+  );
 
   useEffect(() => {
     if (isOpen) {
       dispatch(fetchUsuariosEncargadosThunk());
       if (currentEncargado?.id) {
-        setSelectedUserId(currentEncargado.id.toString()); 
+        setSelectedUserId(currentEncargado.id.toString());
       } else {
         setSelectedUserId("");
       }
     }
   }, [dispatch, isOpen, currentEncargado]);
 
-
-
   const handleUpdate = async () => {
-      
     if (!selectedUserId) return;
 
     try {
@@ -50,7 +50,7 @@ const EncargadoModal = ({ isOpen, onClose, areaId, currentEncargado }) => {
           id: areaId,
           encargado: Number(selectedUserId),
           update_by: Number(localStorage.getItem("usuarioId")),
-        })
+        }),
       ).unwrap();
 
       toast({
@@ -61,7 +61,7 @@ const EncargadoModal = ({ isOpen, onClose, areaId, currentEncargado }) => {
       });
 
       onClose();
-      window.location.reload(); 
+      dispatch(fetchAreas());
     } catch (error) {
       toast({
         title: "Error al actualizar encargado",
@@ -92,17 +92,16 @@ const EncargadoModal = ({ isOpen, onClose, areaId, currentEncargado }) => {
           <Select
             placeholder="Seleccione un encargado"
             onChange={(e) => {
-                setSelectedUserId(e.target.value);
+              setSelectedUserId(e.target.value);
             }}
             value={selectedUserId || ""}
-            >
+          >
             {usuariosEncargados.map((u) => (
-                <option key={u.id} value={u.id}>
+              <option key={u.id} value={u.id}>
                 {u.nombre} {u.apellido} ({u.correo})
-                </option>
+              </option>
             ))}
-            </Select>
-
+          </Select>
         </ModalBody>
 
         <ModalFooter>

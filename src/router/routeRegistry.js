@@ -1,6 +1,5 @@
 import HomePage from "../pages/auth/HomePage";
 import { PortalRouter } from "./PortalRouter";
-
 import { PaginaPais } from "./PaisRoute";
 import { PaginaEmpresa } from "./EmpresaRoute";
 import { PaginaCiudad } from "./CiudaRouter";

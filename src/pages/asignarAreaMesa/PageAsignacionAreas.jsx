@@ -1,43 +1,66 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Heading,
   Text,
   Spinner,
-  SimpleGrid,
-  Card,
-  CardHeader,
-  CardBody,
   Button,
+  VStack,
+  HStack,
+  Icon,
   useColorModeValue,
+  Divider,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { fetchAreas, fetchOpciones } from "../../store/areas/thunks";
 import { fetchUsuarios } from "../../store/usuarios/usuariosSlice";
+import { MdAdd, MdWorkspaces } from "react-icons/md";
 
 const PageAsignacionAreas = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     areas,
     opciones,
     loading: areasLoading,
   } = useSelector((state) => state.areas);
-  const { usuarios, loading: usuariosLoading } = useSelector(
+  const { items, status: usuariosStatus } = useSelector(
     (state) => state.usuarios,
   );
+  const usuarios = items || [];
+  const usuariosLoading = usuariosStatus === "loading";
+
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
-    dispatch(fetchAreas());
-    dispatch(fetchOpciones());
-    dispatch(fetchUsuarios());
+    const loadInitials = async () => {
+      await Promise.all([
+        dispatch(fetchAreas()),
+        dispatch(fetchOpciones()),
+        dispatch(fetchUsuarios()),
+      ]);
+      setIsInitialLoad(false);
+    };
+    loadInitials();
   }, [dispatch]);
 
-  const cardBg = useColorModeValue("white", "gray.800");
+  const sidebarBg = useColorModeValue("white", "gray.800");
+  const sidebarBorder = useColorModeValue("gray.200", "gray.700");
+  const mainBg = useColorModeValue("gray.50", "gray.900");
+  const headingColor = useColorModeValue("gray.700", "whiteAlpha.900");
+  const activeBg = useColorModeValue("green.50", "green.900");
+  const activeHoverBg = useColorModeValue("green.100", "green.800");
+  const inactiveHoverBg = useColorModeValue("gray.50", "whiteAlpha.50");
+  const activeBorderColor = useColorModeValue("green.200", "green.700");
+  const activeTextColor = useColorModeValue("green.700", "green.300");
+  const inactiveTextColor = useColorModeValue("gray.800", "whiteAlpha.800");
+  const activeSubtextColor = useColorModeValue("green.600", "green.400");
+  const inactiveSubtextColor = useColorModeValue("gray.500", "whiteAlpha.500");
 
-  if (areasLoading || usuariosLoading) {
+  if (isInitialLoad && (areasLoading || usuariosLoading)) {
     return (
       <Box
         p={4}
@@ -46,14 +69,12 @@ const PageAsignacionAreas = () => {
         alignItems="center"
         h="50vh"
       >
-        <Spinner size="xl" />
-        <Text ml={4}>Cargando áreas de producción...</Text>
+        <Spinner size="xl" color="green.500" />
+        <Text ml={4}>Cargando entorno de producción...</Text>
       </Box>
     );
   }
 
-  // Filtrar áreas y enriquecerlas con el nombre de la opción (si están asociadas) y el encargado
-  // Asumimos que el backend envía la data de áreas o lo podemos armar
   const areasEnriquecidas = (areas || []).map((area) => {
     const opcionAsociada = (opciones || []).find(
       (op) => op.id === area.opcion_id,
@@ -62,57 +83,118 @@ const PageAsignacionAreas = () => {
     return {
       ...area,
       nombreOpcion: opcionAsociada ? opcionAsociada.nombre : "Área Inicial",
+      nombreFinal:
+        area.nombre && area.nombre !== "Área Sin Nombre"
+          ? area.nombre
+          : opcionAsociada
+            ? opcionAsociada.nombre
+            : "Área Sin Nombre",
       encargadoNombre: encargado
         ? `${encargado.nombre} ${encargado.apellido}`
         : "Sin encargado",
     };
   });
 
-  return (
-    <Box p={5}>
-      <Heading size="lg" mb={6} textAlign="center">
-        Asignación de Áreas de Producción
-      </Heading>
+  const pathParts = location.pathname.split("/");
+  const activeAreaId = pathParts[pathParts.length - 1];
 
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-        {areasEnriquecidas.length > 0 ? (
-          areasEnriquecidas.map((area) => (
-            <Card
-              key={area.id}
-              bg={cardBg}
-              shadow="md"
-              borderWidth="1px"
-              borderRadius="lg"
-            >
-              <CardHeader pb={0}>
-                <Heading size="md" color="teal.600">
-                  {area.nombreOpcion}
-                </Heading>
-              </CardHeader>
-              <CardBody>
-                <Text fontWeight="bold" mb={2}>
-                  Cod. Área: {area.id}
-                </Text>
-                <Text mb={4}>
-                  <b>Encargado:</b> {area.encargadoNombre}
-                </Text>
-                <Button
-                  colorScheme="green"
-                  w="100%"
-                  onClick={() => navigate(`/asignacion-areas/${area.id}`)}
-                >
-                  Administrar Área
-                </Button>
-              </CardBody>
-            </Card>
-          ))
-        ) : (
-          <Text textAlign="center" gridColumn="1 / -1">
-            No hay áreas creadas o asignadas.
-          </Text>
-        )}
-      </SimpleGrid>
-    </Box>
+  return (
+    <HStack h="calc(100vh - 80px)" spacing={0} alignItems="stretch" bg={mainBg}>
+      <Box
+        w={{ base: "full", md: "270px" }}
+        bg={sidebarBg}
+        borderRight="1px solid"
+        borderColor={sidebarBorder}
+        display="flex"
+        flexDirection="column"
+        shadow="sm"
+        zIndex={1}
+      >
+        <Box p={4}>
+          <Heading
+            size="md"
+            mb={4}
+            color={headingColor}
+            display="flex"
+            alignItems="center"
+          >
+            <Icon as={MdWorkspaces} mr={2} color="green.500" />
+            Áreas de Producción
+          </Heading>
+          <Button
+            leftIcon={<MdAdd />}
+            colorScheme="green"
+            w="full"
+            variant="solid"
+            shadow="sm"
+            onClick={() => navigate("/asignacion-areas/nueva")}
+          >
+            Nueva Área
+          </Button>
+        </Box>
+
+        <Divider />
+
+        <Box flex="1" overflowY="auto" p={2}>
+          <VStack spacing={2} align="stretch">
+            {areasEnriquecidas.length > 0 ? (
+              areasEnriquecidas.map((area) => {
+                const isActive = activeAreaId === String(area.id);
+                return (
+                  <Box
+                    key={area.id}
+                    p={4}
+                    borderRadius="md"
+                    cursor="pointer"
+                    bg={isActive ? activeBg : "transparent"}
+                    border="1px solid"
+                    borderColor={isActive ? activeBorderColor : "transparent"}
+                    _hover={{
+                      bg: isActive ? activeHoverBg : inactiveHoverBg,
+                    }}
+                    onClick={() => navigate(`/asignacion-areas/${area.id}`)}
+                    transition="all 0.2s"
+                  >
+                    <Text
+                      fontWeight={isActive ? "bold" : "medium"}
+                      color={isActive ? activeTextColor : inactiveTextColor}
+                    >
+                      {area.nombreFinal}
+                    </Text>
+                    <Text
+                      fontSize="sm"
+                      color={
+                        isActive ? activeSubtextColor : inactiveSubtextColor
+                      }
+                      mt={1}
+                    >
+                      {area.encargadoNombre}
+                    </Text>
+                  </Box>
+                );
+              })
+            ) : (
+              <Text textAlign="center" color="gray.500" p={4}>
+                No hay áreas.
+              </Text>
+            )}
+          </VStack>
+        </Box>
+      </Box>
+
+      <Box
+        flex="1"
+        overflowY="auto"
+        position="relative"
+        bg={mainBg}
+        display={{
+          base: location.pathname === "/asignacion-areas" ? "none" : "block",
+          md: "block",
+        }}
+      >
+        <Outlet />
+      </Box>
+    </HStack>
   );
 };
 
