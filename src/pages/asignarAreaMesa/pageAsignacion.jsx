@@ -14,18 +14,27 @@ import { fetchUsuarios } from "../../store/usuarios/usuariosSlice";
 import MesasAsignadas from "./MesasAsignadas";
 import AsignacionesTipoGrupo from "./AsignacionesTipoGrupo";
 import EncargadoModal from "./EncargadoModal";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 
 const PageAsignacion = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const location = useLocation();
+  const { id } = useParams();
   const dispatch = useDispatch();
-  
+  const navigate = useNavigate();
+
   const [areaId, setAreaId] = useState(null);
   const [nombreArea, setNombreArea] = useState("");
   const [encargado, setEncargado] = useState(null);
 
-  const { areas, opciones, loading: areasLoading } = useSelector((state) => state.areas);
-  const { usuarios, loading: usuariosLoading } = useSelector((state) => state.usuarios);
+  const {
+    areas,
+    opciones,
+    loading: areasLoading,
+  } = useSelector((state) => state.areas);
+  const { usuarios, loading: usuariosLoading } = useSelector(
+    (state) => state.usuarios,
+  );
 
   useEffect(() => {
     dispatch(fetchAreas());
@@ -34,36 +43,29 @@ const PageAsignacion = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (areasLoading || usuariosLoading) return;
+    if (areasLoading || usuariosLoading || !id) return;
 
-    const rutaActual = location.pathname.split("/")[1];
-    const rutaConSlash = `/${rutaActual}`;
+    const area = (areas || []).find((a) => a.id === Number(id));
 
-    const opcion = opciones.find((o) => o.ruta === rutaConSlash);
-
-    if (!opcion) {
-      console.warn("No se encontró la opción para esta ruta");
-      return;
-    }
-
-    const area = areas.find((a) => a.opcion_id === opcion.id);
-    
     if (!area) {
-      console.warn("No se encontró el área para esta opción");
+      console.warn("No se encontró el área proporcionada en la URL");
       return;
     }
+
+    const opcion = (opciones || []).find((o) => o.id === area.opcion_id);
 
     setAreaId(area.id);
-    setNombreArea(opcion.nombre);
-    
-    if (area.encargado_id) {
-        const encargadoData = usuarios.find((u) => u.id === area.encargado_id);
-        setEncargado(encargadoData);
-    } else {
-        setEncargado(null);
-    }
+    setNombreArea(opcion ? opcion.nombre : "Área");
 
-  }, [location.pathname, areas, opciones, usuarios, areasLoading, usuariosLoading]);
+    if (area.encargado_id) {
+      const encargadoData = (usuarios || []).find(
+        (u) => u.id === area.encargado_id,
+      );
+      setEncargado(encargadoData);
+    } else {
+      setEncargado(null);
+    }
+  }, [id, areas, opciones, usuarios, areasLoading, usuariosLoading]);
 
   if (areasLoading || usuariosLoading) {
     return (
@@ -84,15 +86,26 @@ const PageAsignacion = () => {
 
   return (
     <Box p={5}>
+      <Button
+        leftIcon={<ArrowBackIcon />}
+        variant="ghost"
+        mb={4}
+        onClick={() => {
+          navigate("/asignacion-areas");
+        }}
+      >
+        Volver
+      </Button>
+
       <Heading size="lg" mb={4} textAlign={"center"}>
-        {nombreArea}
+        {nombreArea} (Área {areaId})
       </Heading>
       <Box mb={4}>
         <Button onClick={onOpen} colorScheme="green">
-          Encargado
+          Administrar Encargado
         </Button>
         <Text mt={2} fontWeight="bold">
-          Encargado:{" "}
+          Encargado Actual:{" "}
           {encargado
             ? `${encargado.nombre} ${encargado.apellido}`
             : "Ninguno asignado"}

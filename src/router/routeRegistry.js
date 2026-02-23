@@ -27,7 +27,6 @@ import { fabricacionDetailOrder } from "./FabricacionDetails";
 export const ROUTE_REGISTRY = {
   "/auth/home": HomePage,
   "/admin/*": PortalRouter,
-
   "/pais/*": PaginaPais,
   "/ciudad/*": PaginaCiudad,
   "/ruta/*": PaginaRuta,
@@ -42,11 +41,7 @@ export const ROUTE_REGISTRY = {
   "/comprasPedidos/*": PaginaPedidoCompras,
   "/comprador/*": PaginaComprador,
   "/ControlCalidad/*": PaginaControlCalidad,
-  "/area1/*": PaginaAsignacionAM,
-  "/area2/*": PaginaAsignacionAM,
-  "/area3/*": PaginaAsignacionAM,
-  "/area4/*": PaginaAsignacionAM,
-  "/area5/*": PaginaAsignacionAM,
+  "/asignacion-areas/*": PaginaAsignacionAM,
   "/mesa/*": produccionOrden,
   "/produccion/*": produccionOrdenSuper,
   "/despacho/*": productionOrdenDetails,

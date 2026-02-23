@@ -15,6 +15,7 @@ import {
   MenuList,
   MenuItem,
   IconButton,
+  Button,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { ChevronDownIcon } from "@chakra-ui/icons";
@@ -46,7 +47,9 @@ const MesasAsignadas = ({ areaId }) => {
   }, [dispatch, areaId]);
 
   const getNombreMesa = (mesaId) => {
-    const mesa = mesasActivas?.find((mesa) => mesa.id === mesaId);
+    const mesa = (Array.isArray(mesasActivas) ? mesasActivas : []).find(
+      (mesa) => mesa.id === mesaId,
+    );
     return mesa ? `${mesa.name}` : "Mesa no encontrada";
   };
 
@@ -58,7 +61,7 @@ const MesasAsignadas = ({ areaId }) => {
         comentario,
         create_by: Number(usuarioId),
         state: true,
-      })
+      }),
     ).then(() => {
       dispatch(fetchMesasAsignadasThunk(areaId));
       dispatch(fetchMesasDisponiblesThunk());
@@ -66,10 +69,12 @@ const MesasAsignadas = ({ areaId }) => {
   };
 
   const handleDesasignar = (mesaId) => {
-    const asignacion = mesasAsignadas.find((m) => m.id === mesaId);
+    const asignacion = (
+      Array.isArray(mesasAsignadas) ? mesasAsignadas : []
+    ).find((m) => m.id === mesaId);
     if (asignacion) {
       dispatch(
-        desasignarMesaThunk({ id: asignacion.id, userId: Number(usuarioId) })
+        desasignarMesaThunk({ id: asignacion.id, userId: Number(usuarioId) }),
       ).then(() => {
         dispatch(fetchMesasAsignadasThunk(areaId));
         dispatch(fetchMesasDisponiblesThunk());
@@ -100,10 +105,10 @@ const MesasAsignadas = ({ areaId }) => {
         p={2}
         borderRadius="md"
       >
-        {mesasAsignadas.length === 0 ? (
+        {!Array.isArray(mesasAsignadas) || mesasAsignadas.length === 0 ? (
           <Text>No hay mesas asignadas.</Text>
         ) : (
-          mesasAsignadas.map((mesa) => (
+          (Array.isArray(mesasAsignadas) ? mesasAsignadas : []).map((mesa) => (
             <Tag
               size="lg"
               key={mesa.id}
@@ -119,27 +124,29 @@ const MesasAsignadas = ({ areaId }) => {
         <Box ml="auto">
           <Menu>
             <MenuButton
-              as={IconButton}
-              icon={<ChevronDownIcon />}
+              as={Button}
+              rightIcon={<ChevronDownIcon />}
               colorScheme="green"
-              variant="ghost"
+              variant="outline"
               aria-label="Agregar mesa"
-              mb={3}
+              size="sm"
             >
               Agregar Mesa
             </MenuButton>
             <MenuList>
-              {mesasDisponibles?.map((mesa) => (
-                <MenuItem
-                  key={mesa.id}
-                  onClick={() => {
-                    setMesaSeleccionada(mesa);
-                    onOpen();
-                  }}
-                >
-                  {mesa.name}
-                </MenuItem>
-              ))}
+              {(Array.isArray(mesasDisponibles) ? mesasDisponibles : []).map(
+                (mesa) => (
+                  <MenuItem
+                    key={mesa.id}
+                    onClick={() => {
+                      setMesaSeleccionada(mesa);
+                      onOpen();
+                    }}
+                  >
+                    {mesa.name}
+                  </MenuItem>
+                ),
+              )}
             </MenuList>
           </Menu>
         </Box>
