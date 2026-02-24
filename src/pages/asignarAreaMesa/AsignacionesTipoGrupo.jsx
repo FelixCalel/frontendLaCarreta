@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import {
   Box,
@@ -27,7 +27,6 @@ import Select from "react-select";
 import axios from "axios";
 import {
   fetchAsignacionesThunk,
-  asignarTipoGrupoThunk,
   desasignarTipoGrupoThunk,
   fetchClasificacionesThunk,
   bulkAsignarThunk,
@@ -40,16 +39,6 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
   const dispatch = useDispatch();
   const usuarioId = Number(localStorage.getItem("usuarioId"));
   const toast = useToast();
-  const [selectedProducto, setSelectedProducto] = useState(null);
-  const [productOptions, setProductOptions] = useState([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const searchTimeoutRef = useRef(null);
-  const { asignaciones, clasificaciones } = useSelector(
-    (state) => state.AsignacionAreaMesa,
-  );
   const [selectedFilters, setSelectedFilters] = useState({
     empaque: null,
     marca: null,
@@ -59,6 +48,10 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
   });
   const [isBulkLoading, setIsBulkLoading] = useState(false);
 
+  const { asignaciones, clasificaciones } = useSelector(
+    (state) => state.AsignacionAreaMesa,
+  );
+
   useEffect(() => {
     if (areaId) {
       dispatch(fetchAsignacionesThunk(areaId));
@@ -66,83 +59,9 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
     }
   }, [dispatch, areaId]);
 
-  const fetchProductsPage = async (currentPage, search) => {
-    setIsLoadingProducts(true);
-    try {
-      const res = await axios.get(
-        `${BASE_URL}/items/todos?page=${currentPage}&pageSize=10&nombre=${search}`,
-      );
-      const newItems = res.data.items || res.data;
-
-      const newOptions = newItems.map((p) => ({
-        value: p.id,
-        label: `${p.codigo} - ${p.nombre}`,
-      }));
-
-      if (currentPage === 1) {
-        setProductOptions(newOptions);
-      } else {
-        setProductOptions((prev) => [...prev, ...newOptions]);
-      }
-
-      if (newItems.length < 10) setHasMore(false);
-      else setHasMore(true);
-    } catch (err) {
-      console.error("Error cargando productos paginados:", err);
-    } finally {
-      setIsLoadingProducts(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProductsPage(page, searchTerm);
-  }, [page, searchTerm]);
-
-  const handleScrollToBottom = () => {
-    if (!isLoadingProducts && hasMore) {
-      setPage((prev) => prev + 1);
-    }
-  };
-
-  const handleInputChange = (inputValue, { action }) => {
-    if (action === "input-change") {
-      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-      searchTimeoutRef.current = setTimeout(() => {
-        setSearchTerm(inputValue);
-        setPage(1);
-      }, 500);
-    }
-  };
-
   const filteredAsignaciones = (
     Array.isArray(asignaciones) ? asignaciones : []
   ).filter((a) => a?.state);
-
-  const handleAsignar = () => {
-    if (selectedProducto) {
-      dispatch(
-        asignarTipoGrupoThunk({
-          id_area: areaId,
-          productoId: Number(selectedProducto.value),
-          create_by: usuarioId,
-          state: true,
-        }),
-      ).then((res) => {
-        if (res.meta.requestStatus === "fulfilled") {
-          toast({
-            title: "Línea asignada",
-            description: "La línea de producción fue asignada.",
-            status: "success",
-            duration: 2000,
-            isClosable: true,
-            position: "top-right",
-          });
-        }
-        setSelectedProducto(null);
-        dispatch(fetchAsignacionesThunk(areaId));
-      });
-    }
-  };
 
   const handleDesasignar = (id) => {
     dispatch(desasignarTipoGrupoThunk({ id, update_by: usuarioId })).then(
@@ -549,44 +468,6 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
             </Tbody>
           </Table>
         </Box>
-
-        <Flex
-          align="center"
-          gap={3}
-          wrap="wrap"
-          p={2}
-          borderWidth={1}
-          borderColor={borderColor}
-          borderRadius="lg"
-          bg={listBg}
-        >
-          <Box flex="1" minW="250px">
-            <Select
-              placeholder="Buscar línea de producción..."
-              value={selectedProducto}
-              onChange={setSelectedProducto}
-              options={productOptions}
-              onInputChange={handleInputChange}
-              onMenuScrollToBottom={handleScrollToBottom}
-              isLoading={isLoadingProducts}
-              isClearable
-              filterOption={null}
-              noOptionsMessage={() =>
-                isLoadingProducts ? "Buscando..." : "No se encontraron opciones"
-              }
-              styles={customSelectStyles}
-            />
-          </Box>
-          <Button
-            colorScheme="blue"
-            onClick={handleAsignar}
-            isDisabled={!selectedProducto}
-            px={8}
-            boxShadow="sm"
-          >
-            Asignar Línea
-          </Button>
-        </Flex>
       </Box>
     </Box>
   );

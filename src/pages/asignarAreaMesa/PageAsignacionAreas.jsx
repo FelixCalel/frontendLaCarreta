@@ -90,7 +90,7 @@ const PageAsignacionAreas = () => {
   const activeAreaId = pathParts[pathParts.length - 1];
 
   return (
-    <HStack h="calc(100vh - 80px)" spacing={0} alignItems="stretch" bg={mainBg}>
+    <HStack flex="1" spacing={0} alignItems="stretch" bg={mainBg}>
       <Box
         w={{ base: "full", md: "270px" }}
         bg={sidebarBg}

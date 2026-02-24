@@ -32,13 +32,15 @@ export const RootLayout = () => {
 
       <Flex gridRow="2" gridColumn="1 / -1">
         <MenuPrincipal />
-        <Box flex="1" bg={contentBg}>
+        <Flex flex="1" bg={contentBg} direction="column">
           <NavBarDashboard />
-          <Outlet />
-        </Box>
+          <Box flex="1" display="flex" flexDirection="column">
+            <Outlet />
+          </Box>
+        </Flex>
       </Flex>
 
-      <Box gridRow="4" gridColumn="1 / -1">
+      <Box gridRow="3" gridColumn="1 / -1">
         <Footer />
       </Box>
     </Grid>
