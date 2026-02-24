@@ -20,6 +20,7 @@ import {
   Heading,
   Icon,
   IconButton,
+  Input,
 } from "@chakra-ui/react";
 import { MdPrecisionManufacturing, MdDelete } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
@@ -31,6 +32,7 @@ import {
   fetchClasificacionesThunk,
   bulkAsignarThunk,
   bulkDesasignarThunk,
+  asignarTipoGrupoThunk,
 } from "../../store/asignacionAM/thunks";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -48,9 +50,113 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
   });
   const [isBulkLoading, setIsBulkLoading] = useState(false);
 
+  const [productOptions, setProductOptions] = useState([]);
+  const [selectedProducto, setSelectedProducto] = useState(null);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  const loadProducts = async (search = "", page = 1) => {
+    if (!hasMore && page > 1) return;
+    setIsLoadingProducts(true);
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/items/todos?page=${page}&pageSize=10&nombre=${search}&codigo=${search}`,
+      );
+      const newItems = res.data.items || res.data;
+
+      const newOptions = newItems.map((item) => ({
+        label: `${item.codigo} - ${item.nombre}`,
+        value: item.id,
+      }));
+
+      if (page === 1) {
+        setProductOptions(newOptions);
+      } else {
+        setProductOptions((prev) => [...prev, ...newOptions]);
+      }
+
+      if (newItems.length < 10) setHasMore(false);
+      else setHasMore(true);
+    } catch (err) {
+      console.error("Error cargando productos paginados:", err);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadProducts(searchQuery, 1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleInputChange = (newValue, actionMeta) => {
+    if (actionMeta.action === "input-change") {
+      setSearchQuery(newValue || "");
+      setCurrentPage(1);
+      setHasMore(true);
+    }
+  };
+
+  const handleScrollToBottom = () => {
+    if (!isLoadingProducts && hasMore) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      loadProducts(searchQuery, nextPage);
+    }
+  };
+
+  const handleAsignar = () => {
+    if (!selectedProducto) return;
+    dispatch(
+      asignarTipoGrupoThunk({
+        id_area: areaId,
+        productoId: selectedProducto.value,
+        create_by: usuarioId,
+        state: true,
+      }),
+    ).then((res) => {
+      if (res.meta.requestStatus === "fulfilled") {
+        toast({
+          title: "Línea asignada",
+          description: "La línea fue asignada exitosamente.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+          position: "top-right",
+        });
+        setSelectedProducto(null);
+        dispatch(fetchAsignacionesThunk(areaId));
+      } else {
+        toast({
+          title: "Error al asignar",
+          description: "No se pudo asignar la línea.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+          position: "top-right",
+        });
+      }
+    });
+  };
+
   const { asignaciones, clasificaciones } = useSelector(
     (state) => state.AsignacionAreaMesa,
   );
+
+  const [visibleCount, setVisibleCount] = useState(15);
+  const [filtroTabla, setFiltroTabla] = useState("");
+
+  const handleTableScroll = (e) => {
+    const bottom =
+      e.target.scrollHeight - e.target.scrollTop - e.target.clientHeight < 50;
+    if (bottom) {
+      setVisibleCount((prev) => prev + 15);
+    }
+  };
 
   useEffect(() => {
     if (areaId) {
@@ -61,7 +167,14 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
 
   const filteredAsignaciones = (
     Array.isArray(asignaciones) ? asignaciones : []
-  ).filter((a) => a?.state);
+  ).filter((a) => {
+    if (!a?.state) return false;
+    if (!filtroTabla) return true;
+    const searchLower = filtroTabla.toLowerCase();
+    const nombre = a.productoNombre?.toLowerCase() || "";
+    const codigo = a.productoCodigo?.toLowerCase() || "";
+    return nombre.includes(searchLower) || codigo.includes(searchLower);
+  });
 
   const handleDesasignar = (id) => {
     dispatch(desasignarTipoGrupoThunk({ id, update_by: usuarioId })).then(
@@ -386,6 +499,7 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
           borderBottom="1px solid"
           borderColor={borderColor}
           pb={2}
+          wrap="wrap"
         >
           <Flex bg={iconBg} p={2} borderRadius="md" color={iconColor}>
             <Icon as={MdPrecisionManufacturing} boxSize={5} />
@@ -393,13 +507,16 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
           <Heading size="md" color={headingColor} fontWeight="semibold">
             Líneas de Producción Asignadas
           </Heading>
-          <Tag
+          <Input
+            ml={{ base: 0, md: "auto" }}
+            w={{ base: "100%", md: "300px" }}
             size="sm"
-            colorScheme="blue"
-            borderRadius="full"
-            variant="solid"
-            ml="auto"
-          >
+            placeholder="🔍 Buscar asignación (Ejote...)"
+            value={filtroTabla}
+            onChange={(e) => setFiltroTabla(e.target.value)}
+            bg={bgColor}
+          />
+          <Tag size="sm" colorScheme="blue" borderRadius="full" variant="solid">
             {filteredAsignaciones.length} ítems
           </Tag>
         </Flex>
@@ -413,6 +530,7 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
           maxH="300px"
           overflowY="auto"
           position="relative"
+          onScroll={handleTableScroll}
         >
           <Table variant="simple" size="sm">
             <Thead bg={theadBg} position="sticky" top={0} zIndex={1}>
@@ -438,7 +556,7 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
                   </Td>
                 </Tr>
               ) : (
-                filteredAsignaciones.map((a) => (
+                filteredAsignaciones.slice(0, visibleCount).map((a) => (
                   <Tr
                     key={a.id}
                     _hover={{
@@ -468,6 +586,46 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
             </Tbody>
           </Table>
         </Box>
+
+        <Flex
+          align="center"
+          gap={3}
+          wrap="wrap"
+          p={3}
+          borderWidth={1}
+          borderColor={borderColor}
+          borderRadius="lg"
+          bg={listBg}
+          mt={3}
+        >
+          <Box flex="1" minW="250px">
+            <Select
+              placeholder="Buscar línea de producción por código o nombre..."
+              value={selectedProducto}
+              onChange={setSelectedProducto}
+              options={productOptions}
+              onInputChange={handleInputChange}
+              onMenuScrollToBottom={handleScrollToBottom}
+              isLoading={isLoadingProducts}
+              isClearable
+              filterOption={null}
+              menuPlacement="top"
+              noOptionsMessage={() =>
+                isLoadingProducts ? "Buscando..." : "No se encontraron opciones"
+              }
+              styles={customSelectStyles}
+            />
+          </Box>
+          <Button
+            colorScheme="blue"
+            onClick={handleAsignar}
+            isDisabled={!selectedProducto}
+            px={8}
+            boxShadow="sm"
+          >
+            Asignar Línea
+          </Button>
+        </Flex>
       </Box>
     </Box>
   );

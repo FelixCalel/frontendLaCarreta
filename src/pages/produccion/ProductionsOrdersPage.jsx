@@ -26,6 +26,9 @@ import { FilterPanel } from "../../components/production/FilterPanel";
 import { OrdersTable } from "../../components/production/OrdersTable";
 import { ConsolidatedOrdersView } from "../../components/production/ConsolidatedOrdersView";
 import AdvanceOrderButton from "../../components/production/AdvanceOrderButton";
+import { UnassignedProductsModal } from "../../components/production/UnassignedProductsModal";
+import { useGetUnassignedOrdersQuery } from "../../services/pedidoProductionApi";
+import { useDisclosure } from "@chakra-ui/react";
 
 const ProductionOrdersPage = () => {
   const navigate = useNavigate();
@@ -37,6 +40,15 @@ const ProductionOrdersPage = () => {
   const [syncReady, setSyncReady] = useState(false);
   const [procesarEstado5] = useProcesarEstado5Mutation();
   const [viewMode, setViewMode] = useState("byOrder");
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const { data: unassignedData = [] } = useGetUnassignedOrdersQuery(undefined, {
+    skip: !syncReady,
+  });
+  const unassignedCount = unassignedData.reduce(
+    (acc, g) => acc + g.items.length,
+    0,
+  );
 
   useEffect(() => {
     const runProcess = async () => {
@@ -139,60 +151,54 @@ const ProductionOrdersPage = () => {
   );
 
   const filteredGroups = useMemo(() => {
-    return (
-      mesaGroups
-        // Filtro DEU al inicio para optimizar
-        .filter((g) => {
-          if (!deuFilter) return true;
-          // Si el grupo tiene items con ese DEU, lo mantenemos (y filtramos items despues)
-          return g.items.some((i) => i.deudorCodigo === deuFilter);
-        })
-        .map((g) => {
-          const filteredItems = g.items
-            .filter((i) => {
-              if (deuFilter && i.deudorCodigo !== deuFilter) return false; // Filtro por DEU activo
-              if (!itemFilter) return true;
-              return i.productoNombre
-                .toLowerCase()
-                .includes(itemFilter.toLowerCase());
-            })
-            .slice()
-            .sort((a, b) =>
-              a.productoNombre.localeCompare(b.productoNombre, undefined, {
-                sensitivity: "base",
-              }),
-            );
+    return mesaGroups
+      .filter((g) => {
+        if (!deuFilter) return true;
+        return g.items.some((i) => i.deudorCodigo === deuFilter);
+      })
+      .map((g) => {
+        const filteredItems = g.items
+          .filter((i) => {
+            if (deuFilter && i.deudorCodigo !== deuFilter) return false;
+            if (!itemFilter) return true;
+            return i.productoNombre
+              .toLowerCase()
+              .includes(itemFilter.toLowerCase());
+          })
+          .slice()
+          .sort((a, b) =>
+            a.productoNombre.localeCompare(b.productoNombre, undefined, {
+              sensitivity: "base",
+            }),
+          );
 
-          return {
-            ...g,
-            items: filteredItems,
-          };
-        })
-        .filter((g) => g.items.length > 0)
-        .filter((g) => {
-          if (countryFilter && g.pais !== countryFilter) return false;
-          if (clientFilter && g.tienda !== clientFilter) return false;
+        return {
+          ...g,
+          items: filteredItems,
+        };
+      })
+      .filter((g) => g.items.length > 0)
+      .filter((g) => {
+        if (countryFilter && g.pais !== countryFilter) return false;
+        if (clientFilter && g.tienda !== clientFilter) return false;
 
-          if (stateFilter) {
-            const total = g.items.length;
-            const doneCount = g.items.filter((i) => i.completo).length;
-            const anyProgress = g.items.some(
-              (i) => Number(i.cantidad ?? 0) > 0,
-            );
-            const groupStatus =
-              doneCount === total
-                ? "Completado"
-                : anyProgress
-                  ? "En Proceso"
-                  : "Pendiente";
-            if (groupStatus !== stateFilter) return false;
-          }
+        if (stateFilter) {
+          const total = g.items.length;
+          const doneCount = g.items.filter((i) => i.completo).length;
+          const anyProgress = g.items.some((i) => Number(i.cantidad ?? 0) > 0);
+          const groupStatus =
+            doneCount === total
+              ? "Completado"
+              : anyProgress
+                ? "En Proceso"
+                : "Pendiente";
+          if (groupStatus !== stateFilter) return false;
+        }
 
-          return true;
-        })
-        .slice()
-        .sort((a, b) => a.pedidoId - b.pedidoId)
-    );
+        return true;
+      })
+      .slice()
+      .sort((a, b) => a.pedidoId - b.pedidoId);
   }, [
     mesaGroups,
     itemFilter,
@@ -307,7 +313,24 @@ const ProductionOrdersPage = () => {
             </Tooltip>
           </ButtonGroup>
 
-          <Box w={{ base: "100%", lg: "auto" }}>
+          {unassignedCount > 0 && (
+            <Tooltip
+              label="Ver productos que no tienen área asignada"
+              placement="top"
+            >
+              <Button
+                colorScheme="orange"
+                variant="solid"
+                onClick={onOpen}
+                leftIcon={<Icon as={CheckCircleIcon} />}
+                size="sm"
+              >
+                ⚠️ {unassignedCount} Sin Asignar
+              </Button>
+            </Tooltip>
+          )}
+
+          <HStack w={{ base: "full", lg: "auto" }}>
             <FilterPanel
               countryFilter={countryFilter}
               onCountryChange={handleCountryFilterChange}
@@ -321,7 +344,7 @@ const ProductionOrdersPage = () => {
               onDeuChange={handleDeuFilterChange}
               deudores={deudores}
             />
-          </Box>
+          </HStack>
         </Flex>
         {viewMode === "byOrder" ? (
           filteredGroups.length > 0 ? (
@@ -456,6 +479,7 @@ const ProductionOrdersPage = () => {
             </Text>
           </Flex>
         )}
+        <UnassignedProductsModal isOpen={isOpen} onClose={onClose} />
       </Box>
     );
   }

@@ -30,11 +30,23 @@ export const RootLayout = () => {
         <NavBar />
       </Box>
 
-      <Flex gridRow="2" gridColumn="1 / -1">
+      <Flex gridRow="2" gridColumn="1 / -1" overflow="hidden">
         <MenuPrincipal />
-        <Flex flex="1" bg={contentBg} direction="column">
+        <Flex
+          flex="1"
+          bg={contentBg}
+          direction="column"
+          minW={0}
+          overflow="hidden"
+        >
           <NavBarDashboard />
-          <Box flex="1" display="flex" flexDirection="column">
+          <Box
+            flex="1"
+            display="flex"
+            flexDirection="column"
+            overflowY="auto"
+            overflowX="hidden"
+          >
             <Outlet />
           </Box>
         </Flex>
