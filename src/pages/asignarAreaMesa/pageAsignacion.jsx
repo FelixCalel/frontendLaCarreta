@@ -125,14 +125,14 @@ const PageAsignacion = () => {
   }
 
   return (
-    <Box p={{ base: 4, md: 8 }} maxW="1200px" mx="auto">
+    <Box p={4} maxW="1200px" mx="auto">
       <Card
         bg={cardBg}
         shadow="sm"
         borderRadius="xl"
         borderWidth="1px"
         borderColor={cardBorderColor}
-        mb={8}
+        mb={4}
       >
         <CardBody>
           <Flex
@@ -142,8 +142,8 @@ const PageAsignacion = () => {
             gap={4}
           >
             <Box>
-              <Flex align="center" gap={3} mb={1}>
-                <Heading size="lg" color="green.700">
+              <Flex align="center" gap={2} mb={0}>
+                <Heading size="md" color="green.700">
                   {nombreArea}
                 </Heading>
               </Flex>
@@ -154,9 +154,9 @@ const PageAsignacion = () => {
 
             <Flex
               align="center"
-              gap={4}
+              gap={3}
               bg={statsBg}
-              p={3}
+              p={2}
               borderRadius="lg"
               border="1px solid"
               borderColor={statsBorderColor}

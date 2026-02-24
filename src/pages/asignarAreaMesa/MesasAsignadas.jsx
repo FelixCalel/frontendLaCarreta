@@ -137,8 +137,8 @@ const MesasAsignadas = ({ areaId }) => {
 
   return (
     <Box
-      mt={8}
-      p={5}
+      mt={-2}
+      p={4}
       bg={bgColor}
       borderRadius="xl"
       shadow="sm"
@@ -148,12 +148,12 @@ const MesasAsignadas = ({ areaId }) => {
       <Flex
         justifyContent="space-between"
         alignItems="center"
-        mb={6}
+        mb={0}
         borderBottom="1px solid"
         borderColor={borderColor}
-        pb={4}
+        pb={2}
       >
-        <Flex align="center" gap={3}>
+        <Flex align="center" gap={2}>
           <Flex bg={iconBg} p={2} borderRadius="md" color={iconColor}>
             <Icon as={MdTableRestaurant} boxSize={5} />
           </Flex>
@@ -196,14 +196,14 @@ const MesasAsignadas = ({ areaId }) => {
       </Flex>
 
       <Box
-        p={4}
+        p={2}
         bg={listBg}
         borderRadius="lg"
-        minH="80px"
+        minH="60px"
         border="1px dashed"
         borderColor={listBorderColor}
       >
-        <HStack spacing={3} wrap="wrap">
+        <HStack spacing={2} wrap="wrap">
           {!Array.isArray(mesasAsignadas) || mesasAsignadas.length === 0 ? (
             <Text color="gray.500" fontStyle="italic">
               No hay mesas asignadas en este momento.
@@ -212,7 +212,7 @@ const MesasAsignadas = ({ areaId }) => {
             (Array.isArray(mesasAsignadas) ? mesasAsignadas : []).map(
               (mesa) => (
                 <Tag
-                  size="lg"
+                  size="md"
                   key={mesa.id}
                   borderRadius="md"
                   variant="subtle"
@@ -220,7 +220,7 @@ const MesasAsignadas = ({ areaId }) => {
                   bg={tagBg}
                   border="1px solid"
                   borderColor={tagBorderColor}
-                  px={4}
+                  px={2}
                   py={2}
                   boxShadow="sm"
                   _hover={{
@@ -234,7 +234,7 @@ const MesasAsignadas = ({ areaId }) => {
                     {getNombreMesa(mesa.id_mesa)}
                   </TagLabel>
                   <TagCloseButton
-                    ml={3}
+                    ml={2}
                     color="red.600"
                     _hover={{ bg: "red.600", color: "white" }}
                     opacity={1}

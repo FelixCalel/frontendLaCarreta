@@ -68,19 +68,23 @@ const PageAsignacionAreas = () => {
     );
   }
 
-  const areasEnriquecidas = (areas || []).map((area) => {
-    const encargado = (usuarios || []).find((u) => u.id === area.encargado_id);
-    return {
-      ...area,
-      nombreFinal:
-        area.nombre && area.nombre !== "Área Sin Nombre"
-          ? area.nombre
-          : "Área Sin Nombre",
-      encargadoNombre: encargado
-        ? `${encargado.nombre} ${encargado.apellido}`
-        : "Sin encargado",
-    };
-  });
+  const areasEnriquecidas = (areas || [])
+    .map((area) => {
+      const encargado = (usuarios || []).find(
+        (u) => u.id === area.encargado_id,
+      );
+      return {
+        ...area,
+        nombreFinal:
+          area.nombre && area.nombre !== "Área Sin Nombre"
+            ? area.nombre
+            : "Área Sin Nombre",
+        encargadoNombre: encargado
+          ? `${encargado.nombre} ${encargado.apellido}`
+          : "Sin encargado",
+      };
+    })
+    .sort((a, b) => a.id - b.id);
 
   const pathParts = location.pathname.split("/");
   const activeAreaId = pathParts[pathParts.length - 1];

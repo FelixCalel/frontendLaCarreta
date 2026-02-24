@@ -137,3 +137,49 @@ export const actualizarEncargadoThunk = createAsyncThunk(
     }
   },
 );
+
+export const fetchClasificacionesThunk = createAsyncThunk(
+  "asignacionAM/fetchClasificaciones",
+  async (_, thunkAPI) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/items/clasificaciones`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching classifications:", error);
+      return thunkAPI.rejectWithValue("Error al obtener clasificaciones");
+    }
+  },
+);
+
+export const bulkAsignarThunk = createAsyncThunk(
+  "asignacionAM/bulkAsignar",
+  async (data, thunkAPI) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/asignarArea/bulk`, data);
+      return response.data;
+    } catch (error) {
+      console.error("Error in bulk assignment:", error);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.error || "Error en asignación masiva",
+      );
+    }
+  },
+);
+
+export const bulkDesasignarThunk = createAsyncThunk(
+  "asignacionAM/bulkDesasignar",
+  async (data, thunkAPI) => {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/asignarArea/bulk-remove`,
+        data,
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error in bulk remove:", error);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.error || "Error al quitar masivamente",
+      );
+    }
+  },
+);
