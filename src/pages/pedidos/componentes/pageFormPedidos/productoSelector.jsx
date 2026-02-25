@@ -37,7 +37,7 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
   const itemHoverBg = useColorModeValue("gray.100", "gray.600");
 
   useEffect(() => {
-    dispatch(tablaItems());
+    dispatch(tablaItems({ pageSize: 2000 }));
   }, [dispatch]);
 
   const sourceItems = useMemo(() => {
