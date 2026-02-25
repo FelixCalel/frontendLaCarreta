@@ -6,8 +6,8 @@ import {
   Stack,
   Text,
   useColorModeValue,
-  keyframes,
 } from "@chakra-ui/react";
+import { keyframes } from "@emotion/react";
 
 const float = keyframes`
   0% { transform: translateY(10vh); opacity: 0; }
@@ -19,7 +19,7 @@ const float = keyframes`
 const AnimatedBackground = React.memo(() => {
   const icons = React.useMemo(
     () => ["🍍", "🍎", "🛒", "🛍️", "🥦", "🥖", "🧀", "🍇"],
-    []
+    [],
   );
   const bg = useColorModeValue("green.50", "gray.900");
 

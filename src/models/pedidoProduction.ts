@@ -5,11 +5,7 @@ export interface Metadata {
   defaultValue: string | null;
 }
 
-export interface AvanzarEtapaPayload {
-  pedidoId: number;
-  usuarioId: number;
-  comentario?: string | null;
-}
+
 
 export interface PedidoProduccion {
   id: number;
@@ -44,6 +40,8 @@ export interface PedidoProduccion {
   productoNombre: string;
   tienda: string;
   pais: string;
+  deudorCodigo: string;
+  deudorNombre: string;
   unidadMedida: string;
 }
 
@@ -55,6 +53,8 @@ export interface PedidoAgrupado {
   pedidoId: number;
   tienda: string;
   pais: string;
+  deudorCodigo: string;
+  deudorNombre: string;
   items: PedidoProduccion[];
 }
 export type UpdatePedidoDto = Partial<Omit<PedidoProduccion, "id">>;
@@ -63,6 +63,8 @@ export interface AvanzarEtapaPayload {
   pedidoId: number;
   usuarioId: number;
   comentario?: string | null;
+  fechaOrden?: string;
+  nuevaEtapaId?: number;
 }
 
 export interface AvanzarEtapaDetallePayload {
@@ -73,6 +75,9 @@ export interface AvanzarEtapaDetallePayload {
 export interface AvanzarMultiEtapaDetallePayload {
   detalleOrdenIds: number[];
   usuarioId: number;
+  comentario?: string | null;
+  fechaOrden?: string;
+  nuevaEtapaId?: number;
 }
 
 export interface AvanceOK {
@@ -116,9 +121,20 @@ export type UpdateRecetaLineaDto = Partial<
   >
 >;
 
+export interface CreateRecetaLineaDto {
+  pedido_produccionid: number;
+  item: string;
+  descripcion: string;
+  cantidad_base: number;
+  cantidad_requerida: number;
+  nombre_unidad: string;
+  id_almacen: number;
+  mpUtilizada?: number | null;
+}
+
 export interface Rechazo {
   id: number;
-  fechaRechazo: string; // Dates are strings in JSON
+  fechaRechazo: string;
   cantidadRechazada: number;
   comentario: string | null;
   usuarioId: number;

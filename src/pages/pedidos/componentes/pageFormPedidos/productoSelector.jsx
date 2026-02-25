@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useDeferredValue } from "react";
 import PropTypes from "prop-types";
 import {
   Flex,
@@ -25,6 +25,7 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
   const dispatch = useDispatch();
 
   const [inputValue, setInputValue] = useState("");
+  const deferredQuery = useDeferredValue(inputValue);
   const [selectedItem, setSelectedItem] = useState(null);
   const [error, setError] = useState("");
   const [renderItems, setRenderItems] = useState([]);
@@ -43,7 +44,8 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
     const dId = Number(deudorId) || null;
     if (!dId) return [];
 
-    return (itemsAll || [])
+    const list = Array.isArray(itemsAll) ? itemsAll : [];
+    return list
       .filter((it) => {
         if (it.deudores && it.deudores.length > 0) {
           return it.deudores.some((d) => d.id === dId);
@@ -76,7 +78,7 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
   };
 
   useEffect(() => {
-    const term = normalizeText(inputValue.trim());
+    const term = normalizeText(deferredQuery.trim());
     if (term === "") {
       setRenderItems(visibleItems);
       return;
@@ -84,10 +86,10 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
     const matches = sourceItems.filter(
       (it) =>
         normalizeText(it.nombre).includes(term) ||
-        normalizeText(it.codigo).includes(term)
+        normalizeText(it.codigo).includes(term),
     );
     setRenderItems(matches.slice(0, 200));
-  }, [inputValue, sourceItems, visibleItems]);
+  }, [deferredQuery, sourceItems, visibleItems]);
 
   const handleSelectItem = (item) => {
     setInputValue(item.nombre);
@@ -116,7 +118,7 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
     if (visibleItems.length < sourceItems.length) {
       const newLength = Math.min(
         visibleItems.length + CHUNK_SIZE,
-        sourceItems.length
+        sourceItems.length,
       );
       setVisibleItems(sourceItems.slice(0, newLength));
     }

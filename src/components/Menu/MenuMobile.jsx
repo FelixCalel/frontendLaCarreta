@@ -4,9 +4,9 @@ import {
   VStack,
   useColorModeValue,
   IconButton,
-  keyframes,
   Skeleton,
 } from "@chakra-ui/react";
+import { keyframes } from "@emotion/react";
 import { CloseIcon } from "@chakra-ui/icons";
 import { FaBars } from "react-icons/fa";
 import { useLocation } from "react-router-dom";

@@ -77,9 +77,9 @@ export const OrderDetailsTable = ({
       <Text
         px={1}
         pt={1}
-        pb={2}
+        pb={1}
         fontWeight="bold"
-        fontSize="lg"
+        fontSize="sm"
         textAlign="center"
       >
         Receta
@@ -122,11 +122,9 @@ OrderDetailsTable.propTypes = {
       cantidadRequerida: PropTypes.number,
       unidad: PropTypes.string,
       almacen: PropTypes.string,
-    })
+    }),
   ),
   showPTMQ: PropTypes.bool,
   isPTMQ: PropTypes.bool,
   onTogglePTMQ: PropTypes.func,
 };
-
-

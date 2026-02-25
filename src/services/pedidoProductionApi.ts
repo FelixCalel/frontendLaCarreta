@@ -15,13 +15,13 @@ import {
   Rechazo,
   CreateRechazoDto,
   UpdateRechazoDto,
+  CreateRecetaLineaDto,
 } from "../models/pedidoProduction";
 import { parseNumericFields } from "../utils/data-parser";
 
 export interface ProdAlmacen {
   id: number | string;
   nombre: string;
-  // Agrega otros campos si tu modelo los requiere
 }
 
 export const pedidoProduccionApi = createApi({
@@ -91,15 +91,87 @@ export const pedidoProduccionApi = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: (_res, _err, { id }) => [
-        { type: "PedidoProduccion", id },
-        // **muy importante**: invalida la lista de grupos
+      invalidatesTags: (result, error, { id }) => [
+        { type: "PedidoProduccion" as const, id },
+        { type: "PedidoProduccion" as const, id: "LIST" },
+        { type: "PedidoAgrupado" as const, id: "LIST" },
+      ],
+    }),
+
+    updateMultiplePedidosProduccion: builder.mutation<void, { ids: number[]; data: UpdatePedidoDto }>({
+      query: ({ ids, data }) => ({
+        url: `/pedidoProduccion/multiple`,
+        method: "PUT",
+        body: { ids, data },
+      }),
+      async onQueryStarted({ ids, data }, { dispatch, queryFulfilled }) {
+        if (data.completo === undefined) return;
+
+        const patchResult = dispatch(
+          pedidoProduccionApi.util.updateQueryData(
+            "getPedidosAgrupados",
+            { etapaId: 1 },
+            (draft: PedidoAgrupado[]) => {
+              if (data.completo !== undefined) {
+                draft.forEach(group => {
+                  group.items.forEach(item => {
+                    if (ids.includes(item.id)) {
+                      item.completo = data.completo!;
+                    }
+                  });
+                });
+              }
+            }
+          )
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
+      invalidatesTags: [
+        { type: "PedidoProduccion", id: "LIST" },
         { type: "PedidoAgrupado", id: "LIST" },
       ],
     }),
 
-    getPedidosAgrupados: builder.query<PedidoAgrupado[], void>({
-      query: () => "/pedidoProduccion/agrupados",
+    getUnassignedOrders: builder.query<PedidoAgrupado[], void>({
+      query: () => "/pedidoProduccion/sin-asignar",
+      providesTags: (result) =>
+        result
+          ? [
+            ...result.map(({ pedidoId }) => ({
+              type: "PedidoAgrupado" as const,
+              id: pedidoId,
+            })),
+            { type: "PedidoAgrupado", id: "LIST" },
+            { type: "PedidoProduccion", id: "LIST" },
+          ]
+          : [{ type: "PedidoAgrupado", id: "LIST" }, { type: "PedidoProduccion", id: "LIST" }],
+    }),
+
+    getPedidosAgrupados: builder.query<
+      PedidoAgrupado[],
+      { etapaId?: number; completed?: boolean } | void
+    >({
+      query: (params) => {
+        let url = "/pedidoProduccion/agrupados";
+        if (params) {
+          const queryParams = new URLSearchParams();
+          if (params.etapaId !== undefined) {
+            queryParams.append("etapaId", params.etapaId.toString());
+          }
+          if (params.completed !== undefined) {
+            queryParams.append("completed", params.completed.toString());
+          }
+          const queryString = queryParams.toString();
+          if (queryString) {
+            url += `?${queryString}`;
+          }
+        }
+        return url;
+      },
       providesTags: (result) =>
         result
           ? [
@@ -161,6 +233,48 @@ export const pedidoProduccionApi = createApi({
         })),
         { type: "DetalleProduccion", id: "LIST" },
       ],
+    }),
+
+
+
+    createRecetaLinea: builder.mutation<
+      RecetaLinea,
+      { data: CreateRecetaLineaDto }
+    >({
+      query: ({ data }) => ({
+        url: "/receta",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: (_res, _err, { data }) => [
+        { type: "RecetaPedido", id: data.pedido_produccionid },
+        { type: "RecetaPedido", id: "LIST" },
+      ],
+    }),
+
+    getItems: builder.query<
+      { items: any[]; totalItems: number },
+      { page: number; pageSize: number; nombre?: string; codigo?: string }
+    >({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        queryParams.append("page", params.page.toString());
+        queryParams.append("pageSize", params.pageSize.toString());
+        if (params.nombre) queryParams.append("nombre", params.nombre);
+        if (params.codigo) queryParams.append("codigo", params.codigo);
+        return `/items/todos?${queryParams.toString()}`;
+      },
+    }),
+
+    getStockSAP: builder.query<
+      any,
+      { itemcode: string; pedidoId: number }
+    >({
+      query: (body) => ({
+        url: "/sap/items/stock",
+        method: "POST",
+        body,
+      }),
     }),
 
     getRecetaByPedido: builder.query<RecetaLinea[], { pedidoId: number; id_almacen?: number }>({
@@ -270,6 +384,7 @@ export const {
   useGetDetallesYProduccionQuery,
   useUpdatePedidoProduccionMutation,
   useGetPedidosAgrupadosQuery,
+  useGetUnassignedOrdersQuery,
   useAvanzarEtapaMutation,
   useAvanzarEtapaDetalleMutation,
   useAvanzarMultiEtapaDetalleMutation,
@@ -281,5 +396,9 @@ export const {
   useCreateRechazoMutation,
   useUpdateRechazoMutation,
   useGetRechazoByPedidoProduccionIdQuery,
+  useUpdateMultiplePedidosProduccionMutation,
   useGetAlmacenesQuery,
+  useCreateRecetaLineaMutation,
+  useLazyGetItemsQuery,
+  useLazyGetStockSAPQuery,
 } = pedidoProduccionApi;

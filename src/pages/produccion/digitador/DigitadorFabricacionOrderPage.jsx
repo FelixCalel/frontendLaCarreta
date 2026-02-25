@@ -21,32 +21,39 @@ import { GroupCardGrid } from "../../../components/production/digitador/Fabricac
 import { ConsolidatedOrdersView } from "../../../components/production/ConsolidatedOrdersView";
 
 const DigitadorFabricacionOrdersPage = () => {
-  const { data: groups = [], isLoading, error } = useGetPedidosAgrupadosQuery();
+  const {
+    data: groups = [],
+    isLoading,
+    error,
+  } = useGetPedidosAgrupadosQuery({
+    etapaId: 3,
+  });
 
   const base = useMemo(
     () =>
       groups
         .map((g) => ({
           ...g,
-          items: g.items
-            .filter((it) => it.etapaId === 2)
-            .map((item) => ({
-              ...item,
-              // Ensure all numeric fields are numbers
-              cantidadUnidad: Number(item.cantidadUnidad ?? 0),
-              cantidad: Number(item.cantidad ?? 0),
-              faltante: Number(item.faltante ?? 0),
-              mpUtilizada: Number(item.mpUtilizada ?? 0),
-              mp1ra: Number(item.mp1ra ?? 0),
-              mp2da: Number(item.mp2da ?? 0),
-              mp3ra: Number(item.mp3ra ?? 0),
-              mpSobrante: Number(item.mpSobrante ?? 0),
-              rechazo: Number(item.rechazo ?? 0),
-              basura: Number(item.basura ?? 0),
-            })),
+          items: g.items.map((item) => ({
+            ...item,
+            pedidoId: g.pedidoId,
+            tienda: g.tienda,
+            deudorCodigo: g.deudorCodigo,
+            deudorNombre: g.deudorNombre,
+            cantidadUnidad: Number(item.cantidadUnidad ?? 0),
+            cantidad: Number(item.cantidad ?? 0),
+            faltante: Number(item.faltante ?? 0),
+            mpUtilizada: Number(item.mpUtilizada ?? 0),
+            mp1ra: Number(item.mp1ra ?? 0),
+            mp2da: Number(item.mp2da ?? 0),
+            mp3ra: Number(item.mp3ra ?? 0),
+            mpSobrante: Number(item.mpSobrante ?? 0),
+            rechazo: Number(item.rechazo ?? 0),
+            basura: Number(item.basura ?? 0),
+          })),
         }))
         .filter((g) => g.items.length > 0),
-    [groups]
+    [groups],
   );
 
   const [term, setTerm] = useState("");
@@ -66,7 +73,7 @@ const DigitadorFabricacionOrdersPage = () => {
         const byStatus = !status || g.estado === status;
         return byText && byDate && byStatus;
       }),
-    [base, term, date, status]
+    [base, term, date, status],
   );
 
   const consolidatedItems = useMemo(() => {
@@ -76,7 +83,9 @@ const DigitadorFabricacionOrdersPage = () => {
     const itemsMap = new Map();
 
     allFilteredItems.forEach((item) => {
-      const key = item.productoNombre;
+      // Agrupar por código DEU Y producto
+      const deuCode = item.deudorCodigo || "";
+      const key = `${deuCode}|${item.productoNombre}`;
       if (itemsMap.has(key)) {
         const existing = itemsMap.get(key);
         existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
@@ -92,11 +101,20 @@ const DigitadorFabricacionOrdersPage = () => {
       }
     });
 
-    return Array.from(itemsMap.values()).sort((a, b) =>
-      a.productoNombre.localeCompare(b.productoNombre, undefined, {
+    // Ordenar primero por código DEU, luego por producto
+    return Array.from(itemsMap.values()).sort((a, b) => {
+      const deuCompare = (a.deudorCodigo || "").localeCompare(
+        b.deudorCodigo || "",
+        undefined,
+        {
+          sensitivity: "base",
+        },
+      );
+      if (deuCompare !== 0) return deuCompare;
+      return a.productoNombre.localeCompare(b.productoNombre, undefined, {
         sensitivity: "base",
-      })
-    );
+      });
+    });
   }, [filtered, viewMode]);
 
   if (isLoading) {
@@ -187,7 +205,10 @@ const DigitadorFabricacionOrdersPage = () => {
           title="Orden de fabricación"
         />
       ) : (
-        <ConsolidatedOrdersView data={consolidatedItems} />
+        <ConsolidatedOrdersView
+          data={consolidatedItems}
+          actionLabel="Cargar a SAP"
+        />
       )}
     </Box>
   );

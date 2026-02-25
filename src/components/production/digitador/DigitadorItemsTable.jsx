@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import {
   Table,
   Thead,
@@ -8,8 +7,8 @@ import {
   Td,
   Checkbox,
   Input,
+  useColorModeValue,
 } from "@chakra-ui/react";
-import { useUpdatePedidoProduccionMutation } from "../../../services/pedidoProductionApi";
 
 export const DigitadorItemsTable = ({ items }) => {
   const [updateItem] = useUpdatePedidoProduccionMutation();
@@ -22,8 +21,12 @@ export const DigitadorItemsTable = ({ items }) => {
     updateItem({ id, data: { [field]: value } });
   };
 
+  const bgOdd = useColorModeValue("white", "gray.900");
+  const bgEven = useColorModeValue("gray.50", "gray.800");
+  const hoverBg = useColorModeValue("gray.200", "gray.600");
+
   return (
-    <Table size="sm" variant="striped">
+    <Table size="sm" variant="simple">
       <Thead>
         <Tr>
           <Th>ITEM</Th>
@@ -38,9 +41,12 @@ export const DigitadorItemsTable = ({ items }) => {
         </Tr>
       </Thead>
       <Tbody>
-        {items.map((it) => (
-          <Tr key={it.id}>
-            {/* <Td>{it.id_asigArea}</Td> */}
+        {items.map((it, idx) => (
+          <Tr
+            key={it.id}
+            bg={idx % 2 === 0 ? bgOdd : bgEven}
+            _hover={{ bg: hoverBg }}
+          >
             <Td>{it.itemCode}</Td>
             <Td>{it.productoNombre}</Td>
             <Td isNumeric>{it.cantidadUnidad ?? 0}</Td>

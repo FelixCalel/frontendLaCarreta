@@ -11,6 +11,10 @@ import {
   useColorModeValue,
   ButtonGroup,
   Tooltip,
+  VStack,
+  Badge,
+  Divider,
+  HStack,
 } from "@chakra-ui/react";
 import {
   CheckCircleIcon,
@@ -18,6 +22,7 @@ import {
   HamburgerIcon,
   RepeatClockIcon,
 } from "@chakra-ui/icons";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useGetPedidosAgrupadosQuery,
   useProcesarEstado5Mutation,
@@ -29,9 +34,11 @@ import BotonSincronizarReceta from "../../../components/empresa/BotonSincronizar
 import { useSelector, useDispatch } from "react-redux";
 import { tablaEmpresa, tablaPais } from "../../../store/Empresa/thunks";
 import { selectRecetasState } from "../../../store/Empresa";
-import AcceptOrderButton from "../../../components/production/AcceptOrderButton";
+import AdvanceOrderButton from "../../../components/production/AdvanceOrderButton";
 
 const SupervisorOrdersPage = () => {
+  const navigate = useNavigate();
+  const { pedidoId } = useParams();
   const dispatch = useDispatch();
   const { data: empresas, paises } = useSelector((state) => state.empresas);
   const { lastSync } = useSelector(selectRecetasState);
@@ -39,7 +46,6 @@ const SupervisorOrdersPage = () => {
   const [itemFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
-  const [selectedPedidoId, setSelectedPedidoId] = useState(null);
   const [syncReady, setSyncReady] = useState(false);
   const [procesarEstado5] = useProcesarEstado5Mutation();
   const [viewMode, setViewMode] = useState("byOrder");
@@ -77,10 +83,22 @@ const SupervisorOrdersPage = () => {
     data: agrupados = [],
     isLoading,
     error,
-  } = useGetPedidosAgrupadosQuery(undefined, { skip: !syncReady });
+  } = useGetPedidosAgrupadosQuery({ etapaId: 2 }, { skip: !syncReady });
+
+  // DEBUG: Ver qué datos están llegando del backend
+  useEffect(() => {
+    if (agrupados.length > 0) {
+      console.log("🔍 Primer pedido agrupado:", agrupados[0]);
+      console.log(
+        "🔍 Primer item del primer pedido:",
+        agrupados[0]?.items?.[0],
+      );
+    }
+  }, [agrupados]);
 
   const cardBg = useColorModeValue("white", "gray.700");
   const cardBorder = useColorModeValue("gray.200", "gray.600");
+  const cardHoverShadow = useColorModeValue("lg", "dark-lg");
 
   const pedidoGroups = useMemo(
     () =>
@@ -89,11 +107,14 @@ const SupervisorOrdersPage = () => {
           pedidoId: g.pedidoId,
           tienda: g.tienda,
           pais: g.pais,
+          deudorCodigo: g.deudorCodigo,
+          deudorNombre: g.deudorNombre,
           items: g.items.map((item) => ({
             ...item,
             pedidoId: g.pedidoId,
             tienda: g.tienda,
-            // Ensure all numeric fields are numbers
+            deudorCodigo: g.deudorCodigo,
+            deudorNombre: g.deudorNombre,
             cantidadUnidad: Number(item.cantidadUnidad ?? 0),
             cantidad: Number(item.cantidad ?? 0),
             faltante: Number(item.faltante ?? 0),
@@ -107,20 +128,20 @@ const SupervisorOrdersPage = () => {
           })),
         }))
         .filter((g) => g.items.length > 0),
-    [agrupados]
+    [agrupados],
   );
 
   const allItems = useMemo(
     () => pedidoGroups.flatMap((g) => g.items),
-    [pedidoGroups]
+    [pedidoGroups],
   );
   const countries = useMemo(
     () => Array.from(new Set(allItems.map((i) => i.pais))),
-    [allItems]
+    [allItems],
   );
   const clients = useMemo(
     () => Array.from(new Set(allItems.map((i) => i.tienda))),
-    [allItems]
+    [allItems],
   );
 
   const filteredGroups = useMemo(() => {
@@ -137,7 +158,7 @@ const SupervisorOrdersPage = () => {
           .sort((a, b) =>
             a.productoNombre.localeCompare(b.productoNombre, undefined, {
               sensitivity: "base",
-            })
+            }),
           );
 
         return {
@@ -158,8 +179,8 @@ const SupervisorOrdersPage = () => {
             doneCount === total
               ? "Completado"
               : anyProgress
-              ? "En Proceso"
-              : "Pendiente";
+                ? "En Proceso"
+                : "Pendiente";
           if (groupStatus !== stateFilter) return false;
         }
 
@@ -176,27 +197,42 @@ const SupervisorOrdersPage = () => {
     const itemsMap = new Map();
 
     allFilteredItems.forEach((item) => {
-      const key = item.productoNombre;
+      // Agrupar por código DEU Y producto
+      const deuCode = item.deudorCodigo || "";
+      const key = `${deuCode}|${item.productoNombre}`;
       if (itemsMap.has(key)) {
         const existing = itemsMap.get(key);
         existing.cantidadUnidad += Number(item.cantidadUnidad ?? 0);
         existing.cantidad += Number(item.cantidad ?? 0);
+        existing.mpUtilizada += Number(item.mpUtilizada ?? 0);
+        existing.rechazo += Number(item.rechazo ?? 0);
         existing.originalItems.push(item);
       } else {
         itemsMap.set(key, {
           ...item,
           cantidadUnidad: Number(item.cantidadUnidad ?? 0),
           cantidad: Number(item.cantidad ?? 0),
+          mpUtilizada: Number(item.mpUtilizada ?? 0),
+          rechazo: Number(item.rechazo ?? 0),
           originalItems: [item],
         });
       }
     });
 
-    return Array.from(itemsMap.values()).sort((a, b) =>
-      a.productoNombre.localeCompare(b.productoNombre, undefined, {
+    // Ordenar primero por código DEU, luego por producto
+    return Array.from(itemsMap.values()).sort((a, b) => {
+      const deuCompare = (a.deudorCodigo || "").localeCompare(
+        b.deudorCodigo || "",
+        undefined,
+        {
+          sensitivity: "base",
+        },
+      );
+      if (deuCompare !== 0) return deuCompare;
+      return a.productoNombre.localeCompare(b.productoNombre, undefined, {
         sensitivity: "base",
-      })
-    );
+      });
+    });
   }, [filteredGroups, viewMode]);
 
   if (isLoading || !syncReady) {
@@ -214,7 +250,7 @@ const SupervisorOrdersPage = () => {
     );
   }
 
-  if (selectedPedidoId === null) {
+  if (!pedidoId) {
     return (
       <Box p={2}>
         <Flex justifyContent="space-between" alignItems="center" mb={4}>
@@ -292,7 +328,6 @@ const SupervisorOrdersPage = () => {
             </Flex>
           </Flex>
 
-          {/* Right: Filters */}
           <Box w={{ base: "100%", lg: "auto" }}>
             <FilterPanel
               countryFilter={countryFilter}
@@ -311,77 +346,117 @@ const SupervisorOrdersPage = () => {
             {filteredGroups.map((g) => {
               const doneCount = g.items.filter((i) => i.completo).length;
               const allDone = doneCount === g.items.length;
+              const statusColor = allDone ? "green.400" : "yellow.400";
+              const deudorCode = g.deudorCodigo || "N/A";
+
               return (
                 <Box
                   key={g.pedidoId}
                   position="relative"
-                  p={4}
                   bg={cardBg}
                   border="1px solid"
                   borderColor={cardBorder}
-                  borderRadius="md"
+                  borderRadius="lg"
+                  overflow="hidden"
                   cursor="pointer"
-                  _hover={{ shadow: "md" }}
-                  onClick={() => setSelectedPedidoId(g.pedidoId)}
+                  transition="all 0.2s"
+                  _hover={{
+                    shadow: cardHoverShadow,
+                    transform: "translateY(-2px)",
+                  }}
+                  onClick={() => navigate(`/produccion/orden/${g.pedidoId}`)}
+                  role="group"
                 >
-                  <Icon
-                    as={CheckCircleIcon}
-                    position="absolute"
-                    top="4px"
-                    right="4px"
-                    boxSize={6}
-                    color={allDone ? "green.400" : "yellow.400"}
-                  />
-                  <Text fontWeight="bold">Pedido #{g.pedidoId}</Text>
-                  <Text fontSize="sm">{g.tienda}</Text>
-                  <Text fontSize="sm" color="gray.500">
-                    {g.pais}
-                  </Text>
-                  <Box
-                    mt={2}
-                    px={2}
-                    py={1}
-                    bg="blue.500"
-                    color="white"
-                    fontSize="xs"
-                    borderRadius="sm"
-                    display="inline-block"
-                  >
-                    {g.items.length} ÍTEM{g.items.length > 1 ? "S" : ""}
+                  <Box h="4px" bg={statusColor} w="100%" />
+                  <Box p={4}>
+                    <Flex justify="space-between" align="start" mb={2}>
+                      <VStack align="start" spacing={0}>
+                        <Text
+                          fontSize="xs"
+                          color="gray.500"
+                          fontWeight="bold"
+                          letterSpacing="wide"
+                          textTransform="uppercase"
+                        >
+                          Pedido #{g.pedidoId}
+                        </Text>
+                        <Heading size="sm" noOfLines={2} title={g.tienda}>
+                          {g.tienda}
+                        </Heading>
+                      </VStack>
+                      <Icon
+                        as={CheckCircleIcon}
+                        color={statusColor}
+                        boxSize={5}
+                      />
+                    </Flex>
+
+                    <HStack mt={2} mb={3}>
+                      <Badge
+                        colorScheme="blue"
+                        variant="subtle"
+                        fontSize="0.7em"
+                      >
+                        DEU: {deudorCode}
+                      </Badge>
+                      <Badge variant="outline" fontSize="0.7em">
+                        {g.pais}
+                      </Badge>
+                    </HStack>
+
+                    <Divider mb={3} borderColor="gray.100" />
+
+                    <Flex justify="space-between" align="center">
+                      <Text fontSize="xs" color="gray.500">
+                        {doneCount} / {g.items.length} Completados
+                      </Text>
+                      <Badge
+                        colorScheme={allDone ? "green" : "gray"}
+                        variant="solid"
+                        borderRadius="full"
+                        px={2}
+                      >
+                        {g.items.length} ÍTEM{g.items.length !== 1 ? "S" : ""}
+                      </Badge>
+                    </Flex>
                   </Box>
                 </Box>
               );
             })}
           </SimpleGrid>
         ) : (
-          <ConsolidatedOrdersView data={consolidatedItems} />
+          <ConsolidatedOrdersView
+            data={consolidatedItems}
+            actionLabel="Pasar a Digitador"
+          />
         )}
       </Box>
     );
   }
 
   const selectedGroup = filteredGroups.find(
-    (g) => g.pedidoId === selectedPedidoId
+    (g) => g.pedidoId === Number(pedidoId),
   );
 
   if (!selectedGroup) {
-    setSelectedPedidoId(null);
+    navigate("/produccion/orden");
     return null;
   }
 
   return (
     <Box p={6}>
       <Flex mb={4} align="center" justify="space-between">
-        <Button onClick={() => setSelectedPedidoId(null)}>← Volver</Button>
+        <Button onClick={() => navigate("/produccion/orden")}>← Volver</Button>
         <Box flex="1" display="flex" justifyContent="center">
           <Heading size="md">
             Pedido #{selectedGroup.pedidoId} – {selectedGroup.tienda}
           </Heading>
         </Box>
         <Box>
-          <AcceptOrderButton
+          <AdvanceOrderButton
             order={selectedGroup}
-            onSuccess={() => setSelectedPedidoId(null)}
+            onSuccess={() => navigate("/produccion/orden")}
+            label="Pasar a Digitador"
           />
         </Box>
       </Flex>

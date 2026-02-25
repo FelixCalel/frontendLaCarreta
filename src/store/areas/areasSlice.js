@@ -1,5 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchAreas, fetchAreaById, fetchOpciones } from "./thunks";
+import {
+  fetchAreas,
+  fetchAreaById,
+  fetchOpciones,
+  eliminarAreaThunk,
+} from "./thunks";
 
 const areasSlice = createSlice({
   name: "areas",
@@ -48,6 +53,14 @@ const areasSlice = createSlice({
       .addCase(fetchOpciones.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(eliminarAreaThunk.fulfilled, (state, action) => {
+        state.areas = state.areas.filter(
+          (area) => area.id !== action.payload.id,
+        );
+        if (state.currentArea?.id === action.payload.id) {
+          state.currentArea = null;
+        }
       });
   },
 });

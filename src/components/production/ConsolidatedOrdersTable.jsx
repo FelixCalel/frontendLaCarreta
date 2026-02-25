@@ -14,6 +14,10 @@ import {
 export const ConsolidatedOrdersTable = ({ data, onRowClick }) => {
   const headerBg = useColorModeValue("gray.100", "gray.700");
 
+  const bgOdd = useColorModeValue("white", "gray.900");
+  const bgEven = useColorModeValue("gray.50", "gray.800");
+  const hoverBg = useColorModeValue("gray.200", "gray.600");
+
   return (
     <TableContainer
       w="100%"
@@ -34,8 +38,12 @@ export const ConsolidatedOrdersTable = ({ data, onRowClick }) => {
           </Tr>
         </Thead>
         <Tbody>
-          {data.map((item) => (
-            <Tr key={item.productoNombre}>
+          {data.map((item, idx) => (
+            <Tr
+              key={item.productoNombre}
+              bg={idx % 2 === 0 ? bgOdd : bgEven}
+              _hover={{ bg: hoverBg }}
+            >
               <Td>{item.productoNombre}</Td>
               <Td isNumeric>{item.cantidad}</Td>
               <Td>

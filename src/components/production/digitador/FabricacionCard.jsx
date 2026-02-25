@@ -3,14 +3,14 @@ import { Box, Text, Badge, useColorModeValue, Icon } from "@chakra-ui/react";
 import { CheckIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 
-const countStage2 = (items) => items.filter((it) => it.etapaId === 2).length;
+const countStage3 = (items) => items.filter((it) => it.etapaId === 3).length;
 
 export const GroupCard = ({ group, IconComponent, title }) => {
   const { pedidoId, items } = group;
   const navigate = useNavigate();
-  const stage2Items = countStage2(items);
-  const allStage2Complete = items
-    .filter((it) => it.etapaId === 2)
+  const stage3Items = countStage3(items);
+  const allStage3Complete = items
+    .filter((it) => it.etapaId === 3)
     .every((it) => it.completo);
 
   const cardBg = useColorModeValue("gray.100", "gray.700");
@@ -33,7 +33,7 @@ export const GroupCard = ({ group, IconComponent, title }) => {
       transition="all 0.15s"
       position="relative"
     >
-      {allStage2Complete && (
+      {allStage3Complete && (
         <Icon
           as={CheckIcon}
           bg={accent}
@@ -69,7 +69,7 @@ export const GroupCard = ({ group, IconComponent, title }) => {
       </Text>
 
       <Badge mt={2} px={2} colorScheme="green">
-        {stage2Items} {stage2Items === 1 ? "ítem" : "ítems"} en etapa&nbsp;2
+        {stage3Items} {stage3Items === 1 ? "ítem" : "ítems"} en etapa&nbsp;3
       </Badge>
     </Box>
   );
