@@ -44,7 +44,12 @@ const itemsSlice = createSlice({
       })
       .addCase(tablaItems.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.items = action.payload || [];
+        if (action.payload && action.payload.items) {
+          state.items = action.payload.items;
+          state.totalItems = action.payload.totalItems;
+        } else {
+          state.items = action.payload || [];
+        }
       })
       .addCase(tablaItems.rejected, (state, action) => {
         state.status = "failed";
@@ -59,7 +64,10 @@ const itemsSlice = createSlice({
           state.items[idx] = {
             ...existingItem,
             ...payload,
-            deudores: (payload.deudores && payload.deudores.length > 0) ? payload.deudores : existingItem.deudores,
+            deudores:
+              payload.deudores && payload.deudores.length > 0
+                ? payload.deudores
+                : existingItem.deudores,
           };
         }
       })
