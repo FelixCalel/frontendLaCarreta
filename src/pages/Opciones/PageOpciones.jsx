@@ -19,7 +19,7 @@ export const PageOpciones = () => {
   const [filtroBusqueda, setFiltroBusqueda] = useState("");
 
   const { opciones, loading, error, metadata } = useSelector(
-    (state) => state.opciones
+    (state) => state.opciones,
   );
 
   useEffect(() => {
@@ -31,37 +31,32 @@ export const PageOpciones = () => {
     if (opciones && opciones.length > 0) {
       const datosFiltrados = opciones
         .filter((opcion) =>
-          opcion.nombre.toLowerCase().includes(filtroBusqueda.toLowerCase())
+          opcion.nombre.toLowerCase().includes(filtroBusqueda.toLowerCase()),
         )
         .map((opcion) => ({
           ...opcion,
           estado: opcion.estado ? "Activo" : "Inactivo",
         }));
-      setDatosConIconos(datosFiltrados); // Actualizamos los datos una vez filtrados
+      setDatosConIconos(datosFiltrados);
     }
   }, [opciones, filtroBusqueda]);
 
-  // Procesar la metadata cuando cambie
   useEffect(() => {
     if (metadata && metadata.length > 0) {
       const metadataTransformada = metadata.map((item) => ({
         ...item,
       }));
-      setMetadataProcesada(metadataTransformada); // Guardamos el valor transformado en el estado
+      setMetadataProcesada(metadataTransformada);
     }
   }, [metadata]);
 
-  // Mostrar un spinner mientras se cargan los datos
   if (loading) {
     return <Spinner />;
   }
-
-  // Mostrar un mensaje de error si hay algún problema
   if (error) {
     return <p>Error: {error}</p>;
   }
 
-  // Mostrar un mensaje si no hay Opciones disponibles
   if (!opciones || opciones.length === 0) {
     return <p>No hay Opciones disponibles.</p>;
   }
@@ -91,7 +86,7 @@ export const PageOpciones = () => {
         nombreBoton="Crear Opción"
         onCrear={() => console.log("Creando nueva opción")}
         metadata={metadataProcesada.length > 0 ? metadataProcesada : []}
-        onSearch={setFiltroBusqueda} // Pasa la función de búsqueda
+        onSearch={setFiltroBusqueda}
         renderCustomCell={(columnKey, rowData) => {
           if (columnKey === "icono") {
             return renderIcono(rowData.icono);

@@ -136,6 +136,21 @@ export const pedidoProduccionApi = createApi({
       ],
     }),
 
+    getUnassignedOrders: builder.query<PedidoAgrupado[], void>({
+      query: () => "/pedidoProduccion/sin-asignar",
+      providesTags: (result) =>
+        result
+          ? [
+            ...result.map(({ pedidoId }) => ({
+              type: "PedidoAgrupado" as const,
+              id: pedidoId,
+            })),
+            { type: "PedidoAgrupado", id: "LIST" },
+            { type: "PedidoProduccion", id: "LIST" },
+          ]
+          : [{ type: "PedidoAgrupado", id: "LIST" }, { type: "PedidoProduccion", id: "LIST" }],
+    }),
+
     getPedidosAgrupados: builder.query<
       PedidoAgrupado[],
       { etapaId?: number; completed?: boolean } | void
@@ -369,6 +384,7 @@ export const {
   useGetDetallesYProduccionQuery,
   useUpdatePedidoProduccionMutation,
   useGetPedidosAgrupadosQuery,
+  useGetUnassignedOrdersQuery,
   useAvanzarEtapaMutation,
   useAvanzarEtapaDetalleMutation,
   useAvanzarMultiEtapaDetalleMutation,

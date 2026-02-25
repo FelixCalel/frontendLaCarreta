@@ -1,104 +1,108 @@
 import { lazy } from "react";
 
 const PaginaPais = lazy(() =>
-  import("./PaisRoute").then((module) => ({ default: module.PaginaPais }))
+  import("./PaisRoute").then((module) => ({ default: module.PaginaPais })),
 );
 const PaginaEmpresa = lazy(() =>
-  import("./EmpresaRoute").then((module) => ({ default: module.PaginaEmpresa }))
+  import("./EmpresaRoute").then((module) => ({
+    default: module.PaginaEmpresa,
+  })),
 );
 const PaginaCiudad = lazy(() =>
-  import("./CiudaRouter").then((module) => ({ default: module.PaginaCiudad }))
+  import("./CiudaRouter").then((module) => ({ default: module.PaginaCiudad })),
 );
 const PaginaTienda = lazy(() =>
-  import("./TiendaRouter").then((module) => ({ default: module.PaginaTienda }))
+  import("./TiendaRouter").then((module) => ({ default: module.PaginaTienda })),
 );
 const PaginaRuta = lazy(() =>
-  import("./RutaRouter").then((module) => ({ default: module.PaginaRuta }))
+  import("./RutaRouter").then((module) => ({ default: module.PaginaRuta })),
 );
 const PaginaPedido = lazy(() =>
-  import("./PedidosRouter").then((module) => ({ default: module.PaginaPedido }))
+  import("./PedidosRouter").then((module) => ({
+    default: module.PaginaPedido,
+  })),
 );
 const PaginaPedidosEntrantes = lazy(() =>
   import("./PedidosEntrantesRouter").then((module) => ({
     default: module.PaginaPedidosEntrantes,
-  }))
+  })),
 );
 const PaginaDeu = lazy(() =>
-  import("./DeuRoute").then((module) => ({ default: module.PaginaDeu }))
+  import("./DeuRoute").then((module) => ({ default: module.PaginaDeu })),
 );
 const PaginaItem = lazy(() =>
-  import("./ItemRouter").then((module) => ({ default: module.PaginaItem }))
+  import("./ItemRouter").then((module) => ({ default: module.PaginaItem })),
 );
 const PaginaHistorialPedido = lazy(() =>
   import("./HistorialPedidoRouter").then((module) => ({
     default: module.PaginaHistorialPedido,
-  }))
+  })),
 );
 const PaginaExportacionPedido = lazy(() =>
   import("./exportarPedidosRouter").then((module) => ({
     default: module.PaginaExportacionPedido,
-  }))
+  })),
 );
 const PaginaPedidoCompras = lazy(() =>
   import("./ComprasRouter").then((module) => ({
     default: module.PaginaPedidoCompras,
-  }))
+  })),
 );
 const PaginaComprador = lazy(() =>
   import("./CompradorRouter").then((module) => ({
     default: module.PaginaComprador,
-  }))
+  })),
 );
 const PaginaControlCalidad = lazy(() =>
   import("./ControlCalidadRouter").then((module) => ({
     default: module.PaginaControlCalidad,
-  }))
+  })),
 );
 const PaginaAsignacionAM = lazy(() =>
   import("./AsignacionAreaMesaRoute").then((module) => ({
     default: module.PaginaAsignacionAM,
-  }))
+  })),
 );
 const produccionOrden = lazy(() =>
   import("./pedidoProduccion").then((module) => ({
     default: module.produccionOrden,
-  }))
+  })),
 );
 const produccionOrdenSuper = lazy(() =>
   import("./supervisorProduction").then((module) => ({
     default: module.produccionOrdenSuper,
-  }))
+  })),
 );
 const productionOrdenDetails = lazy(() =>
   import("./pedidoProductionDetail").then((module) => ({
     default: module.productionOrdenDetails,
-  }))
+  })),
 );
 const digitadorOrden = lazy(() =>
   import("./digitadorOrden").then((module) => ({
     default: module.digitadorOrden,
-  }))
+  })),
 );
 const digitadorDetalleOrden = lazy(() =>
   import("./detalleDigitadorOrden").then((module) => ({
     default: module.digitadorDetalleOrden,
-  }))
+  })),
 );
 const digitadorFabricacionOrden = lazy(() =>
   import("./digitadorFabricacionOrden").then((module) => ({
     default: module.digitadorFabricacionOrden,
-  }))
+  })),
 );
 const fabricacionDetailOrder = lazy(() =>
   import("./FabricacionDetails").then((module) => ({
     default: module.fabricacionDetailOrder,
-  }))
+  })),
 );
 const QApaginaPedido = lazy(() =>
-  import("./QA").then((module) => ({ default: module.QApaginaPedido }))
+  import("./QA").then((module) => ({ default: module.QApaginaPedido })),
 );
 const QApaginaDetails = lazy(() =>
-  import("./QADetails").then((module) => ({ default: module.QApaginaDetails }))
+  import("./QADetails").then((module) => ({ default: module.QApaginaDetails })),
 );
 
 export const routeComponentMap = {
@@ -116,11 +120,7 @@ export const routeComponentMap = {
   "/comprasPedidos": PaginaPedidoCompras,
   "/comprador": PaginaComprador,
   "/ControlCalidad": PaginaControlCalidad,
-  "/area1": PaginaAsignacionAM,
-  "/area2": PaginaAsignacionAM,
-  "/area3": PaginaAsignacionAM,
-  "/area4": PaginaAsignacionAM,
-  "/area5": PaginaAsignacionAM,
+  "/asignacion-areas": PaginaAsignacionAM,
   "/mesa": produccionOrden,
   "/produccion": produccionOrdenSuper,
   "/despacho": productionOrdenDetails,

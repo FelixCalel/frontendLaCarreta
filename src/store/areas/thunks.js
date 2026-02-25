@@ -12,7 +12,7 @@ export const fetchAreas = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error al obtener áreas");
     }
-  }
+  },
 );
 
 export const fetchAreaById = createAsyncThunk(
@@ -24,7 +24,19 @@ export const fetchAreaById = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error al obtener área");
     }
-  }
+  },
+);
+
+export const crearAreaThunk = createAsyncThunk(
+  "areas/crearArea",
+  async (areaData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/area/`, areaData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Error al crear área");
+    }
+  },
 );
 
 export const fetchOpciones = createAsyncThunk(
@@ -34,7 +46,23 @@ export const fetchOpciones = createAsyncThunk(
       const response = await axios.get(`${BASE_URL}/api/opciones/`);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Error al obtener opciones");
+      return rejectWithValue(
+        error.response?.data || "Error al obtener opciones",
+      );
     }
-  }
+  },
+);
+export const eliminarAreaThunk = createAsyncThunk(
+  "areas/eliminarArea",
+  async ({ id, update_by }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`${BASE_URL}/area/${id}`, {
+        state: false,
+        update_by,
+      });
+      return { id, ...response.data };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Error al eliminar área");
+    }
+  },
 );

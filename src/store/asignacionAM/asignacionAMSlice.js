@@ -1,16 +1,35 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { fetchMesasActivasThunk, fetchMesasAsignadasThunk, fetchMesasDisponiblesThunk, fetchAsignacionesThunk , fetchUsuariosEncargadosThunk,
-  actualizarEncargadoThunk, asignarTipoGrupoThunk, desasignarTipoGrupoThunk, fetchProductosThunk } from './thunks';
+import { createSlice } from "@reduxjs/toolkit";
+import {
+  fetchMesasActivasThunk,
+  fetchMesasAsignadasThunk,
+  fetchMesasDisponiblesThunk,
+  fetchAsignacionesThunk,
+  fetchUsuariosEncargadosThunk,
+  actualizarEncargadoThunk,
+  asignarTipoGrupoThunk,
+  desasignarTipoGrupoThunk,
+  fetchProductosThunk,
+  fetchClasificacionesThunk,
+  bulkAsignarThunk,
+  bulkDesasignarThunk,
+} from "./thunks";
 
 const asignacionAMSlice = createSlice({
-  name: 'asignacionAM',
+  name: "asignacionAM",
   initialState: {
     mesasAsignadas: [],
     asignaciones: [],
     productos: [],
     usuariosEncargados: [],
+    clasificaciones: {
+      empaques: [],
+      marcas: [],
+      tipos: [],
+      grupos: [],
+      subgrupos: [],
+    },
     encargadoActual: null,
-    status: 'idle',
+    status: "idle",
     loading: false,
     error: null,
   },
@@ -36,17 +55,16 @@ const asignacionAMSlice = createSlice({
         state.mesasDisponibles = action.payload;
       })
 
-
       .addCase(fetchAsignacionesThunk.fulfilled, (state, action) => {
         state.asignaciones = action.payload;
-        state.status = 'succeeded';
+        state.status = "succeeded";
       })
       .addCase(asignarTipoGrupoThunk.fulfilled, (state, action) => {
         state.asignaciones.push(action.payload);
       })
       .addCase(desasignarTipoGrupoThunk.fulfilled, (state, action) => {
-        state.asignaciones = state.asignaciones.map(a =>
-          a.id === action.payload.id ? { ...a, state: false } : a
+        state.asignaciones = state.asignaciones.map((a) =>
+          a.id === action.payload.id ? { ...a, state: false } : a,
         );
       })
       .addCase(fetchProductosThunk.fulfilled, (state, action) => {
@@ -57,9 +75,17 @@ const asignacionAMSlice = createSlice({
       })
       .addCase(actualizarEncargadoThunk.fulfilled, (state, action) => {
         state.encargadoActual = action.payload;
-        state.status = 'encargado_actualizado';
+        state.status = "encargado_actualizado";
+      })
+      .addCase(fetchClasificacionesThunk.fulfilled, (state, action) => {
+        state.clasificaciones = action.payload;
+      })
+      .addCase(bulkAsignarThunk.fulfilled, (state) => {
+        state.status = "bulk_succeeded";
+      })
+      .addCase(bulkDesasignarThunk.fulfilled, (state) => {
+        state.status = "bulk_remove_succeeded";
       });
-
   },
 });
 

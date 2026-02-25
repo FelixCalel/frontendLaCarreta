@@ -254,6 +254,8 @@ export const RecetaRow = memo(function RecetaRow({
           variant="filled"
           _focus={{ bg: optionBg, borderColor: "blue.400" }}
           textAlign="center"
+          width="100%"
+          maxW="240px"
           sx={{ textAlignLast: "center" }}
         >
           {almacenes.map((almacen) => (

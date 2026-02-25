@@ -32,6 +32,9 @@ import { FilterPanel } from "../../components/production/FilterPanel";
 import { OrdersTable } from "../../components/production/OrdersTable";
 import { ConsolidatedOrdersView } from "../../components/production/ConsolidatedOrdersView";
 import AdvanceOrderButton from "../../components/production/AdvanceOrderButton";
+import { UnassignedProductsModal } from "../../components/production/UnassignedProductsModal";
+import { useGetUnassignedOrdersQuery } from "../../services/pedidoProductionApi";
+import { useDisclosure } from "@chakra-ui/react";
 
 const ProductionOrdersPage = () => {
   const navigate = useNavigate();
@@ -43,6 +46,15 @@ const ProductionOrdersPage = () => {
   const [syncReady, setSyncReady] = useState(false);
   const [procesarEstado5] = useProcesarEstado5Mutation();
   const [viewMode, setViewMode] = useState("byOrder");
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const { data: unassignedData = [] } = useGetUnassignedOrdersQuery(undefined, {
+    skip: !syncReady,
+  });
+  const unassignedCount = unassignedData.reduce(
+    (acc, g) => acc + g.items.length,
+    0,
+  );
 
   useEffect(() => {
     const runProcess = async () => {
@@ -153,61 +165,53 @@ const ProductionOrdersPage = () => {
   );
 
   const filteredGroups = useMemo(() => {
-    return (
-      mesaGroups
-        // Filtro DEU al inicio para optimizar
-        .filter((g) => {
-          if (!deuFilter) return true;
-          // Si el grupo tiene items con ese DEU, lo mantenemos (y filtramos items despues)
-          return g.items.some((i) => i.deudorCodigo === deuFilter);
-        })
-        .map((g) => {
-          const filteredItems = g.items
-            .filter((i) => {
-              if (deuFilter && i.deudorCodigo !== deuFilter) return false; // Filtro por DEU activo
-              if (!itemFilter) return true;
-              return i.productoNombre
-                .toLowerCase()
-                .includes(itemFilter.toLowerCase());
-            })
-            .slice()
-            .sort((a, b) =>
-              a.productoNombre.localeCompare(b.productoNombre, undefined, {
-                sensitivity: "base",
-              }),
-            );
-
-          return {
-            ...g,
-            items: filteredItems,
-          };
-        })
-        .filter((g) => g.items.length > 0)
-        .filter((g) => {
-          if (countryFilter && g.pais !== countryFilter) return false;
-          if (clientFilter && g.tienda !== clientFilter) return false;
-
-          if (stateFilter) {
-            const total = g.items.length;
-            const doneCount = g.items.filter((i) => i.completo).length;
-            const anyProgress = g.items.some(
-              (i) => Number(i.cantidad ?? 0) > 0,
-            );
-            const groupStatus =
-              doneCount === total
-                ? "Completado"
-                : anyProgress
-                  ? "En Proceso"
-                  : "Pendiente";
-            if (groupStatus !== stateFilter) return false;
-          }
+    return mesaGroups
+      .filter((g) => {
+        if (!deuFilter) return true;
+        return g.items.some((i) => i.deudorCodigo === deuFilter);
+      })
+      .map((g) => {
+        const filteredItems = g.items
+          .filter((i) => {
+            if (deuFilter && i.deudorCodigo !== deuFilter) return false;
+            if (!itemFilter) return true;
+            return i.productoNombre
+              .toLowerCase()
+              .includes(itemFilter.toLowerCase());
+          })
+          .slice()
+          .sort((a, b) =>
+            a.productoNombre.localeCompare(b.productoNombre, undefined, {
+              sensitivity: "base",
+            }),
+          );
 
         return {
           ...g,
           items: filteredItems,
         };
       })
-      .filter(Boolean)
+      .filter((g) => g.items.length > 0)
+      .filter((g) => {
+        if (countryFilter && g.pais !== countryFilter) return false;
+        if (clientFilter && g.tienda !== clientFilter) return false;
+
+        if (stateFilter) {
+          const total = g.items.length;
+          const doneCount = g.items.filter((i) => i.completo).length;
+          const anyProgress = g.items.some((i) => Number(i.cantidad ?? 0) > 0);
+          const groupStatus =
+            doneCount === total
+              ? "Completado"
+              : anyProgress
+                ? "En Proceso"
+                : "Pendiente";
+          if (groupStatus !== stateFilter) return false;
+        }
+
+        return true;
+      })
+      .slice()
       .sort((a, b) => a.pedidoId - b.pedidoId);
   }, [
     mesaGroups,
@@ -218,7 +222,7 @@ const ProductionOrdersPage = () => {
     deuFilter,
   ]);
 
-const consolidatedItems = useMemo(() => {
+  const consolidatedItems = useMemo(() => {
     if (viewMode !== "consolidated") return [];
 
     const itemsMap = new Map();
@@ -232,10 +236,14 @@ const consolidatedItems = useMemo(() => {
           const existing = itemsMap.get(key);
           existing.cantidadUnidad += Number(item.cantidadUnidad || 0);
           existing.cantidad += Number(item.cantidad || 0);
-          existing.mpUtilizada = (existing.mpUtilizada || 0) + Number(item.mpUtilizada || 0);
-          existing.mpSobrante = (existing.mpSobrante || 0) + Number(item.mpSobrante || 0);
+          existing.mpUtilizada =
+            (existing.mpUtilizada || 0) + Number(item.mpUtilizada || 0);
+          existing.mpSobrante =
+            (existing.mpSobrante || 0) + Number(item.mpSobrante || 0);
           existing.basura = (existing.basura || 0) + Number(item.basura || 0);
-          existing.cantidadRechazada = (existing.cantidadRechazada || 0) + Number(item.cantidadRechazada || 0);
+          existing.cantidadRechazada =
+            (existing.cantidadRechazada || 0) +
+            Number(item.cantidadRechazada || 0);
           existing.originalItems.push(item);
         } else {
           itemsMap.set(key, {
@@ -253,9 +261,15 @@ const consolidatedItems = useMemo(() => {
     });
 
     return Array.from(itemsMap.values()).sort((a, b) => {
-      const deuCompare = (a.deudorCodigo || "").localeCompare(b.deudorCodigo || "", undefined, { sensitivity: "base" });
+      const deuCompare = (a.deudorCodigo || "").localeCompare(
+        b.deudorCodigo || "",
+        undefined,
+        { sensitivity: "base" },
+      );
       if (deuCompare !== 0) return deuCompare;
-      return a.productoNombre.localeCompare(b.productoNombre, undefined, { sensitivity: "base" });
+      return a.productoNombre.localeCompare(b.productoNombre, undefined, {
+        sensitivity: "base",
+      });
     });
   }, [filteredGroups, viewMode]);
 
@@ -313,7 +327,24 @@ const consolidatedItems = useMemo(() => {
             </Tooltip>
           </ButtonGroup>
 
-          <Box w={{ base: "100%", lg: "auto" }}>
+          {unassignedCount > 0 && (
+            <Tooltip
+              label="Ver productos que no tienen área asignada"
+              placement="top"
+            >
+              <Button
+                colorScheme="orange"
+                variant="solid"
+                onClick={onOpen}
+                leftIcon={<Icon as={CheckCircleIcon} />}
+                size="sm"
+              >
+                ⚠️ {unassignedCount} Sin Asignar
+              </Button>
+            </Tooltip>
+          )}
+
+          <HStack w={{ base: "full", lg: "auto" }}>
             <FilterPanel
               countryFilter={countryFilter}
               onCountryChange={handleCountryFilterChange}
@@ -327,97 +358,142 @@ const consolidatedItems = useMemo(() => {
               onDeuChange={handleDeuFilterChange}
               deudores={deudores}
             />
-          </Box>
+          </HStack>
         </Flex>
         {viewMode === "byOrder" ? (
-          <SimpleGrid columns={[1, 2, 3, 4, 5]} spacing={6} mt={6}>
-            {filteredGroups.map((g) => {
-              const doneCount = g.items.filter((i) => i.completo).length;
-              const allDone = doneCount === g.items.length;
-              const statusColor = allDone ? "green.400" : "yellow.400";
-              const deudorCode = g.deudorCodigo || "N/A";
+          filteredGroups.length > 0 ? (
+            <SimpleGrid columns={[1, 2, 3, 4, 5]} spacing={6} mt={6}>
+              {filteredGroups.map((g) => {
+                const doneCount = g.items.filter((i) => i.completo).length;
+                const allDone = doneCount === g.items.length;
+                const statusColor = allDone ? "green.400" : "yellow.400";
+                const deudorCode = g.deudorCodigo || "N/A";
 
-              return (
-                <Box
-                  key={g.pedidoId}
-                  position="relative"
-                  bg={cardBg}
-                  border="1px solid"
-                  borderColor={cardBorder}
-                  borderRadius="lg"
-                  overflow="hidden"
-                  cursor="pointer"
-                  transition="all 0.2s"
-                  _hover={{
-                    shadow: cardHoverShadow,
-                    transform: "translateY(-2px)",
-                  }}
-                  onClick={() => navigate(`/mesa/produccion/${g.pedidoId}`)}
-                  role="group"
-                >
-                  <Box h="4px" bg={statusColor} w="100%" />
-                  <Box p={4}>
-                    <Flex justify="space-between" align="start" mb={2}>
-                      <VStack align="start" spacing={0}>
-                        <Text
-                          fontSize="xs"
-                          color="gray.500"
-                          fontWeight="bold"
-                          letterSpacing="wide"
-                          textTransform="uppercase"
+                return (
+                  <Box
+                    key={g.pedidoId}
+                    position="relative"
+                    bg={cardBg}
+                    border="1px solid"
+                    borderColor={cardBorder}
+                    borderRadius="lg"
+                    overflow="hidden"
+                    cursor="pointer"
+                    transition="all 0.2s"
+                    _hover={{
+                      shadow: cardHoverShadow,
+                      transform: "translateY(-2px)",
+                    }}
+                    onClick={() => navigate(`/mesa/produccion/${g.pedidoId}`)}
+                    role="group"
+                  >
+                    <Box h="4px" bg={statusColor} w="100%" />
+                    <Box p={4}>
+                      <Flex justify="space-between" align="start" mb={2}>
+                        <VStack align="start" spacing={0}>
+                          <Text
+                            fontSize="xs"
+                            color="gray.500"
+                            fontWeight="bold"
+                            letterSpacing="wide"
+                            textTransform="uppercase"
+                          >
+                            Pedido #{g.pedidoId}
+                          </Text>
+                          <Heading size="sm" noOfLines={2} title={g.tienda}>
+                            {g.tienda}
+                          </Heading>
+                        </VStack>
+                        <Icon
+                          as={CheckCircleIcon}
+                          color={statusColor}
+                          boxSize={5}
+                        />
+                      </Flex>
+
+                      <HStack mt={2} mb={3}>
+                        <Badge
+                          colorScheme="blue"
+                          variant="subtle"
+                          fontSize="0.7em"
                         >
-                          Pedido #{g.pedidoId}
+                          {deudorCode}
+                        </Badge>
+                        <Badge variant="outline" fontSize="0.7em">
+                          {g.pais}
+                        </Badge>
+                      </HStack>
+
+                      <Divider mb={3} borderColor="gray.100" />
+
+                      <Flex justify="space-between" align="center">
+                        <Text fontSize="xs" color="gray.500">
+                          {doneCount} / {g.items.length} Completados
                         </Text>
-                        <Heading size="sm" noOfLines={2} title={g.tienda}>
-                          {g.tienda}
-                        </Heading>
-                      </VStack>
-                      <Icon
-                        as={CheckCircleIcon}
-                        color={statusColor}
-                        boxSize={5}
-                      />
-                    </Flex>
-
-                    <HStack mt={2} mb={3}>
-                      <Badge
-                        colorScheme="blue"
-                        variant="subtle"
-                        fontSize="0.7em"
-                      >
-                        {deudorCode}
-                      </Badge>
-                      <Badge variant="outline" fontSize="0.7em">
-                        {g.pais}
-                      </Badge>
-                    </HStack>
-
-                    <Divider mb={3} borderColor="gray.100" />
-
-                    <Flex justify="space-between" align="center">
-                      <Text fontSize="xs" color="gray.500">
-                        {doneCount} / {g.items.length} Completados
-                      </Text>
-                      <Badge
-                        colorScheme={allDone ? "green" : "gray"}
-                        variant="solid"
-                        borderRadius="full"
-                        px={2}
-                      >
-                        {g.items.length} ÍTEM{g.items.length !== 1 ? "S" : ""}
-                      </Badge>
-                    </Flex>
+                        <Badge
+                          colorScheme={allDone ? "green" : "gray"}
+                          variant="solid"
+                          borderRadius="full"
+                          px={2}
+                        >
+                          {g.items.length} ÍTEM{g.items.length !== 1 ? "S" : ""}
+                        </Badge>
+                      </Flex>
+                    </Box>
                   </Box>
-                </Box>
-              );
-            })}
-          </SimpleGrid>
-        ) : (
+                );
+              })}
+            </SimpleGrid>
+          ) : (
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              p={10}
+              mt={6}
+              bg={cardBg}
+              borderRadius="lg"
+              border="1px dashed"
+              borderColor={cardBorder}
+            >
+              <Icon as={ViewIcon} boxSize={10} color="gray.400" mb={4} />
+              <Heading size="md" color="gray.500" mb={2}>
+                Sin resultados
+              </Heading>
+              <Text color="gray.500" textAlign="center">
+                No hay pedidos pendientes o no están asignados a tu área en este
+                momento.
+              </Text>
+            </Flex>
+          )
+        ) : consolidatedItems.length > 0 ? (
           <ConsolidatedOrdersView
             data={consolidatedItems}
             actionLabel="Pasar a Supervisor"
           />
+        ) : (
+          <Flex
+            direction="column"
+            align="center"
+            justify="center"
+            p={10}
+            mt={6}
+            bg={cardBg}
+            borderRadius="lg"
+            border="1px dashed"
+            borderColor={cardBorder}
+          >
+            <Icon as={ViewIcon} boxSize={10} color="gray.400" mb={4} />
+            <Heading size="md" color="gray.500" mb={2}>
+              Sin resultados
+            </Heading>
+            <Text color="gray.500" textAlign="center">
+              No hay productos consolidados pendientes o asignados a tu área en
+              este momento.
+            </Text>
+          </Flex>
         )}
+        <UnassignedProductsModal isOpen={isOpen} onClose={onClose} />
       </Box>
     );
   }
