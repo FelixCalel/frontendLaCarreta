@@ -322,7 +322,6 @@ const ProductionOrdersPage = () => {
                 colorScheme="orange"
                 variant="solid"
                 onClick={onOpen}
-                leftIcon={<Icon as={CheckCircleIcon} />}
                 size="sm"
               >
                 ⚠️ {unassignedCount} Sin Asignar
