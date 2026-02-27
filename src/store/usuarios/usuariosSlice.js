@@ -1,27 +1,32 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { listUsuarios } from "../../providers/endpoints";
-import { fetchUsuariosMetadata, toggleUserStatus, assignUserRoutes } from "./thunks";
+import {
+  fetchUsuariosMetadata,
+  toggleUserStatus,
+  assignUserRoutes,
+} from "./thunks";
 
 export const fetchUsuarios = createAsyncThunk(
   "usuarios/fetchUsuarios",
   async (arg = {}) => {
     const { id } = arg;
-    console.log("ingresa en fetchUsuairios", { id });
+    //console.log("ingresa en fetchUsuairios", { id });
     const response = await listUsuarios({ id });
-    console.log("fetchUsuarios response:", response);
+    //console.log("fetchUsuarios response:", response);
 
     if (!response || !response.ok) {
-      console.error("Error fetching usuarios:", response?.error || "Unknown error");
+      console.error(
+        "Error fetching usuarios:",
+        response?.error || "Unknown error",
+      );
       throw new Error(response?.error || "Error al obtener los usuarios -->");
     }
     return response;
-  }
+  },
 );
 
-
-
 const saveState = (state) => {
-  console.log("Guardando estado en localStorage:", state);
+  //console.log("Guardando estado en localStorage:", state);
   localStorage.setItem("authSlice", JSON.stringify(state));
 };
 
@@ -35,8 +40,7 @@ export const usuariosSlice = createSlice({
     paisId: null,
     metadata: [],
   },
-  reducers: {
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchUsuarios.pending, (state) => {
@@ -44,10 +48,12 @@ export const usuariosSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchUsuarios.fulfilled, (state, action) => {
-        console.log(action, "<---");
+        //console.log(action, "<---");
         state.status = "succeeded";
-        state.items = Array.isArray(action.payload.usuarios) ? action.payload.usuarios : [];
-        state.data =  action.payload || {};
+        state.items = Array.isArray(action.payload.usuarios)
+          ? action.payload.usuarios
+          : [];
+        state.data = action.payload || {};
 
         if (action.payload.paisId) {
           state.paisId = action.payload.paisId;
@@ -63,7 +69,9 @@ export const usuariosSlice = createSlice({
       })
       .addCase(toggleUserStatus.fulfilled, (state, action) => {
         if (state.items) {
-          const index = state.items.findIndex((u) => u.id === action.payload.id);
+          const index = state.items.findIndex(
+            (u) => u.id === action.payload.id,
+          );
           if (index !== -1) {
             state.items[index] = action.payload;
           }
@@ -71,7 +79,9 @@ export const usuariosSlice = createSlice({
       })
       .addCase(assignUserRoutes.fulfilled, (state, action) => {
         if (state.items) {
-          const index = state.items.findIndex((u) => u.id === action.payload.usuarioId);
+          const index = state.items.findIndex(
+            (u) => u.id === action.payload.usuarioId,
+          );
           if (index !== -1) {
             state.items[index].rutas = action.payload.rutas;
           }
