@@ -70,7 +70,8 @@ const BotonSincronizarReceta = ({ empresa }) => {
           dbsap: empresaToUse.baseDatos,
           ipsap: empresaToUse.ipBaseDatos,
           warehouses: formattedWarehouses,
-        })
+          empresaId: empresaToUse.id,
+        }),
       );
       if (result.error) throw result.error;
 
@@ -111,9 +112,10 @@ const BotonSincronizarReceta = ({ empresa }) => {
           <ModalHeader>Sincronizar Recetas</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {lastSync && (
+            {empresa?.ultimaSincronizacionRecetas && (
               <Text fontSize="sm" color="gray.500" mb={4}>
-                Última sincronización: {new Date(lastSync).toLocaleString()}
+                Última sincronización:{" "}
+                {new Date(empresa.ultimaSincronizacionRecetas).toLocaleString()}
               </Text>
             )}
             <FormControl>

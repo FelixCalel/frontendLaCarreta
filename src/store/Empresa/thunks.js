@@ -10,7 +10,7 @@ export const tablaEmpresa = createAsyncThunk(
     const data = response.data;
     data.sort((a, b) => a.id - b.id);
     return data;
-  }
+  },
 );
 
 export const addNewEmpresa = createAsyncThunk(
@@ -18,7 +18,7 @@ export const addNewEmpresa = createAsyncThunk(
   async (newEmpresa) => {
     const response = await axios.post(`${BASE_URL}/empresa/create`, newEmpresa);
     return response.data;
-  }
+  },
 );
 
 export const deleteEmpresa = createAsyncThunk(
@@ -26,7 +26,7 @@ export const deleteEmpresa = createAsyncThunk(
   async (id) => {
     await axios.delete(`${BASE_URL}/empresa/eliminar/${id}`);
     return id;
-  }
+  },
 );
 
 export const updateEmpresa = createAsyncThunk(
@@ -34,10 +34,10 @@ export const updateEmpresa = createAsyncThunk(
   async (empresa) => {
     const response = await axios.put(
       `${BASE_URL}/empresa/actualizar/${empresa.id}`,
-      empresa
+      empresa,
     );
     return response.data;
-  }
+  },
 );
 
 export const toggleEmpresaStatus = createAsyncThunk(
@@ -45,10 +45,10 @@ export const toggleEmpresaStatus = createAsyncThunk(
   async ({ id, estaActivo }) => {
     const response = await axios.patch(
       `${BASE_URL}/empresa/actualizar-estado/${id}`,
-      { estaActivo }
+      { estaActivo },
     );
     return response.data;
-  }
+  },
 );
 
 export const tablaPais = createAsyncThunk("paises/fetchPaises", async () => {
@@ -67,10 +67,10 @@ export const sincronizarClientes = createAsyncThunk(
         dbsap,
         ipsap,
         empresaId,
-      }
+      },
     );
     return response.data;
-  }
+  },
 );
 
 export const sincronizarItems = createAsyncThunk(
@@ -83,20 +83,21 @@ export const sincronizarItems = createAsyncThunk(
         dbsap,
         ipsap,
         empresaId,
-      }
+      },
     );
     return response.data;
-  }
+  },
 );
 
 export const importarRecetas = createAsyncThunk(
   "recetas/importar",
-  async ({ dbsap, ipsap, warehouses }) => {
+  async ({ dbsap, ipsap, warehouses, empresaId }) => {
     const response = await axios.post(`${BASE_URL}/sap/receta/importar`, {
       dbsap,
       ipsap,
       warehouses,
+      empresaId,
     });
     return response.data;
-  }
+  },
 );

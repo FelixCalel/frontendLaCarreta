@@ -47,13 +47,13 @@ const empresaSlice = createSlice({
       })
       .addCase(deleteEmpresa.fulfilled, (state, action) => {
         state.data = state.data.filter(
-          (empresa) => empresa.id !== action.payload
+          (empresa) => empresa.id !== action.payload,
         );
         state.data.sort((a, b) => a.id - b.id);
       })
       .addCase(updateEmpresa.fulfilled, (state, action) => {
         const index = state.data.findIndex(
-          (empresa) => empresa.id === action.payload.id
+          (empresa) => empresa.id === action.payload.id,
         );
         if (index !== -1) {
           state.data[index] = action.payload;
@@ -62,7 +62,7 @@ const empresaSlice = createSlice({
       })
       .addCase(toggleEmpresaStatus.fulfilled, (state, action) => {
         const index = state.data.findIndex(
-          (empresa) => empresa.id === action.payload.id
+          (empresa) => empresa.id === action.payload.id,
         );
         if (index !== -1) {
           state.data[index].estaActivo = action.payload.estaActivo;
@@ -89,9 +89,17 @@ const empresaSlice = createSlice({
         const now = new Date().toISOString();
         state.recetas.lastSync = now;
         localStorage.setItem("lastSyncRecetas", now);
+
+        const empresaId = action.meta.arg.empresaId;
+        if (empresaId) {
+          const empresa = state.data.find((e) => e.id === empresaId);
+          if (empresa) {
+            empresa.ultimaSincronizacionRecetas = now;
+          }
+        }
+
         state.recetas.filasWS = action.payload.filasWS;
-        state.recetas.registrosInsertados =
-          action.payload.registrosInsertados;
+        state.recetas.registrosInsertados = action.payload.registrosInsertados;
         state.recetas.errores = action.payload.errores;
       })
       .addCase(importarRecetas.rejected, (state, action) => {
