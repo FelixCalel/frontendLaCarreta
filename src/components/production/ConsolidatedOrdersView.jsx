@@ -105,7 +105,21 @@ export const ConsolidatedOrdersView = ({
       if (selectedItems.has(group.productoNombre)) {
         const firstItem = group.originalItems[0];
         if (firstItem) {
-          if (firstItem.fechaOrden) existingDate = firstItem.fechaOrden;
+          if (firstItem.fecha_orden_sap) {
+            existingDate = new Date(firstItem.fecha_orden_sap)
+              .toISOString()
+              .split("T")[0];
+          } else if (firstItem.fechaOrden) {
+            existingDate = new Date(firstItem.fechaOrden)
+              .toISOString()
+              .split("T")[0];
+          }
+
+          if (firstItem.comentario_sap) {
+            existingComment = firstItem.comentario_sap;
+          } else if (firstItem.comentario) {
+            existingComment = firstItem.comentario;
+          }
         }
         break;
       }
@@ -122,6 +136,18 @@ export const ConsolidatedOrdersView = ({
         title: "Falta fecha",
         description: "Debe seleccionar una fecha de orden.",
         status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const isDigitadorToSAP = actionLabel.toLowerCase().includes("sap");
+    if (isDigitadorToSAP && !comment.trim()) {
+      toast({
+        title: "Comentario obligatorio",
+        description: "Debe ingresar un comentario para el registro en SAP.",
+        status: "error",
         duration: 3000,
         isClosable: true,
       });
@@ -219,11 +245,26 @@ export const ConsolidatedOrdersView = ({
               onChange={(e) => setDateSAP(e.target.value)}
               mb={4}
             />
-            <Text mb={2}>Comentario:</Text>
+            <Text mb={2}>
+              Comentario{" "}
+              {actionLabel.toLowerCase().includes("sap")
+                ? "(Obligatorio para SAP)"
+                : ""}
+              :
+            </Text>
             <Textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Escribe un comentario..."
+              placeholder={
+                actionLabel.toLowerCase().includes("sap")
+                  ? "Ingrese el comentario obligatorio para SAP"
+                  : "Escribe un comentario..."
+              }
+              borderColor={
+                actionLabel.toLowerCase().includes("sap") && !comment.trim()
+                  ? "red.400"
+                  : undefined
+              }
               mb={3}
             />
           </ModalBody>

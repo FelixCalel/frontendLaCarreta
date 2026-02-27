@@ -43,6 +43,7 @@ export const pedidoProduccionApi = createApi({
     "RecetaPedido",
     "Rechazo",
     "Almacen",
+    "UnidadMedida",
   ],
   endpoints: (builder) => ({
     getAlmacenes: builder.query<ProdAlmacen[], void>({
@@ -54,6 +55,16 @@ export const pedidoProduccionApi = createApi({
             { type: "Almacen", id: "LIST" },
           ]
           : [{ type: "Almacen", id: "LIST" }],
+    }),
+    getUnidadesMedida: builder.query<{ id: number; unidad: string }[], void>({
+      query: () => "/unidadMedida",
+      providesTags: (result) =>
+        result
+          ? [
+            ...result.map(({ id }) => ({ type: "UnidadMedida" as const, id })),
+            { type: "UnidadMedida", id: "LIST" },
+          ]
+          : [{ type: "UnidadMedida", id: "LIST" }],
     }),
     getPedidoProduccionMetadata: builder.query<Metadata[], void>({
       query: () => "/pedidoProduccion/metadata",
@@ -91,10 +102,33 @@ export const pedidoProduccionApi = createApi({
         method: "PUT",
         body: data,
       }),
+      async onQueryStarted({ id, data }, { dispatch, queryFulfilled }) {
+        const patchResults = [{ etapaId: 1 }, { etapaId: 2 }, { etapaId: 3 }].map((arg) =>
+          dispatch(
+            pedidoProduccionApi.util.updateQueryData(
+              "getPedidosAgrupados",
+              arg,
+              (draft: PedidoAgrupado[]) => {
+                for (const group of draft) {
+                  const item = group.items.find((i) => i.id === id);
+                  if (item) {
+                    Object.assign(item, data);
+                    break;
+                  }
+                }
+              }
+            )
+          )
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResults.forEach(pr => pr.undo());
+        }
+      },
       invalidatesTags: (result, error, { id }) => [
         { type: "PedidoProduccion" as const, id },
         { type: "PedidoProduccion" as const, id: "LIST" },
-        { type: "PedidoAgrupado" as const, id: "LIST" },
       ],
     }),
 
@@ -107,27 +141,29 @@ export const pedidoProduccionApi = createApi({
       async onQueryStarted({ ids, data }, { dispatch, queryFulfilled }) {
         if (data.completo === undefined) return;
 
-        const patchResult = dispatch(
-          pedidoProduccionApi.util.updateQueryData(
-            "getPedidosAgrupados",
-            { etapaId: 1 },
-            (draft: PedidoAgrupado[]) => {
-              if (data.completo !== undefined) {
-                draft.forEach(group => {
-                  group.items.forEach(item => {
-                    if (ids.includes(item.id)) {
-                      item.completo = data.completo!;
-                    }
+        const patchResults = [{ etapaId: 1 }, { etapaId: 2 }, { etapaId: 3 }].map((arg) =>
+          dispatch(
+            pedidoProduccionApi.util.updateQueryData(
+              "getPedidosAgrupados",
+              arg,
+              (draft: PedidoAgrupado[]) => {
+                if (data.completo !== undefined) {
+                  draft.forEach(group => {
+                    group.items.forEach(item => {
+                      if (ids.includes(item.id)) {
+                        item.completo = data.completo!;
+                      }
+                    });
                   });
-                });
+                }
               }
-            }
+            )
           )
         );
         try {
           await queryFulfilled;
         } catch {
-          patchResult.undo();
+          patchResults.forEach(pr => pr.undo());
         }
       },
       invalidatesTags: [
@@ -398,6 +434,7 @@ export const {
   useGetRechazoByPedidoProduccionIdQuery,
   useUpdateMultiplePedidosProduccionMutation,
   useGetAlmacenesQuery,
+  useGetUnidadesMedidaQuery,
   useCreateRecetaLineaMutation,
   useLazyGetItemsQuery,
   useLazyGetStockSAPQuery,

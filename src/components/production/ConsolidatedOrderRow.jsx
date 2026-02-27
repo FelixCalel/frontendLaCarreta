@@ -103,6 +103,20 @@ export const ConsolidatedOrderRow = memo(
       [handleTrazabilidadUpdate],
     );
 
+    const [localTrazabilidad, setLocalTrazabilidad] = useState(
+      primaryOrder?.trazabilidad_Prod || "",
+    );
+
+    useEffect(() => {
+      setLocalTrazabilidad(primaryOrder?.trazabilidad_Prod || "");
+    }, [primaryOrder?.trazabilidad_Prod]);
+
+    const handleTrazabilidadChange = (e) => {
+      const val = e.target.value;
+      setLocalTrazabilidad(val);
+      debouncedTrazabilidadUpdate(val);
+    };
+
     const inputBg = useColorModeValue("white", "gray.800");
     const inputBorder = useColorModeValue("gray.300", "gray.600");
     const selectBorderColor = useColorModeValue("#E2E8F0", "#4A5568");
@@ -201,9 +215,9 @@ export const ConsolidatedOrderRow = memo(
             <Input
               size="xs"
               width="80px"
-              defaultValue={primaryOrder?.trazabilidad_Prod || ""}
+              value={localTrazabilidad}
               placeholder="-"
-              onChange={(e) => debouncedTrazabilidadUpdate(e.target.value)}
+              onChange={handleTrazabilidadChange}
               bg={inputBg}
               borderColor={inputBorder}
             />
@@ -263,7 +277,7 @@ export const ConsolidatedOrderRow = memo(
                 onChange={(e) => handleAlmacenChange(e.target.value)}
                 style={{
                   fontSize: "12px",
-                  padding: "2px 6px",
+                  padding: "2px 4px",
                   borderRadius: "4px",
                   border: "1px solid",
                   borderColor: selectBorderColor,
@@ -272,7 +286,7 @@ export const ConsolidatedOrderRow = memo(
                   cursor: "pointer",
                   outline: "none",
                   width: "100%",
-                  minWidth: "120px",
+                  maxWidth: "100px",
                 }}
               >
                 <option value="">-- Seleccionar --</option>
@@ -299,6 +313,7 @@ export const ConsolidatedOrderRow = memo(
                 item={item}
                 isExpanded={isExpanded}
                 rechazoQty={rechazoQty}
+                trazabilidad={localTrazabilidad}
               />
             </Td>
           </Tr>

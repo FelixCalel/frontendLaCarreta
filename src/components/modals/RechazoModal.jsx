@@ -45,6 +45,7 @@ export const RechazoModal = ({
     trazabilidad: trazabilidadPadre || "",
     usuarioId: 1,
     almacenId: "",
+    motivo: "",
   });
   const [error, setError] = useState(null);
 
@@ -69,14 +70,18 @@ export const RechazoModal = ({
             ? initialQuantity
             : rechazoData.cantidadRechazada || "",
         comentario: rechazoData.comentario || "",
-        trazabilidad: rechazoData.trazabilidad || trazabilidadPadre || "",
+        trazabilidad: trazabilidadPadre || rechazoData.trazabilidad || "",
         usuarioId: rechazoData.usuarioId || 1,
         almacenId: rechazoData.almacenId || "",
+        motivo: rechazoData.motivo || "",
       });
-    } else if (initialQuantity !== undefined && initialQuantity > 0) {
+    } else {
       setFormData((prev) => ({
         ...prev,
-        cantidadRechazada: initialQuantity,
+        trazabilidad: trazabilidadPadre || "",
+        ...(initialQuantity !== undefined && initialQuantity > 0
+          ? { cantidadRechazada: initialQuantity }
+          : {}),
       }));
     }
   }, [rechazoData, trazabilidadPadre, initialQuantity]);
@@ -88,10 +93,11 @@ export const RechazoModal = ({
     if (
       !formData.fechaRechazo ||
       !formData.cantidadRechazada ||
-      !formData.almacenId
+      !formData.almacenId ||
+      !formData.motivo
     ) {
       setError(
-        "Fecha, Cantidad y Almacén son obligatorios. Por favor completa todos los campos requeridos.",
+        "Fecha, Motivo, Cantidad y Almacén son obligatorios. Por favor completa todos los campos requeridos.",
       );
       return;
     }
@@ -99,7 +105,7 @@ export const RechazoModal = ({
     const totalProcesado =
       Number(currentMpUtilizada || 0) + Number(formData.cantidadRechazada);
 
-    console.log("[RechazoModal] Validation:", {
+    console.log("[SalidaInventarioModal] Validation:", {
       currentMpUtilizada,
       cantidadRechazada: formData.cantidadRechazada,
       totalProcesado,
@@ -114,7 +120,7 @@ export const RechazoModal = ({
       setError(
         `No se puede guardar: La cantidad total procesada (MP Utilizada: ${
           currentMpUtilizada || 0
-        } + Rechazo: ${
+        } + Salida: ${
           formData.cantidadRechazada
         } = ${totalProcesado}) excede la cantidad solicitada (${maxQuantity}).`,
       );
@@ -126,7 +132,7 @@ export const RechazoModal = ({
       refetch();
     } catch (error) {
       console.error("Failed to save:", error);
-      setError("Failed to save rechazo.");
+      setError("Error al guardar la salida de inventario.");
     }
   };
 
@@ -138,13 +144,20 @@ export const RechazoModal = ({
     }));
   };
 
+  const boxBg = useColorModeValue("gray.50", "gray.700");
+  const labelColor = useColorModeValue("gray.600", "gray.300");
+  const valueColor = useColorModeValue("gray.800", "white");
+  const alertBg = useColorModeValue("yellow.50", "yellow.900");
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
       <ModalOverlay />
       <ModalContent borderRadius="lg">
         <ModalHeader>
           <Flex align="center" gap={2}>
-            {rechazoData ? "Editar Rechazo" : "Registrar Rechazo"}
+            {rechazoData
+              ? "Editar Salida de Inventario"
+              : "Registrar Salida de Inventario"}
           </Flex>
         </ModalHeader>
         <ModalCloseButton />
@@ -155,31 +168,18 @@ export const RechazoModal = ({
             </Flex>
           ) : (
             <form onSubmit={handleSubmit}>
-              <Box
-                bg={useColorModeValue("gray.50", "gray.700")}
-                p={3}
-                borderRadius="md"
-                mb={4}
-              >
-                <Text
-                  fontSize="sm"
-                  color={useColorModeValue("gray.600", "gray.300")}
-                  mb={1}
-                >
+              <Box bg={boxBg} p={3} borderRadius="md" mb={4}>
+                <Text fontSize="sm" color={labelColor} mb={1}>
                   Trazabilidad ID
                 </Text>
-                <Text
-                  fontWeight="bold"
-                  fontSize="md"
-                  color={useColorModeValue("gray.800", "white")}
-                >
+                <Text fontWeight="bold" fontSize="md" color={valueColor}>
                   {formData.trazabilidad || "N/A"}
                 </Text>
               </Box>
 
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mb={4}>
                 <FormControl isRequired>
-                  <FormLabel>Fecha de Rechazo</FormLabel>
+                  <FormLabel>Fecha de Salida</FormLabel>
                   <Input
                     type="date"
                     name="fechaRechazo"
@@ -205,16 +205,41 @@ export const RechazoModal = ({
                 </FormControl>
               </SimpleGrid>
 
-              <FormControl isRequired mb={4}>
-                <FormLabel>Cantidad Rechazada</FormLabel>
-                <Input
-                  type="number"
-                  name="cantidadRechazada"
-                  onChange={handleChange}
-                  value={formData.cantidadRechazada}
-                  placeholder="0"
-                />
-              </FormControl>
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mb={4}>
+                <FormControl isRequired>
+                  <FormLabel>Motivo</FormLabel>
+                  <Select
+                    placeholder="-- Seleccionar --"
+                    name="motivo"
+                    onChange={handleChange}
+                    value={formData.motivo}
+                  >
+                    <option value="DEGUSTACION">DEGUSTACION</option>
+                    <option value="MUESTRAS">MUESTRAS</option>
+                    <option value="SALIDA A LA BASURA">
+                      SALIDA A LA BASURA
+                    </option>
+                    <option value="CAMBIO">CAMBIO</option>
+                    <option value="DONACION">DONACION</option>
+                    <option value="ENTREGA COCINA">ENTREGA COCINA</option>
+                    <option value="DEVOLUCION A PROVEEDOR">
+                      DEVOLUCION A PROVEEDOR
+                    </option>
+                    <option value="VENTAS/OBSEQUIO">VENTAS/OBSEQUIO</option>
+                  </Select>
+                </FormControl>
+
+                <FormControl isRequired>
+                  <FormLabel>Cantidad de Salida</FormLabel>
+                  <Input
+                    type="number"
+                    name="cantidadRechazada"
+                    onChange={handleChange}
+                    value={formData.cantidadRechazada}
+                    placeholder="0"
+                  />
+                </FormControl>
+              </SimpleGrid>
 
               <FormControl mb={6}>
                 <FormLabel>Comentario</FormLabel>

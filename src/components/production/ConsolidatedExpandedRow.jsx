@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
   useColorModeValue,
@@ -40,10 +40,10 @@ const FIELD_SPECS = {
   trazabilidad_Prod: { w: "70px", type: "text" },
 };
 
-const ROW_1 = ["mpUtilizada", "mpSobrante", "basura", "trazabilidad_Prod"];
+const ROW_1 = ["mpUtilizada", "mpSobrante", "basura"];
 
 export const ConsolidatedExpandedRow = memo(
-  ({ item, isExpanded, rechazoQty = 0 }) => {
+  ({ item, isExpanded, rechazoQty = 0, trazabilidad = "" }) => {
     const [updatePedido] = useUpdatePedidoProduccionMutation();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [createRechazo, { isLoading: isCreatingRechazo }] =
@@ -63,14 +63,40 @@ export const ConsolidatedExpandedRow = memo(
     });
     const allDetails = item.originalItems.flatMap((o) => o.details || []);
 
+    const initialLocalValues = useMemo(() => {
+      const vals = {};
+      ROW_1.forEach((field) => {
+        if (["mpUtilizada", "mpSobrante", "basura"].includes(field)) {
+          vals[field] = item.originalItems.reduce((sum, order) => {
+            const orderField = field === "basura" ? "cantidadRechazada" : field;
+            return sum + (Number(order[orderField]) || 0);
+          }, 0);
+        } else {
+          vals[field] = item.originalItems[0][field];
+        }
+      });
+      return vals;
+    }, [item.originalItems]);
+
+    const [localValues, setLocalValues] = useState(initialLocalValues);
+
+    useEffect(() => {
+      setLocalValues(initialLocalValues);
+    }, [initialLocalValues]);
+
     const handleUpdate = useCallback(
       async (field, value) => {
-        let finalValue = field === "trazabilidad_Prod" ? value : Number(value);
-        if (
-          typeof finalValue === "number" &&
-          (isNaN(finalValue) || finalValue < 0)
-        ) {
-          finalValue = 0;
+        if (value === "") return;
+
+        let finalValue = field === "trazabilidad_Prod" ? value : value;
+
+        if (field !== "trazabilidad_Prod") {
+          const numVal = Number(finalValue);
+          if (Number.isNaN(numVal) || numVal < 0) {
+            finalValue = 0;
+          } else {
+            finalValue = numVal;
+          }
         }
 
         if (
@@ -211,16 +237,15 @@ export const ConsolidatedExpandedRow = memo(
                     leftIcon={<ChevronRightIcon boxSize={3} />}
                     fontSize="xs"
                     onClick={onOpen}
-                    title="Registrar Rechazo"
+                    title="Salidas de Inventario"
                   >
-                    Registrar Rechazo
+                    Salidas de Inventario
                   </Button>
                 </Flex>
 
                 <Flex gap={2} wrap="wrap" align="center">
                   {ROW_1.map((field) => {
                     let currentValue;
-                    const isReadOnly = FIELD_SPECS[field]?.isReadOnly;
 
                     if (
                       ["mpUtilizada", "mpSobrante", "basura"].includes(field)
@@ -233,7 +258,9 @@ export const ConsolidatedExpandedRow = memo(
                       currentValue = item.originalItems[0][field];
                     }
 
+                    const isReadOnly = FIELD_SPECS[field]?.isReadOnly;
                     const spec = FIELD_SPECS[field];
+
                     return (
                       <Flex key={field} direction="column" align="center">
                         <Text
@@ -253,11 +280,26 @@ export const ConsolidatedExpandedRow = memo(
                           bg={isReadOnly ? "red.50" : inputBg}
                           color={isReadOnly ? "red.600" : "inherit"}
                           borderColor={isReadOnly ? "red.200" : "inherit"}
-                          value={currentValue}
+                          value={
+                            spec.type === "number" &&
+                            (localValues[field] === 0 ||
+                              localValues[field] === "0")
+                              ? ""
+                              : localValues[field] === undefined
+                                ? ""
+                                : localValues[field]
+                          }
+                          placeholder={spec.type === "number" ? "0" : ""}
                           isReadOnly={isReadOnly}
                           onChange={(e) => {
-                            if (!isReadOnly)
-                              debouncedUpdate(field, e.target.value);
+                            if (!isReadOnly) {
+                              const v = e.target.value;
+                              setLocalValues((prev) => ({
+                                ...prev,
+                                [field]: v,
+                              }));
+                              debouncedUpdate(field, v);
+                            }
                           }}
                           onClick={field === "rechazo" ? onOpen : undefined}
                           cursor={field === "rechazo" ? "pointer" : "text"}
@@ -298,26 +340,40 @@ export const ConsolidatedExpandedRow = memo(
             isOpen={isOpen}
             onClose={onClose}
             pedidoProduccionId={primaryOrder?.id}
-            onSave={async ({ formData }) => {
+            trazabilidadPadre={trazabilidad}
+            onSave={async ({ formData, existingRechazo }) => {
               try {
-                const totalRejection = Number(formData.cantidadRechazada) || 0;
-                let remainingRejection = totalRejection;
+                if (existingRechazo) {
+                  await updateRechazo({
+                    id: existingRechazo.id,
+                    data: formData,
+                    id_pedidoProd: primaryOrder?.id,
+                  }).unwrap();
+                } else {
+                  const totalRejection =
+                    Number(formData.cantidadRechazada) || 0;
+                  let remainingRejection = totalRejection;
 
-                for (const order of item.originalItems) {
-                  const orderCapacity = Number(order.cantidadUnidad) || 0;
-                  const currentMp = Number(order.mpUtilizada) || 0;
-                  const availableSpace = Math.max(0, orderCapacity - currentMp);
-                  const amount = Math.min(remainingRejection, availableSpace);
-                  const currentRejection = Number(order.cantidadRechazada) || 0;
+                  for (const order of item.originalItems) {
+                    const orderCapacity = Number(order.cantidadUnidad) || 0;
+                    const currentMp = Number(order.mpUtilizada) || 0;
+                    const availableSpace = Math.max(
+                      0,
+                      orderCapacity - currentMp,
+                    );
+                    const amount = Math.min(remainingRejection, availableSpace);
+                    const currentRejection =
+                      Number(order.cantidadRechazada) || 0;
 
-                  if (amount !== currentRejection) {
-                    await createRechazo({
-                      ...formData,
-                      cantidadRechazada: amount,
-                      id_pedidoProd: order.id,
-                    }).unwrap();
+                    if (amount !== currentRejection) {
+                      await createRechazo({
+                        ...formData,
+                        cantidadRechazada: amount,
+                        id_pedidoProd: order.id,
+                      }).unwrap();
 
-                    remainingRejection -= amount;
+                      remainingRejection -= amount;
+                    }
                   }
                 }
 
@@ -332,7 +388,6 @@ export const ConsolidatedExpandedRow = memo(
               }
             }}
             isLoading={isCreatingRechazo || isUpdatingRechazo}
-            trazabilidadPadre={primaryOrder?.trazabilidad_Prod}
             maxQuantity={Number(item.cantidadUnidad) || 0}
             currentMpUtilizada={item.originalItems.reduce(
               (sum, order) => sum + (Number(order.mpUtilizada) || 0),

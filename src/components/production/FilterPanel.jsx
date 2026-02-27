@@ -26,15 +26,17 @@ export const FilterPanel = ({
     _placeholder: { color: placeholder },
     _hover: { borderColor: fieldBorder },
     _focus: { borderColor: "green.400", boxShadow: "0 0 0 1px #38A169" },
+    size: "sm",
+    borderRadius: "md",
   };
 
   return (
-    <Flex wrap="wrap" gap={4} mb={2} align="center" justify="center" w="100%">
+    <Flex wrap="wrap" gap={2} mb={2} align="center" justify="center" w="100%">
       <Box>
         <Select
           {...commonProps}
           placeholder="País"
-          maxW="160px"
+          maxW="140px"
           value={countryFilter}
           onChange={(e) => onCountryChange(e.target.value)}
         >
@@ -50,7 +52,7 @@ export const FilterPanel = ({
         <Select
           {...commonProps}
           placeholder="Cliente"
-          maxW="200px"
+          maxW="180px"
           value={clientFilter}
           onChange={(e) => onClientChange(e.target.value)}
         >
@@ -66,7 +68,7 @@ export const FilterPanel = ({
         <Select
           {...commonProps}
           placeholder="DEU"
-          maxW="130px"
+          maxW="110px"
           value={deuFilter}
           onChange={(e) => onDeuChange(e.target.value)}
         >
@@ -82,7 +84,7 @@ export const FilterPanel = ({
         <Select
           {...commonProps}
           placeholder="Estado del pedido"
-          maxW="200px"
+          maxW="180px"
           value={stateFilter}
           onChange={(e) => onStateChange(e.target.value)}
         >
