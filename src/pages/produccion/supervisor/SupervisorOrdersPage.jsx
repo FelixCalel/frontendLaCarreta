@@ -15,6 +15,7 @@ import {
   Badge,
   Divider,
   HStack,
+  useDisclosure,
 } from "@chakra-ui/react";
 import {
   CheckCircleIcon,
@@ -26,6 +27,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   useGetPedidosAgrupadosQuery,
   useProcesarEstado5Mutation,
+  useGetUnassignedOrdersQuery,
 } from "../../../services/pedidoProductionApi";
 import { FilterPanel } from "../../../components/production/FilterPanel";
 import { OrdersTable } from "../../../components/production/OrdersTable";
@@ -35,6 +37,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { tablaEmpresa, tablaPais } from "../../../store/Empresa/thunks";
 import { selectRecetasState } from "../../../store/Empresa";
 import AdvanceOrderButton from "../../../components/production/AdvanceOrderButton";
+import { UnassignedProductsModal } from "../../../components/production/UnassignedProductsModal";
 
 const SupervisorOrdersPage = () => {
   const navigate = useNavigate();
@@ -49,6 +52,15 @@ const SupervisorOrdersPage = () => {
   const [syncReady, setSyncReady] = useState(false);
   const [procesarEstado5] = useProcesarEstado5Mutation();
   const [viewMode, setViewMode] = useState("byOrder");
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const { data: unassignedData = [] } = useGetUnassignedOrdersQuery(undefined, {
+    skip: !syncReady,
+  });
+  const unassignedCount = unassignedData.reduce(
+    (acc, g) => acc + g.items.length,
+    0,
+  );
 
   useEffect(() => {
     dispatch(tablaEmpresa());
@@ -61,6 +73,9 @@ const SupervisorOrdersPage = () => {
     if (!paisSeleccionado) return null;
     return empresas.find((e) => e.paisId === paisSeleccionado.id);
   }, [countryFilter, empresas, paises]);
+
+  const empresaParaMostrar =
+    empresaActiva || (empresas && empresas.length > 0 ? empresas[0] : null);
 
   useEffect(() => {
     const runProcess = async () => {
@@ -85,7 +100,6 @@ const SupervisorOrdersPage = () => {
     error,
   } = useGetPedidosAgrupadosQuery({ etapaId: 2 }, { skip: !syncReady });
 
-  // DEBUG: Ver qué datos están llegando del backend
   useEffect(() => {
     if (agrupados.length > 0) {
       console.log("🔍 Primer pedido agrupado:", agrupados[0]);
@@ -197,7 +211,6 @@ const SupervisorOrdersPage = () => {
     const itemsMap = new Map();
 
     allFilteredItems.forEach((item) => {
-      // Agrupar por código DEU Y producto
       const deuCode = item.deudorCodigo || "";
       const key = `${deuCode}|${item.productoNombre}`;
       if (itemsMap.has(key)) {
@@ -219,7 +232,6 @@ const SupervisorOrdersPage = () => {
       }
     });
 
-    // Ordenar primero por código DEU, luego por producto
     return Array.from(itemsMap.values()).sort((a, b) => {
       const deuCompare = (a.deudorCodigo || "").localeCompare(
         b.deudorCodigo || "",
@@ -267,7 +279,6 @@ const SupervisorOrdersPage = () => {
           mb={0}
           gap={0}
         >
-          {/* Left: View Mode & Sync */}
           <Flex
             alignItems="center"
             gap={4}
@@ -300,6 +311,22 @@ const SupervisorOrdersPage = () => {
               </Tooltip>
             </ButtonGroup>
 
+            {unassignedCount > 0 && (
+              <Tooltip
+                label="Ver productos que no tienen área asignada"
+                placement="top"
+              >
+                <Button
+                  colorScheme="orange"
+                  variant="solid"
+                  onClick={onOpen}
+                  size="sm"
+                >
+                  ⚠️ {unassignedCount} Sin Asignar
+                </Button>
+              </Tooltip>
+            )}
+
             <Flex alignItems="center" gap={2}>
               <Tooltip
                 label="Sincronizar información de producción"
@@ -307,22 +334,25 @@ const SupervisorOrdersPage = () => {
               >
                 <Box>
                   <BotonSincronizarReceta
-                    empresa={empresaActiva}
+                    empresa={empresaParaMostrar}
                     ultimaSincronizacionRecetas={
-                      empresaActiva?.ultimaSincronizacionRecetas
+                      empresaParaMostrar?.ultimaSincronizacionRecetas
                     }
                     leftIcon={<RepeatClockIcon />}
                   />
                 </Box>
               </Tooltip>
-              {lastSync && (
+              {empresaParaMostrar?.ultimaSincronizacionRecetas && (
                 <Text
                   fontSize="xs"
                   color="gray.500"
                   whiteSpace="nowrap"
                   display={{ base: "none", xl: "block" }}
                 >
-                  Últ. sinc.: {new Date(lastSync).toLocaleString()}
+                  Últ. sinc.:{" "}
+                  {new Date(
+                    empresaParaMostrar.ultimaSincronizacionRecetas,
+                  ).toLocaleString()}
                 </Text>
               )}
             </Flex>
@@ -430,6 +460,7 @@ const SupervisorOrdersPage = () => {
             actionLabel="Pasar a Digitador"
           />
         )}
+        <UnassignedProductsModal isOpen={isOpen} onClose={onClose} />
       </Box>
     );
   }
