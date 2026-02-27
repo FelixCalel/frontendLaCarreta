@@ -153,7 +153,7 @@ const EntrantesPage = () => {
               status: 2,
               page: currentPage,
               limit: itemsPerPage,
-            })
+            }),
           );
         }
       } catch (error) {
@@ -239,7 +239,7 @@ const EntrantesPage = () => {
       if (pedido) {
         setApproveData({
           fechaOrdenDisplay: pedido.fechaOrdenDisplay
-            ? new Date(pedido.fechaOrdenDisplay).toISOString().split("T")[0]
+            ? pedido.fechaOrdenDisplay.split("T")[0]
             : "",
           comentarioDisplay: pedido.comentarioDisplay || "",
           comentario: pedido.comentario || "",
@@ -266,7 +266,9 @@ const EntrantesPage = () => {
           const fecha =
             selectedPedidos.length === 1
               ? approveData.fechaOrdenDisplay
-              : pedido.fechaOrdenDisplay;
+              : pedido.fechaOrdenDisplay
+                ? pedido.fechaOrdenDisplay.split("T")[0]
+                : undefined;
           const comentarioDisplay =
             selectedPedidos.length === 1
               ? approveData.comentarioDisplay
@@ -333,7 +335,10 @@ const EntrantesPage = () => {
               estadoId: 4,
               comentario: cancelComment,
               comentarioDisplay: pedido ? pedido.comentarioDisplay : undefined,
-              fechaOrdenDisplay: pedido ? pedido.fechaOrdenDisplay : undefined,
+              fechaOrdenDisplay:
+                pedido && pedido.fechaOrdenDisplay
+                  ? pedido.fechaOrdenDisplay.split("T")[0]
+                  : undefined,
             }),
           ).unwrap();
         }),

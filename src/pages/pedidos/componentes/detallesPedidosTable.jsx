@@ -57,7 +57,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     arr.slice().sort((a, b) =>
       (a.nombreProducto || "").localeCompare(b.nombreProducto || "", "es", {
         sensitivity: "base",
-      })
+      }),
     );
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -81,7 +81,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
       setIsLoading(true);
       try {
         const detallesRaw = await dispatch(
-          getDetalleOrdenByPedidoId(pedidoId)
+          getDetalleOrdenByPedidoId(pedidoId),
         ).unwrap();
 
         const detalles = detallesRaw.map((d) => ({
@@ -92,7 +92,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         setProductos(ordenarPorNombre(detalles));
         sessionStorage.setItem(
           `productos_${pedidoId}`,
-          JSON.stringify(detalles)
+          JSON.stringify(detalles),
         );
 
         if (detalles.length > 0) {
@@ -120,14 +120,8 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
             duration: 3000,
             isClosable: true,
           });
-          // Keep isLoading true so cargarPedidoModelo can take over or we handle it in useEffect
         }
       } finally {
-        // If we found products, stop loading. If not, keep loading for cargarPedidoModelo
-        // We check the state in the useEffect, but we can't easily check 'detalles' here as it's scoped.
-        // However, we can check if we set products? No, state update is async.
-        // We rely on the fact that if we didn't set isLoading(false) above, it's still true.
-
         setDetallesCargados(true);
       }
     };
@@ -161,7 +155,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
 
     try {
       const modeloRaw = await dispatch(
-        getPedidoModeloByUsuarioId({ deudorId, pedidoId, tiendaId })
+        getPedidoModeloByUsuarioId({ deudorId, pedidoId, tiendaId }),
       ).unwrap();
       const modelo = modeloRaw.map((c) => ({
         ...c,
@@ -172,7 +166,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         const nuevos = [
           ...prev,
           ...modelo.filter(
-            (c) => !prev.some((p) => p.detallePedidoId === c.detallePedidoId)
+            (c) => !prev.some((p) => p.detallePedidoId === c.detallePedidoId),
           ),
         ];
         sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(nuevos));
@@ -212,7 +206,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     productoId,
     nombreProducto,
     cantidadDisponible,
-    codigo
+    codigo,
   ) => {
     setNewProducto({
       productoId,
@@ -225,7 +219,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
 
   const handleAddProducto = async () => {
     const productoExistente = productos.find(
-      (prod) => prod.productoId === newProducto.productoId
+      (prod) => prod.productoId === newProducto.productoId,
     );
 
     if (productoExistente) {
@@ -260,7 +254,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         };
 
         const result = await dispatch(
-          addNewDetalleOrden(newDetalleOrden)
+          addNewDetalleOrden(newDetalleOrden),
         ).unwrap();
         if (!result || !result.id) {
           throw new Error("El backend no devolvió un detallePedidoId válido.");
@@ -280,7 +274,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
 
         sessionStorage.setItem(
           `productos_${pedidoId}`,
-          JSON.stringify(nuevosProductos)
+          JSON.stringify(nuevosProductos),
         );
 
         setNewProducto({
@@ -332,12 +326,12 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
       await dispatch(deleteDetalleOrden(detallePedidoId)).unwrap();
 
       const productosActualizados = productos.filter(
-        (prod) => prod.detallePedidoId !== detallePedidoId
+        (prod) => prod.detallePedidoId !== detallePedidoId,
       );
       setProductos(productosActualizados);
       sessionStorage.setItem(
         `productos_${pedidoId}`,
-        JSON.stringify(productosActualizados)
+        JSON.stringify(productosActualizados),
       );
       console.log("Producto eliminado:", detallePedidoId);
 
@@ -364,12 +358,12 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
     if (!detalleId || !pedidoId) return;
     setProductos((prev) =>
       prev.map((p) =>
-        p.detallePedidoId === detalleId ? { ...p, cantidad } : p
-      )
+        p.detallePedidoId === detalleId ? { ...p, cantidad } : p,
+      ),
     );
     try {
       await dispatch(
-        updateDetalleOrden({ id: detalleId, pedidoId, cantidad })
+        updateDetalleOrden({ id: detalleId, pedidoId, cantidad }),
       ).unwrap();
 
       toast({
@@ -457,14 +451,14 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                                       ...prod,
                                       cantidad: parseFloat(e.target.value) || 0,
                                     }
-                                  : prod
-                              )
+                                  : prod,
+                              ),
                             )
                           }
                           onBlur={() => {
                             handleCantidadChange(
                               producto.detallePedidoId,
-                              producto.cantidad
+                              producto.cantidad,
                             );
                           }}
                           placeholder="0"
@@ -523,19 +517,16 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                                 producto.detallePedidoId
                                   ? {
                                       ...prod,
-                                      cantidad: Math.min(
-                                        parseFloat(e.target.value) || 0,
-                                        producto.cantidadDisponible
-                                      ),
+                                      cantidad: parseFloat(e.target.value) || 0,
                                     }
-                                  : prod
-                              )
+                                  : prod,
+                              ),
                             )
                           }
                           onBlur={() => {
                             handleCantidadChange(
                               producto.detallePedidoId,
-                              producto.cantidad
+                              producto.cantidad,
                             );
                           }}
                           placeholder="0"
@@ -600,13 +591,13 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
                       productoId,
                       nombreProducto,
                       cantidadDisponible,
-                      codigo
+                      codigo,
                     ) =>
                       handleProductoChange(
                         productoId,
                         nombreProducto,
                         cantidadDisponible,
-                        codigo
+                        codigo,
                       )
                     }
                     reset={resetFields}
