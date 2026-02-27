@@ -98,7 +98,7 @@ const ItemRow = memo(
         </Td>
       </Tr>
     );
-  }
+  },
 );
 
 ItemRow.propTypes = {
@@ -114,7 +114,7 @@ ItemRow.propTypes = {
         id: PropTypes.number,
         correlativo: PropTypes.string,
         nombre: PropTypes.string,
-      })
+      }),
     ),
   }).isRequired,
   handleStatusChange: PropTypes.func.isRequired,
@@ -126,32 +126,42 @@ ItemRow.displayName = "ItemRow";
 
 const PageItems = () => {
   const dispatch = useDispatch();
-  const { items, status, error } = useSelector((state) => state.items);
+  const { items, totalItems, status, error } = useSelector(
+    (state) => state.items,
+  );
   const { deudores: deudoresDisponibles } = useSelector(
-    (state) => state.deudores
+    (state) => state.deudores,
   );
 
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const itemsPerPage = 15;
 
   useEffect(() => {
-    dispatch(tablaItems());
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    dispatch(
+      tablaItems({
+        page: currentPage,
+        pageSize: itemsPerPage,
+        nombre: debouncedSearch,
+        codigo: debouncedSearch,
+      }),
+    );
+  }, [dispatch, currentPage, debouncedSearch]);
+
+  useEffect(() => {
     dispatch(tablaDeudores());
   }, [dispatch]);
 
-  const filteredData =
-    items?.filter(
-      (item) =>
-        item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.codigo &&
-          item.codigo.toLowerCase().includes(searchTerm.toLowerCase()))
-    ) || [];
-
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedData = items || [];
 
   const tableBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
@@ -165,7 +175,7 @@ const PageItems = () => {
           dispatch(patchItem({ id, changes: { estaActivo: !estaActivo } }));
         });
     },
-    [dispatch]
+    [dispatch],
   );
 
   const handleAddDeudor = useCallback(
@@ -183,11 +193,11 @@ const PageItems = () => {
         .unwrap()
         .catch(() => {
           dispatch(
-            patchItem({ id: itemId, changes: { deudores: originalDeudores } })
+            patchItem({ id: itemId, changes: { deudores: originalDeudores } }),
           );
         });
     },
-    [dispatch, items, deudoresDisponibles]
+    [dispatch, items, deudoresDisponibles],
   );
 
   const handleRemoveDeudor = useCallback(
@@ -202,11 +212,11 @@ const PageItems = () => {
         .unwrap()
         .catch(() => {
           dispatch(
-            patchItem({ id: itemId, changes: { deudores: originalDeudores } })
+            patchItem({ id: itemId, changes: { deudores: originalDeudores } }),
           );
         });
     },
-    [dispatch, items]
+    [dispatch, items],
   );
 
   if (status === "loading") {
@@ -296,7 +306,7 @@ const PageItems = () => {
 
       <Pagination
         currentPage={currentPage}
-        totalItems={filteredData.length || 0}
+        totalItems={totalItems || 0}
         itemsPerPage={itemsPerPage}
         onPageChange={(page) => setCurrentPage(page)}
       />
