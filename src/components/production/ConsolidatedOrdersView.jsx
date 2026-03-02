@@ -183,12 +183,17 @@ export const ConsolidatedOrdersView = ({
         nuevaEtapaId: 4,
         comentario: comment || null,
         fechaOrden: dateSAP,
+        avanzar: !isDigitadorToSAP,
       }).unwrap();
 
       toast({
-        title: "Enviado a SAP",
-        description: `${selectedItems.size} productos (${detailsToSend.length} items) han sido enviados a SAP.`,
-        status: "success",
+        title: isDigitadorToSAP
+          ? "Falta integración SAP"
+          : "Movimiento exitoso",
+        description: isDigitadorToSAP
+          ? `Los productos se han guardado, pero AÚN NO han sido enviados a SAP. (Función pendiente)`
+          : `${selectedItems.size} productos (${detailsToSend.length} items) han avanzado a la siguiente etapa.`,
+        status: isDigitadorToSAP ? "warning" : "success",
         duration: 5000,
         isClosable: true,
       });

@@ -24,6 +24,7 @@ import { useState, useEffect } from "react";
 import {
   useGetRechazoByPedidoProduccionIdQuery,
   useGetAlmacenesQuery,
+  useGetMotivosSalidaQuery,
 } from "../../services/pedidoProductionApi";
 import PropTypes from "prop-types";
 
@@ -45,11 +46,12 @@ export const RechazoModal = ({
     trazabilidad: trazabilidadPadre || "",
     usuarioId: 1,
     almacenId: "",
-    motivo: "",
+    motivoId: "",
   });
   const [error, setError] = useState(null);
 
   const { data: almacenes = [] } = useGetAlmacenesQuery();
+  const { data: motivosSalida = [] } = useGetMotivosSalidaQuery();
 
   const {
     data: rechazoData,
@@ -73,7 +75,7 @@ export const RechazoModal = ({
         trazabilidad: trazabilidadPadre || rechazoData.trazabilidad || "",
         usuarioId: rechazoData.usuarioId || 1,
         almacenId: rechazoData.almacenId || "",
-        motivo: rechazoData.motivo || "",
+        motivoId: rechazoData.motivoId || "",
       });
     } else {
       setFormData((prev) => ({
@@ -94,7 +96,7 @@ export const RechazoModal = ({
       !formData.fechaRechazo ||
       !formData.cantidadRechazada ||
       !formData.almacenId ||
-      !formData.motivo
+      !formData.motivoId
     ) {
       setError(
         "Fecha, Motivo, Cantidad y Almacén son obligatorios. Por favor completa todos los campos requeridos.",
@@ -210,22 +212,15 @@ export const RechazoModal = ({
                   <FormLabel>Motivo</FormLabel>
                   <Select
                     placeholder="-- Seleccionar --"
-                    name="motivo"
+                    name="motivoId"
                     onChange={handleChange}
-                    value={formData.motivo}
+                    value={formData.motivoId}
                   >
-                    <option value="DEGUSTACION">DEGUSTACION</option>
-                    <option value="MUESTRAS">MUESTRAS</option>
-                    <option value="SALIDA A LA BASURA">
-                      SALIDA A LA BASURA
-                    </option>
-                    <option value="CAMBIO">CAMBIO</option>
-                    <option value="DONACION">DONACION</option>
-                    <option value="ENTREGA COCINA">ENTREGA COCINA</option>
-                    <option value="DEVOLUCION A PROVEEDOR">
-                      DEVOLUCION A PROVEEDOR
-                    </option>
-                    <option value="VENTAS/OBSEQUIO">VENTAS/OBSEQUIO</option>
+                    {motivosSalida.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nombre}
+                      </option>
+                    ))}
                   </Select>
                 </FormControl>
 

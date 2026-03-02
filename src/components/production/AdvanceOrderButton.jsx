@@ -82,12 +82,6 @@ const AdvanceOrderButton = ({ order, onSuccess, label = "Aceptar Pedido" }) => {
         }).unwrap();
       }
 
-      await avanzarEtapa({
-        pedidoId: Number(order.pedidoId),
-        usuarioId,
-        comentario,
-      }).unwrap();
-
       toast({
         title: "Pedido avanzado.",
         description: "Se cambió a la siguiente etapa correctamente.",

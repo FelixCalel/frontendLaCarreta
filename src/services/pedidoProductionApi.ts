@@ -24,6 +24,17 @@ export interface ProdAlmacen {
   nombre: string;
 }
 
+export interface UnidadMedida {
+  id: number;
+  unidad: string;
+}
+
+export interface MotivoSalida {
+  id: number;
+  nombre: string;
+  descripcion?: string;
+}
+
 export const pedidoProduccionApi = createApi({
   reducerPath: "pedidoProduccionApi",
   baseQuery: fetchBaseQuery({
@@ -187,6 +198,11 @@ export const pedidoProduccionApi = createApi({
           : [{ type: "PedidoAgrupado", id: "LIST" }, { type: "PedidoProduccion", id: "LIST" }],
     }),
 
+    getMotivosSalida: builder.query<MotivoSalida[], void>({
+      query: () => "/motivos-salida",
+      transformResponse: (res: { ok: boolean; motivos: MotivoSalida[] }) => res.motivos,
+    }),
+
     getPedidosAgrupados: builder.query<
       PedidoAgrupado[],
       { etapaId?: number; completed?: boolean } | void
@@ -249,6 +265,7 @@ export const pedidoProduccionApi = createApi({
         }),
         invalidatesTags: (_r, _e, { detalleOrdenId }) => [
           { type: "DetalleProduccion", id: detalleOrdenId },
+          { type: "PedidoAgrupado", id: "LIST" },
         ],
       }
     ),
@@ -268,6 +285,7 @@ export const pedidoProduccionApi = createApi({
           id,
         })),
         { type: "DetalleProduccion", id: "LIST" },
+        { type: "PedidoAgrupado", id: "LIST" },
       ],
     }),
 
@@ -438,4 +456,5 @@ export const {
   useCreateRecetaLineaMutation,
   useLazyGetItemsQuery,
   useLazyGetStockSAPQuery,
+  useGetMotivosSalidaQuery,
 } = pedidoProduccionApi;

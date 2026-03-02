@@ -76,15 +76,15 @@ const FinalizeModal = ({
 
         <ModalFooter>
           <Stack direction="row" spacing={3}>
+            <Button variant="outline" colorScheme="red" onClick={onClose}>
+              Cancelar
+            </Button>
             <Button
               colorScheme="green"
               onClick={onAccept}
               isLoading={isSending}
             >
               Aceptar
-            </Button>
-            <Button variant="outline" colorScheme="red" onClick={onClose}>
-              Cancelar
             </Button>
           </Stack>
         </ModalFooter>

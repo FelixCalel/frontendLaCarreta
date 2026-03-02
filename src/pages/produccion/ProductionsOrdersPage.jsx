@@ -350,8 +350,18 @@ const ProductionOrdersPage = () => {
             <SimpleGrid columns={[1, 2, 3, 4, 5]} spacing={6} mt={6}>
               {filteredGroups.map((g) => {
                 const doneCount = g.items.filter((i) => i.completo).length;
+                const anyProgress = g.items.some(
+                  (i) => Number(i.cantidad ?? 0) > 0,
+                );
                 const allDone = doneCount === g.items.length;
-                const statusColor = allDone ? "green.400" : "yellow.400";
+
+                let statusColor = "yellow.400";
+                if (allDone) {
+                  statusColor = "green.400";
+                } else if (anyProgress) {
+                  statusColor = "blue.400";
+                }
+
                 const deudorCode = g.deudorCodigo || "N/A";
 
                 return (
@@ -390,7 +400,11 @@ const ProductionOrdersPage = () => {
                           </Heading>
                         </VStack>
                         <Icon
-                          as={CheckCircleIcon}
+                          as={
+                            allDone || anyProgress
+                              ? CheckCircleIcon
+                              : CheckCircleIcon
+                          }
                           color={statusColor}
                           boxSize={5}
                         />

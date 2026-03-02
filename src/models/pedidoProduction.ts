@@ -78,6 +78,7 @@ export interface AvanzarMultiEtapaDetallePayload {
   comentario?: string | null;
   fechaOrden?: string;
   nuevaEtapaId?: number;
+  avanzar?: boolean;
 }
 
 export interface AvanceOK {
