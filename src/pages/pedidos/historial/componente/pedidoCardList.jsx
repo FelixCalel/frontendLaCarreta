@@ -21,7 +21,8 @@ const PedidosCardList = ({ pedidos, roleId, onVerDetalles }) => {
   return (
     <VStack spacing={3} align="stretch" w="100%">
       {pedidos.map((pedido) => {
-        const showDocIds = roleId === 3 && pedido.estadoId === 5;
+        const showDocIds =
+          roleId === 3 && (pedido.estadoId === 5 || pedido.estadoId === 6);
 
         return (
           <Box
@@ -50,10 +51,10 @@ const PedidosCardList = ({ pedidos, roleId, onVerDetalles }) => {
                   pedido.estadoId === 2
                     ? "yellow"
                     : pedido.estadoId === 3
-                    ? "green"
-                    : pedido.estadoId === 5
-                    ? "blue"
-                    : "red"
+                      ? "green"
+                      : pedido.estadoId === 5 || pedido.estadoId === 6
+                        ? "blue"
+                        : "red"
                 }
                 fontSize="sm"
                 px={3}
@@ -63,10 +64,10 @@ const PedidosCardList = ({ pedidos, roleId, onVerDetalles }) => {
                 {pedido.estadoId === 2
                   ? "Pendiente"
                   : pedido.estadoId === 3
-                  ? "Aprobado"
-                  : pedido.estadoId === 5
-                  ? "Exportado"
-                  : "Cancelado"}
+                    ? "Aprobado"
+                    : pedido.estadoId === 5 || pedido.estadoId === 6
+                      ? "Exportado"
+                      : "Cancelado"}
               </Badge>
             </HStack>
 
@@ -134,7 +135,7 @@ PedidosCardList.propTypes = {
       nombreUsuario: PropTypes.string,
       docNum: PropTypes.number,
       docEntry: PropTypes.number,
-    })
+    }),
   ).isRequired,
   roleId: PropTypes.number.isRequired,
   onVerDetalles: PropTypes.func.isRequired,
