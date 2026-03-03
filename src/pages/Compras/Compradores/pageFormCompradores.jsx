@@ -170,38 +170,69 @@ const CompradoresPage = () => {
 
   return (
     <MotionBox
-      bg={containerBg}
-      minH="100vh"
-      p={6}
-      initial={{ opacity: 0, y: 50 }}
+      p={4}
+      bg={useColorModeValue("gray.50", "gray.900")}
+      minH="calc(100vh - 100px)"
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      <Flex justify="space-between" alignItems="center" mb={4}>
-        <Heading color={headingColor} fontWeight="extrabold">
-          Panel de Compras
-        </Heading>
-        <Button
-          colorScheme="teal"
-          onClick={handleExportarExcel}
-          leftIcon={<DownloadIcon />}
-          _hover={{ transform: "scale(1.05)" }}
-          transition="transform 0.2s"
+      <Box
+        w="100%"
+        bg={useColorModeValue("white", "gray.800")}
+        rounded="xl"
+        boxShadow="md"
+        p={4}
+        borderWidth="1px"
+        borderColor={useColorModeValue("gray.200", "gray.700")}
+      >
+        <Flex
+          justify="space-between"
+          alignItems="center"
+          mb={4}
+          borderBottomWidth="1px"
+          pb={4}
+          borderColor={useColorModeValue("gray.100", "gray.700")}
         >
-          Exportar a Excel
-        </Button>
-      </Flex>
+          <Heading
+            size="lg"
+            color={useColorModeValue("green.700", "green.300")}
+            fontWeight="bold"
+          >
+            Panel de Compras
+          </Heading>
+          <Button
+            colorScheme="green"
+            onClick={handleExportarExcel}
+            leftIcon={<DownloadIcon />}
+            _hover={{ transform: "scale(1.02)", bg: "green.600" }}
+            transition="all 0.2s"
+          >
+            Exportar a Excel
+          </Button>
+        </Flex>
 
-      <FiltrosCompras onAplicarFiltros={handleAplicarFiltros} />
-      <ComprasTable
-        compras={comprasFiltradas}
-        onRegistrarProveedor={handleRegistrarProveedor}
-      />
-      <RegistrarProveedorModal
-        isOpen={isOpenRegistrar}
-        onClose={onCloseRegistrar}
-        item={selectedItem}
-      />
+        <Box
+          mb={6}
+          p={3}
+          bg={useColorModeValue("green.50", "gray.700")}
+          border="1px solid"
+          borderColor={useColorModeValue("green.100", "gray.600")}
+          rounded="md"
+        >
+          <FiltrosCompras onAplicarFiltros={handleAplicarFiltros} />
+        </Box>
+
+        <ComprasTable
+          compras={comprasFiltradas}
+          onRegistrarProveedor={handleRegistrarProveedor}
+        />
+        <RegistrarProveedorModal
+          isOpen={isOpenRegistrar}
+          onClose={onCloseRegistrar}
+          item={selectedItem}
+        />
+      </Box>
     </MotionBox>
   );
 };

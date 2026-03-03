@@ -73,7 +73,7 @@ const PedidosEntrantesPage = () => {
     const okPal =
       filtros.palabrasClave.length === 0 ||
       filtros.palabrasClave.some((w) =>
-        (c.nombreProducto || "").toLowerCase().includes(w)
+        (c.nombreProducto || "").toLowerCase().includes(w),
       );
     return okFecha && okPal;
   });
@@ -84,22 +84,55 @@ const PedidosEntrantesPage = () => {
   };
 
   return (
-    <Box p={6} bg={bg} color={color} rounded="lg" boxShadow="xl">
-      <Flex justify="space-between" align="center" mb={4}>
-        <Heading size="md">Consolidado de Pedidos</Heading>
-      </Flex>
-      <FiltrosPedidos onAplicarFiltros={setFiltros} />
-      <ConsolidadoTable
-        data={consolidadosFiltrados}
-        status={status}
-        error={error}
-        onVerDetalle={handleVerDetalle}
-      />
-      <DetallesModal
-        isOpen={isOpen}
-        onClose={onClose}
-        pedido={selectedRegistro}
-      />
+    <Box p={4} bg={bg} minH="calc(100vh - 100px)">
+      <Box
+        w="100%"
+        bg={useColorModeValue("white", "gray.800")}
+        rounded="xl"
+        boxShadow="md"
+        p={4}
+        borderWidth="1px"
+        borderColor={useColorModeValue("gray.200", "gray.700")}
+      >
+        <Flex
+          justify="space-between"
+          align="center"
+          mb={4}
+          borderBottomWidth="1px"
+          pb={2}
+          borderColor={useColorModeValue("gray.100", "gray.700")}
+        >
+          <Heading
+            size="md"
+            color={useColorModeValue("green.700", "green.300")}
+            fontWeight="bold"
+          >
+            Consolidado de Pedidos
+          </Heading>
+        </Flex>
+
+        <Box
+          mb={4}
+          p={3}
+          bg={useColorModeValue("green.50", "gray.700")}
+          border="1px solid"
+          borderColor={useColorModeValue("green.100", "gray.600")}
+          rounded="md"
+        >
+          <FiltrosPedidos onAplicarFiltros={setFiltros} />
+        </Box>
+        <ConsolidadoTable
+          data={consolidadosFiltrados}
+          status={status}
+          error={error}
+          onVerDetalle={handleVerDetalle}
+        />
+        <DetallesModal
+          isOpen={isOpen}
+          onClose={onClose}
+          pedido={selectedRegistro}
+        />
+      </Box>
     </Box>
   );
 };
