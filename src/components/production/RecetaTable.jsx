@@ -22,12 +22,14 @@ import { AddIcon } from "@chakra-ui/icons";
 import {
   pedidoProduccionApi,
   useUpdateRecetaLineaMutation,
+  useGetUnidadesMedidaQuery,
 } from "../../services/pedidoProductionApi";
 import AddMaterialModal from "./modals/AddMaterialModal";
 import { RecetaRow } from "./RecetaRow";
 
 export const RecetaTable = memo(
   ({ pedidoId, receta, isLoading = false, almacenes = [] }) => {
+    const { data: unidadesMedida = [] } = useGetUnidadesMedidaQuery();
     const [updateLinea] = useUpdateRecetaLineaMutation();
     const toast = useToast();
     const dispatch = useDispatch();
@@ -204,13 +206,19 @@ export const RecetaTable = memo(
                   >
                     C. Req.
                   </Th>
-                  <Th w="80px" px={2} py={2} color={headColor} fontSize="xs">
+                  <Th
+                    w="70px"
+                    px={1}
+                    py={2}
+                    color={headColor}
+                    fontSize="xs"
+                    textAlign="center"
+                  >
                     Unidad
                   </Th>
                   <Th
-                    w="auto"
+                    w="110px"
                     minW="100px"
-                    maxW="90px"
                     px={1}
                     py={2}
                     color={headColor}
@@ -242,6 +250,7 @@ export const RecetaTable = memo(
                       handleLocalChange={handleLocalChange}
                       updateField={updateField}
                       almacenes={almacenes}
+                      unidadesMedida={unidadesMedida}
                       pedidoId={pedidoId}
                     />
                   ))

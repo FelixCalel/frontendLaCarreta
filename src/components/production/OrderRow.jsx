@@ -213,6 +213,17 @@ export const OrderRow = ({
             <Text fontSize="xs" color="gray.500" mt={0.5}>
               {order.itemCode || "N/A"}
             </Text>
+            {order.comentario_sap &&
+              !order.comentario_sap.includes("Avance automático") && (
+                <Text
+                  fontSize="xs"
+                  color="orange.500"
+                  fontStyle="italic"
+                  mt={1}
+                >
+                  "{order.comentario_sap}"
+                </Text>
+              )}
           </Box>
         </Td>
         <Td px={2} py={2}>

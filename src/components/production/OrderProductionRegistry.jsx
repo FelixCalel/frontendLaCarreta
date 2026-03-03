@@ -45,26 +45,30 @@ export const OrderProductionRegistry = ({
   const inputBg = useColorModeValue("gray.50", "gray.700");
 
   const [prodFields, setProdFields] = useState({
-    mpUtilizada: Number(order.mpUtilizada) || 0,
-    mpSobrante: Number(order.mpSobrante) || 0,
-    basura: Number(order.basura) || 0,
+    mpUtilizada: order.mpUtilizada ?? 0,
+    mpSobrante: order.mpSobrante ?? 0,
+    basura: order.basura ?? 0,
     trazabilidad_Prod: order.trazabilidad_Prod ?? "",
-    mp1ra: Number(order.mp1ra) || 0,
-    mp2da: Number(order.mp2da) || 0,
-    mp3ra: Number(order.mp3ra) || 0,
+    mp1ra: order.mp1ra ?? 0,
+    mp2da: order.mp2da ?? 0,
+    mp3ra: order.mp3ra ?? 0,
   });
 
+  const [isTyping, setIsTyping] = useState(false);
+
   useEffect(() => {
+    if (isTyping) return;
     setProdFields({
-      mpUtilizada: Number(order.mpUtilizada) || 0,
-      mpSobrante: Number(order.mpSobrante) || 0,
-      basura: Number(order.basura) || 0,
+      mpUtilizada: order.mpUtilizada ?? 0,
+      mpSobrante: order.mpSobrante ?? 0,
+      basura: order.basura ?? 0,
       trazabilidad_Prod: order.trazabilidad_Prod ?? "",
-      mp1ra: Number(order.mp1ra) || 0,
-      mp2da: Number(order.mp2da) || 0,
-      mp3ra: Number(order.mp3ra) || 0,
+      mp1ra: order.mp1ra ?? 0,
+      mp2da: order.mp2da ?? 0,
+      mp3ra: order.mp3ra ?? 0,
     });
   }, [
+    isTyping,
     order.mpUtilizada,
     order.mpSobrante,
     order.basura,
@@ -75,35 +79,41 @@ export const OrderProductionRegistry = ({
   ]);
 
   const handleFieldChange = (field, raw) => {
+    setIsTyping(true);
     const isText = field === "trazabilidad_Prod";
-    let value = isText ? raw : Number(raw);
-
-    const fieldsToValidate = [
-      "mpUtilizada",
-      "mpSobrante",
-      "basura",
-      "mp1ra",
-      "mp2da",
-      "mp3ra",
-    ];
+    let value = isText ? raw : raw;
 
     if (!isText) {
-      if (Number.isNaN(value) || value < 0) {
-        value = 0;
+      if (value !== "") {
+        const numVal = Number(value);
+        if (!Number.isNaN(numVal) && numVal >= 0) {
+          value = numVal;
+        } else {
+          value = 0;
+        }
       }
 
-      if (fieldsToValidate.includes(field)) {
+      const fieldsToValidate = [
+        "mpUtilizada",
+        "mpSobrante",
+        "basura",
+        "mp1ra",
+        "mp2da",
+        "mp3ra",
+      ];
+
+      if (value !== "" && fieldsToValidate.includes(field)) {
         const maxAllowed = Number(order.cantidadUnidad) || 0;
-        let totalCheck = value;
+        let totalCheck = Number(value);
 
         if (field === "mpUtilizada") {
-          totalCheck = value + rechazoQty;
+          totalCheck = Number(value) + rechazoQty;
         }
 
         if (totalCheck > maxAllowed) {
           const errorMsg =
             field === "mpUtilizada"
-              ? `No se puede guardar: La cantidad total procesada (MP Utilizada: ${value} + Rechazo: ${rechazoQty} = ${totalCheck}) excede la cantidad solicitada (${maxAllowed}).`
+              ? `No se puede guardar: La cantidad total (MP Utilizada: ${value} + Rechazo: ${rechazoQty} = ${totalCheck}) excede la cantidad solicitada (${maxAllowed}).`
               : `El valor no puede ser mayor que "Solic. Ventas" (${maxAllowed}).`;
 
           toast({
@@ -119,15 +129,23 @@ export const OrderProductionRegistry = ({
     }
 
     setProdFields((prev) => ({ ...prev, [field]: value }));
+  };
 
-    const updateData = { [field]: value };
+  const handleBlur = (field) => {
+    setIsTyping(false);
+
+    let rawValue = prodFields[field];
+    if (rawValue === "") rawValue = 0;
+
+    const validatedValue =
+      field === "trazabilidad_Prod" ? rawValue : Number(rawValue);
+    const updateData = { [field]: validatedValue };
 
     if (field === "mpUtilizada") {
-      const nuevaCantidad = value;
+      const nuevaCantidad = validatedValue;
       const nuevoFaltante =
         (Number(order.cantidadUnidad) || 0) - (nuevaCantidad + rechazoQty);
 
-      // Update parent stats immediately for visual feedback
       onUpdateStats?.(nuevaCantidad, nuevoFaltante);
 
       updateData.cantidad = nuevaCantidad;
@@ -142,9 +160,8 @@ export const OrderProductionRegistry = ({
       .catch(() => {
         setProdFields((prev) => ({
           ...prev,
-          [field]: order[field] ?? (isText ? "" : 0),
+          [field]: order[field] ?? (field === "trazabilidad_Prod" ? "" : 0),
         }));
-        // Revert parent stats if update failed
         if (field === "mpUtilizada") {
           const revertCantidad = Number(order.cantidad) || 0;
           const revertFaltante =
@@ -177,8 +194,9 @@ export const OrderProductionRegistry = ({
             variant="ghost"
             leftIcon={<ChevronRightIcon boxSize={3} />}
             fontSize="xs"
+            title="Salidas de Inventario"
           >
-            Registrar Rechazo
+            Salidas de Inventario
           </Button>
         )}
       </Flex>
@@ -207,9 +225,16 @@ export const OrderProductionRegistry = ({
                 h="24px"
                 w={spec.w}
                 type={spec.type}
-                value={spec.type === "number" && value === 0 ? "" : value}
+                value={
+                  spec.type === "number" && (value === 0 || value === "0")
+                    ? ""
+                    : value === undefined
+                      ? ""
+                      : value
+                }
                 placeholder={spec.type === "number" ? "0" : ""}
                 onChange={(e) => handleFieldChange(field, e.target.value)}
+                onBlur={() => handleBlur(field)}
                 focusBorderColor="blue.400"
                 borderRadius="sm"
                 bg={inputBg}

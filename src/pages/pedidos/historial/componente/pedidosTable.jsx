@@ -76,7 +76,7 @@ const PedidosTable = ({
                 <Td>
                   <Box
                     color={
-                      pedido.estadoId === 5
+                      pedido.estadoId === 5 || pedido.estadoId === 6
                         ? "blue.600"
                         : pedido.estadoId === 3
                           ? "green.600"
@@ -88,7 +88,7 @@ const PedidosTable = ({
                     }
                     fontWeight="bold"
                   >
-                    {pedido.estadoId === 5
+                    {pedido.estadoId === 5 || pedido.estadoId === 6
                       ? "Exportado"
                       : pedido.estadoId === 4
                         ? "Cancelado"
@@ -175,7 +175,7 @@ const PedidosTable = ({
                 <Box
                   fontWeight="bold"
                   color={
-                    pedido.estadoId === 5
+                    pedido.estadoId === 5 || pedido.estadoId === 6
                       ? "blue.600"
                       : pedido.estadoId === 3
                         ? "green.600"
@@ -186,7 +186,7 @@ const PedidosTable = ({
                             : "gray.600"
                   }
                 >
-                  {pedido.estadoId === 5
+                  {pedido.estadoId === 5 || pedido.estadoId === 6
                     ? "Exportado"
                     : pedido.estadoId === 4
                       ? "Cancelado"

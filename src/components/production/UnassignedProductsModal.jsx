@@ -61,7 +61,7 @@ export const UnassignedProductsModal = ({ isOpen, onClose }) => {
                     <Th>Pedido</Th>
                     <Th>Cliente</Th>
                     <Th>Item</Th>
-                    <Th>Cant. / Unidad</Th>
+                    <Th>DEU</Th>
                     <Th>Estado</Th>
                   </Tr>
                 </Thead>
@@ -83,7 +83,15 @@ export const UnassignedProductsModal = ({ isOpen, onClose }) => {
                         </Text>
                       </Td>
                       <Td>
-                        {item.cantidadUnidad} {item.unidadMedida || "N/A"}
+                        {item.deudorCodigo ? (
+                          <Badge colorScheme="blue" variant="subtle">
+                            {item.deudorCodigo}
+                          </Badge>
+                        ) : (
+                          <Text color="gray.400" fontSize="xs">
+                            Sin DEU
+                          </Text>
+                        )}
                       </Td>
                       <Td>
                         <Badge colorScheme="red">Falta Asignar Área</Badge>

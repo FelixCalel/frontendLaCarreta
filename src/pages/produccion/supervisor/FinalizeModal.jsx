@@ -23,6 +23,8 @@ const FinalizeModal = ({
   onToggleNoComment,
   onAccept,
   isSending,
+  isCommentRequired = false,
+  label = "Comentario",
 }) => {
   const overlayBg = useColorModeValue("blackAlpha.300", "whiteAlpha.300");
   const modalBg = useColorModeValue("white", "gray.700");
@@ -35,42 +37,54 @@ const FinalizeModal = ({
       <ModalOverlay bg={overlayBg} />
 
       <ModalContent bg={modalBg} borderRadius="lg" p={6}>
-        <ModalHeader color={textColor}>Comentario</ModalHeader>
+        <ModalHeader color={textColor}>{label}</ModalHeader>
 
         <ModalBody>
           <Textarea
             value={comment}
             onChange={(e) => onChangeComment(e.target.value)}
-            placeholder="Escribe aquí tu comentario"
+            placeholder={
+              isCommentRequired
+                ? "Este comentario es obligatorio"
+                : "Escribe aquí tu comentario"
+            }
             bg={inputBg}
-            borderColor={inputBorder}
+            borderColor={
+              isCommentRequired && !comment.trim() ? "red.500" : inputBorder
+            }
             color={textColor}
             resize="vertical"
             minH="160px"
             isDisabled={noComment}
+            _hover={{
+              borderColor:
+                isCommentRequired && !comment.trim() ? "red.600" : undefined,
+            }}
           />
 
-          <Checkbox
-            mt={4}
-            isChecked={noComment}
-            onChange={onToggleNoComment}
-            color={textColor}
-          >
-            Ningún comentario
-          </Checkbox>
+          {!isCommentRequired && (
+            <Checkbox
+              mt={4}
+              isChecked={noComment}
+              onChange={onToggleNoComment}
+              color={textColor}
+            >
+              Ningún comentario
+            </Checkbox>
+          )}
         </ModalBody>
 
         <ModalFooter>
           <Stack direction="row" spacing={3}>
+            <Button variant="outline" colorScheme="red" onClick={onClose}>
+              Cancelar
+            </Button>
             <Button
               colorScheme="green"
               onClick={onAccept}
               isLoading={isSending}
             >
               Aceptar
-            </Button>
-            <Button variant="outline" colorScheme="red" onClick={onClose}>
-              Cancelar
             </Button>
           </Stack>
         </ModalFooter>

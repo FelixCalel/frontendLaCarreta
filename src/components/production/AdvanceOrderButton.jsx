@@ -36,13 +36,35 @@ const AdvanceOrderButton = ({ order, onSuccess, label = "Aceptar Pedido" }) => {
       });
       return;
     }
-    setComment("");
-    setNoComment(false);
+
+    const firstItem = order.items?.[0];
+    setComment(firstItem?.comentario_sap || "");
+    setNoComment(!firstItem?.comentario_sap);
     onOpen();
   };
 
   const handleAccept = async () => {
     if (!order) return;
+
+    const isSupervisorToDigitador = label
+      .toLowerCase()
+      .includes("pasar a digitador");
+    const isDigitadorToSAP =
+      label.toLowerCase().includes("pasar a sap") ||
+      label.toLowerCase().includes("finalizar");
+    const isCommentRequired = isSupervisorToDigitador || isDigitadorToSAP;
+
+    if (isCommentRequired && !comment.trim()) {
+      toast({
+        title: "Comentario obligatorio",
+        description: "Debe ingresar un comentario para continuar.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     const usuarioId = Number(localStorage.getItem("usuarioId") ?? 1);
     const comentario = noComment ? null : comment.trim();
     const detalleIds = order.items.map((i) => i.id_detallePedido);
@@ -59,12 +81,6 @@ const AdvanceOrderButton = ({ order, onSuccess, label = "Aceptar Pedido" }) => {
           usuarioId,
         }).unwrap();
       }
-
-      await avanzarEtapa({
-        pedidoId: Number(order.pedidoId),
-        usuarioId,
-        comentario,
-      }).unwrap();
 
       toast({
         title: "Pedido avanzado.",
@@ -102,6 +118,16 @@ const AdvanceOrderButton = ({ order, onSuccess, label = "Aceptar Pedido" }) => {
         onToggleNoComment={() => setNoComment(!noComment)}
         onAccept={handleAccept}
         isSending={isSending}
+        label={
+          label.toLowerCase().includes("sap")
+            ? "Comentario para SAP"
+            : "Comentario de Seguimiento"
+        }
+        isCommentRequired={
+          label.toLowerCase().includes("pasar a digitador") ||
+          label.toLowerCase().includes("sap") ||
+          label.toLowerCase().includes("finalizar")
+        }
       />
     </>
   );

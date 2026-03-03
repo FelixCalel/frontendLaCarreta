@@ -48,6 +48,15 @@ export const OrderRegisterBox = ({
   const borderColor = "gray.200";
   const inputBg = useColorModeValue("gray.50", "gray.700");
 
+  const [localValues, setLocalValues] = React.useState(prodFields);
+  const [isTyping, setIsTyping] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isTyping) {
+      setLocalValues(prodFields);
+    }
+  }, [prodFields, isTyping]);
+
   return (
     <Flex gap={4} direction={{ base: "column", xl: "row" }}>
       <Box width="fit-content">
@@ -72,14 +81,15 @@ export const OrderRegisterBox = ({
               variant="ghost"
               leftIcon={<ChevronRightIcon boxSize={3} />}
               fontSize="xs"
+              title="Salidas de Inventario"
             >
-              Registrar Rechazo
+              Salidas de Inventario
             </Button>
           </Flex>
 
           <Flex gap={2} wrap="wrap" align="center">
             {ROW_1.map((field) => {
-              const value = prodFields[field];
+              const value = localValues[field];
               const spec = FIELD_SPECS[field] ?? {
                 w: "80px",
                 type: "number",
@@ -101,9 +111,25 @@ export const OrderRegisterBox = ({
                     h="24px"
                     w={spec.w}
                     type={spec.type}
-                    value={spec.type === "number" && value === 0 ? "" : value}
+                    value={
+                      spec.type === "number" && (value === 0 || value === "0")
+                        ? ""
+                        : value === undefined
+                          ? ""
+                          : value
+                    }
                     placeholder={spec.type === "number" ? "0" : ""}
-                    onChange={(e) => handleFieldChange(field, e.target.value)}
+                    onChange={(e) => {
+                      setIsTyping(true);
+                      setLocalValues((prev) => ({
+                        ...prev,
+                        [field]: e.target.value,
+                      }));
+                    }}
+                    onBlur={() => {
+                      setIsTyping(false);
+                      handleFieldChange(field, localValues[field]);
+                    }}
                     focusBorderColor="blue.400"
                     borderRadius="sm"
                     bg={inputBg}

@@ -98,6 +98,7 @@ export const RecetaRow = memo(function RecetaRow({
   handleLocalChange,
   updateField,
   almacenes,
+  unidadesMedida,
   pedidoId,
 }) {
   const optionBg = useColorModeValue("white", "gray.700");
@@ -106,8 +107,11 @@ export const RecetaRow = memo(function RecetaRow({
   const [triggerGetStockSAP, { data: stockData, isFetching }] =
     useLazyGetStockSAPQuery();
 
+  const [hasFetchedSAP, setHasFetchedSAP] = useState(false);
+
   useEffect(() => {
-    if (r.item && pedidoId) {
+    if (r.item && pedidoId && !hasFetchedSAP && !stockData && !isFetching) {
+      setHasFetchedSAP(true);
       triggerGetStockSAP({
         itemcode: r.item.split(" - ")[0].trim(),
         pedidoId: Number(pedidoId),
@@ -115,7 +119,14 @@ export const RecetaRow = memo(function RecetaRow({
         .unwrap()
         .catch((err) => console.error("Error SAP", err));
     }
-  }, [r.item, r.id_almacen, pedidoId, triggerGetStockSAP]);
+  }, [
+    r.item,
+    pedidoId,
+    triggerGetStockSAP,
+    hasFetchedSAP,
+    stockData,
+    isFetching,
+  ]);
 
   const selectedWarehouse = almacenes.find(
     (a) => a.id === Number(r.id_almacen),
@@ -219,7 +230,7 @@ export const RecetaRow = memo(function RecetaRow({
           {r.cantidad_requerida}
         </Text>
       </Td>
-      <Td px={1} py={2} {...dimStyle}>
+      <Td px={1} py={2} textAlign="center" {...dimStyle}>
         <Select
           size="xs"
           h="24px"
@@ -230,15 +241,15 @@ export const RecetaRow = memo(function RecetaRow({
           borderRadius="md"
           variant="filled"
           _focus={{ borderColor: "blue.400" }}
-          width="70px"
+          width="100%"
+          textAlign="center"
+          sx={{ textAlignLast: "center" }}
         >
-          {["Unidad", "Libra", "KG", "Gramos", "Litro", "ML", "Onza"].map(
-            (unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ),
-          )}
+          {unidadesMedida.map((unit) => (
+            <option key={unit.id} value={unit.unidad}>
+              {unit.unidad}
+            </option>
+          ))}
         </Select>
       </Td>
       <Td px={1} py={2} textAlign="center" {...dimStyle}>
@@ -254,8 +265,7 @@ export const RecetaRow = memo(function RecetaRow({
           variant="filled"
           _focus={{ bg: optionBg, borderColor: "blue.400" }}
           textAlign="center"
-          width="100%"
-          maxW="240px"
+          maxW="100px"
           sx={{ textAlignLast: "center" }}
         >
           {almacenes.map((almacen) => (
@@ -278,5 +288,6 @@ RecetaRow.propTypes = {
   handleLocalChange: PropTypes.func.isRequired,
   updateField: PropTypes.func.isRequired,
   almacenes: PropTypes.arrayOf(PropTypes.object).isRequired,
+  unidadesMedida: PropTypes.arrayOf(PropTypes.object).isRequired,
   pedidoId: PropTypes.number.isRequired,
 };

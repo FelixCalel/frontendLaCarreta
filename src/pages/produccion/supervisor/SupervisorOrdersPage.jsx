@@ -139,6 +139,7 @@ const SupervisorOrdersPage = () => {
             mpSobrante: Number(item.mpSobrante ?? 0),
             rechazo: Number(item.rechazo ?? 0),
             basura: Number(item.basura ?? 0),
+            cantidadRechazada: Number(item.cantidadRechazada ?? 0),
           })),
         }))
         .filter((g) => g.items.length > 0),
@@ -219,6 +220,7 @@ const SupervisorOrdersPage = () => {
         existing.cantidad += Number(item.cantidad ?? 0);
         existing.mpUtilizada += Number(item.mpUtilizada ?? 0);
         existing.rechazo += Number(item.rechazo ?? 0);
+        existing.cantidadRechazada += Number(item.cantidadRechazada ?? 0);
         existing.originalItems.push(item);
       } else {
         itemsMap.set(key, {
@@ -227,6 +229,7 @@ const SupervisorOrdersPage = () => {
           cantidad: Number(item.cantidad ?? 0),
           mpUtilizada: Number(item.mpUtilizada ?? 0),
           rechazo: Number(item.rechazo ?? 0),
+          cantidadRechazada: Number(item.cantidadRechazada ?? 0),
           originalItems: [item],
         });
       }
