@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import PropTypes from "prop-types";
 import {
   AlertDialog,
@@ -43,7 +43,8 @@ const ConfirmDialog = ({
       });
       return;
     }
-    onConfirm({ comentario, fecha: new Date(fecha + "T00:00:00") });
+    // Enviamos solo la fecha (YYYY-MM-DD) para evitar que la conversión a UTC le reste un día
+    onConfirm({ comentario, fecha });
   };
 
   return (
