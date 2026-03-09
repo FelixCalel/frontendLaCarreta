@@ -161,7 +161,7 @@ const PageItems = () => {
     dispatch(tablaDeudores());
   }, [dispatch]);
 
-  const paginatedData = items || [];
+  const paginatedData = (items || []).slice(0, itemsPerPage);
 
   const tableBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
@@ -219,34 +219,6 @@ const PageItems = () => {
     [dispatch, items],
   );
 
-  if (status === "loading") {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
-        <Spinner size="xl" />
-      </Box>
-    );
-  }
-
-  if (status === "failed") {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
-        <Text fontSize="2xl" color="red.500">
-          Error al cargar los datos: {error}
-        </Text>
-      </Box>
-    );
-  }
-
   return (
     <Box
       w="100%"
@@ -259,7 +231,8 @@ const PageItems = () => {
         <Text fontSize="2xl" fontWeight="bold" color="blue.600">
           Gestión de Items
         </Text>
-        <Flex gap={4}>
+        <Flex gap={4} alignItems="center">
+          {status === "loading" && <Spinner size="sm" color="blue.500" />}
           <Input
             placeholder="Buscar por nombre o código"
             value={searchTerm}
@@ -292,15 +265,39 @@ const PageItems = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {paginatedData.map((item) => (
-            <ItemRow
-              key={item.id}
-              item={item}
-              handleStatusChange={handleStatusChange}
-              handleAddDeudor={handleAddDeudor}
-              handleRemoveDeudor={handleRemoveDeudor}
-            />
-          ))}
+          {status === "loading" && paginatedData.length === 0 ? (
+            <Tr>
+              <Td colSpan={7} textAlign="center" py={10}>
+                <Spinner size="xl" />
+              </Td>
+            </Tr>
+          ) : status === "failed" ? (
+            <Tr>
+              <Td colSpan={7} textAlign="center" py={10}>
+                <Text fontSize="lg" color="red.500">
+                  Error al cargar los datos: {error}
+                </Text>
+              </Td>
+            </Tr>
+          ) : paginatedData.length === 0 ? (
+            <Tr>
+              <Td colSpan={7} textAlign="center" py={10}>
+                <Text fontSize="lg" color="gray.500">
+                  No se encontraron items
+                </Text>
+              </Td>
+            </Tr>
+          ) : (
+            paginatedData.map((item) => (
+              <ItemRow
+                key={item.id}
+                item={item}
+                handleStatusChange={handleStatusChange}
+                handleAddDeudor={handleAddDeudor}
+                handleRemoveDeudor={handleRemoveDeudor}
+              />
+            ))
+          )}
         </Tbody>
       </Table>
 

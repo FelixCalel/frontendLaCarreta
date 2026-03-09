@@ -59,6 +59,13 @@ export const pedidoProduccionApi = createApi({
   endpoints: (builder) => ({
     getAlmacenes: builder.query<ProdAlmacen[], void>({
       query: () => "/almacen",
+      transformResponse: (response: ProdAlmacen[]) => {
+        return response.slice().sort((a, b) => {
+          const nameA = a.nombre || (a as any).name || "";
+          const nameB = b.nombre || (b as any).name || "";
+          return nameA.localeCompare(nameB, undefined, { sensitivity: "base" });
+        });
+      },
       providesTags: (result) =>
         result
           ? [
