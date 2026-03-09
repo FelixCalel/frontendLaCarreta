@@ -68,8 +68,7 @@ export const ConsolidatedExpandedRow = memo(
       ROW_1.forEach((field) => {
         if (["mpUtilizada", "mpSobrante", "basura"].includes(field)) {
           vals[field] = item.originalItems.reduce((sum, order) => {
-            const orderField = field === "basura" ? "cantidadRechazada" : field;
-            return sum + (Number(order[orderField]) || 0);
+            return sum + (Number(order[field]) || 0);
           }, 0);
         } else {
           vals[field] = item.originalItems[0][field];
@@ -86,16 +85,18 @@ export const ConsolidatedExpandedRow = memo(
 
     const handleUpdate = useCallback(
       async (field, value) => {
-        if (value === "") return;
-
         let finalValue = field === "trazabilidad_Prod" ? value : value;
 
         if (field !== "trazabilidad_Prod") {
-          const numVal = Number(finalValue);
-          if (Number.isNaN(numVal) || numVal < 0) {
+          if (finalValue === "") {
             finalValue = 0;
           } else {
-            finalValue = numVal;
+            const numVal = Number(finalValue);
+            if (Number.isNaN(numVal) || numVal < 0) {
+              finalValue = 0;
+            } else {
+              finalValue = numVal;
+            }
           }
         }
 
@@ -155,6 +156,42 @@ export const ConsolidatedExpandedRow = memo(
             toast({
               title: "Error",
               description: "Hubo un error al distribuir la cantidad.",
+              status: "error",
+            });
+          }
+        }
+
+        if (field === "mpSobrante" || field === "basura") {
+          let remainingToAllocate = finalValue;
+          const totalSolicitud = Number(item.cantidadUnidad) || 1;
+          const updatePromises = item.originalItems.map((order, index) => {
+            const isLast = index === item.originalItems.length - 1;
+            let allocation = 0;
+
+            if (isLast) {
+              allocation = Number(remainingToAllocate.toFixed(2));
+            } else {
+              const weight =
+                (Number(order.cantidadUnidad) || 0) / totalSolicitud;
+              allocation = Number((finalValue * weight).toFixed(2));
+              remainingToAllocate -= allocation;
+            }
+
+            return updatePedido({
+              id: order.id,
+              data: {
+                [field]: allocation,
+              },
+            }).unwrap();
+          });
+
+          try {
+            await Promise.all(updatePromises);
+          } catch (err) {
+            console.error(`Error distributing ${field}:`, err);
+            toast({
+              title: "Error",
+              description: `Hubo un error al distribuir ${field}.`,
               status: "error",
             });
           }

@@ -338,6 +338,17 @@ export const pedidoProduccionApi = createApi({
       }),
     }),
 
+    exportarOrdenFabricacionSAP: builder.mutation<
+      any,
+      { dbsap: string; ipsap: string; ids: number[]; fecha: string; comentario: string }
+    >({
+      query: (body) => ({
+        url: "/sap/deus/exportarOrdenFabricacion",
+        method: "POST",
+        body,
+      }),
+    }),
+
     getRecetaByPedido: builder.query<RecetaLinea[], { pedidoId: number; id_almacen?: number }>({
       query: ({ pedidoId, id_almacen }) => {
         let url = `/receta/pedido/${pedidoId}`;
@@ -463,5 +474,6 @@ export const {
   useCreateRecetaLineaMutation,
   useLazyGetItemsQuery,
   useLazyGetStockSAPQuery,
+  useExportarOrdenFabricacionSAPMutation,
   useGetMotivosSalidaQuery,
 } = pedidoProduccionApi;

@@ -1,4 +1,5 @@
 import { useState, Fragment, useMemo, useCallback, useEffect } from "react";
+import { useSelector } from "react-redux";
 import PropTypes from "prop-types";
 import {
   Table,
@@ -26,7 +27,10 @@ import {
   Input,
   Center,
 } from "@chakra-ui/react";
-import { useAvanzarMultiEtapaDetalleMutation } from "../../services/pedidoProductionApi";
+import {
+  useAvanzarMultiEtapaDetalleMutation,
+  useExportarOrdenFabricacionSAPMutation,
+} from "../../services/pedidoProductionApi";
 import { ConsolidatedOrderRow } from "./ConsolidatedOrderRow";
 
 export const ConsolidatedOrdersView = ({
@@ -55,6 +59,11 @@ export const ConsolidatedOrdersView = ({
 
   const [avanzarMultiDetalle, { isLoading: isSending }] =
     useAvanzarMultiEtapaDetalleMutation();
+  const [exportarSAP, { isLoading: isExportingSAP }] =
+    useExportarOrdenFabricacionSAPMutation();
+
+  const empresas = useSelector((state) => state.empresas?.data || []);
+  const authState = useSelector((state) => state.auth || {});
 
   const toggleExpansion = useCallback((id) => {
     setExpandedState((prev) => ({
@@ -155,11 +164,15 @@ export const ConsolidatedOrdersView = ({
     }
 
     const detailsToSend = [];
+    const pedidoIds = new Set();
     data.forEach((group) => {
       if (selectedItems.has(group.productoNombre)) {
         group.originalItems.forEach((item) => {
           if (item.id_detallePedido) {
             detailsToSend.push(item.id_detallePedido);
+          }
+          if (item.id) {
+            pedidoIds.add(item.id);
           }
         });
       }
@@ -177,35 +190,96 @@ export const ConsolidatedOrdersView = ({
     }
 
     try {
-      await avanzarMultiDetalle({
-        detalleOrdenIds: detailsToSend,
-        usuarioId: Number(localStorage.getItem("usuarioId") ?? 1),
-        nuevaEtapaId: 4,
-        comentario: comment || null,
-        fechaOrden: dateSAP,
-        avanzar: !isDigitadorToSAP,
-      }).unwrap();
+      if (isDigitadorToSAP) {
+        let paisId =
+          localStorage.getItem("paisId") ||
+          authState.paisId ||
+          authState.user?.paisId;
+        if (!paisId) {
+          try {
+            const userData = JSON.parse(
+              localStorage.getItem("userData") || "{}",
+            );
+            paisId = userData.paisId;
+          } catch (e) {}
+        }
 
-      toast({
-        title: isDigitadorToSAP
-          ? "Falta integración SAP"
-          : "Movimiento exitoso",
-        description: isDigitadorToSAP
-          ? `Los productos se han guardado, pero AÚN NO han sido enviados a SAP. (Función pendiente)`
-          : `${selectedItems.size} productos (${detailsToSend.length} items) han avanzado a la siguiente etapa.`,
-        status: isDigitadorToSAP ? "warning" : "success",
-        duration: 5000,
-        isClosable: true,
-      });
-      setSelectedItems(new Set());
-      setComment("");
-      setDateSAP("");
-      onClose();
+        const emp = empresas.find((e) => e.paisId == paisId && e.estaActivo);
+        if (!emp) {
+          toast({
+            title: "Error de configuración",
+            description: "No hay configuración SAP para tu país",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          return;
+        }
+
+        const resultSAP = await exportarSAP({
+          dbsap: emp.baseDatos,
+          ipsap: emp.ipBaseDatos,
+          ids: Array.from(pedidoIds),
+          fecha: dateSAP,
+          comentario: comment,
+        }).unwrap();
+
+        const hasErrors = resultSAP.enviados?.some((r) => r.status === "ERROR");
+
+        if (hasErrors) {
+          toast({
+            title: "Resultados con advertencias",
+            description:
+              "Algunas órdenes no pudieron enviarse correctamente a SAP.",
+            status: "warning",
+            duration: 7000,
+            isClosable: true,
+          });
+          console.error("Resultados SAP:", resultSAP);
+        } else {
+          toast({
+            title: "Órdenes enviadas a SAP",
+            description: `Se enviaron exitosamente las órdenes de fabricación a SAP.`,
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+          setSelectedItems(new Set());
+          setComment("");
+          setDateSAP("");
+          onClose();
+        }
+      } else {
+        await avanzarMultiDetalle({
+          detalleOrdenIds: detailsToSend,
+          usuarioId: Number(localStorage.getItem("usuarioId") ?? 1),
+          nuevaEtapaId: 4,
+          comentario: comment || null,
+          fechaOrden: dateSAP,
+          avanzar: true,
+        }).unwrap();
+
+        toast({
+          title: "Movimiento exitoso",
+          description: `${selectedItems.size} productos (${detailsToSend.length} items) han avanzado a la siguiente etapa.`,
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+
+        setSelectedItems(new Set());
+        setComment("");
+        setDateSAP("");
+        onClose();
+      }
     } catch (error) {
       console.error("Error sending to SAP:", error);
       toast({
         title: "Error",
-        description: "Hubo un error al enviar a SAP.",
+        description:
+          error?.data?.msg ||
+          error?.data?.error ||
+          "Hubo un error al procesar la solicitud.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -247,6 +321,7 @@ export const ConsolidatedOrdersView = ({
             <Input
               type="date"
               value={dateSAP}
+              max={new Date().toISOString().split("T")[0]}
               onChange={(e) => setDateSAP(e.target.value)}
               mb={4}
             />
