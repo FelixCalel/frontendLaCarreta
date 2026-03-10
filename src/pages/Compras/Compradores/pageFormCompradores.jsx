@@ -10,10 +10,12 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { motion } from "framer-motion";
+import { m, LazyMotion, domAnimation } from "framer-motion";
 import { DownloadIcon } from "@chakra-ui/icons";
-import moment from "moment";
 import * as ExcelJS from "exceljs";
+
+const toYMD = (dateString) =>
+  dateString ? new Date(dateString).toISOString().split("T")[0] : "";
 import {
   fetchCompras,
   consolidateCompras,
@@ -22,7 +24,7 @@ import FiltrosCompras from "./componentes/FiltroCompras";
 import ComprasTable from "./componentes/ComprasTable";
 import RegistrarProveedorModal from "./componentes/RegistrarProveedorModal";
 
-const MotionBox = motion(Box);
+const MotionBox = m(Box);
 
 const CompradoresPage = () => {
   const dispatch = useDispatch();
@@ -46,6 +48,13 @@ const CompradoresPage = () => {
 
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("gray.700", "white");
+
+  const pageBg = useColorModeValue("gray.50", "gray.900");
+  const boxBorder = useColorModeValue("gray.200", "gray.700");
+  const headerBorder = useColorModeValue("gray.100", "gray.700");
+  const titleColor = useColorModeValue("green.700", "green.300");
+  const filterBg = useColorModeValue("green.50", "gray.700");
+  const filterBorder = useColorModeValue("green.100", "gray.600");
 
   useEffect(() => {
     if (hasLoadedRef.current) return;
@@ -92,10 +101,8 @@ const CompradoresPage = () => {
   };
 
   const comprasFiltradas = comprasData.filter((compra) => {
-    const fechaCompra = moment.utc(compra.fecha).format("YYYY-MM-DD");
-    const fechaFiltro = filtros.fechaOrden
-      ? moment.utc(filtros.fechaOrden).format("YYYY-MM-DD")
-      : "";
+    const fechaCompra = toYMD(compra.fecha);
+    const fechaFiltro = filtros.fechaOrden ? toYMD(filtros.fechaOrden) : "";
 
     const cumpleFecha = !filtros.fechaOrden || fechaCompra === fechaFiltro;
     const cumplePalabras =
@@ -169,71 +176,69 @@ const CompradoresPage = () => {
   };
 
   return (
-    <MotionBox
-      p={4}
-      bg={useColorModeValue("gray.50", "gray.900")}
-      minH="calc(100vh - 100px)"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-    >
-      <Box
-        w="100%"
-        bg={useColorModeValue("white", "gray.800")}
-        rounded="xl"
-        boxShadow="md"
+    <LazyMotion features={domAnimation}>
+      <MotionBox
         p={4}
-        borderWidth="1px"
-        borderColor={useColorModeValue("gray.200", "gray.700")}
+        bg={pageBg}
+        minH="calc(100vh - 100px)"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
       >
-        <Flex
-          justify="space-between"
-          alignItems="center"
-          mb={4}
-          borderBottomWidth="1px"
-          pb={4}
-          borderColor={useColorModeValue("gray.100", "gray.700")}
-        >
-          <Heading
-            size="lg"
-            color={useColorModeValue("green.700", "green.300")}
-            fontWeight="bold"
-          >
-            Panel de Compras
-          </Heading>
-          <Button
-            colorScheme="green"
-            onClick={handleExportarExcel}
-            leftIcon={<DownloadIcon />}
-            _hover={{ transform: "scale(1.02)", bg: "green.600" }}
-            transition="all 0.2s"
-          >
-            Exportar a Excel
-          </Button>
-        </Flex>
-
         <Box
-          mb={6}
-          p={3}
-          bg={useColorModeValue("green.50", "gray.700")}
-          border="1px solid"
-          borderColor={useColorModeValue("green.100", "gray.600")}
-          rounded="md"
+          w="100%"
+          bg={containerBg}
+          rounded="xl"
+          boxShadow="md"
+          p={4}
+          borderWidth="1px"
+          borderColor={boxBorder}
         >
-          <FiltrosCompras onAplicarFiltros={handleAplicarFiltros} />
-        </Box>
+          <Flex
+            justify="space-between"
+            alignItems="center"
+            mb={4}
+            borderBottomWidth="1px"
+            pb={4}
+            borderColor={headerBorder}
+          >
+            <Heading size="lg" color={titleColor} fontWeight="bold">
+              Panel de Compras
+            </Heading>
+            <Button
+              colorScheme="green"
+              onClick={handleExportarExcel}
+              leftIcon={<DownloadIcon />}
+              _hover={{ transform: "scale(1.02)", bg: "green.600" }}
+              transition="all 0.2s"
+            >
+              Exportar a Excel
+            </Button>
+          </Flex>
 
-        <ComprasTable
-          compras={comprasFiltradas}
-          onRegistrarProveedor={handleRegistrarProveedor}
-        />
-        <RegistrarProveedorModal
-          isOpen={isOpenRegistrar}
-          onClose={onCloseRegistrar}
-          item={selectedItem}
-        />
-      </Box>
-    </MotionBox>
+          <Box
+            mb={6}
+            p={3}
+            bg={filterBg}
+            border="1px solid"
+            borderColor={filterBorder}
+            rounded="md"
+          >
+            <FiltrosCompras onAplicarFiltros={handleAplicarFiltros} />
+          </Box>
+
+          <ComprasTable
+            compras={comprasFiltradas}
+            onRegistrarProveedor={handleRegistrarProveedor}
+          />
+          <RegistrarProveedorModal
+            isOpen={isOpenRegistrar}
+            onClose={onCloseRegistrar}
+            item={selectedItem}
+          />
+        </Box>
+      </MotionBox>
+    </LazyMotion>
   );
 };
 

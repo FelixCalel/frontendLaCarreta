@@ -30,12 +30,14 @@ import { RechazoModal } from "../modals/RechazoModal";
 import { OrderProductionRegistry } from "./OrderProductionRegistry";
 import { OrderWarehouseSelector } from "./OrderWarehouseSelector";
 
+const EMPTY_OBJECT = {};
+const EMPTY_ARRAY = [];
 export const OrderRow = ({
   order,
   isExpanded,
   onToggle,
-  sx = {},
-  almacenes = [],
+  sx = EMPTY_OBJECT,
+  almacenes = EMPTY_ARRAY,
   index = 0,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -118,8 +120,8 @@ export const OrderRow = ({
   };
 
   const handleUpdateStats = (newCantidad, newFaltante) => {
-    setCantidadLocal(newCantidad + rechazoQty);
-    setFaltanteLocal(newFaltante);
+    setCantidadLocal(() => newCantidad + rechazoQty);
+    setFaltanteLocal(() => newFaltante);
   };
 
   const [completoLocal, setCompletoLocal] = useState(order.completo);

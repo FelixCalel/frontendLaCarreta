@@ -61,12 +61,12 @@ const MenuDesktop = () => {
   const sidebarBg = useColorModeValue("white", "gray.900");
   const sidebarBgGradient = useColorModeValue(
     "linear(to-b, white, gray.50)",
-    "linear(to-b, gray.900, gray.800)"
+    "linear(to-b, gray.900, gray.800)",
   );
   const sidebarBorder = useColorModeValue("gray.200", "gray.700");
   const sidebarShadow = useColorModeValue(
     "2px 0 10px rgba(0, 0, 0, 0.05)",
-    "2px 0 10px rgba(0, 0, 0, 0.3)"
+    "2px 0 10px rgba(0, 0, 0, 0.3)",
   );
   const scrollbarThumb = useColorModeValue("#CBD5E0", "#4A5568");
   const scrollbarThumbHover = useColorModeValue("#A0AEC0", "#718096");
@@ -126,8 +126,13 @@ const MenuDesktop = () => {
       >
         <SkeletonCircle size="10" />
         <VStack spacing={4} w="full" px={2}>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} height="40px" width="40px" borderRadius="md" />
+          {[1, 2, 3, 4, 5].map((skeletonId) => (
+            <Skeleton
+              key={`skeleton-${skeletonId}`}
+              height="40px"
+              width="40px"
+              borderRadius="md"
+            />
           ))}
         </VStack>
       </Box>

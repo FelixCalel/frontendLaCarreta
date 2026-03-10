@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Box, Center, Spinner, Text } from "@chakra-ui/react";
+import { FaFileExport } from "react-icons/fa";
 import { useGetPedidosAgrupadosQuery } from "../../../services/pedidoProductionApi";
 import { FilterPanel } from "../../../components/production/FilterPanel";
 import { GroupCardGrid } from "../../../components/production/digitador/DigitadorCardGrid";
@@ -10,27 +11,25 @@ const DigitadorOrdersPage = () => {
     isLoading,
     error,
   } = useGetPedidosAgrupadosQuery({
-    etapaId: 3,
+    etapaId: 5,
   });
-
-  const base = useMemo(() => groups, [groups]);
 
   const [term, setTerm] = useState("");
   const [country, setCountry] = useState("");
   const [client, setClient] = useState("");
 
   const countries = useMemo(
-    () => [...new Set(base.map((g) => g.pais).filter(Boolean))],
-    [base],
+    () => [...new Set(groups.map((g) => g.pais).filter(Boolean))],
+    [groups],
   );
   const clients = useMemo(
-    () => [...new Set(base.map((g) => g.tienda).filter(Boolean))],
-    [base],
+    () => [...new Set(groups.map((g) => g.tienda).filter(Boolean))],
+    [groups],
   );
 
   const filtered = useMemo(
     () =>
-      base.filter((g) => {
+      groups.filter((g) => {
         const byText =
           !term ||
           g.pedidoId.toString().includes(term) ||
@@ -39,7 +38,7 @@ const DigitadorOrdersPage = () => {
         const byClient = !client || g.tienda === client;
         return byText && byCountry && byClient;
       }),
-    [base, term, country, client],
+    [groups, term, country, client],
   );
 
   if (isLoading) {
@@ -60,6 +59,9 @@ const DigitadorOrdersPage = () => {
 
   return (
     <Box p={4}>
+      <Text fontSize="2xl" fontWeight="bold" mb={4} textAlign="center" color="blue.600">
+        Historial de Exportaciones SAP
+      </Text>
       <FilterPanel
         itemFilter={term}
         onItemChange={setTerm}
@@ -72,7 +74,10 @@ const DigitadorOrdersPage = () => {
         clients={clients}
       />
 
-      <GroupCardGrid groups={filtered} />
+      <GroupCardGrid 
+        groups={filtered} 
+        IconComponent={FaFileExport}
+      />
     </Box>
   );
 };

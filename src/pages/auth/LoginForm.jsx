@@ -99,7 +99,7 @@ export const LoginForm = () => {
       await new Promise((r) => setTimeout(r, 500));
 
       const action = await dispatch(
-        startLogin({ identifier: correo, contrasena, captchaToken })
+        startLogin({ identifier: correo, contrasena, captchaToken }),
       );
 
       if (startLogin.fulfilled.match(action)) {
@@ -130,7 +130,7 @@ export const LoginForm = () => {
     setIsVerifying(true);
     try {
       const action = await dispatch(
-        startVerifyLogin({ userId: verifyUserId, code })
+        startVerifyLogin({ userId: verifyUserId, code }),
       );
 
       if (startVerifyLogin.fulfilled.match(action)) {
@@ -218,7 +218,6 @@ export const LoginForm = () => {
                 value={verifyCode}
                 onChange={(value) => setVerifyCode(value)}
                 onComplete={(value) => handleVerifyCode(value)}
-                autoFocus
               >
                 <PinInputField
                   w={12}

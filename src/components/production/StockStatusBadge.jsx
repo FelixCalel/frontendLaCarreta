@@ -8,13 +8,14 @@ import {
   InfoIcon,
 } from "@chakra-ui/icons";
 
+const EMPTY_ARRAY = [];
 export const StockStatusBadge = ({
   isFetching,
   stockOnHand,
   stockCommited,
   reqQty,
   selectedWarehouse,
-  alternativeWarehouses = [],
+  alternativeWarehouses = EMPTY_ARRAY,
   currentStockInfo,
 }) => {
   if (isFetching) {

@@ -31,7 +31,13 @@ import PedidoInfoDisplay from "./PedidoInfoDisplay";
 import AgregarProductoBar from "./AgregarProductoBar";
 import DetallesProductosTable from "./DetallesProductosTable";
 
-const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
+const EMPTY_ARRAY = [];
+const DetallesModal = ({
+  isOpen,
+  onClose,
+  detalles = EMPTY_ARRAY,
+  pedido = null,
+}) => {
   const location = useLocation();
   const isEditable = location.pathname === "/pedidos/entrantes";
   const dispatch = useDispatch();
@@ -55,13 +61,17 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
   const [detallesLocal, setDetallesLocal] = useState(detalles);
   const [editCantidad, setEditCantidad] = useState({});
 
-  useEffect(() => {
+  const prevDetalles = useRef(detalles);
+  if (detalles !== prevDetalles.current) {
+    prevDetalles.current = detalles;
     setDetallesLocal(detalles);
-  }, [detalles]);
+  }
 
   const sortDetalles = (lista) => {
     return lista.slice().sort((a, b) =>
-      a.nombreProducto.localeCompare(b.nombreProducto, undefined, { sensitivity: "base" })
+      a.nombreProducto.localeCompare(b.nombreProducto, undefined, {
+        sensitivity: "base",
+      }),
     );
   };
 
@@ -74,7 +84,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
       return;
     }
     const yaAgregado = detallesLocal.some(
-      (detalle) => detalle.productoId === newProducto.productoId
+      (detalle) => detalle.productoId === newProducto.productoId,
     );
     if (yaAgregado) {
       toast({
@@ -98,7 +108,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
           cantidadDisponible: newProducto.cantidadDisponible,
           deudorId: pedido.deudorId,
           tiendaId: pedido.tiendaId,
-        })
+        }),
       ).unwrap();
       toast({ title: "Producto agregado", status: "success" });
       setNewProducto({
@@ -113,7 +123,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
       setResetFields(true);
       setTimeout(() => setResetFields(false), 200);
       const nuevosDetalles = await dispatch(
-        getDetalleOrdenByPedidoId(pedido.id)
+        getDetalleOrdenByPedidoId(pedido.id),
       ).unwrap();
       setDetallesLocal(sortDetalles(nuevosDetalles));
     } catch (err) {
@@ -155,11 +165,11 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
           id: detalleId,
           pedidoId: pedido.id,
           cantidad,
-        })
+        }),
       ).unwrap();
       toast({ title: "Cantidad actualizada", status: "success" });
       const nuevosDetalles = await dispatch(
-        getDetalleOrdenByPedidoId(pedido.id)
+        getDetalleOrdenByPedidoId(pedido.id),
       ).unwrap();
       setDetallesLocal(sortDetalles(nuevosDetalles));
       setEditCantidad((prev) => ({ ...prev, [detalleId]: undefined }));
@@ -184,7 +194,7 @@ const DetallesModal = ({ isOpen, onClose, detalles = [], pedido = null }) => {
       await dispatch(deleteDetalleOrden(detalleId)).unwrap();
       toast({ title: "Producto eliminado", status: "info" });
       const nuevosDetalles = await dispatch(
-        getDetalleOrdenByPedidoId(pedido.id)
+        getDetalleOrdenByPedidoId(pedido.id),
       ).unwrap();
       setDetallesLocal(sortDetalles(nuevosDetalles));
     } catch (err) {
@@ -282,7 +292,7 @@ DetallesModal.propTypes = {
       codigo: PropTypes.string,
       nombreProducto: PropTypes.string,
       cantidad: PropTypes.number,
-    })
+    }),
   ),
   pedido: PropTypes.shape({
     id: PropTypes.number,

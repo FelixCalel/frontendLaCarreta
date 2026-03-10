@@ -130,9 +130,11 @@ const HistorialPedidosPage = () => {
   const uniqueValues = useMemo(() => {
     return filterOptions || { tiendas: [], deudores: [], usuarios: [] };
   }, [filterOptions]);
-  useEffect(() => {
+  const [prevFilters, setPrevFilters] = useState(filters);
+  if (filters !== prevFilters) {
+    setPrevFilters(filters);
     setCurrentPage(1);
-  }, [filters]);
+  }
 
   useEffect(() => {
     dispatch(tablaTienda());
@@ -240,6 +242,7 @@ const HistorialPedidosPage = () => {
             onVerDetalles={handleVerDetalles}
             highlightedPedidoId={highlightedPedidoId}
             onClearHighlight={handleClearHighlight}
+            showSapInfo={roleId === 1 || roleId === 3}
           />
           <Pagination
             currentPage={currentPage}

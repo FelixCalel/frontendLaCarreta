@@ -23,7 +23,7 @@ import {
 import { RecetaTable } from "./RecetaTable";
 import { OrderDetailsTable } from "./OrderDetailsTable";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 import { RechazoModal } from "../modals/RechazoModal";
 
 const FIELD_LABELS = {
@@ -79,9 +79,12 @@ export const ConsolidatedExpandedRow = memo(
 
     const [localValues, setLocalValues] = useState(initialLocalValues);
 
-    useEffect(() => {
+    const [prevInitialLocalValues, setPrevInitialLocalValues] =
+      useState(initialLocalValues);
+    if (initialLocalValues !== prevInitialLocalValues) {
+      setPrevInitialLocalValues(initialLocalValues);
       setLocalValues(initialLocalValues);
-    }, [initialLocalValues]);
+    }
 
     const handleUpdate = useCallback(
       async (field, value) => {
@@ -238,6 +241,8 @@ export const ConsolidatedExpandedRow = memo(
     );
 
     const inputBg = useColorModeValue("gray.50", "gray.700");
+    const boxBg = useColorModeValue("gray.50", "gray.900");
+    const containerBg = useColorModeValue("white", "gray.800");
 
     if (!isExpanded) return null;
 
@@ -246,7 +251,7 @@ export const ConsolidatedExpandedRow = memo(
         pl={2}
         pr={1}
         py={2}
-        bg={useColorModeValue("gray.50", "gray.900")}
+        bg={boxBg}
         borderBottomWidth="1px"
         borderColor="gray.200"
       >
@@ -254,7 +259,7 @@ export const ConsolidatedExpandedRow = memo(
           <Box width="fit-content">
             {primaryOrder && (
               <Box
-                bg={useColorModeValue("white", "gray.800")}
+                bg={containerBg}
                 p={1.5}
                 borderRadius="md"
                 shadow="sm"

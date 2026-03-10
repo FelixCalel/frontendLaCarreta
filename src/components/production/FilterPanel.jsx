@@ -1,6 +1,7 @@
 import { Flex, Select, Box, useColorModeValue } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 
+const EMPTY_ARRAY = [];
 export const FilterPanel = ({
   countryFilter = "",
   onCountryChange,
@@ -12,7 +13,7 @@ export const FilterPanel = ({
   clients,
   deuFilter = "",
   onDeuChange,
-  deudores = [],
+  deudores = EMPTY_ARRAY,
 }) => {
   const fieldBg = useColorModeValue("white", "gray.700");
   const fieldBorder = useColorModeValue("gray.300", "gray.600");

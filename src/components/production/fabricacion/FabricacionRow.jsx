@@ -27,6 +27,8 @@ import {
 import { FabricacionDetailsTable } from "./FabricacionDetailsTable";
 import { RecetaTable } from "../RecetaTable";
 import { RechazoModal } from "../../modals/RechazoModal";
+import NumberInputBox from "./components/NumberInputBox";
+import AlmacenSelect from "./components/AlmacenSelect";
 
 const clamp = (v, min, max) => Math.max(min, Math.min(v, max));
 const numOrEmpty = (v) => (v === null || v === undefined ? "" : v);
@@ -67,19 +69,48 @@ export const FabricacionRow = ({ order, index = 0 }) => {
   const panelBg = useColorModeValue("gray.50", "gray.900");
   const panelBorder = useColorModeValue("gray.200", "gray.700");
 
+  const inputBgColor = useColorModeValue("white", "gray.700");
+  const selectBorderColor = useColorModeValue("#E2E8F0", "#4A5568");
+  const selectColor = useColorModeValue("#2D3748", "#EDF2F7");
+  const selectBgColor = useColorModeValue("#fff", "#2D3748");
+  const optionColor = useColorModeValue("#222", "#fff");
+  const optionBgColor = useColorModeValue("#fff", "#222");
+  const detailsBgColor = useColorModeValue("white", "gray.800");
+
   const recetaArg = isExpanded ? { pedidoId: order.id } : skipToken;
   const { data: receta = [], isLoading: loadingReceta } =
     useGetRecetaByPedidoQuery(recetaArg);
 
-  useEffect(() => {
+  const [prevOrderStats, setPrevOrderStats] = useState({
+    cantidad: order.cantidad,
+    despacho: order.despacho,
+    faltante: order.faltante,
+    maxPedido,
+  });
+
+  if (
+    order.cantidad !== prevOrderStats.cantidad ||
+    order.despacho !== prevOrderStats.despacho ||
+    order.faltante !== prevOrderStats.faltante ||
+    maxPedido !== prevOrderStats.maxPedido
+  ) {
+    setPrevOrderStats({
+      cantidad: order.cantidad,
+      despacho: order.despacho,
+      faltante: order.faltante,
+      maxPedido,
+    });
     setCant(order.cantidad ?? 0);
     setDesp(order.despacho ?? 0);
     setFalt(order.faltante ?? maxPedido - (order.cantidad ?? 0));
-  }, [order.cantidad, order.despacho, order.faltante, maxPedido]);
+  }
 
-  useEffect(() => {
+  const [prevDefaultAlmacenId, setPrevDefaultAlmacenId] =
+    useState(defaultAlmacenId);
+  if (defaultAlmacenId !== prevDefaultAlmacenId) {
+    setPrevDefaultAlmacenId(defaultAlmacenId);
     setAlmacenId(defaultAlmacenId);
-  }, [defaultAlmacenId]);
+  }
 
   const persist = (field, value) => {
     updatePedido({ id: order.id, data: { [field]: value } })
@@ -207,49 +238,23 @@ export const FabricacionRow = ({ order, index = 0 }) => {
         </Td>
 
         <Td px={2} py={2} textAlign="center">
-          <Box>
-            <Input
-              size="xs"
-              w="60px"
-              textAlign="center"
-              type="number"
-              value={numOrEmpty(desp)}
-              onChange={(e) => onDespachoChange(e.target.value)}
-              bg={useColorModeValue("white", "gray.700")}
-            />
-            <Text
-              fontSize="2xs"
-              color="gray.400"
-              textTransform="uppercase"
-              mt={0.5}
-            >
-              Despacho
-            </Text>
-          </Box>
+          <NumberInputBox
+            value={numOrEmpty(desp)}
+            onChange={onDespachoChange}
+            label="Despacho"
+            bg={inputBgColor}
+          />
         </Td>
 
         <Td px={2} py={2} textAlign="center">
-          <Box>
-            <Input
-              size="xs"
-              w="60px"
-              textAlign="center"
-              type="number"
-              value={numOrEmpty(falt)}
-              onChange={(e) => onFaltanteChange(e.target.value)}
-              bg={useColorModeValue("white", "gray.700")}
-              color={falt > 0 ? "red.500" : "inherit"}
-              fontWeight={falt > 0 ? "bold" : "normal"}
-            />
-            <Text
-              fontSize="2xs"
-              color="gray.400"
-              textTransform="uppercase"
-              mt={0.5}
-            >
-              Faltante
-            </Text>
-          </Box>
+          <NumberInputBox
+            value={numOrEmpty(falt)}
+            onChange={onFaltanteChange}
+            label="Faltante"
+            bg={inputBgColor}
+            color={falt > 0 ? "red.500" : "inherit"}
+            fontWeight={falt > 0 ? "bold" : "normal"}
+          />
         </Td>
 
         <Td px={2} py={2}>
@@ -257,27 +262,14 @@ export const FabricacionRow = ({ order, index = 0 }) => {
         </Td>
 
         <Td px={2} py={2} textAlign="center">
-          <Box>
-            <Input
-              size="xs"
-              w="60px"
-              textAlign="center"
-              type="number"
-              value={numOrEmpty(cant)}
-              onChange={(e) => onCantidadChange(e.target.value)}
-              bg={useColorModeValue("white", "gray.700")}
-              fontWeight="bold"
-              color="green.500"
-            />
-            <Text
-              fontSize="2xs"
-              color="gray.400"
-              textTransform="uppercase"
-              mt={0.5}
-            >
-              Procesado
-            </Text>
-          </Box>
+          <NumberInputBox
+            value={numOrEmpty(cant)}
+            onChange={onCantidadChange}
+            label="Procesado"
+            bg={inputBgColor}
+            color="green.500"
+            fontWeight="bold"
+          />
         </Td>
 
         <Td px={2} py={2}>
@@ -285,43 +277,16 @@ export const FabricacionRow = ({ order, index = 0 }) => {
         </Td>
 
         <Td px={2} py={2}>
-          <Box
-            display="inline-flex"
-            flexDirection="column"
-            alignItems="flex-start"
-          >
-            <select
-              value={almacenId}
-              onChange={(e) => handleAlmacenChange(e.target.value)}
-              style={{
-                fontSize: "12px",
-                padding: "2px 6px",
-                borderRadius: "4px",
-                border: "1px solid",
-                borderColor: useColorModeValue("#E2E8F0", "#4A5568"),
-                color: useColorModeValue("#2D3748", "#EDF2F7"),
-                background: useColorModeValue("#fff", "#2D3748"),
-                cursor: "pointer",
-                outline: "none",
-                width: "100%",
-                minWidth: "100px",
-              }}
-            >
-              <option value="">-- Seleccionar --</option>
-              {almacenes.map((almacen) => (
-                <option
-                  key={almacen.id}
-                  value={almacen.id}
-                  style={{
-                    color: useColorModeValue("#222", "#fff"),
-                    background: useColorModeValue("#fff", "#222"),
-                  }}
-                >
-                  {almacen.nombre || almacen.name}
-                </option>
-              ))}
-            </select>
-          </Box>
+          <AlmacenSelect
+            almacenId={almacenId}
+            handleAlmacenChange={handleAlmacenChange}
+            selectBorderColor={selectBorderColor}
+            selectColor={selectColor}
+            selectBgColor={selectBgColor}
+            almacenes={almacenes}
+            optionColor={optionColor}
+            optionBgColor={optionBgColor}
+          />
         </Td>
 
         <Td px={2} py={2} textAlign="center">
@@ -348,7 +313,7 @@ export const FabricacionRow = ({ order, index = 0 }) => {
               <Flex gap={4} direction={{ base: "column", xl: "row" }}>
                 <Box flex="1" maxW={{ xl: "40%" }}>
                   <Box
-                    bg={useColorModeValue("white", "gray.800")}
+                    bg={detailsBgColor}
                     p={3}
                     borderRadius="md"
                     shadow="sm"

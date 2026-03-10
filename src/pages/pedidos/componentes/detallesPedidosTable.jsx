@@ -1,28 +1,17 @@
 import { useEffect, useState, useRef } from "react";
 import {
   Box,
-  VStack,
   Text,
-  HStack,
   Spinner,
   useToast,
-  IconButton,
-  Tooltip,
   Heading,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   useColorModeValue,
-  Stack,
 } from "@chakra-ui/react";
-import { DeleteIcon, AddIcon } from "@chakra-ui/icons";
-import { motion } from "framer-motion";
+import { m, LazyMotion, domAnimation } from "framer-motion";
 import { useDispatch } from "react-redux";
-import ProductoSelector from "./pageFormPedidos/productoSelector";
-import CantidadInput from "./pageFormPedidos/cantidadInput";
+import DetallesPedidosListMobile from "./detallesPedidosTableComps/DetallesPedidosListMobile";
+import DetallesPedidosTableDesktop from "./detallesPedidosTableComps/DetallesPedidosTableDesktop";
+import AddProductoSection from "./detallesPedidosTableComps/AddProductoSection";
 import {
   addNewDetalleOrden,
   deleteDetalleOrden,
@@ -32,7 +21,7 @@ import {
 } from "../../../store/Pedidos/DetallePedidos/thunks";
 import PropTypes from "prop-types";
 
-const MotionBox = motion(Box);
+const MotionBox = m.create(Box);
 
 const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   const addBoxBgColor = useColorModeValue("gray.100", "gray.700");
@@ -390,260 +379,68 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("teal.600", "teal.300");
   const mobileCardBg = useColorModeValue("gray.50", "gray.700");
-  const subtextColor = useColorModeValue("gray.500", "gray.400");
-  const addBoxBg = useColorModeValue("teal.50", "teal.900");
 
   return (
-    <Box p={1} borderRadius="md" boxShadow="sm" bg={containerBg}>
-      {isLoading ? (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minH="80px"
-        >
-          <Spinner size="sm" />
-        </Box>
-      ) : (
-        <>
-          <Heading
-            as="h3"
-            size="xs"
-            mb={1}
-            textAlign="center"
-            color={headingColor}
+    <LazyMotion features={domAnimation}>
+      <Box p={1} borderRadius="md" boxShadow="sm" bg={containerBg}>
+        {isLoading ? (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minH="80px"
           >
-            Detalles del Pedido
-          </Heading>
-          {productos.length > 0 ? (
-            isMobile ? (
-              <VStack spacing={1} align="stretch">
-                {productos.map((producto) => (
-                  <MotionBox
-                    key={getUniqueKey(producto)}
-                    p={2}
-                    boxShadow="sm"
-                    borderWidth="1px"
-                    rounded="md"
-                    bg={mobileCardBg}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <HStack justifyContent="space-between" spacing={2}>
-                      <Box flex="1">
-                        <Text fontWeight="bold" fontSize="sm">
-                          {producto.nombreProducto || "N/A"}
-                        </Text>
-                        {/* <Text fontSize="xs" color={subtextColor}>
-                          Cantidad Máxima:{" "}
-                          {producto.cantidadDisponible || "N/A"}
-                        </Text> */}
-                        <CantidadInput
-                          value={producto.cantidad}
-                          onChange={(e) =>
-                            setProductos((prevProductos) =>
-                              prevProductos.map((prod) =>
-                                prod.detallePedidoId ===
-                                producto.detallePedidoId
-                                  ? {
-                                      ...prod,
-                                      cantidad: parseFloat(e.target.value) || 0,
-                                    }
-                                  : prod,
-                              ),
-                            )
-                          }
-                          onBlur={() => {
-                            handleCantidadChange(
-                              producto.detallePedidoId,
-                              producto.cantidad,
-                            );
-                          }}
-                          placeholder="0"
-                          size="sm"
-                          width="60px"
-                          maxWidth="60px"
-                        />
-                      </Box>
-                      <Tooltip label="Eliminar producto" hasArrow>
-                        <IconButton
-                          icon={<DeleteIcon />}
-                          colorScheme="red"
-                          onClick={() =>
-                            handleRemoveProducto(producto.detallePedidoId)
-                          }
-                          size="xs"
-                        />
-                      </Tooltip>
-                    </HStack>
-                  </MotionBox>
-                ))}
-              </VStack>
-            ) : (
-              <Table variant="simple">
-                <Thead>
-                  <Tr>
-                    <Th>Código</Th>
-                    <Th>Producto</Th>
-                    <Th>Cantidad Máxima</Th>
-                    <Th>Cantidad</Th>
-                    <Th>Acciones</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {productos.map((producto) => (
-                    <Tr
-                      key={getUniqueKey(producto)}
-                      style={{ padding: "0px", height: "10px" }}
-                    >
-                      <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
-                        {producto.codigo || "Sin código"}
-                      </Td>
-                      <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
-                        {producto.nombreProducto}
-                      </Td>
-                      <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
-                        {producto.cantidadDisponible}
-                      </Td>
-                      <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
-                        <CantidadInput
-                          value={producto.cantidad}
-                          onChange={(e) =>
-                            setProductos((prevProductos) =>
-                              prevProductos.map((prod) =>
-                                prod.detallePedidoId ===
-                                producto.detallePedidoId
-                                  ? {
-                                      ...prod,
-                                      cantidad: parseFloat(e.target.value) || 0,
-                                    }
-                                  : prod,
-                              ),
-                            )
-                          }
-                          onBlur={() => {
-                            handleCantidadChange(
-                              producto.detallePedidoId,
-                              producto.cantidad,
-                            );
-                          }}
-                          placeholder="0"
-                          size="sm"
-                          width="50px"
-                          maxWidth="50px"
-                          style={{
-                            margin: "0",
-                            padding: "1px",
-                            fontSize: "0.85rem",
-                          }}
-                        />
-                      </Td>
-                      <Td style={{ padding: "2px 4px" }}>
-                        <Tooltip label="Eliminar producto" hasArrow>
-                          <IconButton
-                            icon={<DeleteIcon />}
-                            colorScheme="red"
-                            onClick={() =>
-                              handleRemoveProducto(producto.detallePedidoId)
-                            }
-                            size="xs"
-                            style={{ margin: "0", padding: "0" }}
-                          />
-                        </Tooltip>
-                      </Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            )
-          ) : (
-            <Text textAlign="center" color="gray.500" fontSize="sm">
-              No hay productos añadidos.
-            </Text>
-          )}
-
-          <Box mt={4}>
-            <MotionBox
-              p={1}
-              boxShadow="sm"
-              borderWidth="1px"
-              rounded="md"
-              bg={addBoxBgColor}
-              w="100%"
-              maxW="460px"
-              mx="auto"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Stack
-                direction={{ base: "column", md: "row" }}
-                spacing={2}
-                width="100%"
-                align="stretch"
-              >
-                <Box w="100%">
-                  <ProductoSelector
-                    deudorId={Number(deudorId)}
-                    onSelect={(
-                      productoId,
-                      nombreProducto,
-                      cantidadDisponible,
-                      codigo,
-                    ) =>
-                      handleProductoChange(
-                        productoId,
-                        nombreProducto,
-                        cantidadDisponible,
-                        codigo,
-                      )
-                    }
-                    reset={resetFields}
-                  />
-                </Box>
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  gap={1}
-                  justifyContent="flex-end"
-                  w={{ base: "100%", md: "auto" }}
-                  mt={{ base: 1, md: 0 }}
-                >
-                  <CantidadInput
-                    value={newProducto.cantidad}
-                    onChange={(e) =>
-                      setNewProducto({
-                        ...newProducto,
-                        cantidad:
-                          e.target.value === ""
-                            ? ""
-                            : parseFloat(e.target.value),
-                      })
-                    }
-                    placeholder="0"
-                    size="sm"
-                    width="60px"
-                    maxWidth="60px"
-                    style={{ margin: 0, padding: "2px", fontSize: "0.95rem" }}
-                  />
-                  <Tooltip label="Agregar producto" hasArrow>
-                    <IconButton
-                      icon={<AddIcon />}
-                      colorScheme="teal"
-                      onClick={handleAddProducto}
-                      size="sm"
-                      style={{ margin: 0, padding: "2px" }}
-                    />
-                  </Tooltip>
-                </Box>
-              </Stack>
-            </MotionBox>
+            <Spinner size="sm" />
           </Box>
-        </>
-      )}
-    </Box>
+        ) : (
+          <>
+            <Heading
+              as="h3"
+              size="xs"
+              mb={1}
+              textAlign="center"
+              color={headingColor}
+            >
+              Detalles del Pedido
+            </Heading>
+            {productos.length > 0 ? (
+              isMobile ? (
+                <DetallesPedidosListMobile
+                  productos={productos}
+                  mobileCardBg={mobileCardBg}
+                  getUniqueKey={getUniqueKey}
+                  setProductos={setProductos}
+                  handleCantidadChange={handleCantidadChange}
+                  handleRemoveProducto={handleRemoveProducto}
+                />
+              ) : (
+                <DetallesPedidosTableDesktop
+                  productos={productos}
+                  getUniqueKey={getUniqueKey}
+                  setProductos={setProductos}
+                  handleCantidadChange={handleCantidadChange}
+                  handleRemoveProducto={handleRemoveProducto}
+                />
+              )
+            ) : (
+              <Text textAlign="center" color="gray.500" fontSize="sm">
+                No hay productos añadidos.
+              </Text>
+            )}
+
+            <AddProductoSection
+              deudorId={deudorId}
+              addBoxBgColor={addBoxBgColor}
+              resetFields={resetFields}
+              newProducto={newProducto}
+              handleProductoChange={handleProductoChange}
+              setNewProducto={setNewProducto}
+              handleAddProducto={handleAddProducto}
+            />
+          </>
+        )}
+      </Box>
+    </LazyMotion>
   );
 };
 

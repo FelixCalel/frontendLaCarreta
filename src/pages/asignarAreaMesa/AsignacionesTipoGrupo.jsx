@@ -21,19 +21,20 @@ import {
   Icon,
   IconButton,
   Input,
+  InputGroup,
+  InputLeftElement,
 } from "@chakra-ui/react";
-import { MdPrecisionManufacturing, MdDelete } from "react-icons/md";
+import { MdPrecisionManufacturing, MdDelete, MdSearch } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import Select from "react-select";
 import axios from "axios";
 import {
   fetchAsignacionesThunk,
-  desasignarTipoGrupoThunk,
-  fetchClasificacionesThunk,
-  bulkAsignarThunk,
-  bulkDesasignarThunk,
   asignarTipoGrupoThunk,
+  fetchClasificacionesThunk,
 } from "../../store/asignacionAM/thunks";
+import { FiltrosMasivos } from "./componentes/FiltrosMasivos";
+import { AsignacionesTablaListado } from "./componentes/AsignacionesTablaListado";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -41,14 +42,9 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
   const dispatch = useDispatch();
   const usuarioId = Number(localStorage.getItem("usuarioId"));
   const toast = useToast();
-  const [selectedFilters, setSelectedFilters] = useState({
-    empaque: null,
-    marca: null,
-    tipo: null,
-    grupo: null,
-    subgrupo: null,
-  });
-  const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const { asignaciones, clasificaciones } = useSelector(
+    (state) => state.AsignacionAreaMesa,
+  );
 
   const [productOptions, setProductOptions] = useState([]);
   const [selectedProducto, setSelectedProducto] = useState(null);
@@ -133,19 +129,18 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
       } else {
         toast({
           title: "Error al asignar",
-          description: "No se pudo asignar la línea.",
+          description:
+            typeof res.payload === "string"
+              ? res.payload
+              : "No se pudo asignar la línea.",
           status: "error",
-          duration: 3000,
+          duration: 4000,
           isClosable: true,
           position: "top-right",
         });
       }
     });
   };
-
-  const { asignaciones, clasificaciones } = useSelector(
-    (state) => state.AsignacionAreaMesa,
-  );
 
   const [visibleCount, setVisibleCount] = useState(15);
   const [filtroTabla, setFiltroTabla] = useState("");
@@ -176,23 +171,6 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
     return nombre.includes(searchLower) || codigo.includes(searchLower);
   });
 
-  const handleDesasignar = (id) => {
-    dispatch(desasignarTipoGrupoThunk({ id, update_by: usuarioId })).then(
-      (res) => {
-        if (res.meta.requestStatus === "fulfilled") {
-          toast({
-            title: "Línea removida",
-            description: "La línea de producción fue quitada exitosamente.",
-            status: "info",
-            duration: 2000,
-            isClosable: true,
-            position: "top-right",
-          });
-        }
-        dispatch(fetchAsignacionesThunk(areaId));
-      },
-    );
-  };
   const colorTh = useColorModeValue("white", "green.200");
   const colorThead = useColorModeValue("green.600", "gray.700");
   const bgColor = useColorModeValue("white", "gray.800");
@@ -404,91 +382,14 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
           </Heading>
         </Flex>
 
-        <Flex
-          gap={2}
-          wrap="wrap"
-          p={2}
-          borderWidth={1}
+        <FiltrosMasivos
+          areaId={areaId}
+          usuarioId={usuarioId}
+          clasificaciones={clasificaciones}
+          customSelectStyles={customSelectStyles}
+          listBg={listBg}
           borderColor={borderColor}
-          borderRadius="lg"
-          bg={listBg}
-          align="center"
-          justify="center"
-        >
-          <Box flex="1" minW="150px">
-            <Select
-              placeholder="Empaque"
-              value={selectedFilters.empaque}
-              onChange={(val) => handleFilterChange("empaque", val)}
-              options={classificationOptions("empaques")}
-              isClearable
-              styles={customSelectStyles}
-            />
-          </Box>
-          <Box flex="1" minW="150px">
-            <Select
-              placeholder="Marca"
-              value={selectedFilters.marca}
-              onChange={(val) => handleFilterChange("marca", val)}
-              options={classificationOptions("marcas")}
-              isClearable
-              styles={customSelectStyles}
-            />
-          </Box>
-          <Box flex="1" minW="150px">
-            <Select
-              placeholder="Tipo"
-              value={selectedFilters.tipo}
-              onChange={(val) => handleFilterChange("tipo", val)}
-              options={classificationOptions("tipos")}
-              isClearable
-              styles={customSelectStyles}
-            />
-          </Box>
-          <Box flex="1" minW="150px">
-            <Select
-              placeholder="Grupo"
-              value={selectedFilters.grupo}
-              onChange={(val) => handleFilterChange("grupo", val)}
-              options={classificationOptions("grupos")}
-              isClearable
-              styles={customSelectStyles}
-            />
-          </Box>
-          <Box flex="1" minW="150px">
-            <Select
-              placeholder="Subgrupo"
-              value={selectedFilters.subgrupo}
-              onChange={(val) => handleFilterChange("subgrupo", val)}
-              options={classificationOptions("subgrupos")}
-              isClearable
-              styles={customSelectStyles}
-            />
-          </Box>
-          <Flex gap={2}>
-            <Button
-              colorScheme="red"
-              variant="outline"
-              onClick={handleBulkDesasignar}
-              isLoading={isBulkLoading}
-              loadingText="..."
-              size="sm"
-              boxShadow="sm"
-            >
-              Quitar
-            </Button>
-            <Button
-              colorScheme="orange"
-              onClick={handleBulkAsignar}
-              isLoading={isBulkLoading}
-              loadingText="..."
-              size="sm"
-              boxShadow="sm"
-            >
-              Asignar
-            </Button>
-          </Flex>
-        </Flex>
+        />
       </Box>
 
       <Box>
@@ -507,85 +408,39 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
           <Heading size="md" color={headingColor} fontWeight="semibold">
             Líneas de Producción Asignadas
           </Heading>
-          <Input
+          <InputGroup
             ml={{ base: 0, md: "auto" }}
             w={{ base: "100%", md: "300px" }}
             size="sm"
-            placeholder="🔍 Buscar asignación (Ejote...)"
-            value={filtroTabla}
-            onChange={(e) => setFiltroTabla(e.target.value)}
-            bg={bgColor}
-          />
+          >
+            <InputLeftElement pointerEvents="none">
+              <Icon as={MdSearch} color="gray.400" />
+            </InputLeftElement>
+            <Input
+              placeholder="Buscar asignación (Ejote...)"
+              value={filtroTabla}
+              onChange={(e) => setFiltroTabla(e.target.value)}
+              bg={bgColor}
+            />
+          </InputGroup>
           <Tag size="sm" colorScheme="blue" borderRadius="full" variant="solid">
             {filteredAsignaciones.length} ítems
           </Tag>
         </Flex>
 
-        <Box
-          bg={listBg}
-          borderRadius="lg"
-          border="1px solid"
+        <AsignacionesTablaListado
+          filteredAsignaciones={filteredAsignaciones}
+          visibleCount={visibleCount}
+          listBg={listBg}
           borderColor={borderColor}
-          mb={3}
-          maxH="300px"
-          overflowY="auto"
-          position="relative"
-          onScroll={handleTableScroll}
-        >
-          <Table variant="simple" size="sm">
-            <Thead bg={theadBg} position="sticky" top={0} zIndex={1}>
-              <Tr>
-                <Th color={theadThColor}>Código</Th>
-                <Th color={theadThColor}>Nombre de Producto</Th>
-                <Th w="50px" textAlign="center" color={theadThColor}>
-                  Acciones
-                </Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {filteredAsignaciones.length === 0 ? (
-                <Tr>
-                  <Td
-                    colSpan={3}
-                    textAlign="center"
-                    py={8}
-                    color="gray.500"
-                    fontStyle="italic"
-                  >
-                    No hay líneas asignadas a esta área.
-                  </Td>
-                </Tr>
-              ) : (
-                filteredAsignaciones.slice(0, visibleCount).map((a) => (
-                  <Tr
-                    key={a.id}
-                    _hover={{
-                      bg: hoverBg,
-                    }}
-                    transition="background 0.2s"
-                  >
-                    <Td fontWeight="bold" color="blue.600">
-                      {a.productoCodigo || "---"}
-                    </Td>
-                    <Td color={tagLabelColor}>
-                      {a.productoNombre || "Cargando..."}
-                    </Td>
-                    <Td textAlign="center">
-                      <IconButton
-                        aria-label="Remover línea"
-                        icon={<MdDelete />}
-                        size="sm"
-                        variant="ghost"
-                        colorScheme="red"
-                        onClick={() => handleDesasignar(a.id)}
-                      />
-                    </Td>
-                  </Tr>
-                ))
-              )}
-            </Tbody>
-          </Table>
-        </Box>
+          theadBg={theadBg}
+          theadThColor={theadThColor}
+          hoverBg={hoverBg}
+          tagLabelColor={tagLabelColor}
+          usuarioId={usuarioId}
+          areaId={areaId}
+          handleTableScroll={handleTableScroll}
+        />
 
         <Flex
           align="center"

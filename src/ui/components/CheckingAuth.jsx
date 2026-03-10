@@ -7,14 +7,20 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
-import { motion, useAnimation, AnimatePresence } from "framer-motion";
+import {
+  m,
+  LazyMotion,
+  domAnimation,
+  useAnimation,
+  AnimatePresence,
+} from "framer-motion";
 
 const spin = keyframes`
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 `;
 
-const MotionBox = motion.create(Box);
+const MotionBox = m.create(Box);
 
 const CheckingAuth = () => {
   const controls = useAnimation();
@@ -39,71 +45,73 @@ const CheckingAuth = () => {
   const ringBg = `conic-gradient(${green1} 0% 25%, transparent 25% 50%, ${green1} 50% 75%, transparent 75%)`;
 
   return (
-    <AnimatePresence>
-      <Box
-        as={motion.div}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.4 }}
-        h="100vh"
-        w="100vw"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        bgGradient={useColorModeValue(
-          "linear(to-br, green.50, green.100)",
-          "linear(to-br, gray.700, gray.900)",
-        )}
-      >
-        <MotionBox
-          bg={bg}
-          p={{ base: 8, md: 12 }}
-          rounded="2xl"
-          boxShadow={useColorModeValue("2xl", "dark-lg")}
-          initial={{ scale: 0.85 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 140 }}
+    <LazyMotion features={domAnimation}>
+      <AnimatePresence>
+        <Box
+          as={m.div}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4 }}
+          h="100vh"
+          w="100vw"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          bgGradient={useColorModeValue(
+            "linear(to-br, green.50, green.100)",
+            "linear(to-br, gray.700, gray.900)",
+          )}
         >
-          <VStack spacing={8}>
-            <Box
-              as={motion.div}
-              animation={`${spin} 1.6s linear infinite`}
-              w="120px"
-              h="120px"
-              borderRadius="full"
-              position="relative"
-              _before={{
-                content: '""',
-                position: "absolute",
-                inset: "8px",
-                borderRadius: "full",
-                bg: bg,
-              }}
-              bgImage={ringBg}
-              bgSize="cover"
-            />
-            <Text
-              fontSize="xl"
-              fontWeight="semibold"
-              bgGradient={`linear(to-r, ${green1}, ${green2})`}
-              bgClip="text"
-              textAlign="center"
-            >
-              Cargando…
-            </Text>
-            <Progress
-              value={percent}
-              w="260px"
-              size="sm"
-              colorScheme="green"
-              rounded="full"
-              hasStripe
-            />
-          </VStack>
-        </MotionBox>
-      </Box>
-    </AnimatePresence>
+          <MotionBox
+            bg={bg}
+            p={{ base: 8, md: 12 }}
+            rounded="2xl"
+            boxShadow={useColorModeValue("2xl", "dark-lg")}
+            initial={{ scale: 0.85 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 140 }}
+          >
+            <VStack spacing={8}>
+              <Box
+                as={m.div}
+                animation={`${spin} 1.6s linear infinite`}
+                w="120px"
+                h="120px"
+                borderRadius="full"
+                position="relative"
+                _before={{
+                  content: '""',
+                  position: "absolute",
+                  inset: "8px",
+                  borderRadius: "full",
+                  bg: bg,
+                }}
+                bgImage={ringBg}
+                bgSize="cover"
+              />
+              <Text
+                fontSize="xl"
+                fontWeight="semibold"
+                bgGradient={`linear(to-r, ${green1}, ${green2})`}
+                bgClip="text"
+                textAlign="center"
+              >
+                Cargando…
+              </Text>
+              <Progress
+                value={percent}
+                w="260px"
+                size="sm"
+                colorScheme="green"
+                rounded="full"
+                hasStripe
+              />
+            </VStack>
+          </MotionBox>
+        </Box>
+      </AnimatePresence>
+    </LazyMotion>
   );
 };
 

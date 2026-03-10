@@ -12,7 +12,9 @@ import {
 import { OrderRow } from "./OrderRow";
 import { useGetAlmacenesQuery } from "../../services/pedidoProductionApi";
 
-export const OrdersTable = ({ data = [] }) => {
+const EMPTY_ITEMS = [];
+
+export const OrdersTable = ({ data = EMPTY_ITEMS }) => {
   const [expandedRows, setExpandedRows] = useState({});
   const toggleRow = (id) =>
     setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));

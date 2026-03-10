@@ -17,9 +17,6 @@ import {
   Heading,
   useToast,
   VStack,
-  HStack,
-  PinInput,
-  PinInputField,
 } from "@chakra-ui/react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -29,8 +26,11 @@ import {
   verifySmsRecovery,
   resetPasswordSms,
 } from "../../store/auth/thunks";
-import { FaEnvelope, FaArrowLeft, FaLock } from "react-icons/fa";
+import { FaArrowLeft, FaLock } from "react-icons/fa";
 import { AnimatedBackground } from "../../components/auth/AnimatedBackground";
+import { RecuperarPaso1 } from "./componentes/recuperar/RecuperarPaso1";
+import { RecuperarPaso2 } from "./componentes/recuperar/RecuperarPaso2";
+import { RecuperarPaso3 } from "./componentes/recuperar/RecuperarPaso3";
 
 export const RecuperarClave = () => {
   const [identifier, setIdentifier] = useState("");
@@ -139,7 +139,7 @@ export const RecuperarClave = () => {
     setIsLoading(true);
     try {
       const resultAction = await dispatch(
-        verifySmsRecovery({ telefono: identifier, code })
+        verifySmsRecovery({ telefono: identifier, code }),
       );
       if (verifySmsRecovery.fulfilled.match(resultAction)) {
         setResetToken(resultAction.payload.token);
@@ -202,7 +202,7 @@ export const RecuperarClave = () => {
     setIsLoading(true);
     try {
       const resultAction = await dispatch(
-        resetPasswordSms({ token: resetToken, nuevaClave: newPassword })
+        resetPasswordSms({ token: resetToken, nuevaClave: newPassword }),
       );
       if (resetPasswordSms.fulfilled.match(resultAction)) {
         toast({
@@ -235,288 +235,6 @@ export const RecuperarClave = () => {
   const inputBorder = useColorModeValue("gray.200", "whiteAlpha.100");
   const textColor = useColorModeValue("gray.800", "white");
   const subTextColor = useColorModeValue("gray.600", "gray.400");
-
-  const renderStep1 = () => (
-    <VStack spacing={6} as="form" onSubmit={handleInitialSubmit} w="full">
-      <VStack spacing={2} textAlign="center">
-        <Heading size="lg" color={textColor} fontWeight="bold">
-          Recuperar Contraseña
-        </Heading>
-        <Text color={subTextColor} fontSize="md">
-          Ingresa tu correo o teléfono para recibir un código de recuperación.
-        </Text>
-      </VStack>
-
-      <FormControl isRequired>
-        <FormLabel
-          color={textColor}
-          fontWeight="medium"
-          display="flex"
-          alignItems="center"
-          gap={2}
-        >
-          <Icon as={FaEnvelope} color="gray.500" /> Correo Electrónico o
-          Teléfono
-        </FormLabel>
-        <InputGroup>
-          <Input
-            type="text"
-            placeholder="ejemplo@correo.com o 3210..."
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            bg={inputBg}
-            border="1px solid"
-            borderColor={inputBorder}
-            color={textColor}
-            _hover={{ borderColor: "green.400" }}
-            _focus={{
-              borderColor: "green.400",
-              boxShadow: "0 0 0 1px var(--chakra-colors-green-400)",
-            }}
-            size="lg"
-            rounded="xl"
-          />
-        </InputGroup>
-      </FormControl>
-
-      <Button
-        type="submit"
-        w="full"
-        size="lg"
-        colorScheme="green"
-        bgGradient="linear(to-r, green.400, teal.500)"
-        _hover={{
-          bgGradient: "linear(to-r, green.500, teal.600)",
-          transform: "translateY(-2px)",
-          boxShadow: "lg",
-        }}
-        rounded="xl"
-        isLoading={isLoading}
-        loadingText="Verificando..."
-        fontWeight="bold"
-      >
-        Continuar
-      </Button>
-    </VStack>
-  );
-
-  const renderStep2 = () => (
-    <VStack spacing={6} as="form" onSubmit={handleOtpSubmit} w="full">
-      <VStack spacing={2} textAlign="center">
-        <Heading size="lg" color={textColor} fontWeight="bold">
-          Verificar Código
-        </Heading>
-        <Text color={subTextColor} fontSize="md">
-          Ingresa el código de 6 dígitos que enviamos a tu teléfono.
-        </Text>
-      </VStack>
-
-      <FormControl isRequired display="flex" justifyContent="center">
-        <HStack spacing={2}>
-          <PinInput
-            otp
-            type="number"
-            size="lg"
-            value={otp}
-            onChange={(value) => setOtp(value)}
-            onComplete={(value) => verifyCode(value)}
-            isDisabled={isLoading}
-            autoFocus
-          >
-            <PinInputField
-              bg={inputBg}
-              borderColor={inputBorder}
-              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
-              _hover={{ borderColor: "green.400" }}
-              w={12}
-              h={14}
-              fontSize="2xl"
-              rounded="lg"
-            />
-            <PinInputField
-              bg={inputBg}
-              borderColor={inputBorder}
-              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
-              _hover={{ borderColor: "green.400" }}
-              w={12}
-              h={14}
-              fontSize="2xl"
-              rounded="lg"
-            />
-            <PinInputField
-              bg={inputBg}
-              borderColor={inputBorder}
-              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
-              _hover={{ borderColor: "green.400" }}
-              w={12}
-              h={14}
-              fontSize="2xl"
-              rounded="lg"
-            />
-            <PinInputField
-              bg={inputBg}
-              borderColor={inputBorder}
-              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
-              _hover={{ borderColor: "green.400" }}
-              w={12}
-              h={14}
-              fontSize="2xl"
-              rounded="lg"
-            />
-            <PinInputField
-              bg={inputBg}
-              borderColor={inputBorder}
-              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
-              _hover={{ borderColor: "green.400" }}
-              w={12}
-              h={14}
-              fontSize="2xl"
-              rounded="lg"
-            />
-            <PinInputField
-              bg={inputBg}
-              borderColor={inputBorder}
-              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
-              _hover={{ borderColor: "green.400" }}
-              w={12}
-              h={14}
-              fontSize="2xl"
-              rounded="lg"
-            />
-          </PinInput>
-        </HStack>
-      </FormControl>
-
-      <Button
-        type="submit"
-        w="full"
-        size="lg"
-        colorScheme="green"
-        bgGradient="linear(to-r, green.400, teal.500)"
-        _hover={{
-          bgGradient: "linear(to-r, green.500, teal.600)",
-          transform: "translateY(-2px)",
-          boxShadow: "lg",
-        }}
-        rounded="xl"
-        isLoading={isLoading}
-        loadingText="Verificando..."
-        fontWeight="bold"
-      >
-        Verificar Código
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setStep(1)}
-        isDisabled={isLoading}
-      >
-        Cambiar número de teléfono
-      </Button>
-    </VStack>
-  );
-
-  const renderStep3 = () => (
-    <VStack spacing={6} as="form" onSubmit={handlePasswordResetSubmit} w="full">
-      <VStack spacing={2} textAlign="center">
-        <Heading size="lg" color={textColor} fontWeight="bold">
-          Nueva Contraseña
-        </Heading>
-        <Text color={subTextColor} fontSize="md">
-          Ingresa y confirma tu nueva contraseña segura.
-        </Text>
-      </VStack>
-
-      <FormControl isRequired>
-        <FormLabel color={textColor} fontWeight="medium">
-          Nueva Contraseña
-        </FormLabel>
-        <InputGroup>
-          <Input
-            type={showPassword ? "text" : "password"}
-            placeholder="********"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            bg={inputBg}
-            border="1px solid"
-            borderColor={inputBorder}
-            color={textColor}
-            _hover={{ borderColor: "green.400" }}
-            _focus={{
-              borderColor: "green.400",
-              boxShadow: "0 0 0 1px var(--chakra-colors-green-400)",
-            }}
-            size="lg"
-            rounded="xl"
-          />
-          <InputRightElement width="4.5rem">
-            <Button
-              h="1.75rem"
-              size="sm"
-              onClick={() => setShowPassword(!showPassword)}
-              variant="ghost"
-            >
-              {showPassword ? "Ocultar" : "Mostrar"}
-            </Button>
-          </InputRightElement>
-        </InputGroup>
-      </FormControl>
-
-      <FormControl isRequired>
-        <FormLabel color={textColor} fontWeight="medium">
-          Confirmar Contraseña
-        </FormLabel>
-        <InputGroup>
-          <Input
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="********"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            bg={inputBg}
-            border="1px solid"
-            borderColor={inputBorder}
-            color={textColor}
-            _hover={{ borderColor: "green.400" }}
-            _focus={{
-              borderColor: "green.400",
-              boxShadow: "0 0 0 1px var(--chakra-colors-green-400)",
-            }}
-            size="lg"
-            rounded="xl"
-          />
-          <InputRightElement width="4.5rem">
-            <Button
-              h="1.75rem"
-              size="sm"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              variant="ghost"
-            >
-              {showConfirmPassword ? "Ocultar" : "Mostrar"}
-            </Button>
-          </InputRightElement>
-        </InputGroup>
-      </FormControl>
-
-      <Button
-        type="submit"
-        w="full"
-        size="lg"
-        colorScheme="green"
-        bgGradient="linear(to-r, green.400, teal.500)"
-        _hover={{
-          bgGradient: "linear(to-r, green.500, teal.600)",
-          transform: "translateY(-2px)",
-          boxShadow: "lg",
-        }}
-        rounded="xl"
-        isLoading={isLoading}
-        loadingText="Actualizando..."
-        fontWeight="bold"
-      >
-        Restablecer Contraseña
-      </Button>
-    </VStack>
-  );
 
   return (
     <Box
@@ -558,9 +276,50 @@ export const RecuperarClave = () => {
               <Icon as={FaLock} w={6} h={6} />
             </Box>
 
-            {step === 1 && renderStep1()}
-            {step === 2 && renderStep2()}
-            {step === 3 && renderStep3()}
+            {step === 1 && (
+              <RecuperarPaso1
+                handleInitialSubmit={handleInitialSubmit}
+                identifier={identifier}
+                setIdentifier={setIdentifier}
+                isLoading={isLoading}
+                textColor={textColor}
+                subTextColor={subTextColor}
+                inputBg={inputBg}
+                inputBorder={inputBorder}
+              />
+            )}
+            {step === 2 && (
+              <RecuperarPaso2
+                handleOtpSubmit={handleOtpSubmit}
+                otp={otp}
+                setOtp={setOtp}
+                verifyCode={verifyCode}
+                isLoading={isLoading}
+                setStep={setStep}
+                textColor={textColor}
+                subTextColor={subTextColor}
+                inputBg={inputBg}
+                inputBorder={inputBorder}
+              />
+            )}
+            {step === 3 && (
+              <RecuperarPaso3
+                handlePasswordResetSubmit={handlePasswordResetSubmit}
+                showPassword={showPassword}
+                setShowPassword={setShowPassword}
+                newPassword={newPassword}
+                setNewPassword={setNewPassword}
+                showConfirmPassword={showConfirmPassword}
+                setShowConfirmPassword={setShowConfirmPassword}
+                confirmPassword={confirmPassword}
+                setConfirmPassword={setConfirmPassword}
+                isLoading={isLoading}
+                textColor={textColor}
+                subTextColor={subTextColor}
+                inputBg={inputBg}
+                inputBorder={inputBorder}
+              />
+            )}
 
             <Link
               href="/auth/login"

@@ -69,8 +69,9 @@ const MesasAsignadas = ({ areaId }) => {
         create_by: Number(usuarioId),
         state: true,
       }),
-    ).then((res) => {
-      if (res.meta.requestStatus === "fulfilled") {
+    )
+      .unwrap()
+      .then(() => {
         toast({
           title: "Mesa asignada",
           description: "La mesa se agregó correctamente al área.",
@@ -79,10 +80,19 @@ const MesasAsignadas = ({ areaId }) => {
           isClosable: true,
           position: "top-right",
         });
-      }
-      dispatch(fetchMesasAsignadasThunk(areaId));
-      dispatch(fetchMesasDisponiblesThunk());
-    });
+        dispatch(fetchMesasAsignadasThunk(areaId));
+        dispatch(fetchMesasDisponiblesThunk());
+      })
+      .catch((err) => {
+        toast({
+          title: "Error al asignar",
+          description: typeof err === "string" ? err : "No se pudo asignar la mesa",
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+          position: "top-right",
+        });
+      });
   };
 
   const handleDesasignar = (mesaId) => {
@@ -92,8 +102,9 @@ const MesasAsignadas = ({ areaId }) => {
     if (asignacion) {
       dispatch(
         desasignarMesaThunk({ id: asignacion.id, userId: Number(usuarioId) }),
-      ).then((res) => {
-        if (res.meta.requestStatus === "fulfilled") {
+      )
+        .unwrap()
+        .then(() => {
           toast({
             title: "Mesa removida",
             description: "La mesa fue quitada del área.",
@@ -102,10 +113,20 @@ const MesasAsignadas = ({ areaId }) => {
             isClosable: true,
             position: "top-right",
           });
-        }
-        dispatch(fetchMesasAsignadasThunk(areaId));
-        dispatch(fetchMesasDisponiblesThunk());
-      });
+          dispatch(fetchMesasAsignadasThunk(areaId));
+          dispatch(fetchMesasDisponiblesThunk());
+        })
+        .catch((err) => {
+          toast({
+            title: "Error al remover",
+            description:
+              typeof err === "string" ? err : "No se pudo quitar la mesa",
+            status: "error",
+            duration: 4000,
+            isClosable: true,
+            position: "top-right",
+          });
+        });
     } else {
       toast({
         title: "Error",

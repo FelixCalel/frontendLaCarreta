@@ -64,11 +64,16 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
     }
   }, [sourceItems]);
 
-  useEffect(() => {
+  const prevReset = React.useRef(reset);
+  const prevDeudorId = React.useRef(deudorId);
+
+  if (reset !== prevReset.current || deudorId !== prevDeudorId.current) {
+    prevReset.current = reset;
+    prevDeudorId.current = deudorId;
     setInputValue("");
     setSelectedItem(null);
     setError("");
-  }, [reset, deudorId]);
+  }
 
   const normalizeText = (text) => {
     return text

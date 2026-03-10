@@ -33,6 +33,18 @@ const HistorialFilters = ({
 }) => {
   const bg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+
+  const inputColor = useColorModeValue("gray.800", "white");
+  const menuBg = useColorModeValue("#ffffff", "#1A202C");
+  const singleValueColor = useColorModeValue("gray.800", "white");
+  const optionFocusedBg = useColorModeValue("blue.50", "gray.700");
+  const optionColor = useColorModeValue("gray.800", "white");
+  const optionActiveBg = useColorModeValue("blue.100", "gray.600");
+  const modalBgColor = useColorModeValue(
+    "rgba(255, 255, 255, 0.85)",
+    "rgba(26, 32, 44, 0.85)",
+  );
+  const modalBorderColor = useColorModeValue("gray.200", "gray.700");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isMobile = useBreakpointValue({ base: true, lg: false });
 
@@ -57,7 +69,7 @@ const HistorialFilters = ({
     input: (provided) => ({
       ...provided,
       margin: "0px",
-      color: useColorModeValue("gray.800", "white"),
+      color: inputColor,
     }),
     indicatorsContainer: (provided) => ({
       ...provided,
@@ -65,7 +77,7 @@ const HistorialFilters = ({
     }),
     menu: (provided) => ({
       ...provided,
-      backgroundColor: useColorModeValue("#ffffff", "#1A202C"),
+      backgroundColor: menuBg,
       zIndex: 9999,
       fontSize: "0.875rem",
       boxShadow:
@@ -74,18 +86,16 @@ const HistorialFilters = ({
     }),
     singleValue: (provided) => ({
       ...provided,
-      color: useColorModeValue("gray.800", "white"),
+      color: singleValueColor,
     }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isFocused
-        ? useColorModeValue("blue.50", "gray.700")
-        : "transparent",
-      color: useColorModeValue("gray.800", "white"),
+      backgroundColor: state.isFocused ? optionFocusedBg : "transparent",
+      color: optionColor,
       fontSize: "0.875rem",
       cursor: "pointer",
       "&:active": {
-        backgroundColor: useColorModeValue("blue.100", "gray.600"),
+        backgroundColor: optionActiveBg,
       },
     }),
   };
@@ -294,14 +304,19 @@ const HistorialFilters = ({
           Filtrar Pedidos
         </Button>
 
-        <Modal isOpen={isOpen} onClose={onClose} isCentered motionPreset="slideInBottom">
+        <Modal
+          isOpen={isOpen}
+          onClose={onClose}
+          isCentered
+          motionPreset="slideInBottom"
+        >
           <ModalOverlay />
           <ModalContent
             mx={4}
-            bg={useColorModeValue("rgba(255, 255, 255, 0.85)", "rgba(26, 32, 44, 0.85)")}
+            bg={modalBgColor}
             backdropFilter="blur(10px)"
             borderWidth="1px"
-            borderColor={useColorModeValue("gray.200", "gray.700")}
+            borderColor={modalBorderColor}
             boxShadow="xl"
           >
             <ModalHeader>Filtrar Pedidos</ModalHeader>

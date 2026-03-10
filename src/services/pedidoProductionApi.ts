@@ -347,6 +347,7 @@ export const pedidoProduccionApi = createApi({
         method: "POST",
         body,
       }),
+      invalidatesTags: [{ type: "PedidoAgrupado", id: "LIST" }],
     }),
 
     getRecetaByPedido: builder.query<RecetaLinea[], { pedidoId: number; id_almacen?: number }>({

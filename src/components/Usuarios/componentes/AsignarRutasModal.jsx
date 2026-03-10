@@ -20,11 +20,12 @@ import {
 import { FiSearch } from "react-icons/fi";
 import RutaSelector from "./RutaSelector";
 
+const EMPTY_ARRAY = [];
 const AsignarRutasModal = ({
   isOpen,
   onClose,
   usuario,
-  rutas = [], // Rutas disponibles (ya enriquecidas si es necesario)
+  rutas = EMPTY_ARRAY, // Rutas disponibles (ya enriquecidas si es necesario)
   onAssign,
   isLoading = false,
 }) => {
@@ -47,8 +48,8 @@ const AsignarRutasModal = ({
   const filteredRutas = useMemo(() => {
     if (!searchTerm) return rutas;
     const lowerTerm = searchTerm.toLowerCase();
-    return rutas.filter((ruta) => 
-      ruta.nombre.toLowerCase().includes(lowerTerm)
+    return rutas.filter((ruta) =>
+      ruta.nombre.toLowerCase().includes(lowerTerm),
     );
   }, [rutas, searchTerm]);
 
@@ -59,16 +60,16 @@ const AsignarRutasModal = ({
   };
 
   const handleSelectAll = () => {
-    const allIds = filteredRutas.map(r => r.id);
+    const allIds = filteredRutas.map((r) => r.id);
     // Agregar solo los que no están ya seleccionados
     const newSelected = [...new Set([...selectedRoutes, ...allIds])];
     setSelectedRoutes(newSelected);
   };
 
   const handleDeselectAll = () => {
-    const visibleIds = new Set(filteredRutas.map(r => r.id));
+    const visibleIds = new Set(filteredRutas.map((r) => r.id));
     // Remover los IDs que están visibles actualmente
-    setSelectedRoutes(prev => prev.filter(id => !visibleIds.has(id)));
+    setSelectedRoutes((prev) => prev.filter((id) => !visibleIds.has(id)));
   };
 
   return (
@@ -93,12 +94,22 @@ const AsignarRutasModal = ({
               />
             </InputGroup>
             <Flex justify="flex-end" gap={2} size="sm">
-                <Button size="xs" onClick={handleSelectAll} colorScheme="blue" variant="ghost">
-                    Seleccionar Visibles
-                </Button>
-                <Button size="xs" onClick={handleDeselectAll} colorScheme="red" variant="ghost">
-                    Deseleccionar Visibles
-                </Button>
+              <Button
+                size="xs"
+                onClick={handleSelectAll}
+                colorScheme="blue"
+                variant="ghost"
+              >
+                Seleccionar Visibles
+              </Button>
+              <Button
+                size="xs"
+                onClick={handleDeselectAll}
+                colorScheme="red"
+                variant="ghost"
+              >
+                Deseleccionar Visibles
+              </Button>
             </Flex>
           </Box>
 

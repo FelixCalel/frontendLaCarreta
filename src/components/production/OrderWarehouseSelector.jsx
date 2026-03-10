@@ -21,9 +21,12 @@ export const OrderWarehouseSelector = ({ order, almacenes }) => {
 
   const [almacenId, setAlmacenId] = useState(defaultAlmacenId);
 
-  useEffect(() => {
+  const [prevDefaultAlmacenId, setPrevDefaultAlmacenId] =
+    useState(defaultAlmacenId);
+  if (defaultAlmacenId !== prevDefaultAlmacenId) {
+    setPrevDefaultAlmacenId(defaultAlmacenId);
     setAlmacenId(defaultAlmacenId);
-  }, [defaultAlmacenId]);
+  }
 
   const handleChange = async (e) => {
     const newId = e.target.value;

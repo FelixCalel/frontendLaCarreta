@@ -30,6 +30,14 @@ export const OrderMainRow = ({
   const bgEven = useColorModeValue("gray.100", "gray.800");
   const rowBg = index % 2 === 0 ? bgOdd : bgEven;
   const hoverBg = useColorModeValue("gray.200", "gray.600");
+  const borderBot = useColorModeValue("gray.100", "gray.700");
+  const prodColor = useColorModeValue("gray.700", "white");
+
+  const selectBorderColor = useColorModeValue("#E2E8F0", "#4A5568");
+  const selectColor = useColorModeValue("#2D3748", "#EDF2F7");
+  const selectBg = useColorModeValue("#fff", "#2D3748");
+  const optionColor = useColorModeValue("#222", "#fff");
+  const optionBg = useColorModeValue("#fff", "#222");
 
   return (
     <Tr
@@ -38,7 +46,7 @@ export const OrderMainRow = ({
       transition="all 0.2s"
       sx={sx}
       borderBottomWidth="1px"
-      borderColor={useColorModeValue("gray.100", "gray.700")}
+      borderColor={borderBot}
     >
       <Td px={2} py={2}>
         <IconButton
@@ -59,11 +67,7 @@ export const OrderMainRow = ({
       </Td>
       <Td px={2} py={2}>
         <Box>
-          <Text
-            fontWeight="bold"
-            fontSize="sm"
-            color={useColorModeValue("gray.700", "white")}
-          >
+          <Text fontWeight="bold" fontSize="sm" color={prodColor}>
             {order.productoNombre}
           </Text>
           <Text fontSize="xs" color="gray.500" mt={0.5}>
@@ -142,9 +146,9 @@ export const OrderMainRow = ({
               padding: "2px 6px",
               borderRadius: "4px",
               border: "1px solid",
-              borderColor: useColorModeValue("#E2E8F0", "#4A5568"),
-              color: useColorModeValue("#2D3748", "#EDF2F7"),
-              background: useColorModeValue("#fff", "#2D3748"),
+              borderColor: selectBorderColor,
+              color: selectColor,
+              background: selectBg,
               cursor: "pointer",
               outline: "none",
             }}
@@ -155,8 +159,8 @@ export const OrderMainRow = ({
                 key={almacen.id}
                 value={almacen.id}
                 style={{
-                  color: useColorModeValue("#222", "#fff"),
-                  background: useColorModeValue("#fff", "#222"),
+                  color: optionColor,
+                  background: optionBg,
                 }}
               >
                 {almacen.nombre || almacen.name}

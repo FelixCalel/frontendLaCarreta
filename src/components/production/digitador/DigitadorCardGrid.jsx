@@ -17,6 +17,6 @@ export const GroupCardGrid = ({ groups, IconComponent, title }) => (
 
 GroupCardGrid.propTypes = {
   groups: PropTypes.arrayOf(PropTypes.object).isRequired,
-  IconComponent: PropTypes.elementType.isRequired,
-  title: PropTypes.string.isRequired,
+  IconComponent: PropTypes.elementType,
+  title: PropTypes.string,
 };

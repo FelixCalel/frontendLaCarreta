@@ -20,10 +20,9 @@ export const BuscadorGenerico = ({ onSearch }) => {
     return (
         <Box mb={4}>
             <InputGroup>
-                <InputLeftElement
-                    pointerEvents="none"
-                    children={<Icon as={FaSearch} color={iconColor} />}
-                />
+                <InputLeftElement pointerEvents="none">
+                    <Icon as={FaSearch} color={iconColor} />
+                </InputLeftElement>
                 <Input
                     placeholder="Buscar..."
                     value={searchValue}

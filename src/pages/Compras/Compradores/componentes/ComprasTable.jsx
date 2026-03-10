@@ -62,6 +62,8 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
   const theadBg = useColorModeValue("green.50", "green.900");
   const thColor = useColorModeValue("green.700", "green.300");
   const rowHoverBg = useColorModeValue("gray.50", "gray.700");
+  const numSolicitadoColor = useColorModeValue("cyan.700", "cyan.300");
+  const numAsignadoColor = useColorModeValue("green.600", "green.300");
 
   const sortedCompras = [...compras].sort((a, b) => a.id - b.id);
 
@@ -254,18 +256,10 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
               <Td>{compra.codigo}</Td>
               <Td fontWeight="medium">{compra.nombre}</Td>
               <Td>{`${compra.nombreDeu} - ${compra.nombreCorrelativo}`}</Td>
-              <Td
-                isNumeric
-                fontWeight="bold"
-                color={useColorModeValue("cyan.700", "cyan.300")}
-              >
+              <Td isNumeric fontWeight="bold" color={numSolicitadoColor}>
                 {compra.cantidad || 0}
               </Td>
-              <Td
-                isNumeric
-                fontWeight="bold"
-                color={useColorModeValue("green.600", "green.300")}
-              >
+              <Td isNumeric fontWeight="bold" color={numAsignadoColor}>
                 {compra.cantidadAsignada || 0}
               </Td>
               <Td textAlign="center">

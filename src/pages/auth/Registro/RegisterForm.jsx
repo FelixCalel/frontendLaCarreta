@@ -294,8 +294,8 @@ const RegisterForm = () => {
                 orientation={{ base: "vertical", md: "horizontal" }}
                 my={6}
               >
-                {steps.map((step, index) => (
-                  <Step key={index}>
+                {steps.map((step) => (
+                  <Step key={step.title}>
                     <StepIndicator>
                       <StepStatus
                         complete={<StepIcon />}

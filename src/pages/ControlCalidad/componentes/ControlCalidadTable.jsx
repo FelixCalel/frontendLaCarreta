@@ -110,8 +110,8 @@ const ControlCalidadTable = ({
         <Tbody>
           {Object.keys(itemsFiltrados).length > 0 ? (
             Object.entries(itemsFiltrados).map(([deudor, items]) =>
-              items.map((item, idx) => (
-                <Tr key={`${deudor}-${idx}`}>
+              items.map((item) => (
+                <Tr key={`${deudor}-${item.id || item.codigo}`}>
                   <Td>{item.codigo || "Sin código"}</Td>
                   <Td>{item.nombre || "Sin nombre"}</Td>
                   <Td>{item.nombreTienda}</Td>
@@ -129,7 +129,7 @@ const ControlCalidadTable = ({
                     </Button>
                   </Td>
                 </Tr>
-              ))
+              )),
             )
           ) : (
             <Tr>

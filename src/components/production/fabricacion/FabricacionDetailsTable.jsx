@@ -11,7 +11,9 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 
-export const FabricacionDetailsTable = ({ details = [] }) => {
+const EMPTY_ITEMS = [];
+
+export const FabricacionDetailsTable = ({ details = EMPTY_ITEMS }) => {
   const headerBg = useColorModeValue("green.100", "green.800");
 
   if (!details || details.length === 0) {
@@ -32,7 +34,7 @@ export const FabricacionDetailsTable = ({ details = [] }) => {
       </Thead>
       <Tbody>
         {details.map((d, i) => (
-          <Tr key={i}>
+          <Tr key={d.detalleId || d.descripcion || i}>
             <Td>
               <Checkbox isChecked={!!d.checked} />
             </Td>

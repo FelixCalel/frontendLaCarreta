@@ -1,4 +1,11 @@
-import { useState, Fragment, useMemo, useCallback, useEffect } from "react";
+import {
+  useState,
+  Fragment,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import { useSelector } from "react-redux";
 import PropTypes from "prop-types";
 import {
@@ -39,9 +46,11 @@ export const ConsolidatedOrdersView = ({
 }) => {
   const [visibleLimit, setVisibleLimit] = useState(20);
 
-  useEffect(() => {
+  const prevData = useRef(data);
+  if (data !== prevData.current) {
+    prevData.current = data;
     setVisibleLimit(20);
-  }, [data]);
+  }
 
   const visibleData = data.slice(0, visibleLimit);
   const hasMore = visibleData.length < data.length;
@@ -224,6 +233,38 @@ export const ConsolidatedOrdersView = ({
           comentario: comment,
         }).unwrap();
 
+        const successfulPedidoIds = new Set(
+          resultSAP.enviados
+            ?.filter((r) => r.status === "SUCCESS")
+            .map((r) => r.pedidoId) || []
+        );
+
+        const successfulDetailsToSend = [];
+        data.forEach((group) => {
+          if (selectedItems.has(group.productoNombre)) {
+            group.originalItems.forEach((item) => {
+              if (item.id_detallePedido && successfulPedidoIds.has(item.id)) {
+                successfulDetailsToSend.push(item.id_detallePedido);
+              }
+            });
+          }
+        });
+
+        if (successfulDetailsToSend.length > 0) {
+          try {
+            await avanzarMultiDetalle({
+              detalleOrdenIds: successfulDetailsToSend,
+              usuarioId: Number(localStorage.getItem("usuarioId") ?? 1),
+              nuevaEtapaId: 4,
+              comentario: comment || null,
+              fechaOrden: dateSAP,
+              avanzar: true,
+            }).unwrap();
+          } catch (e) {
+            console.error("Error al avanzar a etapa 4 tras SAP:", e);
+          }
+        }
+
         const hasErrors = resultSAP.enviados?.some((r) => r.status === "ERROR");
 
         if (hasErrors) {
@@ -236,6 +277,11 @@ export const ConsolidatedOrdersView = ({
             isClosable: true,
           });
           console.error("Resultados SAP:", resultSAP);
+          // If partial, maybe unselect successful ones so user can retry failed ones
+          if (successfulDetailsToSend.length > 0) {
+            setSelectedItems(new Set());
+            onClose();
+          }
         } else {
           toast({
             title: "Órdenes enviadas a SAP",

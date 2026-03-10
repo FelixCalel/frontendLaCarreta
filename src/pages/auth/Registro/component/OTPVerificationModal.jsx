@@ -67,7 +67,6 @@ const OTPVerificationModal = ({
               value={verifyCode}
               onChange={(value) => setVerifyCode(value)}
               onComplete={(value) => handleVerifySMS(value)}
-              autoFocus
             >
               <PinInputField
                 w={12}

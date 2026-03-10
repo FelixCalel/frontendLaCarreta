@@ -24,7 +24,9 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { WarningIcon } from "@chakra-ui/icons";
-import { AsyncPaginate } from "react-select-async-paginate";
+import MaterialSelector from "./components/MaterialSelector";
+import WarehouseOptions from "./components/WarehouseOptions";
+import StockInfoCard from "./components/StockInfoCard";
 import {
   useCreateRecetaLineaMutation,
   useLazyGetItemsQuery,
@@ -273,21 +275,12 @@ const AddMaterialModal = ({ isOpen, onClose, pedidoId }) => {
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4}>
-            <FormControl isRequired>
-              <FormLabel>Buscar Item</FormLabel>
-              <AsyncPaginate
-                debounceTimeout={300}
-                value={selectedItem}
-                loadOptions={loadOptions}
-                onChange={handleItemChange}
-                placeholder="Escriba nombre o código..."
-                styles={customStyles}
-                additional={{
-                  page: 1,
-                }}
-                noOptionsMessage={() => "No se encontraron items"}
-              />
-            </FormControl>
+            <MaterialSelector
+              selectedItem={selectedItem}
+              handleItemChange={handleItemChange}
+              loadOptions={loadOptions}
+              customStyles={customStyles}
+            />
 
             <FormControl isRequired>
               <FormLabel>Almacén</FormLabel>
@@ -304,83 +297,16 @@ const AddMaterialModal = ({ isOpen, onClose, pedidoId }) => {
               </Select>
             </FormControl>
 
-            {(isFetchingStock || (stockData && Array.isArray(stockData))) &&
-              selectedItem && (
-                <Box w="100%">
-                  <Flex align="center" mb={2}>
-                    <Text
-                      fontSize="sm"
-                      fontWeight="semibold"
-                      color={subTextColor}
-                    >
-                      Opciones de Almacén desde SAP:
-                    </Text>
-                    {isFetchingStock && (
-                      <Spinner
-                        size="sm"
-                        ml={3}
-                        thickness="2px"
-                        color="blue.500"
-                        emptyColor="gray.200"
-                      />
-                    )}
-                  </Flex>
-                  {!isFetchingStock && stockData && (
-                    <Flex wrap="wrap" gap={2}>
-                      {stockData.map((s, idx) => {
-                        const matchedWarehouse = almacenes?.find(
-                          (a) => a.name === s.almacen,
-                        );
-                        if (!matchedWarehouse) return null;
-
-                        const hasStock = Number(s.stock) > 0;
-                        const isSelected =
-                          almacenId === matchedWarehouse.id.toString();
-
-                        return (
-                          <Button
-                            key={idx}
-                            size="sm"
-                            variant={
-                              isSelected
-                                ? "solid"
-                                : hasStock
-                                  ? "outline"
-                                  : "ghost"
-                            }
-                            colorScheme={
-                              isSelected ? "blue" : hasStock ? "green" : "gray"
-                            }
-                            onClick={() =>
-                              setAlmacenId(matchedWarehouse.id.toString())
-                            }
-                            opacity={hasStock ? 1 : 0.6}
-                            borderWidth={isSelected ? "2px" : "1px"}
-                            _hover={{
-                              bg:
-                                hasStock && !isSelected
-                                  ? greenHoverBg
-                                  : undefined,
-                            }}
-                            h="auto"
-                            py={1}
-                            px={3}
-                          >
-                            <VStack spacing={0} align="center">
-                              <Text fontWeight="bold" fontSize="xs">
-                                {s.almacen}
-                              </Text>
-                              <Text fontSize="2xs">
-                                Stock: {Number(s.stock).toFixed(2)}
-                              </Text>
-                            </VStack>
-                          </Button>
-                        );
-                      })}
-                    </Flex>
-                  )}
-                </Box>
-              )}
+            <WarehouseOptions
+              isFetchingStock={isFetchingStock}
+              stockData={stockData}
+              selectedItem={selectedItem}
+              subTextColor={subTextColor}
+              almacenes={almacenes}
+              almacenId={almacenId}
+              setAlmacenId={setAlmacenId}
+              greenHoverBg={greenHoverBg}
+            />
 
             <FormControl isRequired>
               <FormLabel>Cantidad Requerida</FormLabel>
@@ -391,81 +317,20 @@ const AddMaterialModal = ({ isOpen, onClose, pedidoId }) => {
               />
             </FormControl>
 
-            {selectedItem && almacenId && (
-              <Box
-                p={4}
-                borderWidth="1px"
-                borderRadius="lg"
-                borderColor={`${stockStatus}.300`}
-                bg={
-                  stockStatus === "red"
-                    ? stockRedBg
-                    : stockStatus === "green"
-                      ? stockGreenBg
-                      : stockGrayBg
-                }
-                w="100%"
-                shadow="sm"
-                transition="all 0.2s"
-              >
-                {isFetchingStock ? (
-                  <Text
-                    color={`${stockStatus}.500`}
-                    fontWeight="semibold"
-                    fontSize="sm"
-                  >
-                    Consultando stock en SAP...
-                  </Text>
-                ) : currentStockInfo ? (
-                  <VStack align="start" spacing={2}>
-                    <Text
-                      color={`${stockStatus}.600`}
-                      fontWeight="bold"
-                      fontSize="md"
-                    >
-                      Disponibilidad en Almacén ({selectedWarehouseName})
-                    </Text>
-                    <HStack spacing={4}>
-                      <Badge
-                        colorScheme={stockStatus}
-                        px={2}
-                        py={1}
-                        borderRadius="md"
-                        fontSize="sm"
-                      >
-                        Stock: {parseFloat(stockOnHand).toFixed(2)}
-                      </Badge>
-                      <Badge
-                        colorScheme="orange"
-                        px={2}
-                        py={1}
-                        borderRadius="md"
-                        fontSize="sm"
-                      >
-                        Comprometido: {parseFloat(stockCommited).toFixed(2)}
-                      </Badge>
-                    </HStack>
-                    {reqQty > 0 && stockOnHand < reqQty && (
-                      <Text
-                        color="red.500"
-                        fontSize="sm"
-                        fontWeight="semibold"
-                        display="flex"
-                        alignItems="center"
-                      >
-                        <WarningIcon mr={2} /> Stock insuficiente para requerir{" "}
-                        {reqQty}
-                      </Text>
-                    )}
-                  </VStack>
-                ) : (
-                  <Text color="red.500" fontSize="sm" fontWeight="bold">
-                    No hay información de stock para este ítem en el almacén
-                    seleccionado.
-                  </Text>
-                )}
-              </Box>
-            )}
+            <StockInfoCard
+              selectedItem={selectedItem}
+              almacenId={almacenId}
+              stockStatus={stockStatus}
+              stockRedBg={stockRedBg}
+              stockGreenBg={stockGreenBg}
+              stockGrayBg={stockGrayBg}
+              isFetchingStock={isFetchingStock}
+              currentStockInfo={currentStockInfo}
+              selectedWarehouseName={selectedWarehouseName}
+              stockOnHand={stockOnHand}
+              stockCommited={stockCommited}
+              reqQty={reqQty}
+            />
 
             <FormControl>
               <FormLabel>Cantidad Base (Opcional)</FormLabel>

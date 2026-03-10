@@ -57,6 +57,8 @@ const FabricacionPage = () => {
   const tableBorder = useColorModeValue("gray.200", "gray.700");
   const modalBg = useColorModeValue("white", "gray.700");
 
+  const tableBg = useColorModeValue("white", "gray.800");
+
   const [avanzarEtapa, { isLoading: sendingPedido }] =
     useAvanzarEtapaMutation();
   const [avanzarMultiDetalle, { isLoading: sendingDetalles }] =
@@ -252,7 +254,7 @@ const FabricacionPage = () => {
         borderRadius="md"
         shadow="sm"
         overflowX="auto"
-        bg={useColorModeValue("white", "gray.800")}
+        bg={tableBg}
       >
         <Table variant="simple" size="sm">
           <Thead bg={headBg}>

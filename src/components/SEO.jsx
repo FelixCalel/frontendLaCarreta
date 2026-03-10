@@ -1,7 +1,12 @@
 import { Helmet } from 'react-helmet-async';
 import PropTypes from 'prop-types';
 
-const SEO = ({ title, description, name, type }) => {
+const SEO = ({
+  title = "Inicio",
+  description = "Portal administrativo para La Carreta.",
+  name = "La Carreta",
+  type = "website",
+}) => {
   return (
     <Helmet>
       {/* Standard metadata tags */}
@@ -43,14 +48,7 @@ SEO.propTypes = {
   title: PropTypes.string,
   description: PropTypes.string,
   name: PropTypes.string,
-  type: PropTypes.string
-};
-
-SEO.defaultProps = {
-  title: 'Inicio',
-  description: 'Portal administrativo para La Carreta.',
-  name: 'La Carreta',
-  type: 'website'
+  type: PropTypes.string,
 };
 
 export default SEO;

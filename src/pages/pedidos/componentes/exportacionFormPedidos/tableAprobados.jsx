@@ -13,10 +13,11 @@ import PropTypes from "prop-types";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
+const EMPTY_ARRAY = [];
 const AprobadosTable = ({
   pedidosAprobados,
   handleVerDetalles,
-  selectedPedidosToRevert = [],
+  selectedPedidosToRevert = EMPTY_ARRAY,
   onTogglePedidoSelection,
   onSelectAllPedidos,
 }) => {
@@ -67,10 +68,15 @@ const AprobadosTable = ({
               <Td>{pedido.nombreTienda}</Td>
               <Td>
                 {(() => {
-                  const fechaStr = pedido.fechaOrdenDisplay || pedido.fechaOrden;
+                  const fechaStr =
+                    pedido.fechaOrdenDisplay || pedido.fechaOrden;
                   if (!fechaStr) return "Sin fecha";
                   const [yyyy, mm, dd] = fechaStr.slice(0, 10).split("-");
-                  return format(new Date(yyyy, mm - 1, dd), "dd 'de' MMMM 'de' yyyy", { locale: es });
+                  return format(
+                    new Date(yyyy, mm - 1, dd),
+                    "dd 'de' MMMM 'de' yyyy",
+                    { locale: es },
+                  );
                 })()}
               </Td>
               <Td>
@@ -105,7 +111,7 @@ AprobadosTable.propTypes = {
       nombreDeu: PropTypes.string.isRequired,
       nombreTienda: PropTypes.string.isRequired,
       creadoEl: PropTypes.string.isRequired,
-    })
+    }),
   ).isRequired,
   handleVerDetalles: PropTypes.func.isRequired,
   selectedPedidosToRevert: PropTypes.arrayOf(PropTypes.number),

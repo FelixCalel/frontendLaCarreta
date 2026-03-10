@@ -2,20 +2,12 @@ import { useEffect, useState, useRef } from "react";
 import {
   Box,
   Button,
-  IconButton,
-  Input,
-  FormControl,
-  FormLabel,
-  FormErrorMessage,
-  Switch,
-  Select,
   Spinner,
   Text,
   useDisclosure,
   useToast,
   useBreakpointValue,
   Flex,
-  Badge,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -23,12 +15,10 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  FormControl,
+  FormLabel,
+  Input,
   SimpleGrid,
-  VStack,
-  HStack,
-  Stack,
-  Tooltip,
-  useColorModeValue,
   AlertDialog,
   AlertDialogOverlay,
   AlertDialogContent,
@@ -36,9 +26,8 @@ import {
   AlertDialogBody,
   AlertDialogFooter,
 } from "@chakra-ui/react";
-import { EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
-import { FaSyncAlt } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { AddIcon } from "@chakra-ui/icons";
+import { m, LazyMotion, domAnimation } from "framer-motion";
 import { format } from "date-fns";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -49,11 +38,12 @@ import {
   tablaPais,
   sincronizarClientes,
   sincronizarItems,
-  importarRecetas,
 } from "../../store/Empresa/thunks";
-import BotonSincronizarReceta from "../../components/empresa/BotonSincronizarReceta";
+import EmpresaCard from "./componentes/EmpresaCard";
+import EmpresaFormModal from "./componentes/EmpresaFormModal";
 
-const MotionBox = motion(Box);
+
+const MotionBox = m(Box);
 
 const PageFormEmpresa = () => {
   const dispatch = useDispatch();
@@ -63,7 +53,7 @@ const PageFormEmpresa = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [warehouseModalOpen, setWarehouseModalOpen] = useState(false);
   const [warehouses, setWarehouses] = useState("");
-  
+
   const [currentEmpresa, setCurrentEmpresa] = useState({
     id: "",
     nombre: "",
@@ -109,8 +99,8 @@ const PageFormEmpresa = () => {
       type === "checkbox"
         ? checked
         : name === "paisId"
-        ? parseInt(value, 10)
-        : value;
+          ? parseInt(value, 10)
+          : value;
     setCurrentEmpresa({ ...currentEmpresa, [name]: newValue });
     setErrors({ ...errors, [name]: "" });
   };
@@ -148,11 +138,11 @@ const PageFormEmpresa = () => {
           await handleSync(
             newEmpresaId,
             currentEmpresa.baseDatos,
-            currentEmpresa.ipBaseDatos
+            currentEmpresa.ipBaseDatos,
           );
         } else {
           console.error(
-            "Error: No se pudo obtener el ID de la empresa creada."
+            "Error: No se pudo obtener el ID de la empresa creada.",
           );
         }
         onClose();
@@ -171,7 +161,7 @@ const PageFormEmpresa = () => {
           dbsap: baseDatos,
           ipsap: ipBaseDatos,
           empresaId: empresaId,
-        })
+        }),
       );
       if (syncResult.error) {
         console.error("Error en la sincronización:", syncResult.error);
@@ -204,8 +194,6 @@ const PageFormEmpresa = () => {
     }
   };
 
-  
-
   const handleSyncWithWarehouses = async () => {
     const empresa = data.find((emp) => emp.id === currentEmpresa.id);
     if (!empresa) return;
@@ -232,7 +220,7 @@ const PageFormEmpresa = () => {
           ipsap: empresa.ipBaseDatos,
           empresaId: empresa.id,
           warehouses: formattedWarehouses,
-        })
+        }),
       );
 
       if (syncResult.error) throw syncResult.error;
@@ -297,7 +285,10 @@ const PageFormEmpresa = () => {
     }
   };
 
-  const cardBg = useColorModeValue("gray.100", "gray.700");
+  const handleOpenWarehouseModal = (empresa) => {
+    setCurrentEmpresa(empresa);
+    setWarehouseModalOpen(true);
+  };
 
   if (status === "loading" || paisesStatus === "loading") {
     return (
@@ -333,323 +324,141 @@ const PageFormEmpresa = () => {
   }, {});
 
   return (
-    <Box p={0} w="100%" maxW="100vw" overflowX="hidden">
-      <MotionBox
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        mb={4}
-      >
-        <Flex justifyContent="space-between" alignItems="center">
-          <Text fontSize="2xl" fontWeight="bold">
-            Empresas
-          </Text>
-          <Button
-            colorScheme="teal"
-            leftIcon={<AddIcon />}
-            onClick={() => {
-              setIsEditMode(false);
-              setCurrentEmpresa({
-                nombre: "",
-                alias: "",
-                estaActivo: true,
-                baseDatos: "",
-                ipBaseDatos: "",
-                paisId: "",
-              });
-              onOpen();
-            }}
-          >
-            Agregar Empresa
-          </Button>
-        </Flex>
-      </MotionBox>
-
-      <SimpleGrid
-        columns={[1, 2, 3]}
-        spacing={4}
-        w="100%"
-        maxW="100vw"
-        overflowX="hidden"
-      >
-        {data.map((empresa) => (
-          <MotionBox
-            key={empresa.id}
-            p={4}
-            bg={cardBg}
-            rounded="md"
-            shadow="md"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            w="100%"
-            maxW="100%"
-          >
-            <VStack align="start" spacing={2} w="100%">
-              <HStack justifyContent="space-between" w="100%">
-                <Text fontSize="lg" fontWeight="bold">
-                  {empresa.nombre}
-                </Text>
-                <Badge colorScheme={empresa.estaActivo ? "green" : "red"}>
-                  {empresa.estaActivo ? "ACTIVO" : "INACTIVO"}
-                </Badge>
-              </HStack>
-              <Text>
-                <strong>Alias:</strong> {empresa.alias}
-              </Text>
-              <Text>
-                <strong>Creada:</strong> {formatDate(empresa.creadoEl)}
-              </Text>
-              <Text>
-                <strong>Actualizada:</strong>{" "}
-                {formatDate(empresa.actualizadoEl)}
-              </Text>
-              <Text>
-                <strong>Base de Datos:</strong> {empresa.baseDatos}
-              </Text>
-              <Text>
-                <strong>Serie:</strong> {empresa.serie}
-              </Text>
-              <Text>
-                <strong>IP SAP:</strong> {empresa.ipBaseDatos}
-              </Text>
-              <Text>
-                <strong>País:</strong> {paisMap[empresa.paisId] || "Sin país"}
-              </Text>
-              <Stack direction="row" spacing={2} mt={2} w="100%">
-                <Tooltip label="Editar" aria-label="Editar">
-                  <IconButton
-                    icon={<EditIcon />}
-                    onClick={() => handleEdit(empresa)}
-                    variant="outline"
-                    colorScheme="teal"
-                  />
-                </Tooltip>
-                <Tooltip label="Eliminar" aria-label="Eliminar">
-                  <IconButton
-                    icon={<DeleteIcon />}
-                    onClick={() => confirmDelete(empresa.id)}
-                    variant="outline"
-                    colorScheme="red"
-                  />
-                </Tooltip>
-                <Tooltip label="Sincronizar Deus" aria-label="Sincronizar Deus">
-                  <IconButton
-                    icon={<FaSyncAlt />}
-                    onClick={() =>
-                      handleSync(
-                        empresa.id,
-                        empresa.baseDatos,
-                        empresa.ipBaseDatos
-                      )
-                    }
-                    variant="outline"
-                    colorScheme={syncDisabled[empresa.id] ? "gray" : "blue"}
-                    isDisabled={syncDisabled[empresa.id]}
-                    isLoading={syncDisabled[empresa.id]}
-                  />
-                </Tooltip>
-                <Tooltip
-                  label="Sincronizar Items"
-                  aria-label="Sincronizar Items"
-                >
-                  <IconButton
-                    icon={<FaSyncAlt />}
-                    onClick={() => {
-                      setCurrentEmpresa(empresa);
-                      setWarehouseModalOpen(true);
-                    }}
-                    variant="outline"
-                    colorScheme={syncDisabled[empresa.id] ? "gray" : "green"}
-                    isDisabled={syncDisabled[empresa.id]}
-                  />
-                </Tooltip>
-                <BotonSincronizarReceta empresa={empresa} />
-              </Stack>
-            </VStack>
-          </MotionBox>
-        ))}
-      </SimpleGrid>
-
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        size={isMobile ? "full" : "md"}
-        motionPreset="slideInBottom"
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            {isEditMode ? "Actualizar Empresa" : "Agregar Empresa"}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Stack spacing={4}>
-              <FormControl isInvalid={errors.nombre} isRequired>
-                <FormLabel>Nombre de la Empresa</FormLabel>
-                <Input
-                  name="nombre"
-                  value={currentEmpresa.nombre}
-                  onChange={handleInputChange}
-                  placeholder="Ingrese el nombre de la empresa"
-                />
-                {errors.nombre && (
-                  <FormErrorMessage>{errors.nombre}</FormErrorMessage>
-                )}
-              </FormControl>
-              <FormControl isInvalid={errors.alias} isRequired>
-                <FormLabel>Alias</FormLabel>
-                <Input
-                  name="alias"
-                  value={currentEmpresa.alias}
-                  onChange={handleInputChange}
-                  placeholder="Ingrese el alias de la empresa"
-                />
-                {errors.alias && (
-                  <FormErrorMessage>{errors.alias}</FormErrorMessage>
-                )}
-              </FormControl>
-              <FormControl display="flex" alignItems="center">
-                <FormLabel mb="0">Activo</FormLabel>
-                <Switch
-                  name="estaActivo"
-                  isChecked={currentEmpresa.estaActivo}
-                  onChange={handleInputChange}
-                  colorScheme="green"
-                />
-              </FormControl>
-              <FormControl isInvalid={errors.baseDatos} isRequired>
-                <FormLabel>Base de Datos</FormLabel>
-                <Input
-                  name="baseDatos"
-                  value={currentEmpresa.baseDatos}
-                  onChange={handleInputChange}
-                  placeholder="Ingrese la base de datos"
-                />
-                {errors.baseDatos && (
-                  <FormErrorMessage>{errors.baseDatos}</FormErrorMessage>
-                )}
-              </FormControl>
-              <FormControl isInvalid={errors.ipBaseDatos} isRequired>
-                <FormLabel>IP SAP</FormLabel>
-                <Input
-                  name="ipBaseDatos"
-                  value={currentEmpresa.ipBaseDatos}
-                  onChange={handleInputChange}
-                  placeholder="Ingrese la IP SAP"
-                />
-                {errors.ipBaseDatos && (
-                  <FormErrorMessage>{errors.ipBaseDatos}</FormErrorMessage>
-                )}
-              </FormControl>
-              <FormControl isInvalid={errors.serie} isRequired>
-                <FormLabel>Serie</FormLabel>
-                <Input
-                  name="serie"
-                  value={currentEmpresa.serie}
-                  onChange={handleInputChange}
-                  placeholder="Ingrese la serie de la empresa"
-                />
-                {errors.serie && (
-                  <FormErrorMessage>{errors.serie}</FormErrorMessage>
-                )}
-              </FormControl>
-
-              <FormControl isInvalid={errors.paisId} isRequired>
-                <FormLabel>País</FormLabel>
-                <Select
-                  name="paisId"
-                  value={currentEmpresa.paisId}
-                  onChange={handleInputChange}
-                  placeholder="Seleccione un país"
-                >
-                  {paises.map((pais) => (
-                    <option key={pais.id} value={pais.id}>
-                      {pais.nombre}
-                    </option>
-                  ))}
-                </Select>
-                {errors.paisId && (
-                  <FormErrorMessage>{errors.paisId}</FormErrorMessage>
-                )}
-              </FormControl>
-            </Stack>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="teal" mr={3} onClick={handleSubmit}>
-              {isEditMode ? "Actualizar" : "Guardar"}
-            </Button>
-            <Button onClick={onClose}>Cancelar</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <Modal
-        isOpen={warehouseModalOpen}
-        onClose={() => setWarehouseModalOpen(false)}
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Sincronizar Items</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl>
-              <FormLabel>Almacenes (separados por comas)</FormLabel>
-              <Input
-                placeholder="Ejemplo: CA-0300, CA-0100"
-                value={warehouses}
-                onChange={(e) => setWarehouses(e.target.value)}
-              />
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
+    <LazyMotion features={domAnimation}>
+      <Box p={0} w="100%" maxW="100vw" overflowX="hidden">
+        <MotionBox
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          mb={4}
+        >
+          <Flex justifyContent="space-between" alignItems="center">
+            <Text fontSize="2xl" fontWeight="bold">
+              Empresas
+            </Text>
             <Button
-              colorScheme="green"
-              mr={3}
-              onClick={handleSyncWithWarehouses}
-              isDisabled={syncDisabled[currentEmpresa.id]}
+              colorScheme="teal"
+              leftIcon={<AddIcon />}
+              onClick={() => {
+                setIsEditMode(false);
+                setCurrentEmpresa({
+                  nombre: "",
+                  alias: "",
+                  estaActivo: true,
+                  baseDatos: "",
+                  ipBaseDatos: "",
+                  paisId: "",
+                });
+                onOpen();
+              }}
             >
-              Sincronizar
+              Agregar Empresa
             </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setWarehouseModalOpen(false)}
-            >
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      
-      <AlertDialog
-        isOpen={isDeleteOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={() => {
-          setDeleteId(null);
-          onDeleteClose();
-        }}
-        isCentered
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Eliminar empresa
-            </AlertDialogHeader>
+          </Flex>
+        </MotionBox>
 
-            <AlertDialogBody>
-              ¿Seguro que deseas eliminar esta empresa? Esta acción no se puede
-              deshacer.
-            </AlertDialogBody>
+        <SimpleGrid
+          columns={[1, 2, 3]}
+          spacing={4}
+          w="100%"
+          maxW="100vw"
+          overflowX="hidden"
+        >
+          {data.map((empresa) => (
+            <EmpresaCard
+              key={empresa.id}
+              empresa={empresa}
+              paisNombre={paisMap[empresa.paisId]}
+              formatDate={formatDate}
+              syncDisabled={syncDisabled}
+              handleEdit={handleEdit}
+              confirmDelete={confirmDelete}
+              handleSync={handleSync}
+              handleOpenWarehouseModal={handleOpenWarehouseModal}
+            />
+          ))}
+        </SimpleGrid>
 
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onDeleteClose}>
+        <EmpresaFormModal
+          isOpen={isOpen}
+          onClose={onClose}
+          isMobile={isMobile}
+          isEditMode={isEditMode}
+          currentEmpresa={currentEmpresa}
+          handleInputChange={handleInputChange}
+          errors={errors}
+          paises={paises}
+          handleSubmit={handleSubmit}
+        />
+        <Modal
+          isOpen={warehouseModalOpen}
+          onClose={() => setWarehouseModalOpen(false)}
+        >
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Sincronizar Items</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <FormControl>
+                <FormLabel>Almacenes (separados por comas)</FormLabel>
+                <Input
+                  placeholder="Ejemplo: CA-0300, CA-0100"
+                  value={warehouses}
+                  onChange={(e) => setWarehouses(e.target.value)}
+                />
+              </FormControl>
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                colorScheme="green"
+                mr={3}
+                onClick={handleSyncWithWarehouses}
+                isDisabled={syncDisabled[currentEmpresa.id]}
+              >
+                Sincronizar
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setWarehouseModalOpen(false)}
+              >
                 Cancelar
               </Button>
-              <Button colorScheme="red" ml={3} onClick={handleDelete}>
-                Sí, eliminar
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-    </Box>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        <AlertDialog
+          isOpen={isDeleteOpen}
+          leastDestructiveRef={cancelRef}
+          onClose={() => {
+            setDeleteId(null);
+            onDeleteClose();
+          }}
+          isCentered
+        >
+          <AlertDialogOverlay>
+            <AlertDialogContent>
+              <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                Eliminar empresa
+              </AlertDialogHeader>
+
+              <AlertDialogBody>
+                ¿Seguro que deseas eliminar esta empresa? Esta acción no se
+                puede deshacer.
+              </AlertDialogBody>
+
+              <AlertDialogFooter>
+                <Button ref={cancelRef} onClick={onDeleteClose}>
+                  Cancelar
+                </Button>
+                <Button colorScheme="red" ml={3} onClick={handleDelete}>
+                  Sí, eliminar
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialogOverlay>
+        </AlertDialog>
+      </Box>
+    </LazyMotion>
   );
 };
 

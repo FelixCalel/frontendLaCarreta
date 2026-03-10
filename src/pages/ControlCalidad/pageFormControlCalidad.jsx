@@ -15,9 +15,16 @@ import ControlCalidadTable from "./componentes/ControlCalidadTable";
 import DetallesModal from "./componentes/DetallesModal";
 import * as ExcelJS from "exceljs";
 import FiltrosCompras from "./componentes/FiltrosCompras";
-import moment from "moment";
 import { FaFileExport } from "react-icons/fa";
 import SEO from "../../components/SEO";
+
+const toYMD = (dateString) =>
+  dateString ? new Date(dateString).toISOString().split("T")[0] : "";
+const toDMY = (dateString) => {
+  if (!dateString) return "";
+  const [y, m, d] = new Date(dateString).toISOString().split("T")[0].split("-");
+  return `${d}/${m}/${y}`;
+};
 
 const ControlCalidadPage = () => {
   const dispatch = useDispatch();
@@ -74,7 +81,7 @@ const ControlCalidadPage = () => {
   }
 
   const comprasFiltradas = comprasData.filter((compras) => {
-    const fechaCompra = moment.utc(compras.fechaIngreso).format("YYYY-MM-DD");
+    const fechaCompra = toYMD(compras.fechaIngreso);
     const fechaFiltro = filtros.fechaIngreso;
 
     const cumpleFecha = !fechaFiltro || fechaCompra === fechaFiltro;
@@ -113,13 +120,13 @@ const ControlCalidadPage = () => {
   const itemsAgrupadosPorDeudorArray = {};
   for (const deudor in itemsAgrupadosPorDeudor) {
     itemsAgrupadosPorDeudorArray[deudor] = Object.values(
-      itemsAgrupadosPorDeudor[deudor]
+      itemsAgrupadosPorDeudor[deudor],
     );
   }
 
   const actualizarCantidadRecibida = (id, nuevaCantidad) => {
     const updatedItems = comprasState.map((item) =>
-      item.id === id ? { ...item, pedido_compra: nuevaCantidad } : item
+      item.id === id ? { ...item, pedido_compra: nuevaCantidad } : item,
     );
     setComprasState(updatedItems);
   };
@@ -133,8 +140,7 @@ const ControlCalidadPage = () => {
     try {
       const comprasFiltrados = comprasFiltradas.filter((compra) => {
         const cumpleFecha =
-          !filtros.fechaOrden ||
-          moment.utc(compra.fecha).format("YYYY-MM-DD") === filtros.fechaOrden;
+          !filtros.fechaOrden || toYMD(compra.fecha) === filtros.fechaOrden;
 
         const cumplePalabras =
           !filtros.palabrasClave ||
@@ -171,7 +177,7 @@ const ControlCalidadPage = () => {
           id: item.id,
           nombreDeu: item.nombreDeu,
           nombreTienda: item.nombreTienda,
-          fechaOrden: moment.utc(item.fecha).format("DD/MM/YYYY"),
+          fechaOrden: toDMY(item.fecha),
         });
       });
 
@@ -204,7 +210,10 @@ const ControlCalidadPage = () => {
 
   return (
     <Box p={6} boxShadow="xl" bg={pageBg} rounded="lg">
-      <SEO title="Control de Calidad" description="Inventario y control de calidad." />
+      <SEO
+        title="Control de Calidad"
+        description="Inventario y control de calidad."
+      />
       <Flex justify="space-between" alignItems="center" mb={4}>
         <Heading mb={4} color={headingColor}>
           Inventario

@@ -12,6 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { useLazyGetStockSAPQuery } from "../../services/pedidoProductionApi";
 import { StockStatusBadge } from "./StockStatusBadge";
+import { useCallback } from "react";
 
 const CustomInput = memo(function CustomInput({
   value,
@@ -22,9 +23,11 @@ const CustomInput = memo(function CustomInput({
 }) {
   const [internalValue, setInternalValue] = useState(value);
 
-  useEffect(() => {
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
     setInternalValue(value);
-  }, [value]);
+  }
 
   const handleChange = (e) => {
     setInternalValue(e.target.value);
@@ -68,9 +71,11 @@ CustomInput.propTypes = {
 const OptimisticCheckbox = memo(({ isChecked, onChange }) => {
   const [checked, setChecked] = useState(isChecked);
 
-  useEffect(() => {
+  const [prevIsChecked, setPrevIsChecked] = useState(isChecked);
+  if (isChecked !== prevIsChecked) {
+    setPrevIsChecked(isChecked);
     setChecked(isChecked);
-  }, [isChecked]);
+  }
 
   const handleChange = (e) => {
     const newValue = e.target.checked;
@@ -128,6 +133,21 @@ export const RecetaRow = memo(function RecetaRow({
     isFetching,
   ]);
 
+  const handleCheckboxChange = useCallback((newValue) => {
+    setTimeout(() => {
+      handleLocalChange(r.id, "state", newValue);
+      updateField(r.id, "state", newValue);
+    }, 50);
+  }, [r.id, handleLocalChange, updateField]);
+
+  const handleCustomInputChange = useCallback((field, e) => {
+    handleLocalChange(r.id, field, e.target.value);
+  }, [r.id, handleLocalChange]);
+
+  const handleCustomInputBlur = useCallback((field, e) => {
+    updateField(r.id, field, e.target.value);
+  }, [r.id, updateField]);
+
   const selectedWarehouse = almacenes.find(
     (a) => a.id === Number(r.id_almacen),
   )?.name;
@@ -177,12 +197,7 @@ export const RecetaRow = memo(function RecetaRow({
       <Td px={2} py={2} textAlign="center">
         <OptimisticCheckbox
           isChecked={!!r.state}
-          onChange={(newValue) => {
-            setTimeout(() => {
-              handleLocalChange(r.id, "state", newValue);
-              updateField(r.id, "state", newValue);
-            }, 50);
-          }}
+          onChange={handleCheckboxChange}
         />
       </Td>
       <Td px={2} py={2} {...dimStyle}>
@@ -215,8 +230,8 @@ export const RecetaRow = memo(function RecetaRow({
           <CustomInput
             inputBorderColor={inputBorderColor}
             value={r[field]}
-            onChange={(e) => handleLocalChange(r.id, field, e.target.value)}
-            onBlur={(e) => updateField(r.id, field, e.target.value)}
+            onChange={(e) => handleCustomInputChange(field, e)}
+            onBlur={(e) => handleCustomInputBlur(field, e)}
           />
         </Td>
       ))}

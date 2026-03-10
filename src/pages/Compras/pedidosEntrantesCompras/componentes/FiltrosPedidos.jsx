@@ -13,7 +13,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
-import moment from "moment";
+
 import { SearchIcon } from "@chakra-ui/icons";
 
 const FiltrosPedidos = ({ onAplicarFiltros }) => {
@@ -58,9 +58,7 @@ const FiltrosPedidos = ({ onAplicarFiltros }) => {
             type="date"
             value={fecha}
             onChange={(e) => {
-              const f = e.target.value
-                ? moment.utc(e.target.value).format("YYYY-MM-DD")
-                : "";
+              const f = e.target.value;
               setFecha(f);
               sync(f, palabras);
             }}

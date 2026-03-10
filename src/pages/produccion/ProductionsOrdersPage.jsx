@@ -27,6 +27,8 @@ import { OrdersTable } from "../../components/production/OrdersTable";
 import { ConsolidatedOrdersView } from "../../components/production/ConsolidatedOrdersView";
 import AdvanceOrderButton from "../../components/production/AdvanceOrderButton";
 import { UnassignedProductsModal } from "../../components/production/UnassignedProductsModal";
+import EmptyState from "../../components/production/components/EmptyState";
+import ProductionOrderCard from "../../components/production/components/ProductionOrderCard";
 import { useGetUnassignedOrdersQuery } from "../../services/pedidoProductionApi";
 import { useDisclosure } from "@chakra-ui/react";
 
@@ -348,122 +350,23 @@ const ProductionOrdersPage = () => {
         {viewMode === "byOrder" ? (
           filteredGroups.length > 0 ? (
             <SimpleGrid columns={[1, 2, 3, 4, 5]} spacing={6} mt={6}>
-              {filteredGroups.map((g) => {
-                const doneCount = g.items.filter((i) => i.completo).length;
-                const anyProgress = g.items.some(
-                  (i) => Number(i.cantidad ?? 0) > 0,
-                );
-                const allDone = doneCount === g.items.length;
-
-                let statusColor = "yellow.400";
-                if (allDone) {
-                  statusColor = "green.400";
-                } else if (anyProgress) {
-                  statusColor = "blue.400";
-                }
-
-                const deudorCode = g.deudorCodigo || "N/A";
-
-                return (
-                  <Box
-                    key={g.pedidoId}
-                    position="relative"
-                    bg={cardBg}
-                    border="1px solid"
-                    borderColor={cardBorder}
-                    borderRadius="lg"
-                    overflow="hidden"
-                    cursor="pointer"
-                    transition="all 0.2s"
-                    _hover={{
-                      shadow: cardHoverShadow,
-                      transform: "translateY(-2px)",
-                    }}
-                    onClick={() => navigate(`/mesa/produccion/${g.pedidoId}`)}
-                    role="group"
-                  >
-                    <Box h="4px" bg={statusColor} w="100%" />
-                    <Box p={4}>
-                      <Flex justify="space-between" align="start" mb={2}>
-                        <VStack align="start" spacing={0}>
-                          <Text
-                            fontSize="xs"
-                            color="gray.500"
-                            fontWeight="bold"
-                            letterSpacing="wide"
-                            textTransform="uppercase"
-                          >
-                            Pedido #{g.pedidoId}
-                          </Text>
-                          <Heading size="sm" noOfLines={2} title={g.tienda}>
-                            {g.tienda}
-                          </Heading>
-                        </VStack>
-                        <Icon
-                          as={
-                            allDone || anyProgress
-                              ? CheckCircleIcon
-                              : CheckCircleIcon
-                          }
-                          color={statusColor}
-                          boxSize={5}
-                        />
-                      </Flex>
-
-                      <HStack mt={2} mb={3}>
-                        <Badge
-                          colorScheme="blue"
-                          variant="subtle"
-                          fontSize="0.7em"
-                        >
-                          {deudorCode}
-                        </Badge>
-                        <Badge variant="outline" fontSize="0.7em">
-                          {g.pais}
-                        </Badge>
-                      </HStack>
-
-                      <Divider mb={3} borderColor="gray.100" />
-
-                      <Flex justify="space-between" align="center">
-                        <Text fontSize="xs" color="gray.500">
-                          {doneCount} / {g.items.length} Completados
-                        </Text>
-                        <Badge
-                          colorScheme={allDone ? "green" : "gray"}
-                          variant="solid"
-                          borderRadius="full"
-                          px={2}
-                        >
-                          {g.items.length} ÍTEM{g.items.length !== 1 ? "S" : ""}
-                        </Badge>
-                      </Flex>
-                    </Box>
-                  </Box>
-                );
-              })}
+              {filteredGroups.map((g) => (
+                <ProductionOrderCard
+                  key={g.pedidoId}
+                  group={g}
+                  cardBg={cardBg}
+                  cardBorder={cardBorder}
+                  cardHoverShadow={cardHoverShadow}
+                />
+              ))}
             </SimpleGrid>
           ) : (
-            <Flex
-              direction="column"
-              align="center"
-              justify="center"
-              p={10}
-              mt={6}
-              bg={cardBg}
-              borderRadius="lg"
-              border="1px dashed"
-              borderColor={cardBorder}
-            >
-              <Icon as={ViewIcon} boxSize={10} color="gray.400" mb={4} />
-              <Heading size="md" color="gray.500" mb={2}>
-                Sin resultados
-              </Heading>
-              <Text color="gray.500" textAlign="center">
-                No hay pedidos pendientes o no están asignados a tu área en este
-                momento.
-              </Text>
-            </Flex>
+            <EmptyState
+              cardBg={cardBg}
+              cardBorder={cardBorder}
+              heading="Sin resultados"
+              message="No hay pedidos pendientes o no están asignados a tu área en este momento."
+            />
           )
         ) : consolidatedItems.length > 0 ? (
           <ConsolidatedOrdersView
@@ -471,26 +374,12 @@ const ProductionOrdersPage = () => {
             actionLabel="Pasar a Supervisor"
           />
         ) : (
-          <Flex
-            direction="column"
-            align="center"
-            justify="center"
-            p={10}
-            mt={6}
-            bg={cardBg}
-            borderRadius="lg"
-            border="1px dashed"
-            borderColor={cardBorder}
-          >
-            <Icon as={ViewIcon} boxSize={10} color="gray.400" mb={4} />
-            <Heading size="md" color="gray.500" mb={2}>
-              Sin resultados
-            </Heading>
-            <Text color="gray.500" textAlign="center">
-              No hay productos consolidados pendientes o asignados a tu área en
-              este momento.
-            </Text>
-          </Flex>
+          <EmptyState
+            cardBg={cardBg}
+            cardBorder={cardBorder}
+            heading="Sin resultados"
+            message="No hay productos consolidados pendientes o asignados a tu área en este momento."
+          />
         )}
         <UnassignedProductsModal isOpen={isOpen} onClose={onClose} />
       </Box>

@@ -28,7 +28,7 @@ root.render(
           <AuthProvider>
           <ColorModeScript initialColorMode={theme.config.initialColorMode} />
           <ChakraProvider theme={theme}>
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <SearchProvider>
                 <AuthWrapper>
                   <App />

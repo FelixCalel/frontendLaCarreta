@@ -25,7 +25,7 @@ import {
   useGetRechazoByPedidoProduccionIdQuery,
   useGetAlmacenesQuery,
 } from "../../services/pedidoProductionApi";
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 import { ConsolidatedExpandedRow } from "./ConsolidatedExpandedRow";
 
 export const ConsolidatedOrderRow = memo(
@@ -65,9 +65,12 @@ export const ConsolidatedOrderRow = memo(
 
     const [almacenId, setAlmacenId] = useState(defaultAlmacenId);
 
-    useEffect(() => {
+    const [prevDefaultAlmacenId, setPrevDefaultAlmacenId] =
+      useState(defaultAlmacenId);
+    if (defaultAlmacenId !== prevDefaultAlmacenId) {
+      setPrevDefaultAlmacenId(defaultAlmacenId);
       setAlmacenId(defaultAlmacenId);
-    }, [defaultAlmacenId]);
+    }
 
     const rechazoQty = useMemo(
       () =>
@@ -107,9 +110,13 @@ export const ConsolidatedOrderRow = memo(
       primaryOrder?.trazabilidad_Prod || "",
     );
 
-    useEffect(() => {
+    const [prevTrazabilidad, setPrevTrazabilidad] = useState(
+      primaryOrder?.trazabilidad_Prod,
+    );
+    if (primaryOrder?.trazabilidad_Prod !== prevTrazabilidad) {
+      setPrevTrazabilidad(primaryOrder?.trazabilidad_Prod);
       setLocalTrazabilidad(primaryOrder?.trazabilidad_Prod || "");
-    }, [primaryOrder?.trazabilidad_Prod]);
+    }
 
     const handleTrazabilidadChange = (e) => {
       const val = e.target.value;

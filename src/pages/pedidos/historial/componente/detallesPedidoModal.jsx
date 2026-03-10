@@ -80,11 +80,12 @@ BloqueComentario.propTypes = {
   iconColor: PropTypes.string,
 };
 
+const EMPTY_ARRAY = [];
 const DetallesPedidoModal = ({
   isOpen,
   onClose,
   pedido = null,
-  detalles = [],
+  detalles = EMPTY_ARRAY,
   isLoading = false,
 }) => {
   const cardBg = useColorModeValue("white", "gray.700");

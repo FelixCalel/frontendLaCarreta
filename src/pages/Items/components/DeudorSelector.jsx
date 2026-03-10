@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import PropTypes from "prop-types";
 import {
   Box,
@@ -29,9 +29,11 @@ const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
   const listBorderColor = useColorModeValue("gray.200", "gray.600");
   const itemHoverBg = useColorModeValue("gray.100", "gray.600");
 
-  useEffect(() => {
+  const prevInitialValue = useRef(initialValue);
+  if (initialValue !== prevInitialValue.current) {
+    prevInitialValue.current = initialValue;
     setInputValue(initialValue || "");
-  }, [initialValue]);
+  }
 
   const baseItems = useMemo(() => {
     const term = inputValue.trim().toLowerCase();
@@ -39,7 +41,7 @@ const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
     return deudoresAll.filter(
       (d) =>
         (d.correlativo || "").toLowerCase().includes(term) ||
-        (d.nombre || "").toLowerCase().includes(term)
+        (d.nombre || "").toLowerCase().includes(term),
     );
   }, [inputValue, deudoresAll]);
 

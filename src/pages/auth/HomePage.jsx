@@ -84,9 +84,11 @@ const HomePage = () => {
 
   const navigate = useNavigate();
 
-  const { displayName, roleId: roleIdRedux, user } = useSelector(
-    (state) => state.auth
-  );
+  const {
+    displayName,
+    roleId: roleIdRedux,
+    user,
+  } = useSelector((state) => state.auth);
 
   useEffect(() => {
     setNombreUsuario(displayName || "Usuario");
@@ -103,8 +105,6 @@ const HomePage = () => {
       setRoleId(currentRoleId);
     }
   }, [displayName, roleIdRedux, user]);
-
-  const tipsMemo = useMemo(() => tips, []);
 
   const pageBg = useColorModeValue("gray.50", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
@@ -223,7 +223,7 @@ const HomePage = () => {
 
                     <HStack fontSize="xs" color="gray.500">
                       <Icon as={FaRegLightbulb} />
-                      <span>{tipsMemo[0]}</span>
+                      <span>{tips[0]}</span>
                     </HStack>
                   </VStack>
 
