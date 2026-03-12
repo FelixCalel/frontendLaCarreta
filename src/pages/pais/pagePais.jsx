@@ -13,5 +13,4 @@ export const PagePais= () => {
     )
   }
 
-  export default PagePais;
   

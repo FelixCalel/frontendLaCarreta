@@ -12,7 +12,7 @@ const initialState = {
   theme: getInitialTheme(),
 };
 
-export const settingsSlice = createSlice({
+const settingsSlice = createSlice({
   name: "settings",
   initialState,
   reducers: {

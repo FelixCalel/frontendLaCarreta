@@ -43,19 +43,21 @@ export const RecuperarPaso2 = ({
           onComplete={(value) => verifyCode(value)}
           isDisabled={isLoading}
         >
-          {[...Array(6)].map((_, i) => (
-            <PinInputField
-              key={i}
-              bg={inputBg}
-              borderColor={inputBorder}
-              _focus={{ borderColor: "green.400", boxShadow: "outline" }}
-              _hover={{ borderColor: "green.400" }}
-              w={12}
-              h={14}
-              fontSize="2xl"
-              rounded="lg"
-            />
-          ))}
+          {["otp-0", "otp-1", "otp-2", "otp-3", "otp-4", "otp-5"].map(
+            (id) => (
+              <PinInputField
+                key={id}
+                bg={inputBg}
+                borderColor={inputBorder}
+                _focus={{ borderColor: "green.400", boxShadow: "outline" }}
+                _hover={{ borderColor: "green.400" }}
+                w={12}
+                h={14}
+                fontSize="2xl"
+                rounded="lg"
+              />
+            ),
+          )}
         </PinInput>
       </HStack>
     </FormControl>

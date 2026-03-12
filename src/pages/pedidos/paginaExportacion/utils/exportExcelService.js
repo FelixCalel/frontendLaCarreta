@@ -2,7 +2,7 @@ import * as ExcelJS from "exceljs";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-export const agruparPedidosPorDeudor = (pedidosConDetalles) => {
+const agruparPedidosPorDeudor = (pedidosConDetalles) => {
   return pedidosConDetalles.reduce((acc, pedido) => {
     const deudor = pedido.nombreDeu || "Sin deudor";
     if (!acc[deudor]) {
@@ -13,7 +13,7 @@ export const agruparPedidosPorDeudor = (pedidosConDetalles) => {
   }, {});
 };
 
-export const descargarWorkbook = async (workbook, fileName) => {
+const descargarWorkbook = async (workbook, fileName) => {
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -26,19 +26,19 @@ export const descargarWorkbook = async (workbook, fileName) => {
   window.URL.revokeObjectURL(url);
 };
 
-export const isoToDMY = (iso) => {
+const isoToDMY = (iso) => {
   if (!iso) return "Sin fecha";
   const [yyyy, mm, dd] = iso.slice(0, 10).split("-");
   return `${dd}/${mm}/${yyyy}`;
 };
 
-export const isoToLocalDate = (iso) => {
+const isoToLocalDate = (iso) => {
   if (!iso) return null;
   const [yyyy, mm, dd] = iso.slice(0, 10).split("-").map(Number);
   return new Date(yyyy, mm - 1, dd);
 };
 
-export async function addPedidosToWorksheetFormato2(worksheet, pedidosPorDeudor) {
+async function addPedidosToWorksheetFormato2(worksheet, pedidosPorDeudor) {
   worksheet.columns = [
     { header: "Pedido ID", key: "pedidoId", width: 15 },
     { header: "Tienda", key: "tienda", width: 25 },

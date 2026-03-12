@@ -9,4 +9,3 @@ export const PagePedidoDigitador = () => (
   </Box>
 );
 
-export default PagePedidoDigitador;

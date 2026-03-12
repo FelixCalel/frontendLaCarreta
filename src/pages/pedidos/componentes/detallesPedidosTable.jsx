@@ -9,9 +9,9 @@ import {
 } from "@chakra-ui/react";
 import { m, LazyMotion, domAnimation } from "framer-motion";
 import { useDispatch } from "react-redux";
-import DetallesPedidosListMobile from "./detallesPedidosTableComps/DetallesPedidosListMobile";
-import DetallesPedidosTableDesktop from "./detallesPedidosTableComps/DetallesPedidosTableDesktop";
-import AddProductoSection from "./detallesPedidosTableComps/AddProductoSection";
+import { DetallesPedidosListMobile } from "./detallesPedidosTableComps/DetallesPedidosListMobile";
+import { DetallesPedidosTableDesktop } from "./detallesPedidosTableComps/DetallesPedidosTableDesktop";
+import { AddProductoSection } from "./detallesPedidosTableComps/AddProductoSection";
 import {
   addNewDetalleOrden,
   deleteDetalleOrden,
@@ -27,10 +27,10 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   const addBoxBgColor = useColorModeValue("gray.100", "gray.700");
   const dispatch = useDispatch();
   const toast = useToast();
-  const [productos, setProductos] = useState([]);
-  const [detallesCargados, setDetallesCargados] = useState(false);
-  const [pedidoModeloCargado, setPedidoModeloCargado] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [dataState, setDataState] = useState({
+    productos: [],
+    isLoading: false,
+  });
   const [resetFields, setResetFields] = useState(false);
   const hasLoadedPedidoModelo = useRef(false);
   const [newProducto, setNewProducto] = useState({
@@ -55,7 +55,7 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
   }, []);
 
   useEffect(() => {
-    const loadDetalles = async () => {
+    const loadAllData = async () => {
       if (![deudorId, pedidoId, tiendaId].every((id) => id && !isNaN(id))) {
         toast({
           title: "Error",
@@ -67,8 +67,9 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         return;
       }
 
-      setIsLoading(true);
+      setDataState((prev) => ({ ...prev, isLoading: true }));
       try {
+        // First try to load existing details
         const detallesRaw = await dispatch(
           getDetalleOrdenByPedidoId(pedidoId),
         ).unwrap();
@@ -78,65 +79,61 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
           detallePedidoId: d.id,
         }));
 
-        setProductos(ordenarPorNombre(detalles));
+        let finalProductos = ordenarPorNombre(detalles);
+        
+        // If no details, try to load model
+        if (finalProductos.length === 0) {
+          try {
+            const modeloRaw = await dispatch(
+              getPedidoModeloByUsuarioId({ deudorId, pedidoId, tiendaId }),
+            ).unwrap();
+            const modelo = modeloRaw.map((c) => ({
+              ...c,
+              detallePedidoId: c.detallePedidoId ?? c.id,
+            }));
+            finalProductos = ordenarPorNombre(modelo);
+            
+            if (modelo.length > 0) {
+              toast({
+                title: "Productos activos agregados",
+                description: "Los productos activos ya están en el pedido.",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+              });
+            }
+          } catch (modelErr) {
+            console.error("Error al cargar pedido modelo:", modelErr);
+          }
+        }
+
+        setDataState({ productos: finalProductos, isLoading: false });
         sessionStorage.setItem(
           `productos_${pedidoId}`,
-          JSON.stringify(detalles),
+          JSON.stringify(finalProductos),
         );
-
-        if (detalles.length > 0) {
-          setIsLoading(false);
-        }
       } catch (err) {
         console.error("Error al obtener detalles del servidor:", err);
         const cache = sessionStorage.getItem(`productos_${pedidoId}`);
         if (cache) {
-          setProductos(JSON.parse(cache));
+          setDataState({ productos: JSON.parse(cache), isLoading: false });
           toast({
             title: "Cargado desde cache",
-            description:
-              "No se pudo obtener datos del servidor, usando cache local.",
+            description: "No se pudo obtener datos del servidor, usando cache local.",
             status: "warning",
             duration: 3000,
             isClosable: true,
           });
-          setIsLoading(false);
         } else {
-          toast({
-            title: "Error",
-            description: "No se pudieron cargar los detalles del pedido.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
+          setDataState((prev) => ({ ...prev, isLoading: false }));
         }
-      } finally {
-        setDetallesCargados(true);
       }
     };
 
-    if (deudorId && pedidoId && tiendaId && !detallesCargados) {
-      loadDetalles();
+    if (deudorId && pedidoId && tiendaId) {
+      loadAllData();
     }
-  }, [deudorId, pedidoId, tiendaId, detallesCargados, dispatch, toast]);
-
-  useEffect(() => {
-    if (detallesCargados && !hasLoadedPedidoModelo.current) {
-      if (productos.length === 0) {
-        cargarPedidoModelo();
-      } else {
-        setIsLoading(false);
-      }
-      hasLoadedPedidoModelo.current = true;
-    }
-  }, [detallesCargados]);
-
-  useEffect(() => {
-    setDetallesCargados(false);
-    setPedidoModeloCargado(false);
-    hasLoadedPedidoModelo.current = false;
-    setProductos([]);
-  }, [pedidoId]);
+  }, [deudorId, pedidoId, tiendaId, dispatch, toast]);
 
   const cargarPedidoModelo = async () => {
     if (pedidoModeloCargado) return;
@@ -151,15 +148,18 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         detallePedidoId: c.detallePedidoId ?? c.id,
       }));
 
-      setProductos((prev) => {
+      setDataState((prev) => {
         const nuevos = [
-          ...prev,
+          ...prev.productos,
           ...modelo.filter(
-            (c) => !prev.some((p) => p.detallePedidoId === c.detallePedidoId),
+            (c) =>
+              !prev.productos.some(
+                (p) => p.detallePedidoId === c.detallePedidoId,
+              ),
           ),
         ];
         sessionStorage.setItem(`productos_${pedidoId}`, JSON.stringify(nuevos));
-        return nuevos;
+        return { ...prev, productos: nuevos, isLoading: false };
       });
 
       toast({
@@ -186,10 +186,11 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         duration: 3000,
         isClosable: true,
       });
-    } finally {
-      setIsLoading(false);
+      setDataState((prev) => ({ ...prev, isLoading: false }));
     }
   };
+
+  const { productos, isLoading } = dataState;
 
   const handleProductoChange = (
     productoId,
@@ -259,7 +260,10 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         };
 
         const nuevosProductos = [...productos, nuevoProducto];
-        setProductos(nuevosProductos);
+        setDataState((prev) => ({
+          ...prev,
+          productos: nuevosProductos,
+        }));
 
         sessionStorage.setItem(
           `productos_${pedidoId}`,
@@ -317,7 +321,10 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
       const productosActualizados = productos.filter(
         (prod) => prod.detallePedidoId !== detallePedidoId,
       );
-      setProductos(productosActualizados);
+      setDataState((prev) => ({
+        ...prev,
+        productos: productosActualizados,
+      }));
       sessionStorage.setItem(
         `productos_${pedidoId}`,
         JSON.stringify(productosActualizados),
@@ -345,11 +352,12 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
 
   const handleCantidadChange = async (detalleId, cantidad) => {
     if (!detalleId || !pedidoId) return;
-    setProductos((prev) =>
-      prev.map((p) =>
+    setDataState((prev) => ({
+      ...prev,
+      productos: prev.productos.map((p) =>
         p.detallePedidoId === detalleId ? { ...p, cantidad } : p,
       ),
-    );
+    }));
     try {
       await dispatch(
         updateDetalleOrden({ id: detalleId, pedidoId, cantidad }),

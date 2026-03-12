@@ -27,8 +27,8 @@ import {
 import { FabricacionDetailsTable } from "./FabricacionDetailsTable";
 import { RecetaTable } from "../RecetaTable";
 import { RechazoModal } from "../../modals/RechazoModal";
-import NumberInputBox from "./components/NumberInputBox";
-import AlmacenSelect from "./components/AlmacenSelect";
+import { NumberInputBox } from "./components/NumberInputBox";
+import { AlmacenSelect } from "./components/AlmacenSelect";
 
 const clamp = (v, min, max) => Math.max(min, Math.min(v, max));
 const numOrEmpty = (v) => (v === null || v === undefined ? "" : v);

@@ -57,4 +57,3 @@ AlmacenSelect.propTypes = {
   optionBgColor: PropTypes.string.isRequired,
 };
 
-export default AlmacenSelect;

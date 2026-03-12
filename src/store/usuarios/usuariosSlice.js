@@ -30,7 +30,7 @@ const saveState = (state) => {
   localStorage.setItem("authSlice", JSON.stringify(state));
 };
 
-export const usuariosSlice = createSlice({
+const usuariosSlice = createSlice({
   name: "usuarios",
   initialState: {
     data: [],
@@ -91,5 +91,3 @@ export const usuariosSlice = createSlice({
 });
 
 export const usuariosReducer = usuariosSlice.reducer;
-
-export const { setUsuarios } = usuariosSlice.actions;

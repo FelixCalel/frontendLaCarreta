@@ -113,4 +113,3 @@ export const PageModulos = () => {
     );
 };
 
-export default PageModulos;

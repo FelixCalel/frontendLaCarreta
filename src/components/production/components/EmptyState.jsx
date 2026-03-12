@@ -31,4 +31,3 @@ EmptyState.propTypes = {
   heading: PropTypes.string,
 };
 
-export default EmptyState;

@@ -305,6 +305,7 @@ export const TablaBusuarios = () => {
 
       {selectedUser && (
         <AsignarRutasModal
+          key={selectedUser.id}
           isOpen={isOpen}
           onClose={onClose}
           usuario={selectedUser}

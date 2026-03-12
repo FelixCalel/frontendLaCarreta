@@ -24,9 +24,9 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { WarningIcon } from "@chakra-ui/icons";
-import MaterialSelector from "./components/MaterialSelector";
-import WarehouseOptions from "./components/WarehouseOptions";
-import StockInfoCard from "./components/StockInfoCard";
+import { MaterialSelector } from "./components/MaterialSelector";
+import { WarehouseOptions } from "./components/WarehouseOptions";
+import { StockInfoCard } from "./components/StockInfoCard";
 import {
   useCreateRecetaLineaMutation,
   useLazyGetItemsQuery,

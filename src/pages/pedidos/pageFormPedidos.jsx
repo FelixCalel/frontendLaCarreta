@@ -43,13 +43,13 @@ const PageFormPedidos = () => {
     estadoId: 1,
   });
   const [isPedidoFinalizado] = useState(false);
-  const [pedidoIdGuardado, setPedidoIdGuardado] = useState(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(null);
-  const [selectedPedidoId, setSelectedPedidoId] = useState(null);
-  const [comentarioDialog, setComentarioDialog] = useState("");
-  const [fechaDialog, setFechaDialog] = useState("");
-  const [isTienda1Disabled, setIsTienda1Disabled] = useState(false);
-  const [isTienda2Disabled, setIsTienda2Disabled] = useState(false);
+  const [dialogState, setDialogState] = useState({
+    pedidoIdGuardado: null,
+    isDetailsOpen: null,
+    selectedPedidoId: null,
+    comentarioDialog: "",
+    fechaDialog: "",
+  });
   const [isLoading, setIsLoading] = useState(false);
   const allTiendas = useSelector((state) => state.tiendas.data || []);
 
@@ -158,8 +158,11 @@ const PageFormPedidos = () => {
       ).unwrap();
 
       await dispatch(tablaPedidos({ userId: usuarioId, roleId: roleId, status: 1, limit: 100 }));
-      setPedidoIdGuardado(pedido.id);
-      setIsDetailsOpen(pedido.id);
+      setDialogState(prev => ({
+        ...prev,
+        pedidoIdGuardado: pedido.id,
+        isDetailsOpen: pedido.id,
+      }));
 
       toast({
         title: "Pedido copiado",
@@ -254,8 +257,11 @@ const PageFormPedidos = () => {
     try {
       setIsLoading(true);
       const pedidoGuardado = await dispatch(addNewPedido(newPedido)).unwrap();
-      setPedidoIdGuardado(pedidoGuardado.id);
-      setIsDetailsOpen(pedidoGuardado.id);
+      setDialogState(prev => ({
+        ...prev,
+        pedidoIdGuardado: pedidoGuardado.id,
+        isDetailsOpen: pedidoGuardado.id,
+      }));
 
       dispatch(tablaPedidos({ userId: usuarioId, roleId: roleId, status: 1, limit: 100 }));
 
@@ -290,6 +296,11 @@ const PageFormPedidos = () => {
       tiendaId: null,
       tiendaId2: null,
     });
+    setDialogState(prev => ({
+      ...prev,
+      pedidoIdGuardado: null,
+      isDetailsOpen: null,
+    }));
     setIsTienda1Disabled(false);
     setIsTienda2Disabled(false);
   };
@@ -308,7 +319,7 @@ const PageFormPedidos = () => {
   const handleRealizarPedido = async ({ comentario, fecha }) => {
     try {
       const detalles = await dispatch(
-        getDetalleOrdenByPedidoId(selectedPedidoId)
+        getDetalleOrdenByPedidoId(dialogState.selectedPedidoId)
       ).unwrap();
       if (!detalles || detalles.length === 0) {
         toast({
@@ -323,7 +334,7 @@ const PageFormPedidos = () => {
 
       await dispatch(
         togglePedidoStatus({
-          id: selectedPedidoId,
+          id: dialogState.selectedPedidoId,
           estadoId: 2,
           comentarioDisplay: comentario || "",
           fechaOrdenDisplay: toYMD(fecha),
@@ -356,19 +367,25 @@ const PageFormPedidos = () => {
       <PedidosTable
         pedidosUsuario={pedidosUsuario}
         isMobile={isMobile}
-        isDetailsOpen={isDetailsOpen}
+        isDetailsOpen={dialogState.isDetailsOpen}
         handleToggleDetails={(pedidoId, deudorId, tiendaId) => {
-          setIsDetailsOpen(isDetailsOpen === pedidoId ? null : pedidoId);
+          setDialogState(prev => ({
+            ...prev,
+            isDetailsOpen: prev.isDetailsOpen === pedidoId ? null : pedidoId
+          }));
 
-          if (isDetailsOpen !== pedidoId) {
+          if (dialogState.isDetailsOpen !== pedidoId) {
             dispatch(getDetalleOrdenByPedidoId(pedidoId, deudorId, tiendaId));
           }
         }}
         handleDeletePedido={(pedidoId) => dispatch(deletePedido(pedidoId))}
         showRealizarPedidoConfirmation={(pedidoId) => {
-          setSelectedPedidoId(pedidoId);
-          setComentarioDialog("");
-          setFechaDialog("");
+          setDialogState(prev => ({
+            ...prev,
+            selectedPedidoId: pedidoId,
+            comentarioDialog: "",
+            fechaDialog: "",
+          }));
           onDialogOpen();
         }}
         deudorId={currentPedido.deudorId}
@@ -387,7 +404,7 @@ const PageFormPedidos = () => {
         usuarioRutas={usuarioRutas}
         paisId={paisId || 0}
         usuarioId={usuarioId || 0}
-        pedidoIdGuardado={pedidoIdGuardado}
+        pedidoIdGuardado={dialogState.pedidoIdGuardado}
         isTienda1Disabled={isTienda1Disabled}
         isTienda2Disabled={isTienda2Disabled}
         setIsTienda1Disabled={setIsTienda1Disabled}
@@ -400,10 +417,10 @@ const PageFormPedidos = () => {
         isOpen={isDialogOpen}
         onClose={onDialogClose}
         onConfirm={handleRealizarPedido}
-        fecha={fechaDialog}
-        setFecha={setFechaDialog}
-        comentario={comentarioDialog}
-        setComentario={setComentarioDialog}
+        fecha={dialogState.fechaDialog}
+        setFecha={(val) => setDialogState(prev => ({ ...prev, fechaDialog: val }))}
+        comentario={dialogState.comentarioDialog}
+        setComentario={(val) => setDialogState(prev => ({ ...prev, comentarioDialog: val }))}
       />
     </Box>
   );

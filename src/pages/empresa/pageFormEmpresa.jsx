@@ -39,8 +39,8 @@ import {
   sincronizarClientes,
   sincronizarItems,
 } from "../../store/Empresa/thunks";
-import EmpresaCard from "./componentes/EmpresaCard";
-import EmpresaFormModal from "./componentes/EmpresaFormModal";
+import { EmpresaCard } from "./componentes/EmpresaCard";
+import { EmpresaFormModal } from "./componentes/EmpresaFormModal";
 
 
 const MotionBox = m(Box);

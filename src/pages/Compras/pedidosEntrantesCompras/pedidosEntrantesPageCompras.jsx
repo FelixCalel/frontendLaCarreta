@@ -133,6 +133,7 @@ const PedidosEntrantesPage = () => {
           onVerDetalle={handleVerDetalle}
         />
         <DetallesModal
+          key={selectedRegistro?.id || "detalles-modal"}
           isOpen={isOpen}
           onClose={onClose}
           pedido={selectedRegistro}

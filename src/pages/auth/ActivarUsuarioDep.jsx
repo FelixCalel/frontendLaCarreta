@@ -19,64 +19,46 @@ import { activateUserChild } from '../../store/auth/thunks';
 
 export const ActivarUsuarioDep = () => {
   const url = window.location.href;
-  const tokenMatch = url.match(/\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)$/);
+  const tokenMatch = url.match(/\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)$/) || [];
+  const [, tokenUrl, correoElectronicoUrl, nombresUrl, apellidosUrl] = tokenMatch;
+
   const [setError] = useState(false);
-  const [nombres, setNombres] = useState('');
-  const [setToken] = useState('');
-  const [correo_electronico, setCorreoElectronico] = useState('');
-  const [apellidos, setApellidos] = useState('');
+  const [nombres, setNombres] = useState(() => decodeURIComponent(nombresUrl || ''));
+  const [token, setToken] = useState(() => tokenUrl || '');
+  const [correo_electronico, setCorreoElectronico] = useState(() => correoElectronicoUrl || '');
   const [celular, setCelular] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [setEmail] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [nuevaClave, setNuevaClave] = useState('');
   const [confirmarClave, setConfirmarClave] = useState('');
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const images = [
    'url("./src/assets/images/fnd_py01.jpg")',
    'url("./src/assets/images/fnd_py02.jpg")',
    'url("./src/assets/images/fnd_py03.jpg")',
    'url("./src/assets/images/fnd_py04.jpg")',
- ];
-
-
- useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCurrentImageIndex((currentImageIndex) => (currentImageIndex + 1) % images.length);
-    }, 5000);
-
-    return () => clearInterval(intervalId);
-  }, [images.length]);
+  ];
 
   useEffect(() => {
-    const [, token, correoElectronico, nombres, apellidos] = tokenMatch;
-    const tokenp = token;
-    const correoElectronicop = correoElectronico;
-    const nombresp = decodeURIComponent(nombres);
-    const apellidosp = decodeURIComponent(apellidos);
-
-    setToken(tokenp);
-    setCorreoElectronico(correoElectronicop);
-    setNombres(nombresp);
-    setApellidos(apellidosp);
-  }, []);
+    const intervalId = setInterval(() => {
+      setCurrentImageIndex((idx) => (idx + 1) % images.length);
+    }, 5000);
+    return () => clearInterval(intervalId);
+  }, [images.length]);
 
   const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-   setError(false);
-  if (!nombres || !apellidos || !correo_electronico || !telefono || !celular || !nuevaClave || !confirmarClave) {
-    setError(true);
-    setMensaje('Por favor completa todos los campos.');
-    return;
-  }
-  if (nuevaClave !== confirmarClave) {
-    setError(true);
-    setMensaje('La nueva contraseña y la confirmación no coinciden.');
-    return;
-  }
+    if (!nombres || !apellidos || !correo_electronico || !telefono || !celular || !nuevaClave || !confirmarClave) {
+      setMensaje('Por favor completa todos los campos.');
+      return;
+    }
+    if (nuevaClave !== confirmarClave) {
+      setMensaje('La nueva contraseña y la confirmación no coinciden.');
+      return;
+    }
     
     try {
       const resultAction = await dispatch(activateUserChild({
@@ -197,4 +179,3 @@ export const ActivarUsuarioDep = () => {
   );
 };
 
-export default ActivarUsuarioDep;

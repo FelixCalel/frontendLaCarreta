@@ -27,8 +27,8 @@ import { OrdersTable } from "../../components/production/OrdersTable";
 import { ConsolidatedOrdersView } from "../../components/production/ConsolidatedOrdersView";
 import AdvanceOrderButton from "../../components/production/AdvanceOrderButton";
 import { UnassignedProductsModal } from "../../components/production/UnassignedProductsModal";
-import EmptyState from "../../components/production/components/EmptyState";
-import ProductionOrderCard from "../../components/production/components/ProductionOrderCard";
+import { EmptyState } from "../../components/production/components/EmptyState";
+import { ProductionOrderCard } from "../../components/production/components/ProductionOrderCard";
 import { useGetUnassignedOrdersQuery } from "../../services/pedidoProductionApi";
 import { useDisclosure } from "@chakra-ui/react";
 

@@ -16,32 +16,17 @@ export const FormularioNuevoEditar = ({
   onClose,
   metadata,
 }) => {
-  const [formValues, setFormValues] = useState({});
+  const [formValues, setFormValues] = useState({
+    ...formData,
+    estado:
+      formData.estado === "Activo" || formData.estado === true
+        ? true
+        : false,
+  });
   const [showIconCatalog, setShowIconCatalog] = useState(false);
-  const [selectedIcon, setSelectedIcon] = useState("");
-  const [isIconFieldPresent, setIsIconFieldPresent] = useState(false); // Nuevo estado para controlar la visibilidad del campo de íconos
+  const [selectedIcon, setSelectedIcon] = useState(formData.icono || "");
 
-  useEffect(() => {
-    if (formData) {
-      setFormValues({
-        ...formData,
-        estado:
-          formData.estado === "Activo" || formData.estado === true
-            ? true
-            : false, // Acepta "Activo" o un valor booleano
-      });
-      setSelectedIcon(formData.icono || "");
-    }
-  }, [formData]);
-
-  // Revisa si el campo "icono" está presente en la metadata
-  useEffect(() => {
-    if (metadata && metadata.some((campo) => campo.name === "icono")) {
-      setIsIconFieldPresent(true);
-    } else {
-      setIsIconFieldPresent(false);
-    }
-  }, [metadata]);
+  const isIconFieldPresent = metadata && metadata.some((campo) => campo.name === "icono");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

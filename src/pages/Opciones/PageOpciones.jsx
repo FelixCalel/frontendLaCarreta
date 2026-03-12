@@ -113,4 +113,3 @@ export const PageOpciones = () => {
   );
 };
 
-export default PageOpciones;

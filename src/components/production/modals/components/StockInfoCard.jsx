@@ -108,4 +108,3 @@ StockInfoCard.propTypes = {
   reqQty: PropTypes.number.isRequired,
 };
 
-export default StockInfoCard;

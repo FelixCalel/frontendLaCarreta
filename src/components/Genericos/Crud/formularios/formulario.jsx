@@ -14,18 +14,12 @@ import iconCatalog from "../../../Iconos/IconCatalog"; // Asegúrate de que la r
 
 const EMPTY_OBJECT = {};
 export const Formulario = ({
-  formData = EMPTY_OBJECT,
+  formData: initialFormData = EMPTY_OBJECT,
   metadata,
   onClose,
   onSubmit,
 }) => {
-  const [formDataState, setFormDataState] = useState(formData);
-  const prevFormData = useRef(formData);
-
-  if (formData !== prevFormData.current) {
-    prevFormData.current = formData;
-    setFormDataState(formData);
-  }
+  const [formDataState, setFormDataState] = useState(() => initialFormData);
 
   const [showIconCatalog, setShowIconCatalog] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState("");

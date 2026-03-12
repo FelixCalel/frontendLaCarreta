@@ -156,4 +156,3 @@ EmpresaFormModal.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
 };
 
-export default EmpresaFormModal;

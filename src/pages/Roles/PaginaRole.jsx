@@ -102,4 +102,3 @@ export const PaginaRole = () => {
     );
 };
 
-export default PaginaRole;

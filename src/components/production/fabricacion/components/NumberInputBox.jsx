@@ -41,4 +41,3 @@ NumberInputBox.propTypes = {
   fontWeight: PropTypes.string,
 };
 
-export default NumberInputBox;

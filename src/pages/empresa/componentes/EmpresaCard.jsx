@@ -129,4 +129,3 @@ EmpresaCard.propTypes = {
   handleOpenWarehouseModal: PropTypes.func.isRequired,
 };
 
-export default EmpresaCard;

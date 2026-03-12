@@ -103,4 +103,3 @@ DetallesPedidosTableDesktop.propTypes = {
   handleRemoveProducto: PropTypes.func.isRequired,
 };
 
-export default DetallesPedidosTableDesktop;

@@ -26,6 +26,7 @@ export const ModalV1 = ({ isOpen, onClose, titulo, metadata, onSubmit }) => {
                 <ModalCloseButton size="lg" />
                 <ModalBody>
                     <Formulario 
+                        key={isOpen ? "new-form" : "hidden-form"}
                         formData={{}} // Inicia con formulario vacío
                         metadata={filteredMetadata} // Enviar los metadatos filtrados
                         onClose={onClose} // Función para cerrar el modal

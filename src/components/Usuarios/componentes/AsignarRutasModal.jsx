@@ -30,19 +30,9 @@ const AsignarRutasModal = ({
   isLoading = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRoutes, setSelectedRoutes] = useState([]);
-
-  const modalHeaderColor = useColorModeValue("green.600", "green.200");
-
-  // Inicializar rutas seleccionadas cuando cambia el usuario
-  useEffect(() => {
-    if (usuario && usuario.rutas) {
-      setSelectedRoutes(usuario.rutas.map((r) => r.id));
-    } else {
-      setSelectedRoutes([]);
-    }
-    setSearchTerm(""); // Limpiar búsqueda al abrir
-  }, [usuario, isOpen]);
+  const [selectedRoutes, setSelectedRoutes] = useState(() =>
+    usuario && usuario.rutas ? usuario.rutas.map((r) => r.id) : [],
+  );
 
   // Filtrar rutas basado en el término de búsqueda
   const filteredRutas = useMemo(() => {

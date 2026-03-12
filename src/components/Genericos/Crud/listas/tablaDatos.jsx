@@ -174,4 +174,3 @@ TablaDatos.propTypes = {
   ),
 };
 
-export default TablaDatos;

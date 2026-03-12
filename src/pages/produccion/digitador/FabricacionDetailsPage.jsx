@@ -7,4 +7,3 @@ export const PageFabricacionPedidoDigitador = () => (
   </Box>
 );
 
-export default PageFabricacionPedidoDigitador;

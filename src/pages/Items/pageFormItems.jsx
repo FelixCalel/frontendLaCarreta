@@ -52,6 +52,7 @@ const ItemRow = memo(
         <Td>
           <Flex direction="column" gap={2}>
             <DeudorSelector
+              key={`${item.id}-selector`}
               onSelect={(deuId) => {
                 if (!item.deudores.some((d) => d.id === deuId)) {
                   handleAddDeudor(item.id, deuId);
@@ -133,18 +134,24 @@ const PageItems = () => {
     (state) => state.deudores,
   );
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchState, setSearchState] = useState({
+    debouncedSearch: "",
+    currentPage: 1,
+  });
   const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
   const itemsPerPage = 15;
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
-      setCurrentPage(1);
+      setSearchState({
+        debouncedSearch: searchTerm,
+        currentPage: 1,
+      });
     }, 500);
     return () => clearTimeout(handler);
   }, [searchTerm]);
+
+  const { debouncedSearch, currentPage } = searchState;
 
   useEffect(() => {
     dispatch(

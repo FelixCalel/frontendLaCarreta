@@ -27,19 +27,23 @@ const HistorialPedidosPage = () => {
   const location = useLocation();
   const toast = useToast();
   const { query } = useSearch();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPedido, setSelectedPedido] = useState(null);
-  const [detallesPedido, setDetallesPedido] = useState([]);
-  const [isLoadingDetalles, setIsLoadingDetalles] = useState(false);
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    selectedPedido: null,
+    detalles: [],
+    isLoading: false,
+  });
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
   const { roleId: roleIdRedux, uid } = useSelector((state) => state.auth || {});
   const roleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
   const usuarioId = uid ? parseInt(uid, 10) : null;
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("teal.600", "teal.200");
   const noDataTextColor = useColorModeValue("gray.500", "gray.400");
+  const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
 
   const [filters, setFilters] = useState({
     tienda: "",
@@ -50,6 +54,11 @@ const HistorialPedidosPage = () => {
     fechaFin: "",
   });
 
+  const handleFilterChange = useCallback((newFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  }, []);
+
   useEffect(() => {
     if (location.state?.highlightedPedidoId) {
       console.log(
@@ -59,8 +68,6 @@ const HistorialPedidosPage = () => {
       setHighlightedPedidoId(location.state.highlightedPedidoId);
     }
   }, [location]);
-
-  const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
 
   const handleClearHighlight = useCallback(() => {
     setHighlightedPedidoId(null);
@@ -106,7 +113,6 @@ const HistorialPedidosPage = () => {
 
   useEffect(() => {
     if (highlightedPedidoId && filteredPedidos.length > 0) {
-      const element = document.getElementById(`pedido-${highlightedPedidoId}`);
       setTimeout(() => {
         const el = document.getElementById(`pedido-${highlightedPedidoId}`);
         if (el) {
@@ -130,11 +136,6 @@ const HistorialPedidosPage = () => {
   const uniqueValues = useMemo(() => {
     return filterOptions || { tiendas: [], deudores: [], usuarios: [] };
   }, [filterOptions]);
-  const [prevFilters, setPrevFilters] = useState(filters);
-  if (filters !== prevFilters) {
-    setPrevFilters(filters);
-    setCurrentPage(1);
-  }
 
   useEffect(() => {
     dispatch(tablaTienda());
@@ -158,8 +159,7 @@ const HistorialPedidosPage = () => {
   }, []);
 
   const handleVerDetalles = async (pedido) => {
-    setIsLoadingDetalles(true);
-    setSelectedPedido(pedido);
+    setModalState(prev => ({ ...prev, isLoading: true, selectedPedido: pedido }));
     try {
       const detalles = await dispatch(
         getDetalleOrdenByPedidoId(pedido.id),
@@ -170,8 +170,12 @@ const HistorialPedidosPage = () => {
         }),
       );
 
-      setDetallesPedido(detallesOrdenados);
-      setIsModalOpen(true);
+      setModalState(prev => ({
+        ...prev,
+        detalles: detallesOrdenados,
+        isOpen: true,
+        isLoading: false
+      }));
     } catch (err) {
       toast({
         title: "Error al cargar detalles",
@@ -180,15 +184,17 @@ const HistorialPedidosPage = () => {
         duration: 3000,
         isClosable: true,
       });
-    } finally {
-      setIsLoadingDetalles(false);
+      setModalState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedPedido(null);
-    setDetallesPedido([]);
+    setModalState({
+      isOpen: false,
+      selectedPedido: null,
+      detalles: [],
+      isLoading: false,
+    });
   };
 
   return (
@@ -216,7 +222,7 @@ const HistorialPedidosPage = () => {
 
       <HistorialFilters
         filters={filters}
-        onFilterChange={setFilters}
+        onFilterChange={handleFilterChange}
         uniqueValues={uniqueValues}
         roleId={roleId}
       />
@@ -264,11 +270,11 @@ const HistorialPedidosPage = () => {
       )}
 
       <DetallesPedidoModal
-        isOpen={isModalOpen}
+        isOpen={modalState.isOpen}
         onClose={handleCloseModal}
-        pedido={selectedPedido}
-        detalles={detallesPedido}
-        isLoading={isLoadingDetalles}
+        pedido={modalState.selectedPedido}
+        detalles={modalState.detalles}
+        isLoading={modalState.isLoading}
       />
     </Box>
   );

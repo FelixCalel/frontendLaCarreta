@@ -24,7 +24,7 @@ export const fetchRolesMetadata = createAsyncThunk('Roles/fetchRolesMetadata',
     }
   );
 
-  export const createRol = createAsyncThunk('Rol/createRol',
+  const createRol = createAsyncThunk('Rol/createRol',
     async (RolData, thunkAPI) => {
       try {
         // Agregar los campos faltantes a los datos del módulo

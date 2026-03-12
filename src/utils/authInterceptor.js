@@ -14,7 +14,7 @@ function processQueue(error, token = null) {
   pendingQueue = [];
 }
 
-export const performLogout = () => {
+const performLogout = () => {
   const lsKeys = [
     "access_token",
     "refresh_token",

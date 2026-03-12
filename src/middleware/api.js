@@ -30,7 +30,7 @@ export async function sendSMSCode(to, captchaToken) {
   }
 }
 
-export async function verifySMSCode(to, code) {
+async function verifySMSCode(to, code) {
   try {
     await axios.post(`${BASE_URL}/sms/verify`, { to, code });
     return { ok: true };

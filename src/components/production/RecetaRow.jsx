@@ -148,6 +148,24 @@ export const RecetaRow = memo(function RecetaRow({
     updateField(r.id, field, e.target.value);
   }, [r.id, updateField]);
 
+  // Stable memoized handlers per field so memo-wrapped CustomInput doesn't re-render
+  const handleMpUtilizadaChange = useCallback(
+    (e) => handleCustomInputChange("mpUtilizada", e),
+    [handleCustomInputChange]
+  );
+  const handleMpUtilizadaBlur = useCallback(
+    (e) => handleCustomInputBlur("mpUtilizada", e),
+    [handleCustomInputBlur]
+  );
+  const handleCantidadRealChange = useCallback(
+    (e) => handleCustomInputChange("cantidad_real", e),
+    [handleCustomInputChange]
+  );
+  const handleCantidadRealBlur = useCallback(
+    (e) => handleCustomInputBlur("cantidad_real", e),
+    [handleCustomInputBlur]
+  );
+
   const selectedWarehouse = almacenes.find(
     (a) => a.id === Number(r.id_almacen),
   )?.name;
@@ -225,16 +243,22 @@ export const RecetaRow = memo(function RecetaRow({
           />
         </Box>
       </Td>
-      {["mpUtilizada", "cantidad_real"].map((field) => (
-        <Td key={field} px={1} py={2} isNumeric {...dimStyle}>
-          <CustomInput
-            inputBorderColor={inputBorderColor}
-            value={r[field]}
-            onChange={(e) => handleCustomInputChange(field, e)}
-            onBlur={(e) => handleCustomInputBlur(field, e)}
-          />
-        </Td>
-      ))}
+      <Td key="mpUtilizada" px={1} py={2} isNumeric {...dimStyle}>
+        <CustomInput
+          inputBorderColor={inputBorderColor}
+          value={r["mpUtilizada"]}
+          onChange={handleMpUtilizadaChange}
+          onBlur={handleMpUtilizadaBlur}
+        />
+      </Td>
+      <Td key="cantidad_real" px={1} py={2} isNumeric {...dimStyle}>
+        <CustomInput
+          inputBorderColor={inputBorderColor}
+          value={r["cantidad_real"]}
+          onChange={handleCantidadRealChange}
+          onBlur={handleCantidadRealBlur}
+        />
+      </Td>
       <Td px={1} py={2} textAlign="center" {...dimStyle}>
         <Text fontSize="xs" color="gray.600">
           {r.cantidad_base}

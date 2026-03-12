@@ -94,4 +94,3 @@ DetallesPedidosListMobile.propTypes = {
   handleRemoveProducto: PropTypes.func.isRequired,
 };
 
-export default DetallesPedidosListMobile;

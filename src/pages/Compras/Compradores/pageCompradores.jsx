@@ -2,7 +2,7 @@ import { Box } from "@chakra-ui/react";
 import CompradoresPage from "./pageFormCompradores";
 import SEO from "../../../components/SEO";
 
-export const CompradorPage = () => {
+const CompradorPage = () => {
   return (
     <Box p={4} display="flex" justifyContent="center" alignItems="center">
       <SEO title="Gestión de Compradores" description="Administración de compradores." />

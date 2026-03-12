@@ -58,14 +58,8 @@ const DetallesModal = ({
   const [loading, setLoading] = useState(false);
   const [loadingDetalle, setLoadingDetalle] = useState({});
   const [resetFields, setResetFields] = useState(false);
-  const [detallesLocal, setDetallesLocal] = useState(detalles);
+  const [detallesLocal, setDetallesLocal] = useState(() => detalles);
   const [editCantidad, setEditCantidad] = useState({});
-
-  const prevDetalles = useRef(detalles);
-  if (detalles !== prevDetalles.current) {
-    prevDetalles.current = detalles;
-    setDetallesLocal(detalles);
-  }
 
   const sortDetalles = (lista) => {
     return lista.slice().sort((a, b) =>

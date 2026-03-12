@@ -33,4 +33,3 @@ MaterialSelector.propTypes = {
   customStyles: PropTypes.object.isRequired,
 };
 
-export default MaterialSelector;

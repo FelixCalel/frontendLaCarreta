@@ -43,4 +43,3 @@ export const BuscadorGenerico = ({ onSearch }) => {
     );
 };
 
-export default BuscadorGenerico;

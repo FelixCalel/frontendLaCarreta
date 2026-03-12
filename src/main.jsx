@@ -1,5 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import "./global.css";
 import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
 import { App } from "./App";
 import { theme } from "../src/components/Dashboard/themes/themePY";

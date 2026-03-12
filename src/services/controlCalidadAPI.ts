@@ -149,13 +149,7 @@ export const qaApi = createApi({
 
 export const {
     useGetQaAgrupadosQuery,
-    useGetQaListQuery,
-    useGetQaByIdQuery,
-    useCreateQaMutation,
     useUpdateQaMutation,
-    useDeleteQaMutation,
-    useAutoSeedAllQaMutation,
-    useAutoSeedOneQaMutation,
     useGetMuestreoByIdQuery,
     useUpdateMuestreoMutation,
 } = qaApi;

@@ -109,4 +109,3 @@ AddProductoSection.propTypes = {
   handleAddProducto: PropTypes.func.isRequired,
 };
 
-export default AddProductoSection;

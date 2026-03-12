@@ -29,7 +29,7 @@ export const fetchasignacionMOMetadata = createAsyncThunk('asignacionMO/fetchasi
   }
 );
 
-export const createasignacionMO = createAsyncThunk('asignacionMO/createasignacionMO',
+const createasignacionMO = createAsyncThunk('asignacionMO/createasignacionMO',
   async (asignacionMOData, thunkAPI) => {
     try {
       // Agregar los campos faltantes a los datos del módulo

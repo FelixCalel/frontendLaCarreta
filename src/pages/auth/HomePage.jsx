@@ -78,33 +78,16 @@ const tips = [
 ];
 
 const HomePage = () => {
-  const [nombreUsuario, setNombreUsuario] = useState("");
-  const [rolNombre, setRolNombre] = useState("Sin rol");
-  const [roleId, setRoleId] = useState(null);
-
   const navigate = useNavigate();
-
   const {
     displayName,
     roleId: roleIdRedux,
     user,
   } = useSelector((state) => state.auth);
 
-  useEffect(() => {
-    setNombreUsuario(displayName || "Usuario");
-
-    // Prefer dynamic role name from backend user object
-    const dynamicRoleName = user?.role?.nombre;
-    const currentRoleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
-
-    if (dynamicRoleName) {
-      setRolNombre(dynamicRoleName);
-      setRoleId(currentRoleId);
-    } else if (currentRoleId && roleMap[currentRoleId]) {
-      setRolNombre(roleMap[currentRoleId]);
-      setRoleId(currentRoleId);
-    }
-  }, [displayName, roleIdRedux, user]);
+  const nombreUsuario = displayName || "Usuario";
+  const roleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
+  const rolNombre = user?.role?.nombre || (roleId && roleMap[roleId]) || "Sin rol";
 
   const pageBg = useColorModeValue("gray.50", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");

@@ -341,4 +341,3 @@ export const RecuperarClave = () => {
   );
 };
 
-export default RecuperarClave;

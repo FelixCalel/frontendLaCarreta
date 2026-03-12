@@ -136,7 +136,7 @@ export const registerUserChildren = async (data) => {
     });
 };
 
-export function isAuthenticated() {
+function isAuthenticated() {
   if (localStorage.getItem("isAuthenticated") === "true") {
     return true;
   } else {

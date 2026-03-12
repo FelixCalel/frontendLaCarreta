@@ -90,4 +90,3 @@ WarehouseOptions.propTypes = {
   greenHoverBg: PropTypes.string.isRequired,
 };
 
-export default WarehouseOptions;

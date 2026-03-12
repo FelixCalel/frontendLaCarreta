@@ -58,7 +58,7 @@ export const useTokenRefreshNotifier = () => {
   }, [toast]);
 };
 
-export const tokenRefreshEvents = {
+const tokenRefreshEvents = {
   start: () => {
     window.dispatchEvent(new CustomEvent("token-refresh-start"));
   },

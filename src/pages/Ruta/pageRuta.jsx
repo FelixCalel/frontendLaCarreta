@@ -13,5 +13,4 @@ export const PageRuta= () => {
     )
   }
 
-  export default PageRuta;
   

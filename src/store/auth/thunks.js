@@ -22,12 +22,12 @@ import { auth } from "../../middleware/firebase-config";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-export const checkingAuthentication = () => {
+const checkingAuthentication = () => {
   return async (dispatch) => {
     dispatch(checkingCredentials());
   };
 };
-export const startSignIn = ({ correo_electronico, password, paisId }) => {
+const startSignIn = ({ correo_electronico, password, paisId }) => {
   return async (dispatch) => {
     dispatch(checkingCredentials());
 
@@ -61,7 +61,7 @@ export const startSignIn = ({ correo_electronico, password, paisId }) => {
   };
 };
 
-export const startCreatingUser = (
+const startCreatingUser = (
   nombres,
   apellidos,
   empresa,
@@ -148,7 +148,7 @@ export const startCreatingUserChildren = (
   };
 };
 
-export const obtenerDatosLogeado = () => {
+const obtenerDatosLogeado = () => {
   const data = JSON.parse(localStorage.getItem("userData"));
 
   if (!data) {

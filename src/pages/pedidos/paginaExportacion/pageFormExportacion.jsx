@@ -205,10 +205,11 @@ const AprobadosPage = () => {
       if (successfulPedidos.length > 0) {
         const pedidosConDetalles =
           await cargarDetallesPedidos(successfulPedidos);
-        
-        await generarYDescargarExcelFormato2(pedidosConDetalles);
 
-        await actualizarEstadoPedidosExportados(successfulPedidos);
+        await Promise.all([
+          generarYDescargarExcelFormato2(pedidosConDetalles),
+          actualizarEstadoPedidosExportados(successfulPedidos),
+        ]);
         dispatch(removePedidos(successfulIds));
 
         toast({
@@ -425,6 +426,7 @@ const AprobadosPage = () => {
       />
 
       <DetallesModal
+        key={selectedPedido?.id || "detalles-modal"}
         isOpen={isOpen}
         onClose={onClose}
         detalles={detallesPedido}

@@ -40,15 +40,14 @@ const EntrantesPage = () => {
   const location = useLocation();
   const toast = useToast();
   const { query } = useSearch();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPedido, setSelectedPedido] = useState(null);
-  const [detallesPedido, setDetallesPedido] = useState([]);
+  const { roleId: roleIdRedux, uid } = useSelector((state) => state.auth || {});
+  const roleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
+  const usuarioId = uid ? parseInt(uid, 10) : null;
+
   const [selectedPedidos, setSelectedPedidos] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
-  const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
-  const roleId = parseInt(localStorage.getItem("roleId"), 10);
 
   const {
     isOpen: isCancelOpen,
@@ -194,12 +193,20 @@ const EntrantesPage = () => {
     }
   }, [highlightedPedidoId, pedidosEntrantes]);
 
-  const handleClearHighlight = useCallback(() => {
-    setHighlightedPedidoId(null);
-  }, []);
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    selectedPedido: null,
+    detalles: [],
+  });
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+
 
   const handleVerDetalles = async (pedido) => {
-    setSelectedPedido(pedido);
+    setModalState(prev => ({ ...prev, selectedPedido: pedido }));
     try {
       const detalles = await dispatch(
         getDetalleOrdenByPedidoId(pedido.id),
@@ -209,8 +216,11 @@ const EntrantesPage = () => {
           sensitivity: "base",
         }),
       );
-      setDetallesPedido(detallesOrdenados);
-      setIsModalOpen(true);
+      setModalState(prev => ({
+        ...prev,
+        detalles: detallesOrdenados,
+        isOpen: true
+      }));
     } catch (err) {
       toast({
         title: "Error al cargar detalles",
@@ -223,13 +233,11 @@ const EntrantesPage = () => {
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedPedido(null);
-    setDetallesPedido([]);
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
+    setModalState({
+      isOpen: false,
+      selectedPedido: null,
+      detalles: [],
+    });
   };
 
   const handleBulkApproveClick = () => {
@@ -470,10 +478,11 @@ const EntrantesPage = () => {
       )}
 
       <DetallesModal
-        isOpen={isModalOpen}
+        key={modalState.selectedPedido?.id || "detalles-modal"}
+        isOpen={modalState.isOpen}
         onClose={handleCloseModal}
-        detalles={detallesPedido}
-        pedido={selectedPedido}
+        detalles={modalState.detalles}
+        pedido={modalState.selectedPedido}
       />
 
       <CancelOrdersModal

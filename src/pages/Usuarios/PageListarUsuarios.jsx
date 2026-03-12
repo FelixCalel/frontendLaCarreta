@@ -115,4 +115,3 @@ export const PageListarUsuarios = () => {
   );
 };
 
-export default PageListarUsuarios;

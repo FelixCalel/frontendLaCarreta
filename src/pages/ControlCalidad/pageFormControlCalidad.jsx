@@ -237,6 +237,7 @@ const ControlCalidadPage = () => {
         onEditar={handleEditar}
       />
       <DetallesModal
+        key={selectedCompra?.id || "detalles-modal"}
         isOpen={isOpen}
         onClose={onClose}
         pedido={selectedCompra}

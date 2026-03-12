@@ -181,7 +181,7 @@ export const getPedidoModeloByUsuarioId = createAsyncThunk(
   }
 );
 
-export const actualizarFechaOrden = createAsyncThunk(
+const actualizarFechaOrden = createAsyncThunk(
   "detalleOrden/actualizarFechaOrden",
   async ({ pedidoId, fechaOrden, comentario }) => {
     try {

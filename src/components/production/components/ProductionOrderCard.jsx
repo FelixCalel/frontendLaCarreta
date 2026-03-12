@@ -113,4 +113,3 @@ ProductionOrderCard.propTypes = {
   cardHoverShadow: PropTypes.string.isRequired,
 };
 
-export default ProductionOrderCard;

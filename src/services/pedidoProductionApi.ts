@@ -19,17 +19,18 @@ import {
 } from "../models/pedidoProduction";
 import { parseNumericFields } from "../utils/data-parser";
 
-export interface ProdAlmacen {
+// Internal types (not exported - only used within this file)
+interface ProdAlmacen {
   id: number | string;
   nombre: string;
 }
 
-export interface UnidadMedida {
+interface UnidadMedida {
   id: number;
   unidad: string;
 }
 
-export interface MotivoSalida {
+interface MotivoSalida {
   id: number;
   nombre: string;
   descripcion?: string;
@@ -451,9 +452,6 @@ export const pedidoProduccionApi = createApi({
 });
 
 export const {
-  useGetPedidoProduccionMetadataQuery,
-  useGetAllPedidosProduccionQuery,
-  useGetPedidoProduccionByIdQuery,
   useGetDetallesYProduccionQuery,
   useUpdatePedidoProduccionMutation,
   useGetPedidosAgrupadosQuery,
@@ -464,8 +462,6 @@ export const {
   useGetRecetaByPedidoQuery,
   useUpdateRecetaLineaMutation,
   useProcesarEstado5Mutation,
-  useGetRechazosQuery,
-  useGetRechazoByIdQuery,
   useCreateRechazoMutation,
   useUpdateRechazoMutation,
   useGetRechazoByPedidoProduccionIdQuery,

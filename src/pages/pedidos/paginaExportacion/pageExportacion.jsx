@@ -12,4 +12,3 @@ export const PagePedidoAprobados = () => {
   );
 };
 
-export default PagePedidoAprobados;
