@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   Table,
   Thead,
@@ -8,13 +7,11 @@ import {
   Td,
   Input,
   Button,
-  useToast,
   Stack,
   Text,
   Box,
   Flex,
   Heading,
-  useDisclosure,
   IconButton,
   Switch,
   useColorModeValue,
@@ -23,158 +20,23 @@ import {
 import { FiUserPlus, FiSearch } from "react-icons/fi";
 import RolSelector from "./componentes/RolSelector";
 import AsignarRutasModal from "./componentes/AsignarRutasModal";
-import { useDispatch, useSelector } from "react-redux";
-import { setRutas } from "../../store/auth/authSlice";
-import { tablaPedidos } from "../../store/Pedidos/thunks";
 import Pagination from "../../components/pagination";
-import {
-  fetchRoles,
-  toggleUserStatus,
-  assignUserRoutes,
-} from "../../store/usuarios/thunks";
-import { fetchUsuarios } from "../../store/usuarios/usuariosSlice";
-import { tablaTienda } from "../../store/Tienda/thunks";
-import { tablaRuta } from "../../store/Ruta/thunks";
+import { useUsuariosTable } from "./hooks/useUsuariosTable";
 
 export const TablaBusuarios = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const dispatch = useDispatch();
-  const [allRoles, setAllRoles] = useState([]);
-  const toast = useToast();
-  const roleIdLogueado = localStorage.getItem("roleId");
-  const [rutas, setRutasLocal] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const [isAssigning, setIsAssigning] = useState(false);
-  const { items: usuarios, status } = useSelector((state) => state.usuarios);
-  const tiendas = useSelector((state) => state.tiendas.tiendas);
-  const rutasData = useSelector((state) => state.rutas.data);
-
-  useEffect(() => {
-    const usuarioId = localStorage.getItem("usuarioId");
-    dispatch(fetchUsuarios({ id: usuarioId }));
-    dispatch(tablaTienda());
-    dispatch(tablaRuta());
-
-    const getRoles = async () => {
-      try {
-        const resultAction = await dispatch(fetchRoles());
-        if (fetchRoles.fulfilled.match(resultAction)) {
-          setAllRoles(resultAction.payload);
-        }
-      } catch (error) {
-        console.error("Error fetching roles:", error);
-      }
-    };
-    getRoles();
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (rutasData) {
-      setRutasLocal(rutasData);
-    }
-  }, [rutasData]);
-
-  const usuariosFiltrados = (Array.isArray(usuarios) ? usuarios : [])
-    .filter((u) => {
-      const term = searchTerm.trim().toLowerCase();
-      if (!term) return true;
-
-      const nombre = (u.nombre ?? "").toLowerCase();
-      const apellido = (u.apellido ?? "").toLowerCase();
-      const correo = (u.correo ?? "").toLowerCase();
-      const nombreCompleto = `${nombre} ${apellido}`.trim();
-
-      return (
-        nombre.includes(term) ||
-        apellido.includes(term) ||
-        nombreCompleto.includes(term) ||
-        correo.includes(term)
-      );
-    })
-    .sort((a, b) => {
-      const nombreA = (a.nombre ?? "").toLowerCase();
-      const nombreB = (b.nombre ?? "").toLowerCase();
-      return nombreA.localeCompare(nombreB);
-    });
-
-  const indexOfLast = currentPage * itemsPerPage;
-  const indexOfFirst = indexOfLast - itemsPerPage;
-  const usuariosPagina = usuariosFiltrados.slice(indexOfFirst, indexOfLast);
-
-  const toggleUsuarioEstado = async (usuarioId, estaActivo) => {
-    try {
-      const resultAction = await dispatch(
-        toggleUserStatus({ usuarioId, estaActivo })
-      );
-
-      if (toggleUserStatus.fulfilled.match(resultAction)) {
-        toast({
-          title: `Usuario ${
-            !estaActivo ? "activado" : "desactivado"
-          } correctamente`,
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        dispatch(fetchUsuarios({ id: localStorage.getItem("usuarioId") }));
-      } else {
-        toast({
-          title: "Error al actualizar el estado",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      console.error("Error al actualizar el estado del usuario:", error);
-      toast({
-        title: "Error al actualizar el estado",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const handleAssignRutas = async (usuarioId, selectedRoutes) => {
-    setIsAssigning(true);
-    try {
-      const resultAction = await dispatch(
-        assignUserRoutes({ usuarioId, selectedRoutes })
-      );
-
-      if (assignUserRoutes.fulfilled.match(resultAction)) {
-        toast({
-          title: "Rutas asignadas correctamente",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        dispatch(fetchUsuarios({ id: localStorage.getItem("usuarioId") }));
-        onClose();
-      } else {
-        toast({
-          title: "Error al asignar rutas",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      console.error("Error al asignar rutas:", error);
-      toast({
-        title: "Error al asignar rutas",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsAssigning(false);
-    }
-  };
+  const {
+    searchTerm, setSearchTerm,
+    isOpen, onOpen, onClose,
+    allRoles, rutasLocal: rutas,
+    currentPage, setCurrentPage,
+    isAssigning, status,
+    usuariosPagina,
+    roleIdLogueado,
+    toggleUsuarioEstado, handleAssignRutas,
+    setSelectedUser, selectedUser,
+    usuariosFiltrados,
+    itemsPerPage
+  } = useUsuariosTable();
 
   const handleOpenAssignRutas = (usuario) => {
     setSelectedUser(usuario);

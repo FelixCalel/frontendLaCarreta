@@ -23,6 +23,11 @@ const CHUNK_SIZE = 10;
 const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
   const deudoresAll = useSelector((state) => state.deudores.deudores || []);
   const [inputValue, setInputValue] = useState(() => initialValue);
+  const [renderItems, setRenderItems] = useState([]);
+
+  const listBg = useColorModeValue("white", "gray.800");
+  const listBorderColor = useColorModeValue("gray.200", "gray.600");
+  const itemHoverBg = useColorModeValue("gray.100", "gray.700");
 
   const baseItems = useMemo(() => {
     const term = inputValue.trim().toLowerCase();

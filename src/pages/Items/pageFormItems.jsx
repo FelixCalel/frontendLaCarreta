@@ -17,8 +17,10 @@ import {
   Badge,
   Tooltip,
   IconButton,
+  InputGroup,
+  InputLeftElement,
 } from "@chakra-ui/react";
-import { CloseIcon } from "@chakra-ui/icons";
+import { CloseIcon, SearchIcon } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
   tablaItems,
@@ -70,26 +72,35 @@ const ItemRow = memo(
                     key={deudor.id}
                   >
                     <Badge
-                      variant="solid"
-                      colorScheme="teal"
+                      variant="subtle"
+                      colorScheme="blue"
                       display="flex"
                       alignItems="center"
                       justifyContent="space-between"
-                      p={1}
-                      cursor="pointer"
+                      px={2}
+                      py={1}
+                      borderRadius="full"
+                      cursor="default"
                       maxW="300px"
-                      fontSize="sm"
+                      fontSize="xs"
+                      boxShadow="sm"
+                      border="1px solid"
+                      borderColor="blue.200"
+                      _hover={{ borderColor: "blue.400", bg: "blue.50" }}
                     >
-                      <Text isTruncated maxW="250px" fontSize="xs">
+                      <Text isTruncated maxW="220px">
                         {deudor.correlativo} - {deudor.nombre}
                       </Text>
                       <IconButton
                         aria-label="Eliminar deudor"
                         icon={<CloseIcon />}
                         size="xs"
-                        ml={0}
+                        variant="ghost"
+                        ml={1}
                         colorScheme="red"
                         onClick={() => handleRemoveDeudor(item.id, deudor.id)}
+                        borderRadius="full"
+                        _hover={{ bg: "red.100" }}
                       />
                     </Badge>
                   </Tooltip>
@@ -168,7 +179,7 @@ const PageItems = () => {
     dispatch(tablaDeudores());
   }, [dispatch]);
 
-  const paginatedData = (items || []).slice(0, itemsPerPage);
+  const paginatedData = items || [];
 
   const tableBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
@@ -240,35 +251,42 @@ const PageItems = () => {
         </Text>
         <Flex gap={4} alignItems="center">
           {status === "loading" && <Spinner size="sm" color="blue.500" />}
-          <Input
-            placeholder="Buscar por nombre o código"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            width="300px"
-            borderColor="gray.400"
-          />
+          <InputGroup width="350px">
+            <InputLeftElement pointerEvents="none">
+              <SearchIcon color="gray.400" />
+            </InputLeftElement>
+            <Input
+              placeholder="Buscar por nombre o código"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              borderColor="gray.300"
+              _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px #3182ce" }}
+              borderRadius="lg"
+            />
+          </InputGroup>
         </Flex>
       </Flex>
 
       <Table
         variant="simple"
         bg={tableBg}
-        rounded="md"
-        shadow="lg"
+        rounded="xl"
+        shadow="xl"
         border={`1px solid ${borderColor}`}
         overflowY="visible"
         overflowX="auto"
         position="relative"
+        style={{ borderCollapse: 'separate', borderSpacing: 0 }}
       >
         <Thead bg="blue.600">
           <Tr>
-            <Th color="white">ID</Th>
-            <Th color="white">Nombre</Th>
-            <Th color="white">Código</Th>
-            <Th color="white">Código Almacén</Th>
-            <Th color="white">Cantidad Disponible</Th>
-            <Th color="white">Estado</Th>
-            <Th color="white">Deudor</Th>
+            <Th color="white" py={4} borderTopLeftRadius="xl">ID</Th>
+            <Th color="white" py={4}>Nombre</Th>
+            <Th color="white" py={4}>Código</Th>
+            <Th color="white" py={4}>Código Almacén</Th>
+            <Th color="white" py={4}>Disponible</Th>
+            <Th color="white" py={4}>Estado</Th>
+            <Th color="white" py={4} borderTopRightRadius="xl">Deudor</Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -312,7 +330,7 @@ const PageItems = () => {
         currentPage={currentPage}
         totalItems={totalItems || 0}
         itemsPerPage={itemsPerPage}
-        onPageChange={(page) => setCurrentPage(page)}
+        onPageChange={(page) => setSearchState(prev => ({ ...prev, currentPage: page }))}
       />
     </Box>
   );

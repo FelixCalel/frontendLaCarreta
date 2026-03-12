@@ -35,141 +35,33 @@ import {
 } from "../../store/asignacionAM/thunks";
 import { FiltrosMasivos } from "./componentes/FiltrosMasivos";
 import { AsignacionesTablaListado } from "./componentes/AsignacionesTablaListado";
+import { AsignacionIndividual } from "./componentes/AsignacionIndividual";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
+import { useAsignaciones } from "./hooks/useAsignaciones";
+
 const AsignacionesTipoGrupo = ({ areaId }) => {
-  const dispatch = useDispatch();
-  const usuarioId = Number(localStorage.getItem("usuarioId"));
-  const toast = useToast();
-  const { asignaciones, clasificaciones } = useSelector(
-    (state) => state.AsignacionAreaMesa,
-  );
+  const {
+    state,
+    setState,
+    clasificaciones,
+    filteredAsignaciones,
+    handleInputChange,
+    handleScrollToBottom,
+    handleAsignar,
+    handleTableScroll,
+    usuarioId,
+  } = useAsignaciones(areaId);
 
-  const [productOptions, setProductOptions] = useState([]);
-  const [selectedProducto, setSelectedProducto] = useState(null);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-
-  const loadProducts = async (search = "", page = 1) => {
-    if (!hasMore && page > 1) return;
-    setIsLoadingProducts(true);
-    try {
-      const res = await axios.get(
-        `${BASE_URL}/items/todos?page=${page}&pageSize=10&nombre=${search}&codigo=${search}`,
-      );
-      const newItems = res.data.items || res.data;
-
-      const newOptions = newItems.map((item) => ({
-        label: `${item.codigo} - ${item.nombre}`,
-        value: item.id,
-      }));
-
-      if (page === 1) {
-        setProductOptions(newOptions);
-      } else {
-        setProductOptions((prev) => [...prev, ...newOptions]);
-      }
-
-      if (newItems.length < 10) setHasMore(false);
-      else setHasMore(true);
-    } catch (err) {
-      console.error("Error cargando productos paginados:", err);
-    } finally {
-      setIsLoadingProducts(false);
-    }
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadProducts(searchQuery, 1);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const handleInputChange = (newValue, actionMeta) => {
-    if (actionMeta.action === "input-change") {
-      setSearchQuery(newValue || "");
-      setCurrentPage(1);
-      setHasMore(true);
-    }
-  };
-
-  const handleScrollToBottom = () => {
-    if (!isLoadingProducts && hasMore) {
-      const nextPage = currentPage + 1;
-      setCurrentPage(nextPage);
-      loadProducts(searchQuery, nextPage);
-    }
-  };
-
-  const handleAsignar = () => {
-    if (!selectedProducto) return;
-    dispatch(
-      asignarTipoGrupoThunk({
-        id_area: areaId,
-        productoId: selectedProducto.value,
-        create_by: usuarioId,
-        state: true,
-      }),
-    ).then((res) => {
-      if (res.meta.requestStatus === "fulfilled") {
-        toast({
-          title: "Línea asignada",
-          description: "La línea fue asignada exitosamente.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-          position: "top-right",
-        });
-        setSelectedProducto(null);
-        dispatch(fetchAsignacionesThunk(areaId));
-      } else {
-        toast({
-          title: "Error al asignar",
-          description:
-            typeof res.payload === "string"
-              ? res.payload
-              : "No se pudo asignar la línea.",
-          status: "error",
-          duration: 4000,
-          isClosable: true,
-          position: "top-right",
-        });
-      }
-    });
-  };
-
-  const [visibleCount, setVisibleCount] = useState(15);
-  const [filtroTabla, setFiltroTabla] = useState("");
-
-  const handleTableScroll = (e) => {
-    const bottom =
-      e.target.scrollHeight - e.target.scrollTop - e.target.clientHeight < 50;
-    if (bottom) {
-      setVisibleCount((prev) => prev + 15);
-    }
-  };
-
-  useEffect(() => {
-    if (areaId) {
-      dispatch(fetchAsignacionesThunk(areaId));
-      dispatch(fetchClasificacionesThunk());
-    }
-  }, [dispatch, areaId]);
-
-  const filteredAsignaciones = (
-    Array.isArray(asignaciones) ? asignaciones : []
-  ).filter((a) => {
-    if (!a?.state) return false;
-    if (!filtroTabla) return true;
-    const searchLower = filtroTabla.toLowerCase();
-    const nombre = a.productoNombre?.toLowerCase() || "";
-    const codigo = a.productoCodigo?.toLowerCase() || "";
-    return nombre.includes(searchLower) || codigo.includes(searchLower);
-  });
+  const {
+    productOptions,
+    selectedProducto,
+    isLoadingProducts,
+    hasMore,
+    visibleCount,
+    filtroTabla,
+  } = state;
 
   const colorTh = useColorModeValue("white", "green.200");
   const colorThead = useColorModeValue("green.600", "gray.700");
@@ -179,7 +71,6 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
   const iconColor = useColorModeValue("blue.600", "blue.300");
   const headingColor = useColorModeValue("gray.800", "whiteAlpha.900");
   const listBg = useColorModeValue("gray.50", "whiteAlpha.50");
-  const listBorderColor = useColorModeValue("gray.300", "gray.600");
   const tagBg = useColorModeValue("white", "gray.700");
   const tagBorderColor = useColorModeValue("blue.200", "blue.800");
   const tagLabelColor = useColorModeValue("gray.700", "whiteAlpha.800");
@@ -188,10 +79,7 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
   const selectHoverBorderColor = useColorModeValue("#CBD5E0", "#718096");
   const selectFocusedOptionBg = useColorModeValue("#EBF8FF", "#2D3748");
   const selectTextColor = useColorModeValue("#2D3748", "#E2E8F0");
-  const selectPlaceholderColor = useColorModeValue(
-    "gray.400",
-    "whiteAlpha.400",
-  );
+  const selectPlaceholderColor = useColorModeValue("gray.400", "whiteAlpha.400");
   const selectMenuBg = useColorModeValue("white", "#1A202C");
   const selectMenuShadow = useColorModeValue(
     "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
@@ -249,117 +137,6 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
     }),
   };
 
-  const handleBulkAsignar = () => {
-    const activeFilters = Object.entries(selectedFilters).reduce(
-      (acc, [key, val]) => {
-        if (val) acc[key] = val.value;
-        return acc;
-      },
-      {},
-    );
-
-    if (Object.keys(activeFilters).length === 0) {
-      toast({
-        title: "Seleccione un filtro",
-        description:
-          "Debe seleccionar al menos una clasificación para la asignación masiva.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    setIsBulkLoading(true);
-    dispatch(
-      bulkAsignarThunk({
-        id_area: areaId,
-        create_by: usuarioId || 0,
-        ...activeFilters,
-      }),
-    ).then((res) => {
-      setIsBulkLoading(false);
-      if (res.meta.requestStatus === "fulfilled") {
-        toast({
-          title: "Asignación masiva completada",
-          description: res.payload.message,
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-          position: "top-right",
-        });
-        setSelectedFilters({
-          empaque: null,
-          marca: null,
-          tipo: null,
-          grupo: null,
-          subgrupo: null,
-        });
-        dispatch(fetchAsignacionesThunk(areaId));
-      }
-    });
-  };
-
-  const handleBulkDesasignar = () => {
-    const activeFilters = Object.entries(selectedFilters).reduce(
-      (acc, [key, val]) => {
-        if (val) acc[key] = val.value;
-        return acc;
-      },
-      {},
-    );
-
-    if (Object.keys(activeFilters).length === 0) {
-      toast({
-        title: "Seleccione un filtro",
-        description:
-          "Debe seleccionar al menos una clasificación para quitar masivamente.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    setIsBulkLoading(true);
-    dispatch(
-      bulkDesasignarThunk({
-        id_area: areaId,
-        update_by: usuarioId || 0,
-        ...activeFilters,
-      }),
-    ).then((res) => {
-      setIsBulkLoading(false);
-      if (res.meta.requestStatus === "fulfilled") {
-        toast({
-          title: "Quitado masivo completado",
-          description: res.payload.message,
-          status: "info",
-          duration: 3000,
-          isClosable: true,
-          position: "top-right",
-        });
-        setSelectedFilters({
-          empaque: null,
-          marca: null,
-          tipo: null,
-          grupo: null,
-          subgrupo: null,
-        });
-        dispatch(fetchAsignacionesThunk(areaId));
-      }
-    });
-  };
-
-  const handleFilterChange = (key, value) => {
-    setSelectedFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const classificationOptions = (key) => {
-    const list = clasificaciones[key] || [];
-    return list.map((item) => ({ value: item, label: item }));
-  };
-
   return (
     <Box
       mt={2}
@@ -408,18 +185,14 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
           <Heading size="md" color={headingColor} fontWeight="semibold">
             Líneas de Producción Asignadas
           </Heading>
-          <InputGroup
-            ml={{ base: 0, md: "auto" }}
-            w={{ base: "100%", md: "300px" }}
-            size="sm"
-          >
+          <InputGroup ml={{ base: 0, md: "auto" }} w={{ base: "100%", md: "300px" }} size="sm">
             <InputLeftElement pointerEvents="none">
               <Icon as={MdSearch} color="gray.400" />
             </InputLeftElement>
             <Input
               placeholder="Buscar asignación (Ejote...)"
               value={filtroTabla}
-              onChange={(e) => setFiltroTabla(e.target.value)}
+              onChange={(e) => setState({ filtroTabla: e.target.value })}
               bg={bgColor}
             />
           </InputGroup>
@@ -442,45 +215,18 @@ const AsignacionesTipoGrupo = ({ areaId }) => {
           handleTableScroll={handleTableScroll}
         />
 
-        <Flex
-          align="center"
-          gap={3}
-          wrap="wrap"
-          p={3}
-          borderWidth={1}
+        <AsignacionIndividual
+          selectedProducto={selectedProducto}
+          setSelectedProducto={(val) => setState({ selectedProducto: val })}
+          productOptions={productOptions}
+          handleInputChange={handleInputChange}
+          handleScrollToBottom={handleScrollToBottom}
+          isLoadingProducts={isLoadingProducts}
+          customSelectStyles={customSelectStyles}
+          handleAsignar={handleAsignar}
+          listBg={listBg}
           borderColor={borderColor}
-          borderRadius="lg"
-          bg={listBg}
-          mt={3}
-        >
-          <Box flex="1" minW="250px">
-            <Select
-              placeholder="Buscar línea de producción por código o nombre..."
-              value={selectedProducto}
-              onChange={setSelectedProducto}
-              options={productOptions}
-              onInputChange={handleInputChange}
-              onMenuScrollToBottom={handleScrollToBottom}
-              isLoading={isLoadingProducts}
-              isClearable
-              filterOption={null}
-              menuPlacement="top"
-              noOptionsMessage={() =>
-                isLoadingProducts ? "Buscando..." : "No se encontraron opciones"
-              }
-              styles={customSelectStyles}
-            />
-          </Box>
-          <Button
-            colorScheme="blue"
-            onClick={handleAsignar}
-            isDisabled={!selectedProducto}
-            px={8}
-            boxShadow="sm"
-          >
-            Asignar Línea
-          </Button>
-        </Flex>
+        />
       </Box>
     </Box>
   );

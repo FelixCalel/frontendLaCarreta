@@ -36,32 +36,34 @@ export const VerifyEmail = () => {
 
     const verifyCode = async () => {
       effectRan.current = true;
+      let nextState = { status: "verifying", message: "Verificando..." };
 
       try {
         const resultAction = await dispatch(verifyEmailCode(oobCode));
 
         if (verifyEmailCode.fulfilled.match(resultAction)) {
-          setState({
+          nextState = {
             status: "success",
             message: resultAction.payload.message,
-          });
+          };
 
           setTimeout(() => {
             navigate("/auth/login", { replace: true });
           }, 3000);
         } else {
-          setState({
+          nextState = {
             status: "error",
             message: resultAction.payload || "Hubo un error al verificar el correo.",
-          });
+          };
         }
       } catch (error) {
         console.error("Verification error:", error);
-        setState({
+        nextState = {
           status: "error",
           message: "Hubo un error inesperado al verificar el correo.",
-        });
+        };
       }
+      setState(nextState);
     };
 
     verifyCode();

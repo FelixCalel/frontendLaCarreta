@@ -1,11 +1,8 @@
 import PropTypes from "prop-types";
-import { Box, Stack, Tooltip, IconButton } from "@chakra-ui/react";
+import { Box, HStack, IconButton, useColorModeValue } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
-import { m } from "framer-motion";
 import ProductoSelector from "../pageFormPedidos/productoSelector";
 import CantidadInput from "../pageFormPedidos/cantidadInput";
-
-const MotionBox = m.div || m("div");
 
 export const AddProductoSection = ({
   deudorId,
@@ -16,85 +13,70 @@ export const AddProductoSection = ({
   setNewProducto,
   handleAddProducto,
 }) => {
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+
   return (
-    <Box mt={4}>
-      <MotionBox
-        p={1}
-        bg={addBoxBgColor}
-        style={{
-          boxShadow:
-            "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
-          borderWidth: "1px",
-          borderRadius: "0.375rem",
-          width: "100%",
-          maxWidth: "460px",
-          marginLeft: "auto",
-          marginRight: "auto",
-        }}
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-      >
-        <Stack
-          direction={{ base: "column", md: "row" }}
-          spacing={2}
-          width="100%"
-          align="stretch"
-        >
-          <Box w="100%">
-            <ProductoSelector
-              deudorId={Number(deudorId)}
-              onSelect={(
+    <Box
+      mt={3}
+      pt={3}
+      borderTop="1px solid"
+      borderColor={borderColor}
+      bg={addBoxBgColor}
+      borderRadius="md"
+      px={{ base: 2, md: 3 }}
+      pb={{ base: 2, md: 3 }}
+    >
+      {/* Fila única: selector flex=1, cantidad fija, botón fijo */}
+      <HStack spacing={2} align="center" w="100%">
+        {/* El Box con flex="1" hace que el selector se expanda y el
+            AutoCompleteList (posición absoluta) herede ese ancho */}
+        <Box flex="1" minW={0} position="relative">
+          <ProductoSelector
+            deudorId={Number(deudorId)}
+            onSelect={(
+              productoId,
+              nombreProducto,
+              cantidadDisponible,
+              codigo
+            ) =>
+              handleProductoChange(
                 productoId,
                 nombreProducto,
                 cantidadDisponible,
-                codigo,
-              ) =>
-                handleProductoChange(
-                  productoId,
-                  nombreProducto,
-                  cantidadDisponible,
-                  codigo,
-                )
-              }
-              reset={resetFields}
-            />
-          </Box>
-          <Box
-            display="flex"
-            alignItems="center"
-            gap={1}
-            justifyContent="flex-end"
-            w={{ base: "100%", md: "auto" }}
-            mt={{ base: 1, md: 0 }}
-          >
-            <CantidadInput
-              value={newProducto.cantidad}
-              onChange={(e) =>
-                setNewProducto({
-                  ...newProducto,
-                  cantidad:
-                    e.target.value === "" ? "" : parseFloat(e.target.value),
-                })
-              }
-              placeholder="0"
-              size="sm"
-              width="60px"
-              maxWidth="60px"
-              style={{ margin: 0, padding: "2px", fontSize: "0.95rem" }}
-            />
-            <Tooltip label="Agregar producto" hasArrow>
-              <IconButton
-                icon={<AddIcon />}
-                colorScheme="teal"
-                onClick={handleAddProducto}
-                size="sm"
-                style={{ margin: 0, padding: "2px" }}
-              />
-            </Tooltip>
-          </Box>
-        </Stack>
-      </MotionBox>
+                codigo
+              )
+            }
+            reset={resetFields}
+          />
+        </Box>
+
+        <CantidadInput
+          value={newProducto.cantidad}
+          onChange={(event) =>
+            setNewProducto({
+              ...newProducto,
+              cantidad:
+                event.target.value === ""
+                  ? ""
+                  : Number.parseFloat(event.target.value),
+            })
+          }
+          placeholder="0"
+          size="sm"
+          width="68px"
+          maxWidth="68px"
+          flexShrink={0}
+        />
+
+        <IconButton
+          aria-label="Agregar producto"
+          icon={<AddIcon />}
+          colorScheme="teal"
+          size="sm"
+          flexShrink={0}
+          onClick={handleAddProducto}
+        />
+      </HStack>
     </Box>
   );
 };
@@ -108,4 +90,3 @@ AddProductoSection.propTypes = {
   setNewProducto: PropTypes.func.isRequired,
   handleAddProducto: PropTypes.func.isRequired,
 };
-

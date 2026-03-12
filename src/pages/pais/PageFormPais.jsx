@@ -22,6 +22,7 @@ import {
   useColorModeValue,
   Flex,
   useBreakpointValue,
+  useToast,
 } from "@chakra-ui/react";
 import { EditIcon } from "@chakra-ui/icons";
 import { format } from "date-fns";
@@ -44,6 +45,8 @@ const PageFormPais = () => {
     nombre: "",
     dialCode: "",
   });
+
+  const toast = useToast();
 
   useEffect(() => {
     if (status === "idle") {
@@ -71,9 +74,25 @@ const PageFormPais = () => {
   };
 
   const handleDelete = (id) => {
-    dispatch(deletePais(id)).then(() => {
-      dispatch(tablaPais());
-    });
+    dispatch(deletePais(id)).unwrap()
+      .then(() => {
+        toast({
+          title: "País eliminado",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        dispatch(tablaPais());
+      })
+      .catch((err) => {
+        toast({
+          title: "Error al eliminar",
+          description: err,
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      });
   };
 
   const handleToggleStatus = (id, estaActivo) => {

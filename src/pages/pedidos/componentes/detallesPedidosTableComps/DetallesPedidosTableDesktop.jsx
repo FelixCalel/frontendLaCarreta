@@ -1,3 +1,4 @@
+import { useState } from "react";
 import PropTypes from "prop-types";
 import {
   Table,
@@ -6,100 +7,99 @@ import {
   Tr,
   Th,
   Td,
-  Tooltip,
   IconButton,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import CantidadInput from "../pageFormPedidos/cantidadInput";
 
 export const DetallesPedidosTableDesktop = ({
-  productos,
-  getUniqueKey,
-  setProductos,
-  handleCantidadChange,
-  handleRemoveProducto,
+  detalles = [],
+  onUpdateCantidad = () => {},
+  onDelete = () => {},
 }) => {
+  const [cantidadesEditadas, setCantidadesEditadas] = useState({});
+  const productos = Array.isArray(detalles) ? detalles : [];
+  const thStyle = {
+    fontSize: "0.72rem",
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    padding: "4px 8px",
+  };
+  const tdStyle = { padding: "3px 8px", fontSize: "0.83rem" };
+  const headerBg = useColorModeValue("gray.50", "gray.700");
+
+  const getUniqueKey = (producto, index) =>
+    producto?.detallePedidoId ??
+    producto?.id ??
+    `${producto?.productoId ?? "p"}-${index}`;
+
   return (
-    <Table variant="simple">
-      <Thead>
+    <Table variant="simple" size="sm">
+      <Thead bg={headerBg}>
         <Tr>
-          <Th>Código</Th>
-          <Th>Producto</Th>
-          <Th>Cantidad Máxima</Th>
-          <Th>Cantidad</Th>
-          <Th>Acciones</Th>
+          <Th style={thStyle}>Código</Th>
+          <Th style={thStyle}>Producto</Th>
+          <Th style={{ ...thStyle, textAlign: "right" }}>Cant. Máx.</Th>
+          <Th style={{ ...thStyle, textAlign: "center" }}>Cantidad</Th>
+          <Th style={{ ...thStyle, textAlign: "center" }}>Acción</Th>
         </Tr>
       </Thead>
       <Tbody>
-        {productos.map((producto) => (
-          <Tr
-            key={getUniqueKey(producto)}
-            style={{ padding: "0px", height: "10px" }}
-          >
-            <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
-              {producto.codigo || "Sin código"}
-            </Td>
-            <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
-              {producto.nombreProducto}
-            </Td>
-            <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
-              {producto.cantidadDisponible}
-            </Td>
-            <Td style={{ padding: "2px 4px", fontSize: "0.85rem" }}>
-              <CantidadInput
-                value={producto.cantidad}
-                onChange={(e) =>
-                  setProductos((prevProductos) =>
-                    prevProductos.map((prod) =>
-                      prod.detallePedidoId === producto.detallePedidoId
-                        ? {
-                            ...prod,
-                            cantidad: parseFloat(e.target.value) || 0,
-                          }
-                        : prod,
-                    ),
-                  )
-                }
-                onBlur={() => {
-                  handleCantidadChange(
-                    producto.detallePedidoId,
-                    producto.cantidad,
-                  );
-                }}
-                placeholder="0"
-                size="sm"
-                width="50px"
-                maxWidth="50px"
-                style={{
-                  margin: "0",
-                  padding: "1px",
-                  fontSize: "0.85rem",
-                }}
-              />
-            </Td>
-            <Td style={{ padding: "2px 4px" }}>
-              <Tooltip label="Eliminar producto" hasArrow>
+        {productos.map((producto, index) => {
+          const productoKey = getUniqueKey(producto, index);
+          const cantidadActual =
+            cantidadesEditadas[productoKey] ?? producto?.cantidad ?? 0;
+
+          return (
+            <Tr key={productoKey}>
+              <Td style={tdStyle}>{producto?.codigo || "—"}</Td>
+              <Td style={tdStyle}>{producto?.nombreProducto}</Td>
+              <Td style={{ ...tdStyle, textAlign: "right" }}>
+                {producto?.cantidadDisponible ?? 0}
+              </Td>
+              <Td style={{ ...tdStyle, textAlign: "center" }}>
+                <CantidadInput
+                  value={cantidadActual}
+                  onChange={(e) => {
+                    const v = Number.parseFloat(e.target.value) || 0;
+                    setCantidadesEditadas((prev) => ({
+                      ...prev,
+                      [productoKey]: v,
+                    }));
+                  }}
+                  onBlur={() =>
+                    onUpdateCantidad(
+                      producto,
+                      Number.parseFloat(cantidadActual) || 0
+                    )
+                  }
+                  placeholder="0"
+                  size="sm"
+                  width="56px"
+                  maxWidth="56px"
+                />
+              </Td>
+              <Td style={{ ...tdStyle, textAlign: "center" }}>
                 <IconButton
+                  aria-label="Eliminar"
                   icon={<DeleteIcon />}
                   colorScheme="red"
-                  onClick={() => handleRemoveProducto(producto.detallePedidoId)}
+                  variant="ghost"
                   size="xs"
-                  style={{ margin: "0", padding: "0" }}
+                  onClick={() => onDelete(producto)}
                 />
-              </Tooltip>
-            </Td>
-          </Tr>
-        ))}
+              </Td>
+            </Tr>
+          );
+        })}
       </Tbody>
     </Table>
   );
 };
 
 DetallesPedidosTableDesktop.propTypes = {
-  productos: PropTypes.array.isRequired,
-  getUniqueKey: PropTypes.func.isRequired,
-  setProductos: PropTypes.func.isRequired,
-  handleCantidadChange: PropTypes.func.isRequired,
-  handleRemoveProducto: PropTypes.func.isRequired,
+  detalles: PropTypes.array,
+  onUpdateCantidad: PropTypes.func,
+  onDelete: PropTypes.func,
 };
-

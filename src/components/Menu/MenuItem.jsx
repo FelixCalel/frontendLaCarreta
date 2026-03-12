@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
 import {
   Box,
@@ -56,7 +56,10 @@ const MenuItem = ({
     }
   };
 
-  useEffect(() => {
+  const [prevPath, setPrevPath] = useState(location.pathname);
+
+  if (location.pathname !== prevPath) {
+    setPrevPath(location.pathname);
     if (hasChildren) {
       const childActive = item.opciones?.some(
         (sub) => location.pathname === sub.ruta
@@ -68,14 +71,7 @@ const MenuItem = ({
         }));
       }
     }
-  }, [
-    location.pathname,
-    hasChildren,
-    item.opciones,
-    item.nombre,
-    isOpen,
-    setOpenMenus,
-  ]);
+  }
 
   const menuContent = (
     <Flex

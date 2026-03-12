@@ -14,7 +14,7 @@ import { FaSyncAlt } from "react-icons/fa";
 import { m } from "framer-motion";
 import BotonSincronizarReceta from "../../../components/empresa/BotonSincronizarReceta";
 
-const MotionBox = m.div || m("div");
+const MotionBox = m.create ? m.create("div") : (m.div || m("div"));
 
 export const EmpresaCard = ({
   empresa,

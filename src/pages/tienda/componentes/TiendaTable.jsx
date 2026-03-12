@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React from "react";
 import {
   Table,
   Thead,
@@ -26,8 +26,10 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, SearchIcon } from "@chakra-ui/icons";
-import { format } from "date-fns";
+
 import Pagination from "../../../components/pagination";
+
+import { useTiendaTable } from "../hooks/useTiendaTable";
 
 const TiendaTable = ({
   data,
@@ -36,83 +38,29 @@ const TiendaTable = ({
   onToggleStatus,
   isToggling,
 }) => {
-  const [filtroCiudad, setFiltroCiudad] = useState("");
-  const [filtroRuta, setFiltroRuta] = useState("");
-  const [filtroZona, setFiltroZona] = useState("");
-  const [filtroNombre, setFiltroNombre] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const [prevFiltros, setPrevFiltros] = useState({
+  const {
     filtroCiudad,
+    setFiltroCiudad,
     filtroRuta,
+    setFiltroRuta,
     filtroZona,
+    setFiltroZona,
     filtroNombre,
-  });
-  if (
-    filtroCiudad !== prevFiltros.filtroCiudad ||
-    filtroRuta !== prevFiltros.filtroRuta ||
-    filtroZona !== prevFiltros.filtroZona ||
-    filtroNombre !== prevFiltros.filtroNombre
-  ) {
-    setPrevFiltros({ filtroCiudad, filtroRuta, filtroZona, filtroNombre });
-    setCurrentPage(1);
-  }
-
-  const formatDate = (dateString) => {
-    try {
-      return dateString
-        ? format(new Date(dateString), "dd-MM-yyyy HH:mm")
-        : "-";
-    } catch (error) {
-      return "-";
-    }
-  };
-
-  const filteredData = data
-    .filter((tienda) => {
-      return (
-        (filtroCiudad ? tienda.nombreCiudad === filtroCiudad : true) &&
-        (filtroRuta ? tienda.nombreRuta === filtroRuta : true) &&
-        (filtroZona
-          ? tienda.zona?.toLowerCase().includes(filtroZona.toLowerCase())
-          : true) &&
-        (filtroNombre
-          ? tienda.nombre?.toLowerCase().includes(filtroNombre.toLowerCase())
-          : true)
-      );
-    })
-    .sort((a, b) => {
-      const rutaA = a.nombreRuta || "";
-      const rutaB = b.nombreRuta || "";
-      const numA = parseInt(rutaA.replace(/\D/g, "")) || 0;
-      const numB = parseInt(rutaB.replace(/\D/g, "")) || 0;
-      return numA - numB || rutaA.localeCompare(rutaB);
-    });
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
+    setFiltroNombre,
+    currentPage,
+    itemsPerPage,
+    filteredData,
+    currentItems,
+    handlePageChange,
+    ciudades,
+    rutas,
+  } = useTiendaTable({ data });
 
   const cardBg = useColorModeValue("white", "gray.800");
   const theadBg = useColorModeValue("gray.50", "gray.700");
   const hoverBg = useColorModeValue("gray.50", "gray.700");
   const textColor = useColorModeValue("gray.800", "white");
   const subTextColor = useColorModeValue("gray.600", "gray.400");
-  const ciudades = Array.from(new Set(data.map((t) => t.nombreCiudad))).filter(
-    Boolean,
-  );
-  const rutas = Array.from(new Set(data.map((t) => t.nombreRuta)))
-    .filter(Boolean)
-    .sort((a, b) => {
-      const numA = parseInt(a.replace(/\D/g, "")) || 0;
-      const numB = parseInt(b.replace(/\D/g, "")) || 0;
-      return numA - numB || a.localeCompare(b);
-    });
 
   return (
     <Card bg={cardBg} boxShadow="lg" borderRadius="xl" overflow="hidden" mt={0}>

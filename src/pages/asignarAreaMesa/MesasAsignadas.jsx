@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useRef } from "react";
 import PropTypes from "prop-types";
 import {
   Box,
@@ -45,13 +45,17 @@ const MesasAsignadas = ({ areaId }) => {
   const [mesaSeleccionada, setMesaSeleccionada] = useState(null);
   const [comentario, setComentario] = useState("");
 
-  useEffect(() => {
+  const prevAreaIdRef = useRef(areaId);
+
+  if (areaId !== prevAreaIdRef.current) {
+    prevAreaIdRef.current = areaId;
     if (areaId) {
       dispatch(fetchMesasAsignadasThunk(areaId));
       dispatch(fetchMesasActivasThunk());
       dispatch(fetchMesasDisponiblesThunk());
     }
-  }, [dispatch, areaId]);
+  }
+
 
   const getNombreMesa = (mesaId) => {
     const mesa = (Array.isArray(mesasActivas) ? mesasActivas : []).find(

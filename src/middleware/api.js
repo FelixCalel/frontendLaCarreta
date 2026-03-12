@@ -1,62 +1,49 @@
 import axios from "axios";
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-export async function registerUser(payload) {
+export const registerUser = async (userData) => {
   try {
-    const { data } = await axios.post(`${BASE_URL}/usuarios/registro`, payload);
-    return { ok: true, usuario: data.usuario };
-  } catch (err) {
+    const response = await axios.post(`${BASE_URL}/usuarios/registro`, userData);
+    return { ok: true, data: response.data };
+  } catch (error) {
     return {
       ok: false,
-      errorMessage:
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        "Error al registrar el usuario",
+      errorMessage: error.response?.data?.message || error.message || "Error al registrar usuario",
     };
   }
-}
+};
 
-export async function sendSMSCode(to, captchaToken) {
+export const sendSMSCode = async (phone, captchaToken) => {
   try {
-    await axios.post(`${BASE_URL}/sms/send`, { to, captchaToken });
-    return { ok: true };
-  } catch (err) {
+    const response = await axios.post(`${BASE_URL}/sms/send`, {
+      to: phone,
+      captchaToken,
+    });
+    return { ok: true, data: response.data };
+  } catch (error) {
     return {
       ok: false,
-      errorMessage:
-        err.response?.data?.message ||
-        "No se pudo enviar el SMS (verifica el número o tu cuenta Twilio)",
+      errorMessage: error.response?.data?.message || error.message || "Error al enviar SMS",
     };
   }
-}
+};
 
-async function verifySMSCode(to, code) {
+export const verifyRegistrationPhone = async (phone, code) => {
   try {
-    await axios.post(`${BASE_URL}/sms/verify`, { to, code });
-    return { ok: true };
-  } catch (err) {
-    return {
-      ok: false,
-      errorMessage:
-        err.response?.data?.message ||
-        "Código incorrecto o expirado. Intenta de nuevo.",
-    };
-  }
-}
-
-export async function verifyRegistrationPhone(to, code) {
-  try {
-    await axios.post(`${BASE_URL}/usuarios/verify-phone`, {
-      telefono: to,
+    const response = await axios.post(`${BASE_URL}/sms/verify`, {
+      to: phone,
       code,
     });
-    return { ok: true };
-  } catch (err) {
+    if (response.data.valid) {
+      return { ok: true };
+    } else {
+      return { ok: false, errorMessage: response.data.message || "Código inválido" };
+    }
+  } catch (error) {
     return {
       ok: false,
-      errorMessage:
-        err.response?.data?.message ||
-        "Código incorrecto o expirado. Intenta de nuevo.",
+      errorMessage: error.response?.data?.message || error.message || "Error al verificar código",
     };
   }
-}
+};

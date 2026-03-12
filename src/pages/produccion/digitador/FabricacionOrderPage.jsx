@@ -1,4 +1,3 @@
-import { useState, useMemo } from "react";
 import {
   Box,
   Center,
@@ -20,101 +19,32 @@ import {
   ModalCloseButton,
   Textarea,
   Checkbox,
-  useDisclosure,
-  useToast,
-  useColorModeValue,
   Input,
   Heading,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
-import {
-  useGetPedidosAgrupadosQuery,
-  useAvanzarEtapaMutation,
-  useAvanzarMultiEtapaDetalleMutation,
-  useGetRecetaByPedidoQuery,
-  useGetAlmacenesQuery,
-} from "../../../services/pedidoProductionApi";
 import FilterPanelFabricacion from "../../../components/production/fabricacion/FilterPanelFabricacion";
 import { FabricacionRow } from "../../../components/production/fabricacion/FabricacionRow";
 
+import { useFabricacionPage } from "./hooks/useFabricacionPage";
+
 const FabricacionPage = () => {
-  const { pedidoId: raw } = useParams();
-  const pedidoId = Number(raw);
-  const navigate = useNavigate();
-  const toast = useToast();
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const {
-    data: groups = [],
-    isLoading,
-    error,
-  } = useGetPedidosAgrupadosQuery({
-    etapaId: 3,
-  });
+    pedidoId, navigate, toast,
+    term, setTerm, estado, setEstado, mesa, setMesa,
+    comment, setComment, noComment, setNoComment, dateSAP, setDateSAP,
+    isLoading, error, isSending,
+    filtered, receta, cargandoReceta,
+    isOpen, onOpen, onClose,
+    handleCargarSAP
+  } = useFabricacionPage();
 
   const headBg = useColorModeValue("gray.50", "gray.800");
   const tableBorder = useColorModeValue("gray.200", "gray.700");
   const modalBg = useColorModeValue("white", "gray.700");
-
   const tableBg = useColorModeValue("white", "gray.800");
-
-  const [avanzarEtapa, { isLoading: sendingPedido }] =
-    useAvanzarEtapaMutation();
-  const [avanzarMultiDetalle, { isLoading: sendingDetalles }] =
-    useAvanzarMultiEtapaDetalleMutation();
-
-  const group = useMemo(
-    () => groups.find((g) => g.pedidoId === pedidoId),
-    [groups, pedidoId],
-  );
-
-  const { data: receta = [], isLoading: cargandoReceta } =
-    useGetRecetaByPedidoQuery({ pedidoId });
-
-  const baseItems = useMemo(() => group?.items ?? [], [group]);
-
-  const [term, setTerm] = useState("");
-  const [estado, setEstado] = useState("");
-  const [mesa, setMesa] = useState("");
-  const [comment, setComment] = useState("");
-  const [noComment, setNoComment] = useState(false);
-  const [dateSAP, setDateSAP] = useState("");
-  const isSending = sendingPedido || sendingDetalles;
-
-  console.log({ pedidoId });
-
-  const filtered = useMemo(() => {
-    const txt = term.toLowerCase();
-
-    return baseItems
-      .filter((it) => {
-        const byText =
-          !term ||
-          it.itemCode.toLowerCase().includes(txt) ||
-          it.productoNombre.toLowerCase().includes(txt);
-
-        const byEstado =
-          !estado || (it.completo ? "Completado" : "Pendiente") === estado;
-
-        const byMesa = !mesa || String(it.id_asigArea) === mesa;
-
-        return byText && byEstado && byMesa;
-      })
-      .sort((a, b) =>
-        a.productoNombre.localeCompare(b.productoNombre, "es", {
-          sensitivity: "base",
-        }),
-      );
-  }, [baseItems, term, estado, mesa]);
-
-  if (isLoading) {
-    return (
-      <Center py={20}>
-        <Spinner size="xl" />
-      </Center>
-    );
-  }
 
   const handleOpenModal = () => {
     if (!filtered.length) {
@@ -131,66 +61,6 @@ const FabricacionPage = () => {
     setNoComment(false);
     setDateSAP("");
     onOpen();
-  };
-
-  const handleCargarSAP = async () => {
-    if (!dateSAP) {
-      toast({
-        title: "Falta fecha",
-        description: "Debe seleccionar una fecha de orden para cargar a SAP.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    const usuarioId = Number(localStorage.getItem("usuarioId") ?? 1);
-    const comentario = noComment ? null : comment.trim();
-
-    const detalleIds = filtered.map((o) => o.id_detallePedido);
-    const pedidoId = Number(filtered[0]?.pedidoId ?? 0);
-
-    const nuevaEtapaId = 4;
-
-    try {
-      if (detalleIds.length) {
-        await avanzarMultiDetalle({
-          detalleOrdenIds: detalleIds,
-          usuarioId,
-          nuevaEtapaId,
-          comentario,
-          fechaOrden: dateSAP,
-        }).unwrap();
-      }
-
-      await avanzarEtapa({
-        pedidoId,
-        usuarioId,
-        nuevaEtapaId,
-        comentario,
-        fechaOrden: dateSAP,
-      }).unwrap();
-
-      toast({
-        title: "Pedido enviado a SAP",
-        description: "Se avanzó a la etapa 3 correctamente.",
-        status: "success",
-        duration: 3500,
-        isClosable: true,
-      });
-
-      onClose();
-      navigate(-1);
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: err?.data?.error || "No se pudo cargar a SAP.",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-      });
-    }
   };
 
   if (isLoading) {

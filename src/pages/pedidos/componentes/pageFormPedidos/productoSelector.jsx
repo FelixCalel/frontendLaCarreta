@@ -1,154 +1,54 @@
-import { useEffect, useMemo, useState, useDeferredValue } from "react";
-import PropTypes from "prop-types";
 import {
   Flex,
   FormControl,
   Box,
-  Text,
-  IconButton,
   HStack,
   useColorModeValue,
+  IconButton,
+  Text,
 } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
-import { useSelector, useDispatch } from "react-redux";
 import {
   AutoComplete,
   AutoCompleteInput,
   AutoCompleteItem,
   AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
-import { tablaItems } from "../../../../store/items/thunks";
-
-const CHUNK_SIZE = 20;
+import PropTypes from "prop-types";
+import { useProductoSelector } from "./useProductoSelector";
 
 const ProductoSelector = ({ deudorId, onSelect, reset }) => {
-  const dispatch = useDispatch();
-
-  const [inputValue, setInputValue] = useState("");
-  const deferredQuery = useDeferredValue(inputValue);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [error, setError] = useState("");
-  const [renderItems, setRenderItems] = useState([]);
-  const [visibleItems, setVisibleItems] = useState([]);
-  const itemsAll = useSelector((state) => state.items.items);
+  const {
+    inputValue,
+    setInputValue,
+    selectedItem,
+    error,
+    renderItems,
+    handleSelectItem,
+    loadMoreItems,
+    handleClearInput,
+  } = useProductoSelector(deudorId, onSelect, reset);
 
   const listBg = useColorModeValue("white", "gray.800");
   const listBorderColor = useColorModeValue("gray.200", "gray.600");
   const itemHoverBg = useColorModeValue("gray.100", "gray.600");
 
-  useEffect(() => {
-    dispatch(tablaItems({ pageSize: 10000 }));
-  }, [dispatch]);
+  const handleInputChange = (event) => setInputValue(event.target.value);
 
-  const sourceItems = useMemo(() => {
-    const dId = Number(deudorId) || null;
-    if (!dId) return [];
-
-    const list = Array.isArray(itemsAll) ? itemsAll : [];
-    return list
-      .filter((it) => {
-        if (it.deudores && it.deudores.length > 0) {
-          return it.deudores.some((d) => d.id === dId);
-        }
-        const singleDeudorId = it.deuId ?? it.deudor?.id ?? null;
-        return singleDeudorId === dId;
-      })
-      .filter((it) => Boolean(it.estaActivo));
-  }, [itemsAll, deudorId]);
-
-  useEffect(() => {
-    if (sourceItems.length > 0) {
-      setVisibleItems(sourceItems.slice(0, CHUNK_SIZE));
-    } else {
-      setVisibleItems([]);
-    }
-  }, [sourceItems]);
-
-  const prevReset = React.useRef(reset);
-  const prevDeudorId = React.useRef(deudorId);
-
-  if (reset !== prevReset.current || deudorId !== prevDeudorId.current) {
-    prevReset.current = reset;
-    prevDeudorId.current = deudorId;
-    setInputValue("");
-    setSelectedItem(null);
-    setError("");
-  }
-
-  const normalizeText = (text) => {
-    return text
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  };
-
-  useEffect(() => {
-    const term = normalizeText(deferredQuery.trim());
-    if (term === "") {
-      setRenderItems(visibleItems);
-      return;
-    }
-    const matches = sourceItems.filter(
-      (it) =>
-        normalizeText(it.nombre).includes(term) ||
-        normalizeText(it.codigo).includes(term),
-    );
-    setRenderItems(matches.slice(0, 200));
-  }, [deferredQuery, sourceItems, visibleItems]);
-
-  const handleSelectItem = (item) => {
-    setInputValue(item.nombre);
-    setSelectedItem(item);
-    onSelect(item.id, item.nombre, item.cantidadDisponible, item.codigo);
-
-    setError(item.cantidadDisponible === 0 ? "Cantidad disponible: 0" : "");
-  };
-
-  const handleInputChange = (e) => setInputValue(e.target.value);
-
-  const handleClearInput = () => {
-    setInputValue("");
-    setSelectedItem(null);
-    setError("");
-  };
-
-  const handleScroll = (e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
+  const handleScroll = (event) => {
+    const { scrollTop, scrollHeight, clientHeight } = event.target;
     if (scrollTop + clientHeight >= scrollHeight - 10) {
       loadMoreItems();
     }
   };
 
-  const loadMoreItems = () => {
-    if (visibleItems.length < sourceItems.length) {
-      const newLength = Math.min(
-        visibleItems.length + CHUNK_SIZE,
-        sourceItems.length,
-      );
-      setVisibleItems(sourceItems.slice(0, newLength));
-    }
-  };
-
   const disabled = !deudorId;
-  const isMobile = window.innerWidth <= 768;
 
   return (
-    <Flex
-      pt="2"
-      justify="start"
-      align="center"
-      w="auto"
-      maxW={isMobile ? "100%" : "300px"}
-      flexDir="column"
-    >
+    <Flex w="100%" flexDir="column">
       <FormControl w="100%">
         <HStack spacing={2} w="100%" align="center" position="relative">
-          <Box
-            position="relative"
-            w={isMobile ? "260px" : "300px"}
-            minW={isMobile ? "220px" : "300px"}
-            maxW={isMobile ? "100%" : "300px"}
-          >
+          <Box position="relative" flex="1" minW={0}>
             <AutoComplete openOnFocus filter={() => true}>
               <AutoCompleteInput
                 variant="outline"
@@ -159,35 +59,23 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
                 }
                 value={inputValue}
                 onChange={handleInputChange}
-                size={isMobile ? "md" : "lg"}
-                w={isMobile ? "260px" : "300px"}
-                fontSize={isMobile ? "1.1rem" : "1.15rem"}
-                height={isMobile ? "44px" : "48px"}
-                position="relative"
+                size={{ base: "md", md: "lg" }}
+                w="100%"
                 isDisabled={disabled}
                 spellCheck={false}
                 autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                translate="no"
               />
+
               <AutoCompleteList
                 onScroll={handleScroll}
-                position="relative"
-                top="100%"
-                left="0"
-                zIndex="popover"
                 bg={listBg}
                 borderColor={listBorderColor}
                 borderWidth="1px"
                 borderRadius="md"
                 boxShadow="md"
-                minW={isMobile ? "220px" : "300px"}
-                maxW={isMobile ? "100%" : "300px"}
                 maxHeight="50vh"
                 overflowY="auto"
-                overflowX="hidden"
-                w={isMobile ? "260px" : "300px"}
+                w={{ base: "calc(100% + 155px)", md: "100%" }}
               >
                 {renderItems.length === 0 ? (
                   <Box px={3} py={2}>
@@ -198,26 +86,33 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
                     </Text>
                   </Box>
                 ) : (
-                  renderItems.map((item) => (
-                    <AutoCompleteItem
-                      key={`option-${item.id}`}
-                      value={`${item.codigo} - ${item.nombre}`}
-                      textTransform="capitalize"
-                      onClick={() => handleSelectItem(item)}
-                      _hover={{ bg: itemHoverBg }}
-                      sx={{ whiteSpace: "normal", wordBreak: "break-word" }}
-                    >
-                      <Text fontSize="sm">{item.nombre}</Text>
-                    </AutoCompleteItem>
-                  ))
+                  renderItems.map((item) => {
+                    const itemId = item?.id ?? item?.productoId;
+                    const itemNombre =
+                      item?.nombre ?? item?.nombreProducto ?? "";
+                    const itemCodigo = item?.codigo ?? "";
+
+                    return (
+                      <AutoCompleteItem
+                        key={`option-${itemId}`}
+                        value={`${itemCodigo} - ${itemNombre}`}
+                        onClick={() => handleSelectItem(item)}
+                        _hover={{ bg: itemHoverBg }}
+                        sx={{ whiteSpace: "normal", wordBreak: "break-word" }}
+                      >
+                        <Text fontSize="sm">{itemNombre}</Text>
+                      </AutoCompleteItem>
+                    );
+                  })
                 )}
               </AutoCompleteList>
             </AutoComplete>
           </Box>
+
           <IconButton
             aria-label="Limpiar campo"
             icon={<CloseIcon />}
-            size={isMobile ? "md" : "sm"}
+            size={{ base: "sm", md: "sm" }}
             onClick={handleClearInput}
             colorScheme="red"
             variant="outline"
@@ -226,9 +121,11 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
         </HStack>
       </FormControl>
 
-      {selectedItem && (
-        <FormControl mt="4">
-          {error && <Text color="red.500">{error}</Text>}
+      {selectedItem && error && (
+        <FormControl mt="2">
+          <Text color="red.500" fontSize="sm">
+            {error}
+          </Text>
         </FormControl>
       )}
     </Flex>
@@ -236,9 +133,9 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
 };
 
 ProductoSelector.propTypes = {
-  deudorId: PropTypes.number.isRequired,
+  deudorId: PropTypes.number,
   onSelect: PropTypes.func.isRequired,
-  reset: PropTypes.bool.isRequired,
+  reset: PropTypes.bool,
 };
 
 export default ProductoSelector;

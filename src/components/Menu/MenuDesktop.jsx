@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Box,
   Flex,
@@ -75,6 +75,7 @@ const MenuDesktop = () => {
 
   const { uid } = useSelector((state) => state.auth);
 
+  // Cargar módulos cuando cambia el UID
   useEffect(() => {
     if (uid) {
       dispatch(fetchModulos(uid));

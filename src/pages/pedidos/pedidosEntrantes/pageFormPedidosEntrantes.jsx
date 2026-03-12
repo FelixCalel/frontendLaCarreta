@@ -35,346 +35,40 @@ import ApproveOrdersModal from "../componentes/EntrantesFormPedidos/ApproveOrder
 import { useSearch } from "../../../components/component/SearchContext";
 import { useWebSocket } from "../../../providers/WebSocketProvider";
 
+import { usePedidosEntrantes } from "./hooks/usePedidosEntrantes";
+
 const EntrantesPage = () => {
-  const dispatch = useDispatch();
-  const location = useLocation();
-  const toast = useToast();
+  const {
+    pedidosEntrantes,
+    total,
+    currentPage,
+    setCurrentPage,
+    isLoading,
+    selectedPedidos,
+    setSelectedPedidos,
+    highlightedPedidoId,
+    isCancelOpen,
+    onCancelOpen,
+    onCancelClose,
+    cancelComment,
+    setCancelComment,
+    isProcessing,
+    isApproveOpen,
+    onApproveOpen,
+    onApproveClose,
+    approveData,
+    setApproveData,
+    modalState,
+    dispatchModal,
+    handleVerDetalles,
+    handleConfirmApprove,
+    handleBulkCancel,
+  } = usePedidosEntrantes();
+
   const { query } = useSearch();
-  const { roleId: roleIdRedux, uid } = useSelector((state) => state.auth || {});
-  const roleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
-  const usuarioId = uid ? parseInt(uid, 10) : null;
-
-  const [selectedPedidos, setSelectedPedidos] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const [highlightedPedidoId, setHighlightedPedidoId] = useState(null);
-
-  const {
-    isOpen: isCancelOpen,
-    onOpen: onCancelOpen,
-    onClose: onCancelClose,
-  } = useDisclosure();
-  const [cancelComment, setCancelComment] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const {
-    isOpen: isApproveOpen,
-    onOpen: onApproveOpen,
-    onClose: onApproveClose,
-  } = useDisclosure();
-  const [approveData, setApproveData] = useState({
-    fechaOrdenDisplay: "",
-    comentarioDisplay: "",
-    comentario: "",
-  });
 
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("teal.600", "teal.200");
-  const inputBg = useColorModeValue("white", "gray.700");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const textColor = useColorModeValue("gray.800", "white");
-  const calendarFilter = useColorModeValue("none", "invert(1)");
-
-  const {
-    data: pedidosEntrantesRaw,
-    status,
-    total,
-  } = useSelector((state) => state.pedidos);
-  const tiendas = useSelector((state) => state.tiendas.data);
-  const user = useSelector((state) => state.auth.user);
-
-  const pedidosEntrantes = useMemo(() => {
-    if (!pedidosEntrantesRaw || !tiendas || !user) return [];
-
-    const rutasUsuario = user.rutas || [];
-    const rutasSet = new Set(
-      Array.isArray(rutasUsuario)
-        ? rutasUsuario.map((r) => (typeof r === "object" ? +r.id : +r))
-        : [],
-    );
-    const tiendaRutaMap = new Map(tiendas.map((t) => [t.id, +t.rutaId]));
-
-    const userId =
-      user.id || user.uid || (user.usuarioId ? parseInt(user.usuarioId) : null);
-
-    return pedidosEntrantesRaw.filter((p) => {
-      if (userId && p.usuarioId === userId) return true;
-
-      if (!rutasUsuario.length) return false;
-
-      const rutaTienda = tiendaRutaMap.get(p.tiendaId);
-      return rutasSet.has(rutaTienda);
-    });
-  }, [pedidosEntrantesRaw, tiendas, user]);
-
-  const isLoading = status === "loading";
-
-  useEffect(() => {
-    dispatch(fetchCurrentUser());
-    dispatch(tablaTienda());
-    if (usuarioId && roleId) {
-      dispatch(
-        tablaPedidos({
-          userId: usuarioId,
-          roleId: roleId,
-          status: 2,
-          page: currentPage,
-          limit: itemsPerPage,
-        }),
-      );
-    } else {
-      dispatch(
-        tablaPedidos({
-          status: 2,
-          page: currentPage,
-          limit: itemsPerPage,
-        }),
-      );
-    }
-  }, [dispatch, currentPage, usuarioId, roleId]);
-
-  const { socket } = useWebSocket();
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleSocketMessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (
-          data.type === "notification" ||
-          data.type === "on-order-status-changed"
-        ) {
-          console.log("WebSocket event received:", data.payload);
-          dispatch(
-            tablaPedidos({
-              userId: usuarioId,
-              roleId: roleId,
-              status: 2,
-              page: currentPage,
-              limit: itemsPerPage,
-            }),
-          );
-        }
-      } catch (error) {
-        console.error("Error processing WebSocket message:", error);
-      }
-    };
-
-    socket.addEventListener("message", handleSocketMessage);
-
-    return () => {
-      socket.removeEventListener("message", handleSocketMessage);
-    };
-  }, [socket, dispatch, currentPage, usuarioId, roleId]);
-
-  useEffect(() => {
-    if (location.state?.highlightedPedidoId) {
-      setHighlightedPedidoId(location.state.highlightedPedidoId);
-      window.history.replaceState({}, document.title);
-    }
-  }, [location]);
-
-  useEffect(() => {
-    if (highlightedPedidoId && pedidosEntrantes.length > 0) {
-      setTimeout(() => {
-        const element = document.getElementById(
-          `pedido-${highlightedPedidoId}`,
-        );
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }, 100);
-
-      const timer = setTimeout(() => {
-        setHighlightedPedidoId(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [highlightedPedidoId, pedidosEntrantes]);
-
-  const [modalState, setModalState] = useState({
-    isOpen: false,
-    selectedPedido: null,
-    detalles: [],
-  });
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-
-
-  const handleVerDetalles = async (pedido) => {
-    setModalState(prev => ({ ...prev, selectedPedido: pedido }));
-    try {
-      const detalles = await dispatch(
-        getDetalleOrdenByPedidoId(pedido.id),
-      ).unwrap();
-      const detallesOrdenados = detalles.slice().sort((a, b) =>
-        a.nombreProducto.localeCompare(b.nombreProducto, undefined, {
-          sensitivity: "base",
-        }),
-      );
-      setModalState(prev => ({
-        ...prev,
-        detalles: detallesOrdenados,
-        isOpen: true
-      }));
-    } catch (err) {
-      toast({
-        title: "Error al cargar detalles",
-        description: err.message,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const handleCloseModal = () => {
-    setModalState({
-      isOpen: false,
-      selectedPedido: null,
-      detalles: [],
-    });
-  };
-
-  const handleBulkApproveClick = () => {
-    if (selectedPedidos.length === 0) return;
-
-    if (selectedPedidos.length === 1) {
-      const pedido = pedidosEntrantes.find((p) => p.id === selectedPedidos[0]);
-      if (pedido) {
-        setApproveData({
-          fechaOrdenDisplay: pedido.fechaOrdenDisplay
-            ? pedido.fechaOrdenDisplay.split("T")[0]
-            : "",
-          comentarioDisplay: pedido.comentarioDisplay || "",
-          comentario: pedido.comentario || "",
-        });
-      }
-    } else {
-      setApproveData({
-        fechaOrdenDisplay: "",
-        comentarioDisplay: "",
-        comentario: "",
-      });
-    }
-    onApproveOpen();
-  };
-
-  const handleConfirmApprove = async () => {
-    setIsProcessing(true);
-    try {
-      await Promise.all(
-        selectedPedidos.map((id) => {
-          const pedido = pedidosEntrantes.find((p) => p.id === id);
-          if (!pedido) return Promise.resolve();
-
-          const fecha =
-            selectedPedidos.length === 1
-              ? approveData.fechaOrdenDisplay
-              : pedido.fechaOrdenDisplay
-                ? pedido.fechaOrdenDisplay.split("T")[0]
-                : undefined;
-          const comentarioDisplay =
-            selectedPedidos.length === 1
-              ? approveData.comentarioDisplay
-              : pedido.comentarioDisplay;
-          const comentario =
-            selectedPedidos.length === 1
-              ? approveData.comentario
-              : pedido.comentario;
-
-          return dispatch(
-            togglePedidoStatus({
-              id,
-              estadoId: 3,
-              comentarioDisplay: comentarioDisplay,
-              comentario: comentario,
-              fechaOrdenDisplay: fecha,
-            }),
-          ).unwrap();
-        }),
-      );
-      toast({ title: "Pedidos aprobados correctamente", status: "success" });
-      setSelectedPedidos([]);
-
-      dispatch(
-        tablaPedidos({
-          userId: usuarioId,
-          roleId: roleId,
-          status: 2,
-          page: currentPage,
-          limit: itemsPerPage,
-        }),
-      );
-
-      onApproveClose();
-    } catch (err) {
-      toast({
-        title: "Error al aprobar pedidos",
-        description: err.message || "Ocurrió un error",
-        status: "error",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleBulkCancel = async () => {
-    if (selectedPedidos.length === 0) return;
-    if (!cancelComment.trim()) {
-      toast({
-        title: "Debes ingresar un motivo de cancelación",
-        status: "warning",
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      await Promise.all(
-        selectedPedidos.map((id) => {
-          const pedido = pedidosEntrantes.find((p) => p.id === id);
-          return dispatch(
-            togglePedidoStatus({
-              id,
-              estadoId: 4,
-              comentario: cancelComment,
-              comentarioDisplay: pedido ? pedido.comentarioDisplay : undefined,
-              fechaOrdenDisplay:
-                pedido && pedido.fechaOrdenDisplay
-                  ? pedido.fechaOrdenDisplay.split("T")[0]
-                  : undefined,
-            }),
-          ).unwrap();
-        }),
-      );
-      toast({ title: "Pedidos cancelados correctamente", status: "info" });
-      setSelectedPedidos([]);
-      setCancelComment("");
-      onCancelClose();
-      dispatch(
-        tablaPedidos({
-          userId: usuarioId,
-          roleId: roleId,
-          status: 2,
-          page: currentPage,
-          limit: itemsPerPage,
-        }),
-      );
-    } catch (err) {
-      toast({
-        title: "Error al cancelar pedidos",
-        description: err.message || "Ocurrió un error",
-        status: "error",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const filteredPedidos = useMemo(() => {
     if (!query) return pedidosEntrantes;
@@ -395,8 +89,6 @@ const EntrantesPage = () => {
       );
     });
   }, [pedidosEntrantes, query]);
-
-  const pedidosPaginados = filteredPedidos;
 
   return (
     <Box
@@ -435,7 +127,7 @@ const EntrantesPage = () => {
           <Button
             colorScheme="green"
             isDisabled={selectedPedidos.length === 0 || isProcessing}
-            onClick={handleBulkApproveClick}
+            onClick={onApproveOpen}
             isLoading={isProcessing}
           >
             Aprobar ({selectedPedidos.length})
@@ -459,57 +151,49 @@ const EntrantesPage = () => {
       ) : (
         <>
           <PedidosTable
-            pedidosEntrantes={pedidosPaginados}
+            pedidosEntrantes={filteredPedidos}
             highlight={query}
             selectedPedidos={selectedPedidos}
             setSelectedPedidos={setSelectedPedidos}
             handleVerDetalles={handleVerDetalles}
             highlightedPedidoId={highlightedPedidoId}
-            onClearHighlight={handleClearHighlight}
+            onClearHighlight={() => {}}
           />
 
           <Pagination
             currentPage={currentPage}
             totalItems={total}
-            itemsPerPage={itemsPerPage}
-            onPageChange={handlePageChange}
+            itemsPerPage={10}
+            onPageChange={setCurrentPage}
           />
         </>
       )}
 
       <DetallesModal
-        key={modalState.selectedPedido?.id || "detalles-modal"}
         isOpen={modalState.isOpen}
-        onClose={handleCloseModal}
+        onClose={() => dispatchModal({ isOpen: false })}
+        selectedPedido={modalState.selectedPedido}
         detalles={modalState.detalles}
-        pedido={modalState.selectedPedido}
       />
 
       <CancelOrdersModal
         isOpen={isCancelOpen}
         onClose={onCancelClose}
-        selectedCount={selectedPedidos.length}
         cancelComment={cancelComment}
         setCancelComment={setCancelComment}
         handleBulkCancel={handleBulkCancel}
         isProcessing={isProcessing}
-        inputBg={inputBg}
-        borderColor={borderColor}
-        textColor={textColor}
+        selectedCount={selectedPedidos.length}
       />
 
       <ApproveOrdersModal
         isOpen={isApproveOpen}
         onClose={onApproveClose}
-        selectedCount={selectedPedidos.length}
         approveData={approveData}
         setApproveData={setApproveData}
         handleConfirmApprove={handleConfirmApprove}
         isProcessing={isProcessing}
-        inputBg={inputBg}
-        borderColor={borderColor}
-        textColor={textColor}
-        calendarFilter={calendarFilter}
+        selectedCount={selectedPedidos.length}
       />
     </Box>
   );

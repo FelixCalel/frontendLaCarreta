@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -30,16 +30,15 @@ const EncargadoModal = ({ isOpen, onClose, areaId, currentEncargado }) => {
     (state) => state.AsignacionAreaMesa,
   );
 
-  useEffect(() => {
+  const [prevProps, setPrevProps] = useState({ isOpen, currentEncargado });
+
+  if (isOpen !== prevProps.isOpen || currentEncargado !== prevProps.currentEncargado) {
+    setPrevProps({ isOpen, currentEncargado });
     if (isOpen) {
       dispatch(fetchUsuariosEncargadosThunk());
-      if (currentEncargado?.id) {
-        setSelectedUserId(currentEncargado.id.toString());
-      } else {
-        setSelectedUserId("");
-      }
+      setSelectedUserId(currentEncargado?.id ? currentEncargado.id.toString() : "");
     }
-  }, [dispatch, isOpen, currentEncargado]);
+  }
 
   const handleUpdate = async () => {
     if (!selectedUserId) return;

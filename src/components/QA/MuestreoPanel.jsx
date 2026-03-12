@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Box,
   HStack,
@@ -37,10 +37,13 @@ export default function MuestreoPanel({ selected, onSave, saving }) {
   });
   const [form, setForm] = useState(defaultState);
 
-  useEffect(() => {
+  const [prevSync, setPrevSync] = useState({ data, muestreoId });
+
+  if (data !== prevSync.data || muestreoId !== prevSync.muestreoId) {
+    setPrevSync({ data, muestreoId });
     if (data) setForm({ ...defaultState, ...data });
     else setForm(defaultState);
-  }, [data, muestreoId]);
+  }
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const panelBg = useColorModeValue("white", "gray.800");

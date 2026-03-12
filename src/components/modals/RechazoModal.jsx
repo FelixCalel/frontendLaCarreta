@@ -20,7 +20,7 @@ import {
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   useGetRechazoByPedidoProduccionIdQuery,
   useGetAlmacenesQuery,
@@ -61,7 +61,10 @@ export const RechazoModal = ({
     skip: !pedidoProduccionId,
   });
 
-  useEffect(() => {
+  const [prevSync, setPrevSync] = useState({ rechazoData, trazabilidadPadre, initialQuantity });
+
+  if (rechazoData !== prevSync.rechazoData || trazabilidadPadre !== prevSync.trazabilidadPadre || initialQuantity !== prevSync.initialQuantity) {
+    setPrevSync({ rechazoData, trazabilidadPadre, initialQuantity });
     if (rechazoData) {
       setFormData({
         fechaRechazo: rechazoData.fechaRechazo
@@ -86,8 +89,7 @@ export const RechazoModal = ({
           : {}),
       }));
     }
-  }, [rechazoData, trazabilidadPadre, initialQuantity]);
-
+  }
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);

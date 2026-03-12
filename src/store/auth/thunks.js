@@ -27,39 +27,6 @@ const checkingAuthentication = () => {
     dispatch(checkingCredentials());
   };
 };
-const startSignIn = ({ correo_electronico, password, paisId }) => {
-  return async (dispatch) => {
-    dispatch(checkingCredentials());
-
-    await singIn({ correo_electronico, password, paisId })
-      .then((result) => {
-        if (result.ok) {
-          const userData = {
-            id: result.usuario.id,
-            displayName:
-              result.usuario.nombres + " " + result.usuario.apellidos,
-            email: result.usuario.correo_electronico,
-            nombre_empresa: result.usuario.nombre_empresa,
-            paisId: result.usuario.paisId,
-          };
-
-          localStorage.setItem("userData", JSON.stringify(userData));
-          localStorage.setItem("access_token", result.token);
-          localStorage.setItem("token", result.token);
-
-          dispatch(login(userData));
-        } else {
-          localStorage.setItem("isAuthenticated", "false");
-          localStorage.setItem("userData", "");
-          dispatch(logout(result));
-        }
-      })
-      .catch((error) => {
-        const err = error.response;
-        dispatch(logout(err));
-      });
-  };
-};
 
 const startCreatingUser = (
   nombres,
@@ -169,6 +136,93 @@ const obtenerDatosLogeado = () => {
   return payload;
 };
 
+export const startLogin = createAsyncThunk(
+  "auth/startLogin",
+  async ({ identifier, contrasena, captchaToken }, { rejectWithValue, dispatch }) => {
+    try {
+      const resp = await axios.post(`${BASE_URL}/usuarios/login`, {
+        correo_electronico: identifier,
+        password: contrasena,
+        captchaToken,
+      });
+
+      if (resp.data.status === "2fa_required") {
+        return resp.data;
+      }
+
+      // De lo contrario, iniciar sesión normalmente
+      const { token, usuario } = resp.data;
+      localStorage.setItem("access_token", token);
+      localStorage.setItem("token", token);
+      localStorage.setItem("usuarioId", usuario.id);
+      localStorage.setItem("roleId", usuario.roleId);
+      localStorage.setItem("nombreUsuario", `${usuario.nombres} ${usuario.apellidos}`);
+      localStorage.setItem("correoUsuario", usuario.correo_electronico);
+      localStorage.setItem("isAuthenticated", "true");
+
+      const payload = {
+        uid: usuario.id,
+        correo: usuario.correo_electronico,
+        displayName: `${usuario.nombres} ${usuario.apellidos}`,
+        photoURL: usuario.avatar || null,
+        token: token,
+        paisId: usuario.paisId,
+        roleId: usuario.roleId,
+        permissions: resp.data.permissions || null,
+        rutas: usuario.rutas || [],
+      };
+
+      dispatch(login(payload));
+      return payload;
+    } catch (error) {
+      console.error("Login thunk error:", error);
+      return rejectWithValue(
+        error.response?.data?.error || error.response?.data?.message || "Credenciales incorrectas"
+      );
+    }
+  },
+);
+
+export const startVerifyLogin = createAsyncThunk(
+  "auth/startVerifyLogin",
+  async ({ userId, code }, { rejectWithValue, dispatch }) => {
+    try {
+      const resp = await axios.post(`${BASE_URL}/usuarios/verify-login`, {
+        userId,
+        code,
+      });
+
+      const { token, usuario } = resp.data;
+      localStorage.setItem("access_token", token);
+      localStorage.setItem("token", token);
+      localStorage.setItem("usuarioId", usuario.id);
+      localStorage.setItem("roleId", usuario.roleId);
+      localStorage.setItem("nombreUsuario", `${usuario.nombres} ${usuario.apellidos}`);
+      localStorage.setItem("correoUsuario", usuario.correo_electronico);
+      localStorage.setItem("isAuthenticated", "true");
+
+      const payload = {
+        uid: usuario.id,
+        correo: usuario.correo_electronico,
+        displayName: `${usuario.nombres} ${usuario.apellidos}`,
+        photoURL: usuario.avatar || null,
+        token: token,
+        paisId: usuario.paisId,
+        roleId: usuario.roleId,
+        permissions: resp.data.permissions || null,
+        rutas: usuario.rutas || [],
+      };
+
+      dispatch(login(payload));
+      return payload;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error || error.response?.data?.message || "Código inválido"
+      );
+    }
+  },
+);
+
 export const fetchCurrentUser = createAsyncThunk(
   "auth/fetchCurrentUser",
   async (_, { rejectWithValue }) => {
@@ -224,153 +278,7 @@ export const fetchCurrentUser = createAsyncThunk(
   },
 );
 
-export const startLogin = createAsyncThunk(
-  "auth/startLogin",
-  async ({ identifier, contrasena }, { dispatch, rejectWithValue }) => {
-    try {
-      const keyId = identifier.trim().toLowerCase();
-      const trustToken =
-        localStorage.getItem(`trust_token_${keyId}`) ||
-        localStorage.getItem("trust_token");
-      const resp = await axios.post(`${BASE_URL}/usuarios/login`, {
-        identifier,
-        contrasena,
-        trustToken,
-      });
 
-      if (resp.data.status === "2fa_required") {
-        return {
-          status: "2fa_required",
-          userId: resp.data.userId,
-          maskedPhone: resp.data.maskedPhone,
-        };
-      } else if (resp.data.token && resp.data.usuario) {
-        const { token, usuario, firebaseToken, permissions, trustToken } =
-          resp.data;
-
-        localStorage.setItem("access_token", token);
-        if (resp.data.refreshToken) {
-          localStorage.setItem("refresh_token", resp.data.refreshToken);
-        }
-
-        if (trustToken) {
-          if (usuario.correo)
-            localStorage.setItem(
-              `trust_token_${usuario.correo.toLowerCase()}`,
-              trustToken,
-            );
-          if (usuario.telefono)
-            localStorage.setItem(`trust_token_${usuario.telefono}`, trustToken);
-          localStorage.setItem("trust_token", trustToken);
-        }
-
-        const userData = {
-          id: usuario.id,
-          displayName: usuario.nombre + " " + usuario.apellido,
-          email: usuario.correo,
-          roleId: usuario.roleId,
-          paisId: usuario.paisId,
-        };
-        localStorage.setItem("userData", JSON.stringify(userData));
-
-        localStorage.setItem("usuarioId", usuario.id);
-        localStorage.setItem("roleId", usuario.roleId);
-        localStorage.setItem("nombreUsuario", userData.displayName);
-        if (usuario.correo)
-          localStorage.setItem("correoUsuario", usuario.correo);
-        localStorage.setItem("isAuthenticated", "true");
-
-        dispatch(
-          login({
-            uid: usuario.id,
-            email: usuario.correo,
-            displayName: usuario.nombre,
-            token: token,
-            roleId: usuario.roleId,
-            permissions: permissions,
-            roleId: usuario.roleId,
-            permissions: permissions,
-            user: usuario,
-            photoURL: usuario.avatar,
-          }),
-        );
-
-        return { status: "authenticated" };
-      }
-
-      return rejectWithValue("Flujo inesperado.");
-    } catch (err) {
-      console.error("Error al iniciar sesión:", err);
-      return rejectWithValue(
-        err.response?.data?.error || "Error al iniciar sesión.",
-      );
-    }
-  },
-);
-
-export const startVerifyLogin = createAsyncThunk(
-  "auth/startVerifyLogin",
-  async ({ userId, code }, { dispatch, rejectWithValue }) => {
-    try {
-      const resp = await axios.post(`${BASE_URL}/usuarios/verify-login`, {
-        userId,
-        code,
-      });
-
-      const { token, usuario, firebaseToken, permissions, trustToken } =
-        resp.data;
-
-      localStorage.setItem("access_token", token);
-      if (resp.data.refreshToken) {
-        localStorage.setItem("refresh_token", resp.data.refreshToken);
-      }
-      if (trustToken) {
-        if (usuario.correo)
-          localStorage.setItem(
-            `trust_token_${usuario.correo.toLowerCase()}`,
-            trustToken,
-          );
-        if (usuario.telefono)
-          localStorage.setItem(`trust_token_${usuario.telefono}`, trustToken);
-        localStorage.setItem("trust_token", trustToken);
-      }
-
-      const userData = {
-        id: usuario.id,
-        displayName: usuario.nombre + " " + usuario.apellido,
-        email: usuario.correo,
-        roleId: usuario.roleId,
-        paisId: usuario.paisId,
-      };
-      localStorage.setItem("userData", JSON.stringify(userData));
-
-      localStorage.setItem("usuarioId", usuario.id);
-      localStorage.setItem("roleId", usuario.roleId);
-      localStorage.setItem("nombreUsuario", userData.displayName);
-      if (usuario.correo) localStorage.setItem("correoUsuario", usuario.correo);
-      localStorage.setItem("isAuthenticated", "true");
-
-      dispatch(
-        login({
-          uid: usuario.id,
-          email: usuario.correo,
-          displayName: usuario.nombre,
-          token: token,
-          roleId: usuario.roleId,
-          permissions: permissions,
-          roleId: usuario.roleId,
-          permissions: permissions,
-          user: usuario,
-          photoURL: usuario.avatar,
-        }),
-      );
-
-      return { success: true };
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.error || "Código inválido.");
-    }
-  },
-);
 
 export const verifyEmailCode = createAsyncThunk(
   "auth/verifyEmailCode",
@@ -455,27 +363,6 @@ export const resetPasswordWithToken = createAsyncThunk(
   },
 );
 
-export const activateUserChild = createAsyncThunk(
-  "auth/activateUserChild",
-  async (userData, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/usuarios/activarUsuarioHijo`,
-        userData,
-      );
-      if (response.status === 201) {
-        return {
-          success: true,
-          message: "Tu cuenta fue activada correctamente.",
-        };
-      } else {
-        return rejectWithValue("No se pudo activar la cuenta.");
-      }
-    } catch (error) {
-      return rejectWithValue(`Hubo un error: ${error.message || error}`);
-    }
-  },
-);
 
 export const startLogout = createAsyncThunk(
   "auth/startLogout",

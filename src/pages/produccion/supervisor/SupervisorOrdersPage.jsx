@@ -40,89 +40,30 @@ import AdvanceOrderButton from "../../../components/production/AdvanceOrderButto
 import { UnassignedProductsModal } from "../../../components/production/UnassignedProductsModal";
 import { useSupervisorOrdersLogic } from "./hooks/useSupervisorOrdersLogic";
 
+import { useSupervisorOrders } from "./hooks/useSupervisorOrders";
+import { SupervisorOrderCard } from "./componentes/SupervisorOrderCard";
+
 const SupervisorOrdersPage = () => {
-  const navigate = useNavigate();
   const { pedidoId } = useParams();
-  const dispatch = useDispatch();
-  const { data: empresas, paises } = useSelector((state) => state.empresas);
-  const { lastSync } = useSelector(selectRecetasState);
-  const [countryFilter, setCountryFilter] = useState("");
-  const [itemFilter] = useState("");
-  const [clientFilter, setClientFilter] = useState("");
-  const [stateFilter, setStateFilter] = useState("");
-  const [syncReady, setSyncReady] = useState(false);
-  const [procesarEstado5] = useProcesarEstado5Mutation();
-  const [viewMode, setViewMode] = useState("byOrder");
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
-  const { data: unassignedData = [] } = useGetUnassignedOrdersQuery(undefined, {
-    skip: !syncReady,
-  });
-  const unassignedCount = unassignedData.reduce(
-    (acc, g) => acc + g.items.length,
-    0,
-  );
-
-  useEffect(() => {
-    dispatch(tablaEmpresa());
-    dispatch(tablaPais());
-  }, [dispatch]);
-
-  const empresaActiva = useMemo(() => {
-    if (!countryFilter || !empresas || !paises) return null;
-    const paisSeleccionado = paises.find((p) => p.nombre === countryFilter);
-    if (!paisSeleccionado) return null;
-    return empresas.find((e) => e.paisId === paisSeleccionado.id);
-  }, [countryFilter, empresas, paises]);
-
-  const empresaParaMostrar =
-    empresaActiva || (empresas && empresas.length > 0 ? empresas[0] : null);
-
-  useEffect(() => {
-    const runProcess = async () => {
-      try {
-        const result = await procesarEstado5(undefined).unwrap();
-        if (result && result.procesados === 0) {
-          console.log("No hay pedidos en estado 5 para procesar.");
-        }
-      } catch (error) {
-        console.error("Error al intentar procesar el estado 5:", error);
-      } finally {
-        setSyncReady(true);
-      }
-    };
-
-    runProcess();
-  }, [procesarEstado5]);
-
+  const navigate = useNavigate();
   const {
-    data: agrupados = [],
+    countryFilter, setCountryFilter,
+    clientFilter, setClientFilter,
+    stateFilter, setStateFilter,
+    viewMode, setViewMode,
+    isOpen, onOpen, onClose,
+    unassignedCount,
+    empresaParaMostrar,
+    filteredGroups, consolidatedItems, countries, clients,
     isLoading,
     error,
-  } = useGetPedidosAgrupadosQuery({ etapaId: 2 }, { skip: !syncReady });
+    selectedGroup
+  } = useSupervisorOrders(pedidoId);
 
-  useEffect(() => {
-    if (agrupados.length > 0) {
-      console.log("🔍 Primer pedido agrupado:", agrupados[0]);
-      console.log(
-        "🔍 Primer item del primer pedido:",
-        agrupados[0]?.items?.[0],
-      );
-    }
-  }, [agrupados]);
+  // Call hooks at the top level to avoid conditional calling errors
+  useColorModeValue("white", "gray.700"); 
 
-  const cardBg = useColorModeValue("white", "gray.700");
-  const cardBorder = useColorModeValue("gray.200", "gray.600");
-  const cardHoverShadow = useColorModeValue("lg", "dark-lg");
-
-  const { filteredGroups, consolidatedItems, countries, clients } =
-    useSupervisorOrdersLogic({
-      agrupados,
-      filters: { itemFilter, countryFilter, clientFilter, stateFilter },
-      viewMode,
-    });
-
-  if (isLoading || !syncReady) {
+  if (isLoading) {
     return (
       <Box textAlign="center" py={20}>
         <Spinner size="xl" />
@@ -142,92 +83,41 @@ const SupervisorOrdersPage = () => {
       <Box p={2}>
         <Flex justifyContent="space-between" alignItems="center" mb={4}>
           <Heading size="lg" flex="1" textAlign="center">
-            {viewMode === "byOrder"
-              ? "Pedidos de Supervisor"
-              : "Consolidado de Supervisor"}
+            {viewMode === "byOrder" ? "Pedidos de Supervisor" : "Consolidado de Supervisor"}
           </Heading>
         </Flex>
-        <Flex
-          direction={{ base: "column", lg: "row" }}
-          justifyContent={{ lg: "space-between" }}
-          alignItems="center"
-          mb={0}
-          gap={0}
-        >
-          <Flex
-            alignItems="center"
-            gap={4}
-            w={{ base: "100%", lg: "auto" }}
-            justifyContent={{ base: "space-between", lg: "flex-start" }}
-          >
+        <Flex direction={{ base: "column", lg: "row" }} justifyContent={{ lg: "space-between" }} alignItems="center" gap={0}>
+          <Flex alignItems="center" gap={4} w={{ base: "100%", lg: "auto" }} justifyContent={{ base: "space-between", lg: "flex-start" }}>
             <ButtonGroup isAttached variant="outline">
               <Tooltip label="Ver pedidos individuales" placement="top">
-                <Button
-                  onClick={() => setViewMode("byOrder")}
-                  isActive={viewMode === "byOrder"}
-                  leftIcon={<ViewIcon />}
-                  aria-label="Ver por pedido"
-                >
+                <Button onClick={() => setViewMode("byOrder")} isActive={viewMode === "byOrder"} leftIcon={<ViewIcon />} aria-label="Ver por pedido">
                   Pedido
                 </Button>
               </Tooltip>
-              <Tooltip
-                label="Ver resumen de productos consolidados"
-                placement="top"
-              >
-                <Button
-                  onClick={() => setViewMode("consolidated")}
-                  isActive={viewMode === "consolidated"}
-                  leftIcon={<HamburgerIcon />}
-                  aria-label="Ver consolidado"
-                >
+              <Tooltip label="Ver resumen de productos consolidados" placement="top">
+                <Button onClick={() => setViewMode("consolidated")} isActive={viewMode === "consolidated"} leftIcon={<HamburgerIcon />} aria-label="Ver consolidado">
                   Consolidado
                 </Button>
               </Tooltip>
             </ButtonGroup>
 
             {unassignedCount > 0 && (
-              <Tooltip
-                label="Ver productos que no tienen área asignada"
-                placement="top"
-              >
-                <Button
-                  colorScheme="orange"
-                  variant="solid"
-                  onClick={onOpen}
-                  size="sm"
-                >
+              <Tooltip label="Ver productos que no tienen área asignada" placement="top">
+                <Button colorScheme="orange" variant="solid" onClick={onOpen} size="sm">
                   ⚠️ {unassignedCount} Sin Asignar
                 </Button>
               </Tooltip>
             )}
 
             <Flex alignItems="center" gap={2}>
-              <Tooltip
-                label="Sincronizar información de producción"
-                placement="top"
-              >
-                <Box>
-                  <BotonSincronizarReceta
-                    empresa={empresaParaMostrar}
-                    ultimaSincronizacionRecetas={
-                      empresaParaMostrar?.ultimaSincronizacionRecetas
-                    }
-                    leftIcon={<RepeatClockIcon />}
-                  />
-                </Box>
-              </Tooltip>
+              <BotonSincronizarReceta
+                empresa={empresaParaMostrar}
+                ultimaSincronizacionRecetas={empresaParaMostrar?.ultimaSincronizacionRecetas}
+                leftIcon={<RepeatClockIcon />}
+              />
               {empresaParaMostrar?.ultimaSincronizacionRecetas && (
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                  whiteSpace="nowrap"
-                  display={{ base: "none", xl: "block" }}
-                >
-                  Últ. sinc.:{" "}
-                  {new Date(
-                    empresaParaMostrar.ultimaSincronizacionRecetas,
-                  ).toLocaleString()}
+                <Text fontSize="xs" color="gray.500" whiteSpace="nowrap" display={{ base: "none", xl: "block" }}>
+                  Últ. sinc.: {new Date(empresaParaMostrar.ultimaSincronizacionRecetas).toLocaleString()}
                 </Text>
               )}
             </Flex>
@@ -246,103 +136,24 @@ const SupervisorOrdersPage = () => {
             />
           </Box>
         </Flex>
+
         {viewMode === "byOrder" ? (
           <SimpleGrid columns={[1, 2, 3, 4]} spacing={6} mt={6}>
-            {filteredGroups.map((g) => {
-              const doneCount = g.items.filter((i) => i.completo).length;
-              const allDone = doneCount === g.items.length;
-              const statusColor = allDone ? "green.400" : "yellow.400";
-              const deudorCode = g.deudorCodigo || "N/A";
-
-              return (
-                <Box
-                  key={g.pedidoId}
-                  position="relative"
-                  bg={cardBg}
-                  border="1px solid"
-                  borderColor={cardBorder}
-                  borderRadius="lg"
-                  overflow="hidden"
-                  cursor="pointer"
-                  transition="all 0.2s"
-                  _hover={{
-                    shadow: cardHoverShadow,
-                    transform: "translateY(-2px)",
-                  }}
-                  onClick={() => navigate(`/produccion/orden/${g.pedidoId}`)}
-                  role="group"
-                >
-                  <Box h="4px" bg={statusColor} w="100%" />
-                  <Box p={4}>
-                    <Flex justify="space-between" align="start" mb={2}>
-                      <VStack align="start" spacing={0}>
-                        <Text
-                          fontSize="xs"
-                          color="gray.500"
-                          fontWeight="bold"
-                          letterSpacing="wide"
-                          textTransform="uppercase"
-                        >
-                          Pedido #{g.pedidoId}
-                        </Text>
-                        <Heading size="sm" noOfLines={2} title={g.tienda}>
-                          {g.tienda}
-                        </Heading>
-                      </VStack>
-                      <Icon
-                        as={CheckCircleIcon}
-                        color={statusColor}
-                        boxSize={5}
-                      />
-                    </Flex>
-
-                    <HStack mt={2} mb={3}>
-                      <Badge
-                        colorScheme="blue"
-                        variant="subtle"
-                        fontSize="0.7em"
-                      >
-                        DEU: {deudorCode}
-                      </Badge>
-                      <Badge variant="outline" fontSize="0.7em">
-                        {g.pais}
-                      </Badge>
-                    </HStack>
-
-                    <Divider mb={3} borderColor="gray.100" />
-
-                    <Flex justify="space-between" align="center">
-                      <Text fontSize="xs" color="gray.500">
-                        {doneCount} / {g.items.length} Completados
-                      </Text>
-                      <Badge
-                        colorScheme={allDone ? "green" : "gray"}
-                        variant="solid"
-                        borderRadius="full"
-                        px={2}
-                      >
-                        {g.items.length} ÍTEM{g.items.length !== 1 ? "S" : ""}
-                      </Badge>
-                    </Flex>
-                  </Box>
-                </Box>
-              );
-            })}
+            {filteredGroups.map((g) => (
+              <SupervisorOrderCard 
+                key={g.pedidoId} 
+                g={g} 
+                onClick={() => navigate(`/produccion/orden/${g.pedidoId}`)} 
+              />
+            ))}
           </SimpleGrid>
         ) : (
-          <ConsolidatedOrdersView
-            data={consolidatedItems}
-            actionLabel="Pasar a Digitador"
-          />
+          <ConsolidatedOrdersView data={consolidatedItems} actionLabel="Pasar a Digitador" />
         )}
         <UnassignedProductsModal isOpen={isOpen} onClose={onClose} />
       </Box>
     );
   }
-
-  const selectedGroup = filteredGroups.find(
-    (g) => g.pedidoId === Number(pedidoId),
-  );
 
   if (!selectedGroup) {
     navigate("/produccion/orden");

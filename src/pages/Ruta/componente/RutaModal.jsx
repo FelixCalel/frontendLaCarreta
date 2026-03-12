@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -30,7 +30,10 @@ const RutaModal = ({ isOpen, onClose, initialData, onSave }) => {
   }));
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
+  const [prevProps, setPrevProps] = useState({ isOpen, initialData });
+
+  if (isOpen !== prevProps.isOpen || initialData !== prevProps.initialData) {
+    setPrevProps({ isOpen, initialData });
     if (isOpen) {
       setState({
         formData: initialData ? {
@@ -44,7 +47,7 @@ const RutaModal = ({ isOpen, onClose, initialData, onSave }) => {
         errors: {},
       });
     }
-  }, [isOpen, initialData]);
+  }
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;

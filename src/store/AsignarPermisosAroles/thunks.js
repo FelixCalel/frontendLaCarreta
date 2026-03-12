@@ -74,21 +74,6 @@ export const createasignacionPermisosRoles = createAsyncThunk(
   }
 );
 
-export const deleteasignacionPermisosRoles = createAsyncThunk(
-  "Permisos/deleteasignacionPermisosRoles",
-  async (id, thunkAPI) => {
-    try {
-      const response = await axios.delete(
-        `${BASE_URL}/api/asignarRMOP/eliminar/${id}`
-      );
-      return response.data;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
-);
 
 // En tu archivo de thunks
 export const fetchAsignacionMO = createAsyncThunk(

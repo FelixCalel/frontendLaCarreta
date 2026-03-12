@@ -199,7 +199,7 @@ PedidosTable.propTypes = {
     PropTypes.shape({
       id: PropTypes.number.isRequired,
       nombreCiudad: PropTypes.string,
-      nombreCorrelativo: PropTypes.string.isRequired,
+      nombreCorrelativo: PropTypes.string,
       nombreDeu: PropTypes.string,
       nombreTienda: PropTypes.string,
       estadoId: PropTypes.number.isRequired,

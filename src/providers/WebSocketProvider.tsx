@@ -3,17 +3,26 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useState,
   useReducer,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
-// @ts-ignore
+// @ts-expect-error Thunk en archivo JS sin tipos TypeScript exportados
 import { fetchModulos } from "../store/RolPermisoUsuario/thunks";
-// @ts-ignore
-import { fetchCurrentUser, startLogout } from "../store/auth/thunks";
+// @ts-expect-error Thunk en archivo JS sin tipos TypeScript exportados
+import { fetchCurrentUser } from "../store/auth/thunks";
 
 interface IWebSocketContext {
   socket: WebSocket | null;
+}
+
+interface AuthState {
+  status: string;
+  uid: string | number | null;
+  roleId: string | number | null;
+}
+
+interface RootState {
+  auth: AuthState;
 }
 
 const WebSocketContext = createContext<IWebSocketContext>({ socket: null });
@@ -47,9 +56,7 @@ type State = {
   isConnected: boolean;
 };
 
-type Action =
-  | { type: "CONNECT"; socket: WebSocket }
-  | { type: "DISCONNECT" };
+type Action = { type: "CONNECT"; socket: WebSocket } | { type: "DISCONNECT" };
 
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
@@ -65,15 +72,24 @@ const reducer = (state: State, action: Action): State => {
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [state, dispatchAction] = useReducer(reducer, { socket: null, isConnected: false });
+  const [state, dispatchAction] = useReducer(reducer, {
+    socket: null,
+    isConnected: false,
+  });
   const wsUrl = useMemo(() => {
     const apiUrl = import.meta.env.VITE_API_URL;
     return apiUrl.replace(/^http/, "ws").replace("/api", "") + "/ws";
   }, []);
-  const { status, uid, roleId } = useSelector((state: any) => state.auth);
+  const { status, uid, roleId } = useSelector(
+    (currentState: RootState) => currentState.auth
+  );
   const dispatchRedux = useDispatch();
 
-  // Keep refs to avoid stale closures in message listeners without triggering reconnects
+  const socketRef = React.useRef<WebSocket | null>(null);
+  useEffect(() => {
+    socketRef.current = state.socket;
+  }, [state.socket]);
+
   const uidRef = React.useRef(uid);
   const roleIdRef = React.useRef(roleId);
   useEffect(() => {
@@ -83,17 +99,21 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if (status !== "authenticated") {
-      if (state.socket) {
-        state.socket.close();
+      if (socketRef.current) {
+        socketRef.current.close();
         dispatchAction({ type: "DISCONNECT" });
+        socketRef.current = null;
       }
       return;
     }
 
     let ws: WebSocket;
     let reconnectTimeout: ReturnType<typeof setTimeout>;
+    let isEffectActive = true;
 
     const connect = () => {
+      if (!isEffectActive) return;
+
       ws = createWebSocket(
         wsUrl,
         (event) => {
@@ -107,25 +127,31 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
               const targetRoleId = data.payload?.roleId;
 
               if (currentUid == targetId || currentRoleId == targetRoleId) {
-                dispatchRedux(fetchCurrentUser() as any);
+                dispatchRedux(fetchCurrentUser() as never);
                 if (currentUid) {
-                  dispatchRedux(fetchModulos(currentUid) as any);
+                  dispatchRedux(fetchModulos(currentUid) as never);
                 }
               }
             } else if (data.type === "notification") {
-              if (data.payload.usuarioId && data.payload.usuarioId != currentUid) {
-                 return;
+              if (
+                data.payload.usuarioId &&
+                data.payload.usuarioId != currentUid
+              ) {
+                return;
               }
-              window.dispatchEvent(
+              globalThis.dispatchEvent(
                 new CustomEvent("notification-received", {
                   detail: data.payload,
                 })
               );
             } else if (data.type === "notification-deleted") {
-               if (data.payload.usuarioId && data.payload.usuarioId != currentUid) {
-                  return;
-               }
-              window.dispatchEvent(
+              if (
+                data.payload.usuarioId &&
+                data.payload.usuarioId != currentUid
+              ) {
+                return;
+              }
+              globalThis.dispatchEvent(
                 new CustomEvent("notification-deleted", {
                   detail: data.payload,
                 })
@@ -136,13 +162,26 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
           }
         },
         () => {
+          if (!isEffectActive) {
+            ws?.close();
+            return;
+          }
           dispatchAction({ type: "CONNECT", socket: ws });
         },
         () => {
+          if (!isEffectActive) return;
           dispatchAction({ type: "DISCONNECT" });
           reconnectTimeout = setTimeout(connect, RECONNECT_INTERVAL);
         },
         (error) => {
+          if (!isEffectActive) return;
+          if (
+            ws &&
+            (ws.readyState === WebSocket.CLOSING ||
+              ws.readyState === WebSocket.CLOSED)
+          ) {
+            return;
+          }
           console.warn("Advertencia en WebSocket:", error);
         }
       );
@@ -151,12 +190,25 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     connect();
 
     return () => {
+      isEffectActive = false;
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
-      if (ws) ws.close();
+      if (ws) {
+        if (ws.readyState === WebSocket.CONNECTING) {
+          ws.onopen = () => ws.close();
+          ws.onclose = null;
+          ws.onerror = null;
+          ws.onmessage = null;
+        } else {
+          ws.close();
+        }
+      }
     };
-  }, [wsUrl, status]);
+  }, [dispatchRedux, status, wsUrl]);
 
-  const contextValue = useMemo(() => ({ socket: state.socket }), [state.socket]);
+  const contextValue = useMemo(
+    () => ({ socket: state.socket }),
+    [state.socket]
+  );
 
   return (
     <WebSocketContext.Provider value={contextValue}>
