@@ -11,7 +11,7 @@ const DigitadorOrdersPage = () => {
     isLoading,
     error,
   } = useGetPedidosAgrupadosQuery({
-    etapaId: 5,
+    etapaId: 4,
   });
 
   const [term, setTerm] = useState("");

@@ -23,6 +23,8 @@ import { digitadorDetalleOrden } from "./detalleDigitadorOrden";
 import { digitadorFabricacionOrden } from "./digitadorFabricacionOrden";
 import { fabricacionDetailOrder } from "./FabricacionDetails";
 
+import { historialSapRoute } from "./HistorialSapRoute";
+
 export const ROUTE_REGISTRY = {
   "/auth/home": HomePage,
   "/admin/*": PortalRouter,
@@ -48,4 +50,5 @@ export const ROUTE_REGISTRY = {
   "/detalle/*": digitadorDetalleOrden,
   "/fabricacion/*": digitadorFabricacionOrden,
   "/detalleFabricacion/*": fabricacionDetailOrder,
+  "/historialSapDetalle/*": historialSapRoute,
 };

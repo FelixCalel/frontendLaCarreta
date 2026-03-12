@@ -14,6 +14,7 @@ export const GroupCard = ({ group, IconComponent, title }) => {
   const docNum = items[0]?.docNum;
   const docEntry = items[0]?.docEntry;
   const currentEtapaId = items[0]?.etapaId ?? 3;
+  const isHistory = currentEtapaId === 4;
 
   const stageItemsCount = countStage(items, currentEtapaId);
   const allComplete = items
@@ -30,7 +31,7 @@ export const GroupCard = ({ group, IconComponent, title }) => {
       bg={cardBg}
       borderRadius="md"
       cursor="pointer"
-      onClick={() => navigate(`/detalleFabricacion/${pedidoId}`)}
+      onClick={() => navigate(isHistory ? `/historialSapDetalle/${pedidoId}` : `/detalleFabricacion/${pedidoId}`)}
       _hover={{
         bg: hoverBg,
         transform: "translateY(-2px)",
@@ -83,9 +84,9 @@ export const GroupCard = ({ group, IconComponent, title }) => {
         </Text>
       )}
 
-      <Badge mt={2} px={2} colorScheme={currentEtapaId === 5 ? "blue" : "green"}>
-        {stageItemsCount} {stageItemsCount === 1 ? "ítem" : "ítems"} en{" "}
-        {currentEtapaId === 5 ? "SAP / Finalizado" : `etapa ${currentEtapaId}`}
+      <Badge mt={2} px={2} colorScheme={isHistory ? "blue" : "green"}>
+        {stageItemsCount} {stageItemsCount === 1 ? "ítem" : "ítems"}{" "}
+        {isHistory ? "🟢 Exportado SAP" : `en etapa ${currentEtapaId}`}
       </Badge>
     </Box>
   );

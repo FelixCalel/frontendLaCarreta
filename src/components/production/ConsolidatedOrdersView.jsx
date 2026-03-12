@@ -236,7 +236,7 @@ export const ConsolidatedOrdersView = ({
         const successfulPedidoIds = new Set(
           resultSAP.enviados
             ?.filter((r) => r.status === "SUCCESS")
-            .map((r) => r.pedidoId) || []
+            .map((r) => r.pedidoId) || [],
         );
 
         const successfulDetailsToSend = [];
@@ -250,20 +250,8 @@ export const ConsolidatedOrdersView = ({
           }
         });
 
-        if (successfulDetailsToSend.length > 0) {
-          try {
-            await avanzarMultiDetalle({
-              detalleOrdenIds: successfulDetailsToSend,
-              usuarioId: Number(localStorage.getItem("usuarioId") ?? 1),
-              nuevaEtapaId: 4,
-              comentario: comment || null,
-              fechaOrden: dateSAP,
-              avanzar: true,
-            }).unwrap();
-          } catch (e) {
-            console.error("Error al avanzar a etapa 4 tras SAP:", e);
-          }
-        }
+        // Redundant frontend advancement removed as backend now handles the full transition to Stage 5 (History).
+
 
         const hasErrors = resultSAP.enviados?.some((r) => r.status === "ERROR");
 
@@ -401,7 +389,7 @@ export const ConsolidatedOrdersView = ({
             <Button
               colorScheme="green"
               onClick={confirmSendToSap}
-              isLoading={isSending}
+              isLoading={isExportingSAP || isSending}
               isDisabled={!dateSAP}
             >
               {actionButtonText}

@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { useToast } from "@chakra-ui/react";
 import { useModalAuthError } from "../../../../hooks/useAuthError";
