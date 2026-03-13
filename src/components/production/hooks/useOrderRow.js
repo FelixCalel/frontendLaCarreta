@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useDisclosure, useToast } from "@chakra-ui/react";
 import {
   useGetDetallesYProduccionQuery,
   useUpdatePedidoProduccionMutation,
   useGetRecetaByPedidoQuery,
+  useGetPedidosAgrupadosQuery,
   useCreateRechazoMutation,
   useUpdateRechazoMutation,
   useGetRechazoByPedidoProduccionIdQuery,
@@ -15,9 +16,12 @@ export const useOrderRow = (order, isExpanded) => {
   const toast = useToast();
   const shouldFetch = isExpanded;
 
-  const { data: rechazoData } = useGetRechazoByPedidoProduccionIdQuery(order.id, {
-    skip: !order.id,
-  });
+  const { data: rechazoData } = useGetRechazoByPedidoProduccionIdQuery(
+    order.id,
+    {
+      skip: !order.id,
+    },
+  );
   const rechazoQty = rechazoData?.cantidadRechazada || 0;
 
   const recetaArg = shouldFetch ? { pedidoId: Number(order.id) } : skipToken;
@@ -28,13 +32,66 @@ export const useOrderRow = (order, isExpanded) => {
   } = useGetRecetaByPedidoQuery(recetaArg);
 
   const [updatePedido] = useUpdatePedidoProduccionMutation();
-  const [createRechazo, { isLoading: isCreatingRechazo }] = useCreateRechazoMutation();
-  const [updateRechazo, { isLoading: isUpdatingRechazo }] = useUpdateRechazoMutation();
+  const [createRechazo, { isLoading: isCreatingRechazo }] =
+    useCreateRechazoMutation();
+  const [updateRechazo, { isLoading: isUpdatingRechazo }] =
+    useUpdateRechazoMutation();
+  const { data: groupedOrders = [] } = useGetPedidosAgrupadosQuery();
+
+  const consolidatedKey = `${order.deudorCodigo || ""}|${order.productoNombre || ""}`;
+  const siblingOrders = useMemo(() => {
+    const allOrders = groupedOrders.flatMap((group) => group.items || []);
+    const matches = allOrders.filter(
+      (item) =>
+        `${item.deudorCodigo || ""}|${item.productoNombre || ""}` ===
+        consolidatedKey,
+    );
+
+    if (!matches.some((item) => Number(item.id) === Number(order.id))) {
+      matches.push(order);
+    }
+
+    const dedup = new Map();
+    matches.forEach((item) => {
+      dedup.set(Number(item.id), item);
+    });
+
+    return Array.from(dedup.values());
+  }, [groupedOrders, consolidatedKey, order]);
+
+  const modalAnchorOrder = useMemo(() => {
+    return (
+      siblingOrders.find(
+        (item) =>
+          Number(item?.cantidadRechazada) > 0 || Number(item?.rechazoId) > 0,
+      ) || order
+    );
+  }, [siblingOrders, order]);
+
+  const consolidatedMaxQuantity = useMemo(
+    () =>
+      siblingOrders.reduce(
+        (sum, item) => sum + (Number(item?.cantidadUnidad) || 0),
+        0,
+      ),
+    [siblingOrders],
+  );
+
+  const consolidatedMpUtilizada = useMemo(
+    () =>
+      siblingOrders.reduce(
+        (sum, item) => sum + (Number(item?.mpUtilizada) || 0),
+        0,
+      ),
+    [siblingOrders],
+  );
 
   const [isPTMQ, setIsPTMQ] = useState(order.ptmq ?? false);
-  const [cantidadLocal, setCantidadLocal] = useState(Number(order.cantidad) || 0);
+  const [cantidadLocal, setCantidadLocal] = useState(
+    Number(order.cantidad) || 0,
+  );
   const [faltanteLocal, setFaltanteLocal] = useState(
-    (Number(order.cantidadUnidad) || 0) - (Number(order.cantidad) || 0)
+    (Number(order.cantidadUnidad) || 0) - (Number(order.cantidad) || 0),
   );
 
   const {
@@ -45,7 +102,9 @@ export const useOrderRow = (order, isExpanded) => {
 
   useEffect(() => {
     setCantidadLocal((order.cantidad ?? 0) + rechazoQty);
-    setFaltanteLocal((order.cantidadUnidad ?? 0) - ((order.cantidad ?? 0) + rechazoQty));
+    setFaltanteLocal(
+      (order.cantidadUnidad ?? 0) - ((order.cantidad ?? 0) + rechazoQty),
+    );
   }, [order.cantidad, order.cantidadUnidad, rechazoQty]);
 
   useEffect(() => setIsPTMQ(order.ptmq), [order.ptmq]);
@@ -86,11 +145,49 @@ export const useOrderRow = (order, isExpanded) => {
 
   const handleSaveRechazo = async ({ formData, existingRechazo }) => {
     try {
-      if (existingRechazo) {
-        await updateRechazo({ id: existingRechazo.id, data: formData, id_pedidoProd: order.id }).unwrap();
-      } else {
-        await createRechazo({ ...formData, id_pedidoProd: order.id }).unwrap();
+      const totalRejection = Number(formData.cantidadRechazada) || 0;
+      let remainingRejection = totalRejection;
+
+      for (const sibling of siblingOrders) {
+        const siblingCapacity = Math.max(
+          0,
+          (Number(sibling.cantidadUnidad) || 0) -
+            (Number(sibling.mpUtilizada) || 0),
+        );
+        const amount = Math.min(remainingRejection, siblingCapacity);
+
+        const payload = {
+          ...formData,
+          cantidadRechazada: amount,
+        };
+
+        if (Number(sibling.rechazoId) > 0) {
+          await updateRechazo({
+            id: Number(sibling.rechazoId),
+            data: payload,
+            id_pedidoProd: Number(sibling.id),
+          }).unwrap();
+        } else if (amount > 0) {
+          await createRechazo({
+            ...payload,
+            id_pedidoProd: Number(sibling.id),
+          }).unwrap();
+        }
+
+        remainingRejection -= amount;
       }
+
+      if (remainingRejection > 0) {
+        toast({
+          title: "Cantidad parcial aplicada",
+          description:
+            "La salida excede la capacidad disponible del consolidado.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+
       onClose();
     } catch (err) {
       console.error(err);
@@ -111,7 +208,13 @@ export const useOrderRow = (order, isExpanded) => {
     handleUpdateStats,
     handleCompletoChange,
     handleSaveRechazo,
-    isOpen, onOpen, onClose,
-    isSavingRechazo: isCreatingRechazo || isUpdatingRechazo
+    modalPedidoProduccionId: Number(modalAnchorOrder?.id) || Number(order.id),
+    modalMaxQuantity:
+      consolidatedMaxQuantity || Number(order.cantidadUnidad) || 0,
+    modalCurrentMpUtilizada: consolidatedMpUtilizada,
+    isOpen,
+    onOpen,
+    onClose,
+    isSavingRechazo: isCreatingRechazo || isUpdatingRechazo,
   };
 };

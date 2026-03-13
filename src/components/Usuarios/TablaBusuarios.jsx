@@ -25,17 +25,25 @@ import { useUsuariosTable } from "./hooks/useUsuariosTable";
 
 export const TablaBusuarios = () => {
   const {
-    searchTerm, setSearchTerm,
-    isOpen, onOpen, onClose,
-    allRoles, rutasLocal: rutas,
-    currentPage, setCurrentPage,
-    isAssigning, status,
+    searchTerm,
+    setSearchTerm,
+    isOpen,
+    onOpen,
+    onClose,
+    allRoles,
+    rutasLocal: rutas,
+    currentPage,
+    setCurrentPage,
+    isAssigning,
+    status,
     usuariosPagina,
     roleIdLogueado,
-    toggleUsuarioEstado, handleAssignRutas,
-    setSelectedUser, selectedUser,
+    toggleUsuarioEstado,
+    handleAssignRutas,
+    setSelectedUser,
+    selectedUser,
     usuariosFiltrados,
-    itemsPerPage
+    itemsPerPage,
   } = useUsuariosTable();
 
   const handleOpenAssignRutas = (usuario) => {
@@ -105,8 +113,11 @@ export const TablaBusuarios = () => {
               </Thead>
               <Tbody>
                 {usuariosPagina.map((usuario) => {
-                  const rolUsuario = allRoles.find(
-                    (rol) => rol.id === usuario.roleId
+                  const rolesDisponibles = Array.isArray(allRoles)
+                    ? allRoles
+                    : [];
+                  const rolUsuario = rolesDisponibles.find(
+                    (rol) => rol.id === usuario.roleId,
                   );
                   return (
                     <Tr key={usuario.id} _hover={{ bg: rowHoverBg }}>
@@ -143,7 +154,7 @@ export const TablaBusuarios = () => {
                           <RolSelector
                             usuarioId={usuario.id}
                             currentRoleId={usuario.roleId}
-                            roles={allRoles}
+                            roles={rolesDisponibles}
                           />
                         ) : (
                           <Text>{rolUsuario?.nombre || "Sin rol"}</Text>

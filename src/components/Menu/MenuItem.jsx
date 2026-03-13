@@ -62,7 +62,7 @@ const MenuItem = ({
     setPrevPath(location.pathname);
     if (hasChildren) {
       const childActive = item.opciones?.some(
-        (sub) => location.pathname === sub.ruta
+        (sub) => location.pathname === sub.ruta,
       );
       if (childActive && !isOpen) {
         setOpenMenus((prev) => ({
@@ -94,8 +94,8 @@ const MenuItem = ({
           isActive
             ? activeTextColor
             : indentLevel === 0
-            ? textColor
-            : textColorSecondary
+              ? textColor
+              : textColorSecondary
         }
         borderRadius="lg"
         _hover={{
@@ -174,9 +174,9 @@ const MenuItem = ({
             ml={isExpanded || isMobileDrawer ? 4 : 0}
           >
             <VStack spacing={1} align="stretch">
-              {item.opciones.map((subItem) => (
+              {item.opciones.map((subItem, index) => (
                 <MenuItem
-                  key={subItem.id}
+                  key={`${item.id ?? item.nombre}-${subItem.id ?? index}`}
                   item={subItem}
                   isExpanded={isExpanded}
                   toggleMenu={toggleMenu}
@@ -227,7 +227,7 @@ MenuItem.propTypes = {
         nombre: PropTypes.string.isRequired,
         ruta: PropTypes.string,
         icono: PropTypes.elementType,
-      })
+      }),
     ),
   }).isRequired,
   isExpanded: PropTypes.bool.isRequired,

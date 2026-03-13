@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import {
   Box,
   Flex,
@@ -24,6 +24,8 @@ const agruparModulos = (data) => {
   const modulosAgrupados = {};
 
   data.forEach((entry) => {
+    if (!entry?.modulo?.id || !entry?.opcion?.id) return;
+
     const moduloId = entry.modulo.id;
     const IconoModulo = iconCatalog[entry.modulo.icono];
     const IconoOpcion = iconCatalog[entry.opcion.icono];
@@ -38,12 +40,19 @@ const agruparModulos = (data) => {
       };
     }
 
-    modulosAgrupados[moduloId].opciones.push({
-      id: entry.opcion.id,
-      nombre: entry.opcion.nombre,
-      ruta: entry.opcion.ruta,
-      icono: IconoOpcion,
-    });
+    const opcionId = Number(entry.opcion.id);
+    const yaExiste = modulosAgrupados[moduloId].opciones.some(
+      (opcion) => Number(opcion.id) === opcionId,
+    );
+
+    if (!yaExiste) {
+      modulosAgrupados[moduloId].opciones.push({
+        id: entry.opcion.id,
+        nombre: entry.opcion.nombre,
+        ruta: entry.opcion.ruta,
+        icono: IconoOpcion,
+      });
+    }
   });
 
   return Object.values(modulosAgrupados);
@@ -76,7 +85,7 @@ const MenuDesktop = () => {
   const { uid } = useSelector((state) => state.auth);
 
   // Cargar módulos cuando cambia el UID
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (uid) {
       dispatch(fetchModulos(uid));
     }
@@ -157,6 +166,14 @@ const MenuDesktop = () => {
     m.opciones = m.opciones.filter((op) => !op.ruta?.includes(":"));
   });
 
+  const modulosRender = modulosAgrupados.filter(
+    (modulo) => Array.isArray(modulo.opciones) && modulo.opciones.length > 0,
+  );
+
+  if (!modulosRender.length) {
+    return null;
+  }
+
   return (
     <Box
       ref={menuRef}
@@ -176,7 +193,7 @@ const MenuDesktop = () => {
       overflowY="auto"
       css={{
         "&::-webkit-scrollbar": {
-          width: "6px",
+          inlineSize: "6px",
         },
         "&::-webkit-scrollbar-track": {
           background: "transparent",
@@ -229,7 +246,7 @@ const MenuDesktop = () => {
 
       {/* Contenido del menú */}
       <VStack align="stretch" spacing={2} px={2}>
-        {modulosAgrupados.map((modulo) => (
+        {modulosRender.map((modulo) => (
           <MenuItem
             key={modulo.id}
             item={modulo}

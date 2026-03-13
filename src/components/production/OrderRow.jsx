@@ -56,8 +56,13 @@ export const OrderRow = ({
     handleUpdateStats,
     handleCompletoChange,
     handleSaveRechazo,
-    isOpen, onOpen, onClose,
-    isSavingRechazo
+    modalPedidoProduccionId,
+    modalMaxQuantity,
+    modalCurrentMpUtilizada,
+    isOpen,
+    onOpen,
+    onClose,
+    isSavingRechazo,
   } = useOrderRow(order, isExpanded);
 
   const hasReceta = receta && receta.length > 0;
@@ -94,7 +99,13 @@ export const OrderRow = ({
         <Td px={2} py={2}>
           <IconButton
             size="xs"
-            icon={isExpanded ? <ChevronDownIcon boxSize={4} /> : <ChevronRightIcon boxSize={4} />}
+            icon={
+              isExpanded ? (
+                <ChevronDownIcon boxSize={4} />
+              ) : (
+                <ChevronRightIcon boxSize={4} />
+              )
+            }
             aria-label="Expandir"
             onClick={() => onToggle(order.id)}
             variant="ghost"
@@ -104,27 +115,47 @@ export const OrderRow = ({
         </Td>
         <Td px={2} py={2}>
           <Box>
-            <Text fontWeight="bold" fontSize="sm" color={useColorModeValue("gray.700", "white")}>
+            <Text
+              fontWeight="bold"
+              fontSize="sm"
+              color={useColorModeValue("gray.700", "white")}
+            >
               {order.productoNombre}
             </Text>
-            <Text fontSize="xs" color="gray.500" mt={0.5}>{order.itemCode || "N/A"}</Text>
-            {order.comentario_sap && !order.comentario_sap.includes("Avance automático") && (
-              <Text fontSize="xs" color="orange.500" fontStyle="italic" mt={1}>
-                "{order.comentario_sap}"
-              </Text>
-            )}
+            <Text fontSize="xs" color="gray.500" mt={0.5}>
+              {order.itemCode || "N/A"}
+            </Text>
+            {order.comentario_sap &&
+              !order.comentario_sap.includes("Avance automático") && (
+                <Text
+                  fontSize="xs"
+                  color="orange.500"
+                  fontStyle="italic"
+                  mt={1}
+                >
+                  "{order.comentario_sap}"
+                </Text>
+              )}
           </Box>
         </Td>
         <Td px={2} py={2}>
           <Box>
-            <Text fontSize="xs" fontWeight="medium">{order.pais}</Text>
-            <Text fontSize="xs" color="gray.500">{order.tienda}</Text>
+            <Text fontSize="xs" fontWeight="medium">
+              {order.pais}
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              {order.tienda}
+            </Text>
           </Box>
         </Td>
         <Td px={2} py={2} textAlign="center">
           <Box>
-            <Text fontWeight="bold" fontSize="md" color="blue.500">{order.cantidadUnidad ?? "-"}</Text>
-            <Text fontSize="2xs" color="gray.400" textTransform="uppercase">Solicita</Text>
+            <Text fontWeight="bold" fontSize="md" color="blue.500">
+              {order.cantidadUnidad ?? "-"}
+            </Text>
+            <Text fontSize="2xs" color="gray.400" textTransform="uppercase">
+              Solicita
+            </Text>
           </Box>
         </Td>
         <Td px={2} py={2} textAlign="center">
@@ -137,16 +168,26 @@ export const OrderRow = ({
         </Td>
         <Td px={2} py={2} textAlign="center">
           <Box>
-            <Text fontWeight="bold" fontSize="md" color="green.500">{cantidadLocal}</Text>
-            <Text fontSize="2xs" color="gray.400" textTransform="uppercase">Procesado</Text>
+            <Text fontWeight="bold" fontSize="md" color="green.500">
+              {cantidadLocal}
+            </Text>
+            <Text fontSize="2xs" color="gray.400" textTransform="uppercase">
+              Procesado
+            </Text>
           </Box>
         </Td>
         <Td px={2} py={2} textAlign="center">
           <Box>
-            <Text fontWeight="bold" fontSize="md" color={faltanteLocal > 0 ? "red.400" : "gray.400"}>
+            <Text
+              fontWeight="bold"
+              fontSize="md"
+              color={faltanteLocal > 0 ? "red.400" : "gray.400"}
+            >
               {faltanteLocal}
             </Text>
-            <Text fontSize="2xs" color="gray.400" textTransform="uppercase">Faltante</Text>
+            <Text fontSize="2xs" color="gray.400" textTransform="uppercase">
+              Faltante
+            </Text>
           </Box>
         </Td>
         <Td px={2} py={2} textAlign="right">
@@ -157,8 +198,19 @@ export const OrderRow = ({
       <Tr>
         <Td colSpan={8} p={0} border="none">
           <Collapse in={isExpanded} animateOpacity>
-            <Box pl={2} pr={1} py={2} bg={collapseBg} borderBottomWidth="1px" borderColor="gray.200">
-              <Flex gap={4} direction={{ base: "column", xl: "row" }}>
+            <Box
+              pl={2}
+              pr={1}
+              py={2}
+              bg={collapseBg}
+              borderBottomWidth="1px"
+              borderColor="gray.200"
+            >
+              <Flex
+                gap={4}
+                direction={{ base: "column", md: "row" }}
+                align="flex-start"
+              >
                 <Box width="fit-content">
                   <OrderProductionRegistry
                     order={order}
@@ -182,12 +234,12 @@ export const OrderRow = ({
             <RechazoModal
               isOpen={isOpen}
               onClose={onClose}
-              pedidoProduccionId={order.id}
+              pedidoProduccionId={modalPedidoProduccionId}
               onSave={handleSaveRechazo}
               isLoading={isSavingRechazo}
               trazabilidadPadre={order.trazabilidad_Prod}
-              maxQuantity={Number(order.cantidadUnidad) || 0}
-              currentMpUtilizada={Number(order.mpUtilizada) || 0}
+              maxQuantity={modalMaxQuantity}
+              currentMpUtilizada={modalCurrentMpUtilizada}
             />
           )}
         </Td>

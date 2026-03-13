@@ -4,7 +4,10 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const singIn = async ({ correo_electronico, password }) => {
   return await axios
-    .post(`${BASE_URL}/usuarios/login`, { correo_electronico, password })
+    .post(`${BASE_URL}/usuarios/login`, {
+      identifier: correo_electronico,
+      contrasena: password,
+    })
     .then((response) => {
       // cambio
       const { token, usuario } = response.data;
@@ -25,7 +28,7 @@ export const singIn = async ({ correo_electronico, password }) => {
           nombre_empresa,
           displayName,
           errorMessage,
-        })
+        }),
       );
       return {
         ok: true,
@@ -148,13 +151,13 @@ export const listUsuarios = async (data) => {
   const usuarioData = { id: data.id };
   const userDataString = localStorage.getItem("userData");
   const userData = userDataString ? JSON.parse(userDataString) : null;
-  
+
   if (!usuarioData.id) {
     if (userData && userData.id) {
-        usuarioData.id = parseInt(userData.id);
+      usuarioData.id = parseInt(userData.id);
     } else {
-        console.error("No user ID found in arguments or localStorage");
-        return { ok: false, error: "No user ID found" };
+      console.error("No user ID found in arguments or localStorage");
+      return { ok: false, error: "No user ID found" };
     }
   }
   return await axios
@@ -163,11 +166,11 @@ export const listUsuarios = async (data) => {
       // console.log(response.data.result)
       if (response.status === 200 || response.status === 201) {
         const data = response.data;
-        const usuariosList = Array.isArray(data) ? data : (data.usuarios || []);
+        const usuariosList = Array.isArray(data) ? data : data.usuarios || [];
 
-        if (typeof data === 'string' && data.trim().startsWith('<')) {
-            console.error("Received HTML instead of JSON from listUsuarios");
-            return { ok: false, error: "Invalid server response" };
+        if (typeof data === "string" && data.trim().startsWith("<")) {
+          console.error("Received HTML instead of JSON from listUsuarios");
+          return { ok: false, error: "Invalid server response" };
         }
 
         return {

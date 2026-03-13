@@ -74,6 +74,7 @@ const ApproveOrdersModal = ({
                 setApproveData({
                   ...approveData,
                   comentarioDisplay: e.target.value,
+                  comentario: e.target.value,
                 })
               }
               mb={4}
@@ -84,8 +85,8 @@ const ApproveOrdersModal = ({
           </>
         ) : (
           <Text color="gray.500" mb={4}>
-            Se aprobarán {selectedCount} pedidos con sus fechas y
-            comentarios originales.
+            Se aprobarán {selectedCount} pedidos con sus fechas y comentarios
+            originales.
           </Text>
         )}
       </ModalBody>

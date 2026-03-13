@@ -1,39 +1,18 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useMemo } from "react";
 import {
   Box,
   Heading,
-  useToast,
   useColorModeValue,
   Button,
   HStack,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  ModalCloseButton,
-  Text,
-  useDisclosure,
-  Input,
   Spinner,
 } from "@chakra-ui/react";
-import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
-import {
-  tablaPedidos,
-  togglePedidoStatus,
-} from "../../../store/Pedidos/thunks";
-import { fetchCurrentUser } from "../../../store/auth/thunks";
-import { getDetalleOrdenByPedidoId } from "../../../store/Pedidos/DetallePedidos/thunks";
-import { tablaTienda } from "../../../store/Tienda/thunks";
 import Pagination from "../../../components/pagination";
 import PedidosTable from "../componentes/EntrantesFormPedidos/PedidosTable";
 import DetallesModal from "../componentes/EntrantesFormPedidos/detallesModal";
 import CancelOrdersModal from "../componentes/EntrantesFormPedidos/CancelOrdersModal";
 import ApproveOrdersModal from "../componentes/EntrantesFormPedidos/ApproveOrdersModal";
 import { useSearch } from "../../../components/component/SearchContext";
-import { useWebSocket } from "../../../providers/WebSocketProvider";
 
 import { usePedidosEntrantes } from "./hooks/usePedidosEntrantes";
 
@@ -69,6 +48,10 @@ const EntrantesPage = () => {
 
   const containerBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("teal.600", "teal.200");
+  const inputBg = useColorModeValue("white", "gray.700");
+  const borderColor = useColorModeValue("gray.300", "gray.600");
+  const textColor = useColorModeValue("gray.700", "whiteAlpha.900");
+  const calendarFilter = useColorModeValue("none", "invert(1)");
 
   const filteredPedidos = useMemo(() => {
     if (!query) return pedidosEntrantes;
@@ -172,7 +155,7 @@ const EntrantesPage = () => {
       <DetallesModal
         isOpen={modalState.isOpen}
         onClose={() => dispatchModal({ isOpen: false })}
-        selectedPedido={modalState.selectedPedido}
+        pedido={modalState.selectedPedido}
         detalles={modalState.detalles}
       />
 
@@ -184,6 +167,9 @@ const EntrantesPage = () => {
         handleBulkCancel={handleBulkCancel}
         isProcessing={isProcessing}
         selectedCount={selectedPedidos.length}
+        inputBg={inputBg}
+        borderColor={borderColor}
+        textColor={textColor}
       />
 
       <ApproveOrdersModal
@@ -194,6 +180,10 @@ const EntrantesPage = () => {
         handleConfirmApprove={handleConfirmApprove}
         isProcessing={isProcessing}
         selectedCount={selectedPedidos.length}
+        inputBg={inputBg}
+        borderColor={borderColor}
+        textColor={textColor}
+        calendarFilter={calendarFilter}
       />
     </Box>
   );

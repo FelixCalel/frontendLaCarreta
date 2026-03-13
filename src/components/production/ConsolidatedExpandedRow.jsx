@@ -53,6 +53,10 @@ export const ConsolidatedExpandedRow = memo(
 
     const toast = useToast();
     const primaryOrder = item.originalItems[0];
+    const orderWithRechazo =
+      item.originalItems.find(
+        (order) => Number(order?.cantidadRechazada) > 0,
+      ) || primaryOrder;
     const pedidoId = primaryOrder?.id;
     const recetaArg = isExpanded && pedidoId ? { pedidoId } : skipToken;
     const { data: receta = [], isLoading: loadingReceta } =
@@ -255,7 +259,11 @@ export const ConsolidatedExpandedRow = memo(
         borderBottomWidth="1px"
         borderColor="gray.200"
       >
-        <Flex gap={4} direction={{ base: "column", xl: "row" }}>
+        <Flex
+          gap={4}
+          direction={{ base: "column", md: "row" }}
+          align="flex-start"
+        >
           <Box width="fit-content">
             {primaryOrder && (
               <Box
@@ -381,7 +389,7 @@ export const ConsolidatedExpandedRow = memo(
           <RechazoModal
             isOpen={isOpen}
             onClose={onClose}
-            pedidoProduccionId={primaryOrder?.id}
+            pedidoProduccionId={orderWithRechazo?.id}
             trazabilidadPadre={trazabilidad}
             onSave={async ({ formData, existingRechazo }) => {
               try {
@@ -389,7 +397,7 @@ export const ConsolidatedExpandedRow = memo(
                   await updateRechazo({
                     id: existingRechazo.id,
                     data: formData,
-                    id_pedidoProd: primaryOrder?.id,
+                    id_pedidoProd: orderWithRechazo?.id,
                   }).unwrap();
                 } else {
                   const totalRejection =

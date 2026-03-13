@@ -107,7 +107,7 @@ const PedidosTable = ({
           </Thead>
 
           <Tbody>
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {pedidosEntrantes.length > 0 ? (
                 pedidosEntrantes.map((p) => {
                   const textoFila = (

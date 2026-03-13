@@ -47,6 +47,14 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
     },
   });
 
+  const handleBellClick = () => {
+    if (isOpen) {
+      onClose();
+      return;
+    }
+    onToggle();
+  };
+
   const handleNotificationClick = async (notificacion) => {
     if (!notificacion.id) return;
 
@@ -75,7 +83,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
         aria-label="Notificaciones Tooltip"
         zIndex={9999}
       >
-        <Box position="relative" onClick={onToggle} cursor="pointer">
+        <Box position="relative" onClick={handleBellClick} cursor="pointer">
           <IconButton
             variant="ghost"
             fontSize="24px"
@@ -123,25 +131,26 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
             overflow="hidden"
           >
             <Flex
-              p={4}
+              py={2}
+              px={3}
               bg={colors.headerBg}
               justify="space-between"
               align="center"
               borderBottom="1px solid"
               borderColor={colors.containerBorder}
             >
-              <HStack spacing={2}>
-                <Text fontWeight="bold" fontSize="md">
-                  Notificaciones{" "}
-                  {rolNombre === "Ventas"
-                    ? "de Pedidos"
-                    : rolNombre === "Display"
-                      ? "de Display"
-                      : ""}
+              <HStack spacing={1.5}>
+                <Text fontWeight="bold" fontSize="sm">
+                  Notificaciones
                 </Text>
                 {displayUnreadCount > 0 && (
-                  <Badge colorScheme="blue" borderRadius="full" px={2}>
-                    {displayUnreadCount} nuevas
+                  <Badge
+                    colorScheme="blue"
+                    borderRadius="full"
+                    px={1.5}
+                    fontSize="0.65em"
+                  >
+                    {displayUnreadCount} NUEVAS
                   </Badge>
                 )}
               </HStack>
@@ -152,6 +161,7 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
                   colorScheme="blue"
                   onClick={handleMarkAllAsRead}
                   leftIcon={<FiCheck />}
+                  fontSize="0.65rem"
                   _hover={{ bg: "blue.50" }}
                 >
                   Marcar todo leído
@@ -161,18 +171,20 @@ export default function Notifications({ isOpen, onToggle, onClose }) {
 
             <NotificationList
               notificaciones={filteredNotificaciones}
+              rolNombre={rolNombre}
               onMarkAsRead={handleMarkAsRead}
               onNotificationClick={handleNotificationClick}
             />
 
             <Box
-              p={2}
+              py={1}
+              px={3}
               bg={colors.headerBg}
               borderTop="1px solid"
               borderColor={colors.containerBorder}
               textAlign="center"
             >
-              <Text fontSize="xs" color={colors.mutedColor}>
+              <Text fontSize="0.65rem" color={colors.mutedColor}>
                 Mantente al día con tus pedidos
               </Text>
             </Box>

@@ -16,22 +16,19 @@ export const useAsignaciones = (areaId) => {
   const usuarioId = Number(localStorage.getItem("usuarioId"));
 
   const { asignaciones, clasificaciones } = useSelector(
-    (state) => state.AsignacionAreaMesa
+    (state) => state.AsignacionAreaMesa,
   );
 
-  const [state, setState] = useReducer(
-    (s, a) => ({ ...s, ...a }),
-    {
-      productOptions: [],
-      selectedProducto: null,
-      isLoadingProducts: false,
-      searchQuery: "",
-      currentPage: 1,
-      hasMore: true,
-      visibleCount: 15,
-      filtroTabla: "",
-    }
-  );
+  const [state, setState] = useReducer((s, a) => ({ ...s, ...a }), {
+    productOptions: [],
+    selectedProducto: null,
+    isLoadingProducts: false,
+    searchQuery: "",
+    currentPage: 1,
+    hasMore: true,
+    visibleCount: 15,
+    filtroTabla: "",
+  });
 
   const {
     productOptions,
@@ -44,47 +41,55 @@ export const useAsignaciones = (areaId) => {
     filtroTabla,
   } = state;
 
-  const loadProducts = useCallback(async (search = "", page = 1) => {
-    if (!state.hasMore && page > 1) return;
-    setState({ isLoadingProducts: true });
-    try {
-      const res = await axios.get(
-        `${BASE_URL}/items/todos?page=${page}&pageSize=10&nombre=${search}&codigo=${search}`
-      );
-      const newItems = res.data.items || res.data;
-      const newOptions = newItems.map((item) => ({
-        label: `${item.codigo} - ${item.nombre}`,
-        value: item.id,
-      }));
+  const loadProducts = useCallback(
+    async (search = "", page = 1) => {
+      if (!state.hasMore && page > 1) return;
+      setState({ isLoadingProducts: true });
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/items/todos?page=${page}&pageSize=10&nombre=${search}&codigo=${search}`,
+        );
+        const newItems = res.data.items || res.data;
+        const newOptions = newItems.map((item) => ({
+          label: `${item.codigo} - ${item.nombre}`,
+          value: item.id,
+        }));
 
-      if (page === 1) {
-        setState({ productOptions: newOptions, hasMore: newItems.length >= 10 });
-      } else {
-        setState({
-          productOptions: [...state.productOptions, ...newOptions],
-          hasMore: newItems.length >= 10,
-        });
+        if (page === 1) {
+          setState({
+            productOptions: newOptions,
+            hasMore: newItems.length >= 10,
+          });
+        } else {
+          setState({
+            productOptions: [...state.productOptions, ...newOptions],
+            hasMore: newItems.length >= 10,
+          });
+        }
+      } catch (err) {
+        console.error("Error cargando productos paginados:", err);
+      } finally {
+        setState({ isLoadingProducts: false });
       }
-    } catch (err) {
-      console.error("Error cargando productos paginados:", err);
-    } finally {
-      setState({ isLoadingProducts: false });
-    }
-  }, [state.hasMore, state.productOptions]);
+    },
+    [state.hasMore, state.productOptions],
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => {
       loadProducts(searchQuery, 1);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timer);
   }, [searchQuery, loadProducts]);
 
   useEffect(() => {
     if (areaId) {
       dispatch(fetchAsignacionesThunk(areaId));
-      dispatch(fetchClasificacionesThunk());
+      if (!clasificaciones?.empaques?.length) {
+        dispatch(fetchClasificacionesThunk());
+      }
     }
-  }, [dispatch, areaId]);
+  }, [dispatch, areaId, clasificaciones?.empaques?.length]);
 
   const handleInputChange = (newValue, actionMeta) => {
     if (actionMeta.action === "input-change") {
@@ -108,7 +113,7 @@ export const useAsignaciones = (areaId) => {
         productoId: selectedProducto.value,
         create_by: usuarioId,
         state: true,
-      })
+      }),
     ).then((res) => {
       if (res.meta.requestStatus === "fulfilled") {
         toast({
@@ -124,7 +129,10 @@ export const useAsignaciones = (areaId) => {
       } else {
         toast({
           title: "Error al asignar",
-          description: typeof res.payload === "string" ? res.payload : "No se pudo asignar la línea.",
+          description:
+            typeof res.payload === "string"
+              ? res.payload
+              : "No se pudo asignar la línea.",
           status: "error",
           duration: 4000,
           isClosable: true,

@@ -1,58 +1,111 @@
-import { useState, useMemo } from "react";
+import { useMemo, useEffect, useReducer } from "react";
 import {
   Box,
   Center,
   Spinner,
   Text,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Button,
   Flex,
   Heading,
-  Badge,
   useColorModeValue,
-  Tag,
-  TagLabel,
-  Divider,
 } from "@chakra-ui/react";
-import { ArrowBackIcon, ExternalLinkIcon } from "@chakra-ui/icons";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetPedidosAgrupadosQuery } from "../../../services/pedidoProductionApi";
+import { skipToken } from "@reduxjs/toolkit/query";
+import {
+  useGetPedidosAgrupadosQuery,
+  useGetRecetaByPedidoQuery,
+  useGetAlmacenesQuery,
+} from "../../../services/pedidoProductionApi";
 import FilterPanelFabricacion from "../../../components/production/fabricacion/FilterPanelFabricacion";
+import {
+  HistorialItemsTable,
+  RecetaReadonlyTable,
+} from "./components/SapHistorialTables";
+
+const initialState = {
+  term: "",
+  estado: "",
+  mesa: "",
+  selectedProdId: null,
+  expandedItems: new Set(),
+};
+
+const reducer = (state, action) => {
+  switch (action.type) {
+  case "SET_TERM":
+    return { ...state, term: action.payload };
+  case "SET_ESTADO":
+    return { ...state, estado: action.payload };
+  case "SET_MESA":
+    return { ...state, mesa: action.payload };
+  case "SET_SELECTED_PROD_ID":
+    return { ...state, selectedProdId: action.payload };
+  case "TOGGLE_ITEM_DETAILS": {
+    const next = new Set(state.expandedItems);
+    if (next.has(action.payload)) {
+      next.delete(action.payload);
+    } else {
+      next.add(action.payload);
+    }
+    return { ...state, expandedItems: next };
+  }
+  default:
+    return state;
+  }
+};
 
 const SapHistorialDetallePage = () => {
   const { pedidoId: raw } = useParams();
   const pedidoId = Number(raw);
   const navigate = useNavigate();
 
+  const handleBackToHistory = () => {
+    if (globalThis.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/digitador/orden/pedido");
+  };
+
   const {
     data: groups = [],
     isLoading,
     error,
-  } = useGetPedidosAgrupadosQuery({ etapaId: 4 });
+  } = useGetPedidosAgrupadosQuery(undefined, {
+    pollingInterval: 5000,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
 
   const headBg = useColorModeValue("gray.50", "gray.800");
   const tableBorder = useColorModeValue("gray.200", "gray.700");
   const tableBg = useColorModeValue("white", "gray.800");
-  const sapTagBg = useColorModeValue("blue.50", "blue.900");
+  const detailsRowBg = useColorModeValue("gray.50", "gray.900");
 
-  const [term, setTerm] = useState("");
-  const [estado, setEstado] = useState("");
-  const [mesa, setMesa] = useState("");
+  const [state, dispatchState] = useReducer(reducer, initialState);
+  const { term, estado, mesa, selectedProdId, expandedItems } = state;
 
   const group = useMemo(
-    () => groups.find((g) => g.pedidoId === pedidoId),
-    [groups, pedidoId]
+    () => groups.find((g) => Number(g.pedidoId) === pedidoId),
+    [groups, pedidoId],
   );
 
-  const filteredItems = useMemo(() => {
+  const historyItems = useMemo(() => {
     if (!group) return [];
+    const sapItems = group.items.filter(
+      (it) =>
+        Number(it?.etapaId) === 4 ||
+        Boolean(it?.docNum) ||
+        Boolean(it?.docEntry),
+    );
+    return sapItems.length ? sapItems : group.items;
+  }, [group]);
+
+  const filteredItems = useMemo(() => {
+    if (!historyItems.length) return [];
     const txt = term.toLowerCase();
-    return group.items.filter((it) => {
+    return historyItems.filter((it) => {
       const byText =
         !term ||
         (it.itemCode || "").toLowerCase().includes(txt) ||
@@ -61,7 +114,36 @@ const SapHistorialDetallePage = () => {
         !estado || (it.completo ? "Completado" : "Pendiente") === estado;
       return byText && byEstado;
     });
-  }, [group, term, estado]);
+  }, [historyItems, term, estado]);
+
+  useEffect(() => {
+    if (!historyItems.length) {
+      dispatchState({ type: "SET_SELECTED_PROD_ID", payload: null });
+      return;
+    }
+
+    const stillExists = historyItems.some(
+      (item) => Number(item.id) === Number(selectedProdId),
+    );
+
+    if (!stillExists) {
+      dispatchState({
+        type: "SET_SELECTED_PROD_ID",
+        payload: Number(historyItems[0].id),
+      });
+    }
+  }, [historyItems, selectedProdId]);
+
+  const recetaArg = selectedProdId
+    ? { pedidoId: Number(selectedProdId) }
+    : skipToken;
+  const { data: receta = [], isLoading: loadingReceta } =
+    useGetRecetaByPedidoQuery(recetaArg, {
+      pollingInterval: 5000,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    });
+  const { data: almacenes = [] } = useGetAlmacenesQuery();
 
   if (isLoading) {
     return (
@@ -75,25 +157,61 @@ const SapHistorialDetallePage = () => {
     return (
       <Center py={20} flexDirection="column" gap={4}>
         <Text color="red.500">
-          {error ? "Error al cargar el historial." : `No se encontró historial para el Pedido #${pedidoId}.`}
+          {error
+            ? "Error al cargar el historial."
+            : `No se encontró historial para el Pedido #${pedidoId}.`}
         </Text>
-        <Button leftIcon={<ArrowBackIcon />} onClick={() => navigate("/digitador/orden/pedido")}>
+        <Button leftIcon={<ArrowBackIcon />} onClick={handleBackToHistory}>
           Volver al historial
         </Button>
       </Center>
     );
   }
 
-  // Pick SAP info from the first item
-  const sapDocNum = filteredItems[0]?.docNum;
-  const sapDocEntry = filteredItems[0]?.docEntry;
-  const fechaOrdenSap = filteredItems[0]?.fecha_orden_sap;
-  const comentarioSap = filteredItems[0]?.comentario_sap;
+  const getMaterialParts = (linea) => {
+    const rawItem = String(linea?.item || "").trim();
+    const rawDesc = String(linea?.descripcion || "").trim();
+
+    if (!rawItem && !rawDesc) {
+      return { code: "-", name: "" };
+    }
+
+    if (rawItem.includes(" - ")) {
+      const [code, ...nameParts] = rawItem.split(" - ");
+      const nameFromItem = nameParts.join(" - ").trim();
+      const finalName = rawDesc || nameFromItem;
+      return {
+        code: code?.trim() || rawItem,
+        name: finalName && finalName !== code?.trim() ? finalName : "",
+      };
+    }
+
+    return {
+      code: rawItem || "-",
+      name: rawDesc && rawDesc !== rawItem ? rawDesc : "",
+    };
+  };
+
+  const toggleItemDetails = (itemId) =>
+    dispatchState({ type: "TOGGLE_ITEM_DETAILS", payload: itemId });
+
+  const getAlmacenName = (linea) =>
+    linea.almacen?.name ||
+    linea.almacen?.nombre ||
+    almacenes.find((a) => Number(a.id) === Number(linea.id_almacen))?.nombre ||
+    almacenes.find((a) => Number(a.id) === Number(linea.id_almacen))?.name ||
+    "-";
 
   return (
     <Box p={6}>
-      <Flex mb={4} align="center" justify="space-between" direction={{ base: "column", md: "row" }} gap={4}>
-        <Button leftIcon={<ArrowBackIcon />} onClick={() => navigate("/digitador/orden/pedido")}>
+      <Flex
+        mb={4}
+        align="center"
+        justify="space-between"
+        direction={{ base: "column", md: "row" }}
+        gap={4}
+      >
+        <Button leftIcon={<ArrowBackIcon />} onClick={handleBackToHistory}>
           Volver al Historial
         </Button>
         <Heading size="md" textAlign="center">
@@ -102,114 +220,46 @@ const SapHistorialDetallePage = () => {
         <Box />
       </Flex>
 
-      {/* SAP Info Panel */}
-      <Box
-        mb={6}
-        p={4}
-        bg={sapTagBg}
-        borderRadius="md"
-        borderLeft="4px solid"
-        borderLeftColor="blue.400"
-      >
-        <Flex wrap="wrap" gap={4} align="center">
-          <Box>
-            <Text fontSize="xs" color="gray.500" mb={1}>CLIENTE</Text>
-            <Text fontWeight="bold">{group.deudorNombre || group.tienda}</Text>
-            <Text fontSize="sm" color="gray.500">{group.pais}</Text>
-          </Box>
-          <Divider orientation="vertical" h="40px" />
-          {sapDocNum && (
-            <Box>
-              <Text fontSize="xs" color="gray.500" mb={1}>SAP DOC NUM</Text>
-              <Badge colorScheme="blue" fontSize="md" px={2}>{sapDocNum}</Badge>
-            </Box>
-          )}
-          {sapDocEntry && (
-            <Box>
-              <Text fontSize="xs" color="gray.500" mb={1}>SAP DOC ENTRY</Text>
-              <Badge colorScheme="purple" fontSize="md" px={2}>{sapDocEntry}</Badge>
-            </Box>
-          )}
-          {fechaOrdenSap && (
-            <Box>
-              <Text fontSize="xs" color="gray.500" mb={1}>FECHA SAP</Text>
-              <Text fontWeight="semibold">
-                {new Date(fechaOrdenSap).toLocaleDateString("es-GT")}
-              </Text>
-            </Box>
-          )}
-          {comentarioSap && (
-            <Box flex={1} minW="200px">
-              <Text fontSize="xs" color="gray.500" mb={1}>COMENTARIO</Text>
-              <Text fontSize="sm">{comentarioSap}</Text>
-            </Box>
-          )}
-          <Tag colorScheme="green" ml="auto">
-            <TagLabel>✅ Exportado a SAP</TagLabel>
-          </Tag>
-        </Flex>
-      </Box>
-
       <FilterPanelFabricacion
         term={term}
-        onTermChange={setTerm}
+        onTermChange={(value) =>
+          dispatchState({ type: "SET_TERM", payload: value })
+        }
         estado={estado}
-        onEstadoChange={setEstado}
+        onEstadoChange={(value) =>
+          dispatchState({ type: "SET_ESTADO", payload: value })
+        }
         mesa={mesa}
-        onMesaChange={setMesa}
+        onMesaChange={(value) =>
+          dispatchState({ type: "SET_MESA", payload: value })
+        }
       />
 
-      <Box
-        w="100%"
-        border="1px solid"
-        borderColor={tableBorder}
-        borderRadius="md"
-        shadow="sm"
-        overflowX="auto"
-        bg={tableBg}
-        mt={4}
-      >
-        <Table variant="simple" size="sm">
-          <Thead bg={headBg}>
-            <Tr>
-              <Th>PRODUCTO</Th>
-              <Th>CÓDIGO</Th>
-              <Th textAlign="center">SOLICITADO</Th>
-              <Th textAlign="center">COMPLETADO</Th>
-              <Th textAlign="center">DESPACHO</Th>
-              <Th>UNIDAD</Th>
-              <Th textAlign="center">ESTADO</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {filteredItems.length === 0 ? (
-              <Tr>
-                <Td colSpan={7} textAlign="center" color="gray.400" py={8}>
-                  No hay ítems que mostrar.
-                </Td>
-              </Tr>
-            ) : (
-              filteredItems.map((item) => (
-                <Tr key={item.id}>
-                  <Td fontWeight="medium">{item.productoNombre}</Td>
-                  <Td>
-                    <Badge variant="outline" colorScheme="gray">{item.itemCode}</Badge>
-                  </Td>
-                  <Td textAlign="center">{item.cantidadUnidad ?? "-"}</Td>
-                  <Td textAlign="center">{item.completo ? "✅" : "⏳"}</Td>
-                  <Td textAlign="center">{item.despacho ?? "-"}</Td>
-                  <Td>{item.unidadMedida ?? "-"}</Td>
-                  <Td textAlign="center">
-                    <Badge colorScheme={item.completo ? "green" : "orange"}>
-                      {item.completo ? "Completado" : "Pendiente"}
-                    </Badge>
-                  </Td>
-                </Tr>
-              ))
-            )}
-          </Tbody>
-        </Table>
-      </Box>
+      <HistorialItemsTable
+        filteredItems={filteredItems}
+        headBg={headBg}
+        tableBorder={tableBorder}
+        tableBg={tableBg}
+        detailsRowBg={detailsRowBg}
+        expandedItems={expandedItems}
+        toggleItemDetails={toggleItemDetails}
+        group={group}
+      />
+
+      <RecetaReadonlyTable
+        tableBorder={tableBorder}
+        tableBg={tableBg}
+        headBg={headBg}
+        selectedProdId={selectedProdId}
+        setSelectedProdId={(value) =>
+          dispatchState({ type: "SET_SELECTED_PROD_ID", payload: value })
+        }
+        historyItems={historyItems}
+        loadingReceta={loadingReceta}
+        receta={receta}
+        getMaterialParts={getMaterialParts}
+        getAlmacenName={getAlmacenName}
+      />
     </Box>
   );
 };

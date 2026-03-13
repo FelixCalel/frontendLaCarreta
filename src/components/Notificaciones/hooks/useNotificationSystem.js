@@ -20,49 +20,53 @@ export const useNotificationSystem = () => {
   const { notificaciones = [], unreadCount } = useSelector(
     (state) => state.notificaciones || {},
   );
-  const {
-    user,
-    rutas: userRutasIds,
-  } = useSelector((state) => state.auth || {});
+  const { user, rutas: userRutasIds } = useSelector(
+    (state) => state.auth || {},
+  );
   const rolNombre = user?.role?.nombre || localStorage.getItem("rolNombre");
+
+  const isVentasNotification = (notification) => {
+    const notificationKind =
+      notification?.notificationKind ||
+      (notification?.data && notification.data.notificationKind);
+
+    if (notificationKind === "NEW_ORDER") {
+      return true;
+    }
+
+    const estadoId =
+      notification?.estadoId ||
+      (notification?.data && notification.data.estadoId);
+
+    return parseInt(estadoId, 10) === 2;
+  };
 
   useEffect(() => {
     if (usuarioId) {
       dispatch(fetchCurrentUser());
       dispatch(getNotificaciones(usuarioId));
+
+      const intervalId = setInterval(() => {
+        dispatch(getNotificaciones(usuarioId));
+      }, 10000);
+
+      return () => clearInterval(intervalId);
     }
   }, [dispatch, usuarioId]);
 
   useEffect(() => {
     const handleNotification = (event) => {
       const newNotification = event.detail;
+      const nUsuarioId =
+        newNotification?.usuarioId ||
+        (newNotification?.data && newNotification.data.usuarioId);
 
-      const notifUserId = newNotification.usuarioId
-        ? parseInt(newNotification.usuarioId, 10)
-        : null;
-      if (!notifUserId || notifUserId !== usuarioId) {
-        const rutaId =
-          newNotification.rutaId ||
-          (newNotification.data && newNotification.data.rutaId);
-
-        if (rolNombre === "Ventas" || rolNombre === "Display") {
-          if (rutaId && userRutasIds && userRutasIds.length > 0) {
-            if (!userRutasIds.includes(parseInt(rutaId, 10))) {
-              return;
-            }
-          } else if (!notifUserId) {
-            return;
-          }
-        } else if (!notifUserId) {
-          return;
-        }
+      if (!nUsuarioId || parseInt(nUsuarioId, 10) !== usuarioId) {
+        return;
       }
 
       if (rolNombre === "Ventas") {
-        const estadoId =
-          newNotification.estadoId ||
-          (newNotification.data && newNotification.data.estadoId);
-        if (estadoId && parseInt(estadoId) !== 2) {
+        if (!isVentasNotification(newNotification)) {
           return;
         }
       }
@@ -71,7 +75,7 @@ export const useNotificationSystem = () => {
         const estadoId =
           newNotification.estadoId ||
           (newNotification.data && newNotification.data.estadoId);
-        if (estadoId && ![3, 4, 5].includes(parseInt(estadoId))) {
+        if (estadoId && ![2, 3, 4, 5, 6].includes(parseInt(estadoId))) {
           return;
         }
       }
@@ -125,22 +129,17 @@ export const useNotificationSystem = () => {
   );
 
   const filteredNotificaciones = notificaciones.filter((n) => {
-    const userRoleId = parseInt(roleId, 10);
-    const isVentasOrDisplay = userRoleId === 3 || userRoleId === 2;
-    const hasPedidoId = n.pedidoId || (n.data && n.data.pedidoId);
-
-    if (isVentasOrDisplay && hasPedidoId) {
-      if (rutasSet.size === 0) return false;
-
-      const nRutaId = n.rutaId || (n.data && n.data.rutaId);
-      if (nRutaId) {
-        return rutasSet.has(parseInt(nRutaId, 10));
-      }
-      return false;
-    }
+    if (n.leido) return false;
 
     const nUsuarioId = n.usuarioId || (n.data && n.data.usuarioId);
     if (nUsuarioId && parseInt(nUsuarioId) === usuarioId) {
+      if (rolNombre === "Ventas") {
+        return isVentasNotification(n);
+      }
+      if (rolNombre === "Display") {
+        const estadoId = n.estadoId || (n.data && n.data.estadoId);
+        return !estadoId || [2, 3, 4, 5, 6].includes(parseInt(estadoId, 10));
+      }
       return true;
     }
 
@@ -168,4 +167,3 @@ export const useNotificationSystem = () => {
     roleId,
   };
 };
-

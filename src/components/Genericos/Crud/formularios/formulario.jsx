@@ -19,7 +19,20 @@ export const Formulario = ({
   onClose,
   onSubmit,
 }) => {
-  const [formDataState, setFormDataState] = useState(() => initialFormData);
+  const [formDataState, setFormDataState] = useState(() => {
+    // Inicializar campos boolean (switch) a false si no tienen valor previo
+    const booleanDefaults = {};
+    if (Array.isArray(metadata)) {
+      metadata.forEach((campo) => {
+        if (campo.name === "estado" || campo.type === "boolean") {
+          if (initialFormData[campo.name] === undefined) {
+            booleanDefaults[campo.name] = false;
+          }
+        }
+      });
+    }
+    return { ...booleanDefaults, ...initialFormData };
+  });
 
   const [showIconCatalog, setShowIconCatalog] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState("");

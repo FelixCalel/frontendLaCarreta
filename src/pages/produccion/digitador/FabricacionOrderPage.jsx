@@ -24,7 +24,6 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { ArrowBackIcon } from "@chakra-ui/icons";
-import { useNavigate } from "react-router-dom";
 import FilterPanelFabricacion from "../../../components/production/fabricacion/FilterPanelFabricacion";
 import { FabricacionRow } from "../../../components/production/fabricacion/FabricacionRow";
 
@@ -32,13 +31,31 @@ import { useFabricacionPage } from "./hooks/useFabricacionPage";
 
 const FabricacionPage = () => {
   const {
-    pedidoId, navigate, toast,
-    term, setTerm, estado, setEstado, mesa, setMesa,
-    comment, setComment, noComment, setNoComment, dateSAP, setDateSAP,
-    isLoading, error, isSending,
-    filtered, receta, cargandoReceta,
-    isOpen, onOpen, onClose,
-    handleCargarSAP
+    pedidoId,
+    navigate,
+    toast,
+    term,
+    setTerm,
+    estado,
+    setEstado,
+    mesa,
+    setMesa,
+    comment,
+    setComment,
+    noComment,
+    setNoComment,
+    dateSAP,
+    setDateSAP,
+    isLoading,
+    error,
+    isSending,
+    filtered,
+    receta,
+    cargandoReceta,
+    isOpen,
+    onOpen,
+    onClose,
+    handleCargarSAP,
   } = useFabricacionPage();
 
   const headBg = useColorModeValue("gray.50", "gray.800");
@@ -88,10 +105,7 @@ const FabricacionPage = () => {
         direction={{ base: "column", md: "row" }}
         gap={4}
       >
-        <Button
-          leftIcon={<ArrowBackIcon />}
-          onClick={() => navigate("/fabricacion/orden")}
-        >
+        <Button leftIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>
           Volver
         </Button>
         <Heading size="md" textAlign="center">

@@ -13,8 +13,10 @@ import {
 import { DeleteIcon } from "@chakra-ui/icons";
 import CantidadInput from "../pageFormPedidos/cantidadInput";
 
+const EMPTY_DETALLES = [];
+
 export const DetallesPedidosTableDesktop = ({
-  detalles = [],
+  detalles = EMPTY_DETALLES,
   onUpdateCantidad = () => {},
   onDelete = () => {},
 }) => {

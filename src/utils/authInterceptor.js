@@ -88,6 +88,11 @@ export const setupAxiosInterceptors = () => {
       try {
         const baseUrl = import.meta.env.VITE_API_URL;
         const storedRefreshToken = localStorage.getItem("refresh_token");
+
+        if (!storedRefreshToken) {
+          throw new Error("NO_REFRESH_TOKEN");
+        }
+
         const resp = await axios.post(
           `${baseUrl}/login/refresh-token`,
           { refreshToken: storedRefreshToken },

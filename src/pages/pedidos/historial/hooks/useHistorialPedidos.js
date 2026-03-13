@@ -1,15 +1,16 @@
 import { useState, useEffect, useMemo, useCallback, useReducer } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import { tablaPedidos, fetchFilterOptions } from "../../../../store/Pedidos/thunks";
+import {
+  tablaPedidos,
+  fetchFilterOptions,
+} from "../../../../store/Pedidos/thunks";
 import { getDetalleOrdenByPedidoId } from "../../../../store/Pedidos/DetallePedidos/thunks";
 import { tablaTienda } from "../../../../store/Tienda/thunks";
-import { useSearch } from "../../../../components/component/SearchContext";
 
 export const useHistorialPedidos = () => {
   const dispatch = useDispatch();
   const location = useLocation();
-  const { query } = useSearch();
 
   const [modalState, dispatchModal] = useReducer((s, a) => ({ ...s, ...a }), {
     isOpen: false,
@@ -46,23 +47,19 @@ export const useHistorialPedidos = () => {
     }
   }, [location]);
 
-  const { data: todosLosPedidosRaw = [], status, total, filterOptions } = useSelector((state) => state.pedidos);
-  const tiendas = useSelector((state) => state.tiendas.data);
-  const user = useSelector((state) => state.auth.user);
+  const {
+    data: todosLosPedidosRaw = [],
+    status,
+    total,
+    filterOptions,
+  } = useSelector((state) => state.pedidos);
 
   const filteredPedidos = useMemo(() => {
-    if (!todosLosPedidosRaw || !tiendas || !user) return [];
-    const rutasUsuario = user.rutas || [];
-    const rutasSet = new Set(Array.isArray(rutasUsuario) ? rutasUsuario.map((r) => +r.id || +r) : []);
-    const tiendaRutaMap = new Map((tiendas || []).map((t) => [t.id, +t.rutaId]));
-    const userId = user.id || user.uid || (user.usuarioId ? parseInt(user.usuarioId) : null);
-
-    return todosLosPedidosRaw.filter((p) => {
-      if (userId && p.usuarioId === userId) return true;
-      if (!rutasUsuario.length) return false;
-      return rutasSet.has(tiendaRutaMap.get(p.tiendaId));
-    });
-  }, [todosLosPedidosRaw, tiendas, user]);
+    if (Array.isArray(todosLosPedidosRaw)) return todosLosPedidosRaw;
+    if (todosLosPedidosRaw && Array.isArray(todosLosPedidosRaw.data))
+      return todosLosPedidosRaw.data;
+    return [];
+  }, [todosLosPedidosRaw]);
 
   useEffect(() => {
     if (highlightedPedidoId && filteredPedidos.length > 0) {
@@ -72,13 +69,22 @@ export const useHistorialPedidos = () => {
   }, [highlightedPedidoId, filteredPedidos]);
 
   useEffect(() => {
-    if (usuarioId && roleId) dispatch(fetchFilterOptions({ userId: usuarioId, roleId }));
+    if (usuarioId && roleId)
+      dispatch(fetchFilterOptions({ userId: usuarioId, roleId }));
   }, [dispatch, usuarioId, roleId]);
 
   useEffect(() => {
     dispatch(tablaTienda());
     if (usuarioId && roleId) {
-      dispatch(tablaPedidos({ userId: usuarioId, roleId, page: currentPage, limit: itemsPerPage, filters }));
+      dispatch(
+        tablaPedidos({
+          userId: usuarioId,
+          roleId,
+          page: currentPage,
+          limit: itemsPerPage,
+          filters,
+        }),
+      );
     }
   }, [dispatch, usuarioId, roleId, currentPage, filters]);
 
@@ -91,19 +97,40 @@ export const useHistorialPedidos = () => {
   const handleVerDetalles = async (pedido) => {
     dispatchModal({ isLoading: true, selectedPedido: pedido });
     try {
-      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedido.id)).unwrap();
-      dispatchModal({ detalles: detalles.slice().sort((a, b) => a.nombreProducto.localeCompare(b.nombreProducto)), isOpen: true, isLoading: false });
+      const detalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedido.id),
+      ).unwrap();
+      dispatchModal({
+        detalles: detalles
+          .slice()
+          .sort((a, b) => a.nombreProducto.localeCompare(b.nombreProducto)),
+        isOpen: true,
+        isLoading: false,
+      });
     } catch (err) {
       dispatchModal({ isLoading: false });
     }
   };
 
-  const handleCloseModal = () => dispatchModal({ isOpen: false, selectedPedido: null, detalles: [] });
+  const handleCloseModal = () =>
+    dispatchModal({ isOpen: false, selectedPedido: null, detalles: [] });
 
   return {
-    modalState, currentPage, setCurrentPage, isMobile, roleId, 
-    highlightedPedidoId, setHighlightedPedidoId, filters, 
-    handleFilterChange, filteredPedidos, status, total, filterOptions,
-    handleVerDetalles, handleCloseModal, itemsPerPage
+    modalState,
+    currentPage,
+    setCurrentPage,
+    isMobile,
+    roleId,
+    highlightedPedidoId,
+    setHighlightedPedidoId,
+    filters,
+    handleFilterChange,
+    filteredPedidos,
+    status,
+    total,
+    filterOptions,
+    handleVerDetalles,
+    handleCloseModal,
+    itemsPerPage,
   };
 };

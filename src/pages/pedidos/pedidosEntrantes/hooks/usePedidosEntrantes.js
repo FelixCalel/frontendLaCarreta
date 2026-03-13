@@ -17,8 +17,8 @@ export const usePedidosEntrantes = () => {
   const toast = useToast();
 
   const { roleId: roleIdRedux, uid } = useSelector((state) => state.auth || {});
-  const roleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
-  const usuarioId = uid ? parseInt(uid, 10) : null;
+  const roleId = roleIdRedux ? Number.parseInt(roleIdRedux, 10) : null;
+  const usuarioId = uid ? Number.parseInt(uid, 10) : null;
 
   const [selectedPedidos, setSelectedPedidos] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,7 +26,7 @@ export const usePedidosEntrantes = () => {
 
   const [highlightState, setHighlightState] = useReducer(
     (s, a) => ({ ...s, ...a }),
-    { highlightedPedidoId: null }
+    { highlightedPedidoId: null },
   );
 
   const {
@@ -48,6 +48,23 @@ export const usePedidosEntrantes = () => {
     comentario: "",
   });
 
+  const normalizeDateForInput = (value) => {
+    if (!value) return "";
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+
+    const isoCandidate = String(value).slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(isoCandidate)) return isoCandidate;
+
+    const ddmmyyyy = String(value).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (ddmmyyyy) {
+      const [, day, month, year] = ddmmyyyy;
+      return `${year}-${month}-${day}`;
+    }
+
+    return "";
+  };
+
   const {
     data: pedidosEntrantesRaw,
     status,
@@ -62,10 +79,13 @@ export const usePedidosEntrantes = () => {
     const rutasSet = new Set(
       Array.isArray(rutasUsuario)
         ? rutasUsuario.map((r) => (typeof r === "object" ? +r.id : +r))
-        : []
+        : [],
     );
     const tiendaRutaMap = new Map(tiendas.map((t) => [t.id, +t.rutaId]));
-    const userId = user.id || user.uid || (user.usuarioId ? parseInt(user.usuarioId) : null);
+    const userId =
+      user.id ||
+      user.uid ||
+      (user.usuarioId ? Number.parseInt(user.usuarioId, 10) : null);
 
     return pedidosEntrantesRaw.filter((p) => {
       if (userId && p.usuarioId === userId) return true;
@@ -85,7 +105,7 @@ export const usePedidosEntrantes = () => {
         status: 2,
         page: currentPage,
         limit: itemsPerPage,
-      })
+      }),
     );
   }, [dispatch, usuarioId, roleId, currentPage]);
 
@@ -102,7 +122,10 @@ export const usePedidosEntrantes = () => {
     const handleSocketMessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === "notification" || data.type === "on-order-status-changed") {
+        if (
+          data.type === "notification" ||
+          data.type === "on-order-status-changed"
+        ) {
           refreshPedidos();
         }
       } catch (error) {
@@ -115,16 +138,21 @@ export const usePedidosEntrantes = () => {
 
   useEffect(() => {
     if (location.state?.highlightedPedidoId) {
-      setHighlightState({ highlightedPedidoId: location.state.highlightedPedidoId });
-      window.history.replaceState({}, document.title);
+      setHighlightState({
+        highlightedPedidoId: location.state.highlightedPedidoId,
+      });
+      globalThis.history.replaceState({}, document.title);
     }
   }, [location]);
 
   useEffect(() => {
     if (highlightState.highlightedPedidoId && pedidosEntrantes.length > 0) {
       const timerScroll = setTimeout(() => {
-        const element = document.getElementById(`pedido-${highlightState.highlightedPedidoId}`);
-        if (element) element.scrollIntoView({ behavior: "smooth", block: "center" });
+        const element = document.getElementById(
+          `pedido-${highlightState.highlightedPedidoId}`,
+        );
+        if (element)
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 100);
 
       const timerClear = setTimeout(() => {
@@ -137,21 +165,32 @@ export const usePedidosEntrantes = () => {
     }
   }, [highlightState.highlightedPedidoId, pedidosEntrantes]);
 
-  const [modalState, dispatchModal] = useReducer(
-    (s, a) => ({ ...s, ...a }),
-    { isOpen: false, selectedPedido: null, detalles: [] }
-  );
+  const [modalState, dispatchModal] = useReducer((s, a) => ({ ...s, ...a }), {
+    isOpen: false,
+    selectedPedido: null,
+    detalles: [],
+  });
 
   const handleVerDetalles = async (pedido) => {
     dispatchModal({ selectedPedido: pedido });
     try {
-      const detalles = await dispatch(getDetalleOrdenByPedidoId(pedido.id)).unwrap();
+      const detalles = await dispatch(
+        getDetalleOrdenByPedidoId(pedido.id),
+      ).unwrap();
       const detallesOrdenados = detalles.slice().sort((a, b) =>
-        a.nombreProducto.localeCompare(b.nombreProducto, undefined, { sensitivity: "base" })
+        a.nombreProducto.localeCompare(b.nombreProducto, undefined, {
+          sensitivity: "base",
+        }),
       );
       dispatchModal({ detalles: detallesOrdenados, isOpen: true });
     } catch (err) {
-      toast({ title: "Error al cargar detalles", description: err.message, status: "error", duration: 3000, isClosable: true });
+      toast({
+        title: "Error al cargar detalles",
+        description: err.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -160,29 +199,64 @@ export const usePedidosEntrantes = () => {
     try {
       await Promise.all(
         selectedPedidos.map((id) => {
-          const pedido = pedidosEntrantes.find((p) => p.id === id);
-          if (!pedido) return Promise.resolve();
-          const fecha = selectedPedidos.length === 1 ? approveData.fechaOrdenDisplay : (pedido.fechaOrdenDisplay?.split("T")[0]);
+          if (selectedPedidos.length === 1) {
+            return dispatch(
+              togglePedidoStatus({
+                id,
+                estadoId: 3,
+                comentarioDisplay: approveData.comentarioDisplay,
+                fechaOrdenDisplay: approveData.fechaOrdenDisplay,
+              }),
+            ).unwrap();
+          }
+
           return dispatch(
             togglePedidoStatus({
               id,
               estadoId: 3,
-              comentarioDisplay: selectedPedidos.length === 1 ? approveData.comentarioDisplay : pedido.comentarioDisplay,
-              comentario: selectedPedidos.length === 1 ? approveData.comentario : pedido.comentario,
-              fechaOrdenDisplay: fecha,
-            })
+            }),
           ).unwrap();
-        })
+        }),
       );
       toast({ title: "Pedidos aprobados correctamente", status: "success" });
       setSelectedPedidos([]);
       refreshPedidos();
       onApproveClose();
     } catch (err) {
-      toast({ title: "Error al aprobar pedidos", description: err.message, status: "error" });
+      toast({
+        title: "Error al aprobar pedidos",
+        description: err.message,
+        status: "error",
+      });
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleOpenApproveModal = () => {
+    if (selectedPedidos.length === 1) {
+      const selectedId = selectedPedidos[0];
+      const pedido = pedidosEntrantes.find((p) => p.id === selectedId);
+
+      setApproveData({
+        fechaOrdenDisplay: normalizeDateForInput(
+          pedido?.fechaOrdenDisplay || pedido?.fechaOrden,
+        ),
+        comentarioDisplay:
+          pedido?.comentarioDisplay || pedido?.comentario || "",
+        comentario: pedido?.comentario || pedido?.comentarioDisplay || "",
+      });
+    }
+
+    if (selectedPedidos.length > 1) {
+      setApproveData({
+        fechaOrdenDisplay: "",
+        comentarioDisplay: "",
+        comentario: "",
+      });
+    }
+
+    onApproveOpen();
   };
 
   const handleBulkCancel = async () => {
@@ -191,17 +265,14 @@ export const usePedidosEntrantes = () => {
     try {
       await Promise.all(
         selectedPedidos.map((id) => {
-          const pedido = pedidosEntrantes.find((p) => p.id === id);
           return dispatch(
             togglePedidoStatus({
               id,
               estadoId: 4,
               comentario: cancelComment,
-              comentarioDisplay: pedido?.comentarioDisplay,
-              fechaOrdenDisplay: pedido?.fechaOrdenDisplay?.split("T")[0],
-            })
+            }),
           ).unwrap();
-        })
+        }),
       );
       toast({ title: "Pedidos cancelados correctamente", status: "info" });
       setSelectedPedidos([]);
@@ -209,7 +280,11 @@ export const usePedidosEntrantes = () => {
       onCancelClose();
       refreshPedidos();
     } catch (err) {
-      toast({ title: "Error al cancelar pedidos", description: err.message, status: "error" });
+      toast({
+        title: "Error al cancelar pedidos",
+        description: err.message,
+        status: "error",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -231,7 +306,7 @@ export const usePedidosEntrantes = () => {
     setCancelComment,
     isProcessing,
     isApproveOpen,
-    onApproveOpen,
+    onApproveOpen: handleOpenApproveModal,
     onApproveClose,
     approveData,
     setApproveData,

@@ -4,7 +4,8 @@ import { CheckIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import { FaTruckLoading } from "react-icons/fa";
 
-const countStage = (items, stageId) => items.filter((it) => it.etapaId === stageId).length;
+const countStage = (items, stageId) =>
+  items.filter((it) => it.etapaId === stageId).length;
 
 export const GroupCard = ({ group, IconComponent, title }) => {
   const { pedidoId, tienda, pais, items } = group;
@@ -14,9 +15,15 @@ export const GroupCard = ({ group, IconComponent, title }) => {
   const docNum = items[0]?.docNum;
   const docEntry = items[0]?.docEntry;
   const currentEtapaId = items[0]?.etapaId ?? 3;
-  const isHistory = currentEtapaId === 4;
+  const isHistory =
+    group.forceHistory ||
+    currentEtapaId === 4 ||
+    Boolean(docNum) ||
+    Boolean(docEntry);
 
-  const stageItemsCount = countStage(items, currentEtapaId);
+  const stageItemsCount = isHistory
+    ? items.length
+    : countStage(items, currentEtapaId);
   const allComplete = items
     .filter((it) => it.etapaId === currentEtapaId)
     .every((it) => it.completo);
@@ -31,7 +38,13 @@ export const GroupCard = ({ group, IconComponent, title }) => {
       bg={cardBg}
       borderRadius="md"
       cursor="pointer"
-      onClick={() => navigate(isHistory ? `/historialSapDetalle/${pedidoId}` : `/detalleFabricacion/${pedidoId}`)}
+      onClick={() =>
+        navigate(
+          isHistory
+            ? `/digitador/orden/pedido/historial/${pedidoId}`
+            : `/detalleFabricacion/${pedidoId}`,
+        )
+      }
       _hover={{
         bg: hoverBg,
         transform: "translateY(-2px)",
@@ -65,7 +78,11 @@ export const GroupCard = ({ group, IconComponent, title }) => {
         borderRadius="sm"
         mb={3}
       >
-        <Icon as={IconComponent || FaTruckLoading} boxSize={8} color="gray.500" />
+        <Icon
+          as={IconComponent || FaTruckLoading}
+          boxSize={8}
+          color="gray.500"
+        />
       </Box>
 
       <Text fontWeight="bold" noOfLines={1}>
@@ -98,6 +115,7 @@ GroupCard.propTypes = {
     tienda: PropTypes.string.isRequired,
     pais: PropTypes.string.isRequired,
     items: PropTypes.array.isRequired,
+    forceHistory: PropTypes.bool,
   }).isRequired,
   IconComponent: PropTypes.elementType,
   title: PropTypes.string,

@@ -18,7 +18,15 @@ export const useAddMaterial = (pedidoId, onClose) => {
   const [createRecetaLinea, { isLoading }] = useCreateRecetaLineaMutation();
   const [triggerGetItems] = useLazyGetItemsQuery();
   const { data: almacenes } = useGetAlmacenesQuery();
-  const [triggerGetStockSAP, { data: stockData, isFetching: isFetchingStock }] = useLazyGetStockSAPQuery();
+  const [
+    triggerGetStockSAP,
+    {
+      data: stockData,
+      isFetching: isFetchingStock,
+      isError: isStockError,
+      isSuccess: isStockSuccess,
+    },
+  ] = useLazyGetStockSAPQuery();
 
   const loadOptions = async (search, loadedOptions, { page }) => {
     try {
@@ -54,23 +62,61 @@ export const useAddMaterial = (pedidoId, onClose) => {
       triggerGetStockSAP({
         itemcode: option.item.codigo,
         pedidoId: Number(pedidoId),
-      }).unwrap().catch(console.error);
+      });
     }
   };
 
   useEffect(() => {
-    if (stockData && Array.isArray(stockData) && almacenes && !isFetchingStock && !almacenId) {
+    if (
+      stockData &&
+      Array.isArray(stockData) &&
+      almacenes &&
+      !isFetchingStock &&
+      !almacenId
+    ) {
       const availableStocks = stockData.filter((s) => Number(s.stock) > 0);
       if (availableStocks.length > 0) {
-        const matchedWarehouse = almacenes.find((a) => a.name === availableStocks[0].almacen);
+        const matchedWarehouse = almacenes.find(
+          (a) => a.name === availableStocks[0].almacen,
+        );
         if (matchedWarehouse) setAlmacenId(matchedWarehouse.id.toString());
       }
     }
   }, [stockData, almacenes, isFetchingStock, almacenId]);
 
+  useEffect(() => {
+    if (!selectedItem || isFetchingStock) return;
+
+    const noDataFound =
+      isStockError ||
+      (isStockSuccess && (!Array.isArray(stockData) || stockData.length === 0));
+
+    if (noDataFound) {
+      toast({
+        title: "Ítem no encontrado en SAP",
+        description:
+          "No se encontraron opciones de almacén para este material.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  }, [
+    selectedItem,
+    isFetchingStock,
+    isStockError,
+    isStockSuccess,
+    stockData,
+    toast,
+  ]);
+
   const handleSubmit = async () => {
     if (!selectedItem || !cantidadRequerida || !almacenId) {
-      toast({ title: "Error", description: "Complete los campos obligatorios.", status: "error" });
+      toast({
+        title: "Error",
+        description: "Complete los campos obligatorios.",
+        status: "error",
+      });
       return;
     }
 
@@ -88,12 +134,20 @@ export const useAddMaterial = (pedidoId, onClose) => {
         },
       }).unwrap();
 
-      toast({ title: "Éxito", description: "Material agregado.", status: "success" });
+      toast({
+        title: "Éxito",
+        description: "Material agregado.",
+        status: "success",
+      });
       onClose();
       resetForm();
     } catch (error) {
       console.error(error);
-      toast({ title: "Error", description: "No se pudo agregar material.", status: "error" });
+      toast({
+        title: "Error",
+        description: "No se pudo agregar material.",
+        status: "error",
+      });
     }
   };
 
@@ -107,16 +161,22 @@ export const useAddMaterial = (pedidoId, onClose) => {
 
   return {
     selectedItem,
-    cantidadBase, setCantidadBase,
-    cantidadRequerida, setCantidadRequerida,
-    almacenId, setAlmacenId,
-    unidad, setUnidad,
+    cantidadBase,
+    setCantidadBase,
+    cantidadRequerida,
+    setCantidadRequerida,
+    almacenId,
+    setAlmacenId,
+    unidad,
+    setUnidad,
     isLoading,
     loadOptions,
     handleItemChange,
     handleSubmit,
     stockData,
     isFetchingStock,
-    almacenes
+    isStockError,
+    isStockSuccess,
+    almacenes,
   };
 };

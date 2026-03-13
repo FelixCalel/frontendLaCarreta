@@ -1,5 +1,4 @@
 import PropTypes from "prop-types";
-import { useModalAuthError } from "../../../../hooks/useAuthError";
 
 import {
   Modal,
@@ -21,6 +20,7 @@ import { useLocation } from "react-router-dom";
 import PedidoInfoDisplay from "./PedidoInfoDisplay";
 import AgregarProductoBar from "./AgregarProductoBar";
 import DetallesProductosTable from "./DetallesProductosTable";
+import { useDetallesModal } from "./useDetallesModal";
 
 const EMPTY_ARRAY = [];
 
@@ -32,14 +32,21 @@ const DetallesModal = ({
 }) => {
   const location = useLocation();
   const isEditable = location.pathname === "/pedidos/entrantes";
-  
+
   const {
-    newProducto, setNewProducto,
-    cantidadAgregar, setCantidadAgregar,
-    loading, loadingDetalle,
-    resetFields, detallesLocal,
-    editCantidad, setEditCantidad,
-    handleAddProducto, handleCantidadConfirm, handleRemoveProducto
+    newProducto,
+    setNewProducto,
+    cantidadAgregar,
+    setCantidadAgregar,
+    loading,
+    loadingDetalle,
+    resetFields,
+    detallesLocal,
+    editCantidad,
+    setEditCantidad,
+    handleAddProducto,
+    handleCantidadConfirm,
+    handleRemoveProducto,
   } = useDetallesModal(pedido, detalles, onClose);
 
   const bg = useColorModeValue("white", "gray.800");
@@ -52,14 +59,28 @@ const DetallesModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl" isCentered motionPreset="slideInBottom">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      isCentered
+      motionPreset="slideInBottom"
+    >
       <ModalOverlay bg="blackAlpha.600" />
-      <ModalContent bg={bg} borderRadius="lg" boxShadow="xl" border="1px solid" borderColor={borderColor}>
+      <ModalContent
+        bg={bg}
+        borderRadius="lg"
+        boxShadow="xl"
+        border="1px solid"
+        borderColor={borderColor}
+      >
         <ModalHeader>
           <Flex align="center" gap={2}>
             <Icon as={FaBoxOpen} w={6} h={6} />
             <Text>Detalles del Pedido&nbsp;</Text>
-            <Text as="span" fontWeight="bold">#{pedido.id}</Text>
+            <Text as="span" fontWeight="bold">
+              #{pedido.id}
+            </Text>
           </Flex>
         </ModalHeader>
         <ModalCloseButton />
@@ -80,16 +101,24 @@ const DetallesModal = ({
             <DetallesProductosTable
               detallesLocal={detallesLocal}
               editCantidad={editCantidad}
-              handleCantidadChange={isEditable ? handleCantidadChange : () => {}}
-              handleCantidadConfirm={isEditable ? handleCantidadConfirm : () => {}}
-              handleRemoveProducto={isEditable ? handleRemoveProducto : () => {}}
+              handleCantidadChange={
+                isEditable ? handleCantidadChange : () => {}
+              }
+              handleCantidadConfirm={
+                isEditable ? handleCantidadConfirm : () => {}
+              }
+              handleRemoveProducto={
+                isEditable ? handleRemoveProducto : () => {}
+              }
               loadingDetalle={loadingDetalle}
               isEditable={isEditable}
             />
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose} colorScheme="green" variant="outline">Cerrar</Button>
+          <Button onClick={onClose} colorScheme="green" variant="outline">
+            Cerrar
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

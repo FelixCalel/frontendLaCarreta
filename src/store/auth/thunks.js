@@ -138,11 +138,14 @@ const obtenerDatosLogeado = () => {
 
 export const startLogin = createAsyncThunk(
   "auth/startLogin",
-  async ({ identifier, contrasena, captchaToken }, { rejectWithValue, dispatch }) => {
+  async (
+    { identifier, contrasena, captchaToken },
+    { rejectWithValue, dispatch },
+  ) => {
     try {
       const resp = await axios.post(`${BASE_URL}/usuarios/login`, {
-        correo_electronico: identifier,
-        password: contrasena,
+        identifier,
+        contrasena,
         captchaToken,
       });
 
@@ -156,7 +159,10 @@ export const startLogin = createAsyncThunk(
       localStorage.setItem("token", token);
       localStorage.setItem("usuarioId", usuario.id);
       localStorage.setItem("roleId", usuario.roleId);
-      localStorage.setItem("nombreUsuario", `${usuario.nombres} ${usuario.apellidos}`);
+      localStorage.setItem(
+        "nombreUsuario",
+        `${usuario.nombres} ${usuario.apellidos}`,
+      );
       localStorage.setItem("correoUsuario", usuario.correo_electronico);
       localStorage.setItem("isAuthenticated", "true");
 
@@ -177,7 +183,11 @@ export const startLogin = createAsyncThunk(
     } catch (error) {
       console.error("Login thunk error:", error);
       return rejectWithValue(
-        error.response?.data?.error || error.response?.data?.message || "Credenciales incorrectas"
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          (Array.isArray(error.response?.data?.errors)
+            ? error.response.data.errors.join(", ")
+            : "Credenciales incorrectas"),
       );
     }
   },
@@ -197,7 +207,10 @@ export const startVerifyLogin = createAsyncThunk(
       localStorage.setItem("token", token);
       localStorage.setItem("usuarioId", usuario.id);
       localStorage.setItem("roleId", usuario.roleId);
-      localStorage.setItem("nombreUsuario", `${usuario.nombres} ${usuario.apellidos}`);
+      localStorage.setItem(
+        "nombreUsuario",
+        `${usuario.nombres} ${usuario.apellidos}`,
+      );
       localStorage.setItem("correoUsuario", usuario.correo_electronico);
       localStorage.setItem("isAuthenticated", "true");
 
@@ -217,7 +230,9 @@ export const startVerifyLogin = createAsyncThunk(
       return payload;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || error.response?.data?.message || "Código inválido"
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Código inválido",
       );
     }
   },
@@ -277,8 +292,6 @@ export const fetchCurrentUser = createAsyncThunk(
     }
   },
 );
-
-
 
 export const verifyEmailCode = createAsyncThunk(
   "auth/verifyEmailCode",
@@ -362,7 +375,6 @@ export const resetPasswordWithToken = createAsyncThunk(
     }
   },
 );
-
 
 export const startLogout = createAsyncThunk(
   "auth/startLogout",

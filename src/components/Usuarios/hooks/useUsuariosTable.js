@@ -1,7 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useDisclosure, useToast } from "@chakra-ui/react";
-import { fetchRoles, toggleUserStatus, assignUserRoutes } from "../../../store/usuarios/thunks";
+import {
+  fetchRoles,
+  toggleUserStatus,
+  assignUserRoutes,
+} from "../../../store/usuarios/thunks";
 import { fetchUsuarios } from "../../../store/usuarios/usuariosSlice";
 import { tablaTienda } from "../../../store/Tienda/thunks";
 import { tablaRuta } from "../../../store/Ruta/thunks";
@@ -33,7 +37,14 @@ export const useUsuariosTable = () => {
       try {
         const resultAction = await dispatch(fetchRoles());
         if (fetchRoles.fulfilled.match(resultAction)) {
-          setAllRoles(resultAction.payload);
+          const roles = Array.isArray(resultAction.payload)
+            ? resultAction.payload
+            : Array.isArray(resultAction.payload?.roles)
+              ? resultAction.payload.roles
+              : Array.isArray(resultAction.payload?.data)
+                ? resultAction.payload.data
+                : [];
+          setAllRoles(roles);
         }
       } catch (error) {
         console.error("Error fetching roles:", error);
@@ -55,9 +66,18 @@ export const useUsuariosTable = () => {
         const apellido = (u.apellido ?? "").toLowerCase();
         const correo = (u.correo ?? "").toLowerCase();
         const nombreCompleto = `${nombre} ${apellido}`.trim();
-        return nombre.includes(term) || apellido.includes(term) || nombreCompleto.includes(term) || correo.includes(term);
+        return (
+          nombre.includes(term) ||
+          apellido.includes(term) ||
+          nombreCompleto.includes(term) ||
+          correo.includes(term)
+        );
       })
-      .sort((a, b) => (a.nombre ?? "").toLowerCase().localeCompare((b.nombre ?? "").toLowerCase()));
+      .sort((a, b) =>
+        (a.nombre ?? "")
+          .toLowerCase()
+          .localeCompare((b.nombre ?? "").toLowerCase()),
+      );
   }, [usuarios, searchTerm]);
 
   const usuariosPagina = useMemo(() => {
@@ -68,7 +88,10 @@ export const useUsuariosTable = () => {
   const toggleUsuarioEstado = async (usuarioId, estaActivo) => {
     const res = await dispatch(toggleUserStatus({ usuarioId, estaActivo }));
     if (toggleUserStatus.fulfilled.match(res)) {
-      toast({ title: `Usuario ${!estaActivo ? "activado" : "desactivado"}`, status: "success" });
+      toast({
+        title: `Usuario ${!estaActivo ? "activado" : "desactivado"}`,
+        status: "success",
+      });
       dispatch(fetchUsuarios({ id: localStorage.getItem("usuarioId") }));
     } else toast({ title: "Error", status: "error" });
   };
@@ -85,15 +108,24 @@ export const useUsuariosTable = () => {
   };
 
   return {
-    searchTerm, setSearchTerm,
-    selectedUser, setSelectedUser,
-    isOpen, onOpen, onClose,
-    allRoles, rutasLocal,
-    currentPage, setCurrentPage,
-    isAssigning, status,
-    usuariosFiltrados, usuariosPagina,
+    searchTerm,
+    setSearchTerm,
+    selectedUser,
+    setSelectedUser,
+    isOpen,
+    onOpen,
+    onClose,
+    allRoles,
+    rutasLocal,
+    currentPage,
+    setCurrentPage,
+    isAssigning,
+    status,
+    usuariosFiltrados,
+    usuariosPagina,
     roleIdLogueado,
-    toggleUsuarioEstado, handleAssignRutas,
-    itemsPerPage
+    toggleUsuarioEstado,
+    handleAssignRutas,
+    itemsPerPage,
   };
 };

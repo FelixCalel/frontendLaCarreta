@@ -10,7 +10,6 @@ import {
   ModalFooter,
   Button,
   Input,
-  Text,
   InputGroup,
   InputLeftElement,
   Flex,
@@ -25,7 +24,7 @@ const AsignarRutasModal = ({
   isOpen,
   onClose,
   usuario,
-  rutas = EMPTY_ARRAY, // Rutas disponibles (ya enriquecidas si es necesario)
+  rutas = EMPTY_ARRAY,
   onAssign,
   isLoading = false,
 }) => {
@@ -33,8 +32,12 @@ const AsignarRutasModal = ({
   const [selectedRoutes, setSelectedRoutes] = useState(() =>
     usuario && usuario.rutas ? usuario.rutas.map((r) => r.id) : [],
   );
+  const modalHeaderColor = useColorModeValue("teal.600", "teal.200");
 
-  // Filtrar rutas basado en el término de búsqueda
+  useEffect(() => {
+    setSelectedRoutes(usuario?.rutas ? usuario.rutas.map((r) => r.id) : []);
+  }, [usuario, isOpen]);
+
   const filteredRutas = useMemo(() => {
     if (!searchTerm) return rutas;
     const lowerTerm = searchTerm.toLowerCase();
@@ -51,14 +54,12 @@ const AsignarRutasModal = ({
 
   const handleSelectAll = () => {
     const allIds = filteredRutas.map((r) => r.id);
-    // Agregar solo los que no están ya seleccionados
     const newSelected = [...new Set([...selectedRoutes, ...allIds])];
     setSelectedRoutes(newSelected);
   };
 
   const handleDeselectAll = () => {
     const visibleIds = new Set(filteredRutas.map((r) => r.id));
-    // Remover los IDs que están visibles actualmente
     setSelectedRoutes((prev) => prev.filter((id) => !visibleIds.has(id)));
   };
 

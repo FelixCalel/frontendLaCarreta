@@ -34,7 +34,10 @@ import {
   useLazyGetStockSAPQuery,
 } from "../../../services/pedidoProductionApi";
 
-import { getMaterialSelectStyles, getModalColors } from "./styles/MaterialStyles";
+import {
+  getMaterialSelectStyles,
+  getModalColors,
+} from "./styles/MaterialStyles";
 import { useAddMaterial } from "./hooks/useAddMaterial";
 
 const AddMaterialModal = ({ isOpen, onClose, pedidoId }) => {
@@ -43,43 +46,66 @@ const AddMaterialModal = ({ isOpen, onClose, pedidoId }) => {
 
   const {
     selectedItem,
-    cantidadBase, setCantidadBase,
-    cantidadRequerida, setCantidadRequerida,
-    almacenId, setAlmacenId,
-    unidad, setUnidad,
+    cantidadBase,
+    setCantidadBase,
+    cantidadRequerida,
+    setCantidadRequerida,
+    almacenId,
+    setAlmacenId,
+    unidad,
+    setUnidad,
     isLoading,
     loadOptions,
     handleItemChange,
     handleSubmit,
     stockData,
     isFetchingStock,
-    almacenes
+    isStockError,
+    isStockSuccess,
+    almacenes,
   } = useAddMaterial(pedidoId, onClose);
 
   const colors = useMemo(() => getModalColors(isDark), [isDark]);
   const customStyles = useMemo(() => getMaterialSelectStyles(isDark), [isDark]);
 
-  const selectedWarehouseName = useMemo(() => 
-    almacenes?.find((a) => a.id === Number(almacenId))?.name,
-    [almacenes, almacenId]
+  const selectedWarehouseName = useMemo(
+    () => almacenes?.find((a) => a.id === Number(almacenId))?.name,
+    [almacenes, almacenId],
   );
 
-  const currentStockInfo = useMemo(() => 
-    (stockData && Array.isArray(stockData))
-      ? stockData.find((s) => s.almacen === selectedWarehouseName)
-      : null,
-    [stockData, selectedWarehouseName]
+  const currentStockInfo = useMemo(
+    () =>
+      stockData && Array.isArray(stockData)
+        ? stockData.find((s) => s.almacen === selectedWarehouseName)
+        : null,
+    [stockData, selectedWarehouseName],
   );
 
-  const stockOnHand = currentStockInfo ? Number(currentStockInfo.stock || 0) : 0;
-  const stockCommited = currentStockInfo ? Number(currentStockInfo.comprometido || 0) : 0;
+  const stockOnHand = currentStockInfo
+    ? Number(currentStockInfo.stock || 0)
+    : 0;
+  const stockCommited = currentStockInfo
+    ? Number(currentStockInfo.comprometido || 0)
+    : 0;
   const reqQty = Number(cantidadRequerida) || 0;
 
   const stockStatus = useMemo(() => {
     if (isFetchingStock || !selectedItem || !almacenId) return "gray";
-    if (!currentStockInfo || stockOnHand <= 0 || (reqQty > 0 && stockOnHand < reqQty)) return "red";
+    if (
+      !currentStockInfo ||
+      stockOnHand <= 0 ||
+      (reqQty > 0 && stockOnHand < reqQty)
+    )
+      return "red";
     return "green";
-  }, [isFetchingStock, selectedItem, almacenId, currentStockInfo, stockOnHand, reqQty]);
+  }, [
+    isFetchingStock,
+    selectedItem,
+    almacenId,
+    currentStockInfo,
+    stockOnHand,
+    reqQty,
+  ]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
@@ -120,6 +146,8 @@ const AddMaterialModal = ({ isOpen, onClose, pedidoId }) => {
               almacenId={almacenId}
               setAlmacenId={setAlmacenId}
               greenHoverBg={colors.greenHoverBg}
+              isStockError={isStockError}
+              isStockSuccess={isStockSuccess}
             />
 
             <FormControl isRequired>

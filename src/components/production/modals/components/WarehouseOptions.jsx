@@ -1,5 +1,14 @@
 import PropTypes from "prop-types";
-import { Box, Flex, Text, Spinner, Button, VStack } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Text,
+  Spinner,
+  Button,
+  VStack,
+  HStack,
+} from "@chakra-ui/react";
+import { WarningTwoIcon } from "@chakra-ui/icons";
 
 export const WarehouseOptions = ({
   isFetchingStock,
@@ -10,8 +19,30 @@ export const WarehouseOptions = ({
   almacenId,
   setAlmacenId,
   greenHoverBg,
+  isStockError,
+  isStockSuccess,
 }) => {
-  if (!(isFetchingStock || (stockData && Array.isArray(stockData))) || !selectedItem) {
+  const sapRows = Array.isArray(stockData) ? stockData : [];
+  const matchedOptions = sapRows
+    .map((stock) => {
+      const matchedWarehouse = almacenes?.find(
+        (warehouse) => warehouse.name === stock.almacen,
+      );
+      if (!matchedWarehouse) return null;
+      return { stock, matchedWarehouse };
+    })
+    .filter(Boolean);
+
+  const notFoundInSAP =
+    !isFetchingStock &&
+    selectedItem &&
+    (isStockError ||
+      (isStockSuccess &&
+        (!Array.isArray(stockData) ||
+          sapRows.length === 0 ||
+          matchedOptions.length === 0)));
+
+  if (!selectedItem || (!isFetchingStock && !isStockError && !isStockSuccess)) {
     return null;
   }
 
@@ -31,13 +62,32 @@ export const WarehouseOptions = ({
           />
         )}
       </Flex>
-      {!isFetchingStock && stockData && (
+      {notFoundInSAP && (
+        <HStack
+          spacing={2}
+          px={3}
+          py={2}
+          borderRadius="md"
+          bg="orange.50"
+          borderWidth="1px"
+          borderColor="orange.300"
+          _dark={{ bg: "orange.900", borderColor: "orange.600" }}
+        >
+          <WarningTwoIcon color="orange.400" boxSize={4} flexShrink={0} />
+          <Text
+            fontSize="xs"
+            color="orange.700"
+            fontWeight="medium"
+            _dark={{ color: "orange.200" }}
+          >
+            Este ítem no se encontró en SAP. No hay datos de stock disponibles.
+          </Text>
+        </HStack>
+      )}
+      {!isFetchingStock && matchedOptions.length > 0 && (
         <Flex wrap="wrap" gap={2}>
-          {stockData.map((s) => {
-            const matchedWarehouse = almacenes?.find(
-              (a) => a.name === s.almacen,
-            );
-            if (!matchedWarehouse) return null;
+          {matchedOptions.map(({ stock, matchedWarehouse }) => {
+            const s = stock;
 
             const hasStock = Number(s.stock) > 0;
             const isSelected = almacenId === matchedWarehouse.id.toString();
@@ -46,12 +96,8 @@ export const WarehouseOptions = ({
               <Button
                 key={s.almacen}
                 size="sm"
-                variant={
-                  isSelected ? "solid" : hasStock ? "outline" : "ghost"
-                }
-                colorScheme={
-                  isSelected ? "blue" : hasStock ? "green" : "gray"
-                }
+                variant={isSelected ? "solid" : hasStock ? "outline" : "ghost"}
+                colorScheme={isSelected ? "blue" : hasStock ? "green" : "gray"}
                 onClick={() => setAlmacenId(matchedWarehouse.id.toString())}
                 opacity={hasStock ? 1 : 0.6}
                 borderWidth={isSelected ? "2px" : "1px"}
@@ -88,5 +134,6 @@ WarehouseOptions.propTypes = {
   almacenId: PropTypes.string.isRequired,
   setAlmacenId: PropTypes.func.isRequired,
   greenHoverBg: PropTypes.string.isRequired,
+  isStockError: PropTypes.bool,
+  isStockSuccess: PropTypes.bool,
 };
-

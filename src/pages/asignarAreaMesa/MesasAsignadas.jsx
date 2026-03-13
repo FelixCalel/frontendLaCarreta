@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import PropTypes from "prop-types";
 import {
   Box,
@@ -14,14 +14,13 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  IconButton,
   Button,
   useToast,
   Flex,
   Icon,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { MdTableRestaurant, MdDelete, MdAdd } from "react-icons/md";
+import { MdTableRestaurant, MdDelete } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import {
@@ -45,17 +44,21 @@ const MesasAsignadas = ({ areaId }) => {
   const [mesaSeleccionada, setMesaSeleccionada] = useState(null);
   const [comentario, setComentario] = useState("");
 
-  const prevAreaIdRef = useRef(areaId);
+  const hasLoadedStaticDataRef = useRef(false);
 
-  if (areaId !== prevAreaIdRef.current) {
-    prevAreaIdRef.current = areaId;
-    if (areaId) {
-      dispatch(fetchMesasAsignadasThunk(areaId));
+  useEffect(() => {
+    if (!hasLoadedStaticDataRef.current) {
       dispatch(fetchMesasActivasThunk());
       dispatch(fetchMesasDisponiblesThunk());
+      hasLoadedStaticDataRef.current = true;
     }
-  }
+  }, [dispatch]);
 
+  useLayoutEffect(() => {
+    if (areaId) {
+      dispatch(fetchMesasAsignadasThunk(areaId));
+    }
+  }, [dispatch, areaId]);
 
   const getNombreMesa = (mesaId) => {
     const mesa = (Array.isArray(mesasActivas) ? mesasActivas : []).find(
@@ -90,7 +93,8 @@ const MesasAsignadas = ({ areaId }) => {
       .catch((err) => {
         toast({
           title: "Error al asignar",
-          description: typeof err === "string" ? err : "No se pudo asignar la mesa",
+          description:
+            typeof err === "string" ? err : "No se pudo asignar la mesa",
           status: "error",
           duration: 4000,
           isClosable: true,

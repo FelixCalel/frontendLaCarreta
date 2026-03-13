@@ -50,7 +50,7 @@ const typeStyles = {
   info: {
     iconColor: "blue.500",
     icon: FiInfo,
-    label: "INFO",
+    label: "EXPORTADO",
     badgeScheme: "blue",
     bgLight: "blue.50",
     bgDark: "blue.900",
@@ -58,46 +58,95 @@ const typeStyles = {
   },
 };
 
-const NotificationItem = ({ notificacion, onMarkAsRead, onClick }) => {
-  const styles = typeStyles[notificacion.tipo] || typeStyles.info;
-  
+const getStyleByEstado = (estadoId) => {
+  const parsed = parseInt(estadoId, 10);
+  if (parsed === 2) return typeStyles.warning;
+  if (parsed === 3) return typeStyles.success;
+  if (parsed === 4) return typeStyles.error;
+  if (parsed === 5 || parsed === 6) return typeStyles.info;
+  return null;
+};
+
+export const NotificationItem = ({
+  notificacion,
+  rolNombre,
+  onMarkAsRead,
+  onClick,
+}) => {
+  const notificationKind =
+    notificacion.notificationKind ||
+    (notificacion.data && notificacion.data.notificationKind);
+  const estadoId =
+    notificacion.estadoId || (notificacion.data && notificacion.data.estadoId);
+  const isVentasNewOrder =
+    rolNombre === "Ventas" &&
+    (notificationKind === "NEW_ORDER" || parseInt(estadoId, 10) === 2);
+  const styles = isVentasNewOrder
+    ? {
+        ...typeStyles.info,
+        icon: FiAlertCircle,
+        label: "NUEVO",
+      }
+    : notificationKind === "NEW_ORDER"
+      ? { ...typeStyles.info, label: "NUEVO" }
+      : getStyleByEstado(estadoId) ||
+        typeStyles[(notificacion.tipo || "").toLowerCase()] ||
+        typeStyles.info;
+
+  const displayTitle = isVentasNewOrder
+    ? `Nuevo pedido #${notificacion.pedidoId || (notificacion.data && notificacion.data.pedidoId) || ""}`.trim()
+    : notificacion.titulo || "Notificación";
+
+  const displayMessage = isVentasNewOrder
+    ? "Ha ingresado un nuevo pedido que requiere atención."
+    : notificacion.mensaje || "Tienes una nueva notificación";
+
   const bg = useColorModeValue(styles.bgLight, styles.bgDark);
   const hoverBg = useColorModeValue("blue.50", "gray.700");
   const mutedColor = useColorModeValue("gray.500", "gray.400");
 
   return (
     <Box
-      p={4}
+      py={1.5}
+      px={3}
       bg={notificacion.leido ? "transparent" : bg}
-      borderLeft="4px solid"
+      borderLeft="3px solid"
       borderColor={notificacion.leido ? "transparent" : styles.border}
       _hover={{ bg: hoverBg, cursor: "pointer" }}
       onClick={() => onClick(notificacion)}
       transition="all 0.2s"
       position="relative"
     >
-      <HStack align="start" spacing={3}>
-        <Box mt={1}>
-          <Icon as={styles.icon} color={styles.iconColor} boxSize={5} />
-        </Box>
-        <Box flex={1}>
-          <HStack justify="space-between" mb={1}>
+      <HStack align="center" spacing={2}>
+        <Icon
+          as={styles.icon}
+          color={styles.iconColor}
+          boxSize={4}
+          flexShrink={0}
+        />
+        <Box flex={1} minW={0}>
+          <HStack justify="space-between" spacing={1}>
             <Text
-              fontSize="sm"
-              fontWeight={notificacion.leido ? "normal" : "bold"}
+              fontSize="xs"
+              fontWeight={notificacion.leido ? "normal" : "semibold"}
+              isTruncated
             >
-              {notificacion.titulo || "Notificación"}
+              {displayTitle}
             </Text>
-            <Badge colorScheme={styles.badgeScheme} fontSize="0.6em">
+            <Badge
+              colorScheme={styles.badgeScheme}
+              fontSize="0.55em"
+              flexShrink={0}
+            >
               {styles.label}
             </Badge>
           </HStack>
-          <Text fontSize="xs" color={mutedColor} noOfLines={2} mb={2}>
-            {notificacion.mensaje || "Tienes una nueva notificación"}
+          <Text fontSize="xs" color={mutedColor} noOfLines={1}>
+            {displayMessage}
           </Text>
-          <HStack spacing={1} color={mutedColor}>
-            <Icon as={FiClock} boxSize={3} />
-            <Text fontSize="xs">
+          <HStack spacing={1} color={mutedColor} mt={0.5}>
+            <Icon as={FiClock} boxSize={2.5} />
+            <Text fontSize="0.65rem">
               {notificacion.creadoEl
                 ? formatDistanceToNow(new Date(notificacion.creadoEl), {
                     addSuffix: true,
@@ -115,6 +164,7 @@ const NotificationItem = ({ notificacion, onMarkAsRead, onClick }) => {
               variant="ghost"
               colorScheme="blue"
               aria-label="Marcar leída"
+              flexShrink={0}
               onClick={(e) => {
                 e.stopPropagation();
                 onMarkAsRead(notificacion.id);
@@ -129,6 +179,7 @@ const NotificationItem = ({ notificacion, onMarkAsRead, onClick }) => {
 
 NotificationItem.propTypes = {
   notificacion: PropTypes.object.isRequired,
+  rolNombre: PropTypes.string,
   onMarkAsRead: PropTypes.func.isRequired,
   onClick: PropTypes.func.isRequired,
 };

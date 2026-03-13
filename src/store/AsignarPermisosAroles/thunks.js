@@ -6,16 +6,28 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const fetchPermisosRoles = createAsyncThunk(
   "Permisos/fetchPermisosRoles",
-  async (_, thunkAPI) => {
+  async (params, thunkAPI) => {
     try {
+      const { selectedModulo, selectedOpcion } = params || {};
       const response = await axios.get(`${BASE_URL}/api/asignarRMOP/`);
-      return response.data; // Asegúrate de que los datos sean correctos
+
+      const asignaciones = Array.isArray(response.data) ? response.data : [];
+
+      if (selectedModulo && selectedOpcion) {
+        return asignaciones.filter(
+          (item) =>
+            Number(item.modulo_id) === Number(selectedModulo) &&
+            Number(item.opcion_id) === Number(selectedOpcion),
+        );
+      }
+
+      return asignaciones;
     } catch (error) {
       return thunkAPI.rejectWithValue(
-        error.response ? error.response.data : error.message
+        error.response ? error.response.data : error.message,
       );
     }
-  }
+  },
 );
 
 export const fetchPermisosRolesMetadata = createAsyncThunk(
@@ -26,10 +38,10 @@ export const fetchPermisosRolesMetadata = createAsyncThunk(
       return response.data; // Asegúrate de que los datos retornados sean correctos
     } catch (error) {
       return thunkAPI.rejectWithValue(
-        error.response ? error.response.data : error.message
+        error.response ? error.response.data : error.message,
       );
     }
-  }
+  },
 );
 
 export const createasignacionPermisosRoles = createAsyncThunk(
@@ -50,7 +62,7 @@ export const createasignacionPermisosRoles = createAsyncThunk(
 
       console.log(
         "Payload que se enviará al backend:",
-        JSON.stringify(createPayload)
+        JSON.stringify(createPayload),
       );
 
       if (createPayload.length > 0) {
@@ -61,7 +73,7 @@ export const createasignacionPermisosRoles = createAsyncThunk(
             headers: {
               "Content-Type": "application/json",
             },
-          }
+          },
         );
         return response.data;
       }
@@ -71,9 +83,23 @@ export const createasignacionPermisosRoles = createAsyncThunk(
       console.error("Error al crear permisos:", error);
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
+export const deleteasignacionPermisosRoles = createAsyncThunk(
+  "permisos/deleteasignacionPermisosRoles",
+  async (id, thunkAPI) => {
+    try {
+      const response = await axios.delete(
+        `${BASE_URL}/api/asignarRMOP/eliminar/${id}`,
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error al eliminar permiso:", error);
+      return thunkAPI.rejectWithValue(error.response?.data || error.message);
+    }
+  },
+);
 
 // En tu archivo de thunks
 export const fetchAsignacionMO = createAsyncThunk(
@@ -84,8 +110,8 @@ export const fetchAsignacionMO = createAsyncThunk(
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
-        error.response ? error.response.data : error.message
+        error.response ? error.response.data : error.message,
       );
     }
-  }
+  },
 );
