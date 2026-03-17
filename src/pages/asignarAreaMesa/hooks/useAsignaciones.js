@@ -19,7 +19,9 @@ export const useAsignaciones = (areaId) => {
     (state) => state.AsignacionAreaMesa,
   );
 
-  const [state, setState] = useReducer((s, a) => ({ ...s, ...a }), {
+  const [state, setState] = useReducer(
+    (s, a) => (typeof a === "function" ? a(s) : { ...s, ...a }),
+    {
     productOptions: [],
     selectedProducto: null,
     isLoadingProducts: false,
@@ -28,7 +30,8 @@ export const useAsignaciones = (areaId) => {
     hasMore: true,
     visibleCount: 15,
     filtroTabla: "",
-  });
+    },
+  );
 
   const {
     productOptions,
@@ -41,39 +44,30 @@ export const useAsignaciones = (areaId) => {
     filtroTabla,
   } = state;
 
-  const loadProducts = useCallback(
-    async (search = "", page = 1) => {
-      if (!state.hasMore && page > 1) return;
-      setState({ isLoadingProducts: true });
-      try {
-        const res = await axios.get(
-          `${BASE_URL}/items/todos?page=${page}&pageSize=10&nombre=${search}&codigo=${search}`,
-        );
-        const newItems = res.data.items || res.data;
-        const newOptions = newItems.map((item) => ({
-          label: `${item.codigo} - ${item.nombre}`,
-          value: item.id,
-        }));
+  const loadProducts = useCallback(async (search = "", page = 1) => {
+    setState({ isLoadingProducts: true });
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/items/todos?page=${page}&pageSize=10&nombre=${search}&codigo=${search}`,
+      );
+      const newItems = res.data.items || res.data;
+      const newOptions = newItems.map((item) => ({
+        label: `${item.codigo} - ${item.nombre}`,
+        value: item.id,
+      }));
 
-        if (page === 1) {
-          setState({
-            productOptions: newOptions,
-            hasMore: newItems.length >= 10,
-          });
-        } else {
-          setState({
-            productOptions: [...state.productOptions, ...newOptions],
-            hasMore: newItems.length >= 10,
-          });
-        }
-      } catch (err) {
-        console.error("Error cargando productos paginados:", err);
-      } finally {
-        setState({ isLoadingProducts: false });
-      }
-    },
-    [state.hasMore, state.productOptions],
-  );
+      setState((prev) => ({
+        ...prev,
+        productOptions:
+          page === 1 ? newOptions : [...prev.productOptions, ...newOptions],
+        hasMore: newItems.length >= 10,
+      }));
+    } catch (err) {
+      console.error("Error cargando productos paginados:", err);
+    } finally {
+      setState({ isLoadingProducts: false });
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -153,7 +147,7 @@ export const useAsignaciones = (areaId) => {
   const filteredAsignaciones = (
     Array.isArray(asignaciones) ? asignaciones : []
   ).filter((a) => {
-    if (!a?.state) return false;
+    if (a?.state === false) return false;
     if (!filtroTabla) return true;
     const searchLower = filtroTabla.toLowerCase();
     const nombre = a.productoNombre?.toLowerCase() || "";

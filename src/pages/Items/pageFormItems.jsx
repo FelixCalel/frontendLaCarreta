@@ -37,6 +37,7 @@ import { DeudorSelector } from "./components/DeudorSelector.jsx";
 const ItemRow = memo(
   ({
     item,
+    itemId,
     handleStatusChange,
     handleAddDeudor,
     handleRemoveDeudor,
@@ -50,7 +51,7 @@ const ItemRow = memo(
     const triggerHover = useColorModeValue("gray.50", "whiteAlpha.100");
 
     const handleToggleSelector = () => {
-      if (!isSelectorOpen) ensureDeudoresLoaded();
+      if (!isSelectorOpen) ensureDeudoresLoaded(itemId);
       setIsSelectorOpen((prev) => !prev);
     };
 
@@ -168,6 +169,7 @@ ItemRow.propTypes = {
       }),
     ),
   }).isRequired,
+  itemId: PropTypes.number.isRequired,
   handleStatusChange: PropTypes.func.isRequired,
   handleAddDeudor: PropTypes.func.isRequired,
   handleRemoveDeudor: PropTypes.func.isRequired,
@@ -384,10 +386,11 @@ const PageItems = () => {
               <ItemRow
                 key={item.id}
                 item={item}
+                itemId={item.id}
                 handleStatusChange={handleStatusChange}
                 handleAddDeudor={handleAddDeudor}
                 handleRemoveDeudor={handleRemoveDeudor}
-                ensureDeudoresLoaded={() => handleEnsureDeudoresLoaded(item.id)}
+                ensureDeudoresLoaded={handleEnsureDeudoresLoaded}
                 isLoadingDeudores={
                   deudoresStatus === "loading" &&
                   activeDeudorLoaderItemId === item.id

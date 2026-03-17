@@ -210,34 +210,33 @@ export const FiltrosMasivos = ({
   };
 
   return (
-    <Flex
-      gap={2}
-      wrap="wrap"
+    <Box
       p={2}
       borderWidth={1}
       borderColor={borderColor}
       borderRadius="lg"
       bg={listBg}
-      align="center"
-      justify="center"
     >
-      {FILTER_CONFIG.map(({ key, placeholder }) => (
-        <Box key={key} flex="1" minW="140px">
-          <Select
-            placeholder={placeholder}
-            value={selectedFilters[key]}
-            onChange={(val) => handleFilterChange(key, val)}
-            options={getVisibleOptions(key)}
-            onInputChange={(value, meta) => handleInputChange(key, value, meta)}
-            onMenuScrollToBottom={() => handleMenuScrollToBottom(key)}
-            isSearchable
-            isClearable
-            styles={mergedStyles}
-            components={{ SingleValue: CustomSingleValue }}
-          />
-        </Box>
-      ))}
-      <Flex gap={2}>
+      <Flex gap={2} wrap="wrap" align="center" justify="center">
+        {FILTER_CONFIG.map(({ key, placeholder }) => (
+          <Box key={key} flex="1" minW="140px">
+            <Select
+              placeholder={placeholder}
+              value={selectedFilters[key]}
+              onChange={(val) => handleFilterChange(key, val)}
+              options={getVisibleOptions(key)}
+              onInputChange={(value, meta) => handleInputChange(key, value, meta)}
+              onMenuScrollToBottom={() => handleMenuScrollToBottom(key)}
+              isSearchable
+              isClearable
+              styles={mergedStyles}
+              components={{ SingleValue: CustomSingleValue }}
+            />
+          </Box>
+        ))}
+      </Flex>
+
+      <Flex mt={3} gap={2} justify="center" align="center">
         <Button
           colorScheme="red"
           variant="outline"
@@ -264,7 +263,7 @@ export const FiltrosMasivos = ({
           Asignar
         </Button>
       </Flex>
-    </Flex>
+    </Box>
   );
 };
 
