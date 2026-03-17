@@ -1,25 +1,24 @@
-import { memo } from "react";
 import { Flex, Select, Box, useColorModeValue } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 
-export const FilterPanel = memo(
-  ({
-    countryFilter = "",
-    onCountryChange,
-    clientFilter = "",
-    onClientChange,
-    stateFilter = "",
-    onStateChange,
-    countries,
-    clients,
-    deuFilter = "",
-    onDeuChange,
-    deudores = [],
-  }) => {
-    const fieldBg = useColorModeValue("white", "gray.700");
-    const fieldBorder = useColorModeValue("gray.300", "gray.600");
-    const fieldText = useColorModeValue("gray.800", "gray.100");
-    const placeholder = useColorModeValue("gray.400", "gray.400");
+const EMPTY_ARRAY = [];
+export const FilterPanel = ({
+  countryFilter = "",
+  onCountryChange,
+  clientFilter = "",
+  onClientChange,
+  stateFilter = "",
+  onStateChange,
+  countries,
+  clients,
+  deuFilter = "",
+  onDeuChange,
+  deudores = EMPTY_ARRAY,
+}) => {
+  const fieldBg = useColorModeValue("white", "gray.700");
+  const fieldBorder = useColorModeValue("gray.300", "gray.600");
+  const fieldText = useColorModeValue("gray.800", "gray.100");
+  const placeholder = useColorModeValue("gray.400", "gray.400");
 
   const commonProps = {
     bg: fieldBg,

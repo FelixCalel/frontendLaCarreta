@@ -23,7 +23,7 @@ import {
 import { RecetaTable } from "./RecetaTable";
 import { OrderDetailsTable } from "./OrderDetailsTable";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 import { RechazoModal } from "../modals/RechazoModal";
 
 const FIELD_LABELS = {
@@ -53,6 +53,10 @@ export const ConsolidatedExpandedRow = memo(
 
     const toast = useToast();
     const primaryOrder = item.originalItems[0];
+    const orderWithRechazo =
+      item.originalItems.find(
+        (order) => Number(order?.cantidadRechazada) > 0,
+      ) || primaryOrder;
     const pedidoId = primaryOrder?.id;
     const recetaArg = isExpanded && pedidoId ? { pedidoId } : skipToken;
     const { data: receta = [], isLoading: loadingReceta } =
@@ -68,8 +72,7 @@ export const ConsolidatedExpandedRow = memo(
       ROW_1.forEach((field) => {
         if (["mpUtilizada", "mpSobrante", "basura"].includes(field)) {
           vals[field] = item.originalItems.reduce((sum, order) => {
-            const orderField = field === "basura" ? "cantidadRechazada" : field;
-            return sum + (Number(order[orderField]) || 0);
+            return sum + (Number(order[field]) || 0);
           }, 0);
         } else {
           vals[field] = item.originalItems[0][field];
@@ -80,22 +83,27 @@ export const ConsolidatedExpandedRow = memo(
 
     const [localValues, setLocalValues] = useState(initialLocalValues);
 
-    useEffect(() => {
+    const [prevInitialLocalValues, setPrevInitialLocalValues] =
+      useState(initialLocalValues);
+    if (initialLocalValues !== prevInitialLocalValues) {
+      setPrevInitialLocalValues(initialLocalValues);
       setLocalValues(initialLocalValues);
-    }, [initialLocalValues]);
+    }
 
     const handleUpdate = useCallback(
       async (field, value) => {
-        if (value === "") return;
-
         let finalValue = field === "trazabilidad_Prod" ? value : value;
 
         if (field !== "trazabilidad_Prod") {
-          const numVal = Number(finalValue);
-          if (Number.isNaN(numVal) || numVal < 0) {
+          if (finalValue === "") {
             finalValue = 0;
           } else {
-            finalValue = numVal;
+            const numVal = Number(finalValue);
+            if (Number.isNaN(numVal) || numVal < 0) {
+              finalValue = 0;
+            } else {
+              finalValue = numVal;
+            }
           }
         }
 
@@ -159,6 +167,42 @@ export const ConsolidatedExpandedRow = memo(
             });
           }
         }
+
+        if (field === "mpSobrante" || field === "basura") {
+          let remainingToAllocate = finalValue;
+          const totalSolicitud = Number(item.cantidadUnidad) || 1;
+          const updatePromises = item.originalItems.map((order, index) => {
+            const isLast = index === item.originalItems.length - 1;
+            let allocation = 0;
+
+            if (isLast) {
+              allocation = Number(remainingToAllocate.toFixed(2));
+            } else {
+              const weight =
+                (Number(order.cantidadUnidad) || 0) / totalSolicitud;
+              allocation = Number((finalValue * weight).toFixed(2));
+              remainingToAllocate -= allocation;
+            }
+
+            return updatePedido({
+              id: order.id,
+              data: {
+                [field]: allocation,
+              },
+            }).unwrap();
+          });
+
+          try {
+            await Promise.all(updatePromises);
+          } catch (err) {
+            console.error(`Error distributing ${field}:`, err);
+            toast({
+              title: "Error",
+              description: `Hubo un error al distribuir ${field}.`,
+              status: "error",
+            });
+          }
+        }
       },
       [
         pedidoId,
@@ -201,6 +245,8 @@ export const ConsolidatedExpandedRow = memo(
     );
 
     const inputBg = useColorModeValue("gray.50", "gray.700");
+    const boxBg = useColorModeValue("gray.50", "gray.900");
+    const containerBg = useColorModeValue("white", "gray.800");
 
     if (!isExpanded) return null;
 
@@ -209,15 +255,19 @@ export const ConsolidatedExpandedRow = memo(
         pl={2}
         pr={1}
         py={2}
-        bg={useColorModeValue("gray.50", "gray.900")}
+        bg={boxBg}
         borderBottomWidth="1px"
         borderColor="gray.200"
       >
-        <Flex gap={4} direction={{ base: "column", xl: "row" }}>
+        <Flex
+          gap={4}
+          direction={{ base: "column", md: "row" }}
+          align="flex-start"
+        >
           <Box width="fit-content">
             {primaryOrder && (
               <Box
-                bg={useColorModeValue("white", "gray.800")}
+                bg={containerBg}
                 p={1.5}
                 borderRadius="md"
                 shadow="sm"
@@ -339,7 +389,7 @@ export const ConsolidatedExpandedRow = memo(
           <RechazoModal
             isOpen={isOpen}
             onClose={onClose}
-            pedidoProduccionId={primaryOrder?.id}
+            pedidoProduccionId={orderWithRechazo?.id}
             trazabilidadPadre={trazabilidad}
             onSave={async ({ formData, existingRechazo }) => {
               try {
@@ -347,7 +397,7 @@ export const ConsolidatedExpandedRow = memo(
                   await updateRechazo({
                     id: existingRechazo.id,
                     data: formData,
-                    id_pedidoProd: primaryOrder?.id,
+                    id_pedidoProd: orderWithRechazo?.id,
                   }).unwrap();
                 } else {
                   const totalRejection =

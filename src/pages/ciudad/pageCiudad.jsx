@@ -13,4 +13,3 @@ export const PageCiudad = () => {
   );
 };
 
-export default PageCiudad;

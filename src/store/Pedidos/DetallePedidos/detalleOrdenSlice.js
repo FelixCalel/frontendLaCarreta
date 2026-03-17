@@ -1,4 +1,4 @@
-import { createSlice, createSelector } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import {
   tablaDetalleOrden,
   addNewDetalleOrden,
@@ -65,10 +65,6 @@ const detalleOrdenSlice = createSlice({
   },
 });
 
-export const selectOrderedDetalleOrden = createSelector(
-  (state) => state.detalleOrden.data,
-  (data) => data.slice().sort((a, b) => a.id - b.id)
-);
 
 export const selectConsolidadoEstado = (state) => ({
   data: state.detalleOrden.consolidado,

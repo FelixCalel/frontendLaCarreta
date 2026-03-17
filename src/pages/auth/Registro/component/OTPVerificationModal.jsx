@@ -24,29 +24,38 @@ const OTPVerificationModal = ({
   isLoading,
 }) => {
   useEffect(() => {
-    if (isOpen && "OTPCredential" in window) {
-      const ac = new AbortController();
+    if (!isOpen) return;
 
+    const applyOtpCandidate = (value) => {
+      const code = String(value || "")
+        .replace(/\D/g, "")
+        .slice(0, 6);
+
+      if (code.length !== 6) return false;
+
+      setVerifyCode(code);
+      setTimeout(() => handleVerifySMS(code), 0);
+      return true;
+    };
+
+    const ac = new AbortController();
+
+    if ("OTPCredential" in window && navigator.credentials?.get) {
       navigator.credentials
         .get({
           otp: { transport: ["sms"] },
           signal: ac.signal,
         })
         .then((otp) => {
-          if (otp) {
-            setVerifyCode(otp.code);
-            setTimeout(() => handleVerifySMS(otp.code), 0);
-          }
+          if (otp?.code) applyOtpCandidate(otp.code);
         })
-        .catch((err) => {
-          console.log("WebOTP Error or Timeout:", err);
-        });
-
-      return () => {
-        ac.abort();
-      };
+        .catch(() => {});
     }
-  }, [isOpen, setVerifyCode]);
+
+    return () => {
+      ac.abort();
+    };
+  }, [isOpen, setVerifyCode, handleVerifySMS]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
@@ -67,12 +76,14 @@ const OTPVerificationModal = ({
               value={verifyCode}
               onChange={(value) => setVerifyCode(value)}
               onComplete={(value) => handleVerifySMS(value)}
-              autoFocus
             >
               <PinInputField
                 w={12}
                 h={14}
                 fontSize="2xl"
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 rounded="lg"
                 _focus={{ borderColor: "green.400", boxShadow: "outline" }}
               />
@@ -80,6 +91,9 @@ const OTPVerificationModal = ({
                 w={12}
                 h={14}
                 fontSize="2xl"
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 rounded="lg"
                 _focus={{ borderColor: "green.400", boxShadow: "outline" }}
               />
@@ -87,6 +101,9 @@ const OTPVerificationModal = ({
                 w={12}
                 h={14}
                 fontSize="2xl"
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 rounded="lg"
                 _focus={{ borderColor: "green.400", boxShadow: "outline" }}
               />
@@ -94,6 +111,9 @@ const OTPVerificationModal = ({
                 w={12}
                 h={14}
                 fontSize="2xl"
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 rounded="lg"
                 _focus={{ borderColor: "green.400", boxShadow: "outline" }}
               />
@@ -101,6 +121,9 @@ const OTPVerificationModal = ({
                 w={12}
                 h={14}
                 fontSize="2xl"
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 rounded="lg"
                 _focus={{ borderColor: "green.400", boxShadow: "outline" }}
               />
@@ -108,13 +131,16 @@ const OTPVerificationModal = ({
                 w={12}
                 h={14}
                 fontSize="2xl"
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 rounded="lg"
                 _focus={{ borderColor: "green.400", boxShadow: "outline" }}
               />
             </PinInput>
           </HStack>
           <Text fontSize="xs" color="gray.500">
-            Detectando código automáticamente...
+            Autodetección disponible en móviles compatibles.
           </Text>
         </ModalBody>
         <ModalFooter>

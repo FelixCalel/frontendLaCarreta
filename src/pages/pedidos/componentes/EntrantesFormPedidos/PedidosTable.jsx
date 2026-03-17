@@ -14,9 +14,9 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import PropTypes from "prop-types";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m, LazyMotion, domAnimation } from "framer-motion";
 
-const MotionTr = motion(Tr);
+const MotionTr = m.create(Tr);
 
 const PedidosTable = ({
   pedidosEntrantes,
@@ -41,152 +41,168 @@ const PedidosTable = ({
     );
 
   return (
-    <>
-      <style>
-        {`
+    <LazyMotion features={domAnimation}>
+      <>
+        <style>
+          {`
           @keyframes blink {
             0% { background-color: transparent; }
             50% { background-color: var(--blink-color); }
             100% { background-color: transparent; }
           }
         `}
-      </style>
-      <Table
-        variant="striped"
-        colorScheme={stripe}
-        size="md"
-        style={{ "--blink-color": blinkBg }}
-      >
-        <Thead>
-          <Tr>
-            <Th>
-              <Checkbox
-                size="lg"
-                borderColor={borderColor}
-                isChecked={
-                  pedidosEntrantes.length > 0 &&
-                  pedidosEntrantes.every((p) => selectedPedidos.includes(p.id))
-                }
-                isIndeterminate={
-                  selectedPedidos.length > 0 &&
-                  !pedidosEntrantes.every((p) => selectedPedidos.includes(p.id))
-                }
-                onChange={() => {
-                  const visibleIds = pedidosEntrantes.map((p) => p.id);
-                  const allSelected = visibleIds.every((id) =>
-                    selectedPedidos.includes(id),
-                  );
-
-                  if (allSelected) {
-                    setSelectedPedidos(
-                      selectedPedidos.filter((id) => !visibleIds.includes(id)),
-                    );
-                  } else {
-                    const newIds = visibleIds.filter(
-                      (id) => !selectedPedidos.includes(id),
-                    );
-                    setSelectedPedidos([...selectedPedidos, ...newIds]);
+        </style>
+        <Table
+          variant="striped"
+          colorScheme={stripe}
+          size="md"
+          style={{ "--blink-color": blinkBg }}
+        >
+          <Thead>
+            <Tr>
+              <Th>
+                <Checkbox
+                  size="lg"
+                  borderColor={borderColor}
+                  isChecked={
+                    pedidosEntrantes.length > 0 &&
+                    pedidosEntrantes.every((p) =>
+                      selectedPedidos.includes(p.id),
+                    )
                   }
-                }}
-              />
-            </Th>
-            <Th>ID</Th>
-            <Th>Deudor</Th>
-            <Th>Tienda</Th>
-            <Th>Usuario</Th>
-            <Th>Fecha Orden</Th>
-            <Th>Acciones</Th>
-          </Tr>
-        </Thead>
+                  isIndeterminate={
+                    selectedPedidos.length > 0 &&
+                    !pedidosEntrantes.every((p) =>
+                      selectedPedidos.includes(p.id),
+                    )
+                  }
+                  onChange={() => {
+                    const visibleIds = pedidosEntrantes.map((p) => p.id);
+                    const allSelected = visibleIds.every((id) =>
+                      selectedPedidos.includes(id),
+                    );
 
-        <Tbody>
-          <AnimatePresence mode="wait">
-            {pedidosEntrantes.length > 0 ? (
-              pedidosEntrantes.map((p) => {
-                const textoFila = (
-                  `${p.nombreCorrelativo} ${p.nombreDeu} ` +
-                  `${p.nombreTienda} ` +
-                  `${p.nombreUsuario} ${p.apellidoUsuario}`
-                ).toLowerCase();
+                    if (allSelected) {
+                      setSelectedPedidos(
+                        selectedPedidos.filter(
+                          (id) => !visibleIds.includes(id),
+                        ),
+                      );
+                    } else {
+                      const newIds = visibleIds.filter(
+                        (id) => !selectedPedidos.includes(id),
+                      );
+                      setSelectedPedidos([...selectedPedidos, ...newIds]);
+                    }
+                  }}
+                />
+              </Th>
+              <Th>ID</Th>
+              <Th>Deudor</Th>
+              <Th>Tienda</Th>
+              <Th>Usuario</Th>
+              <Th>Fecha Orden</Th>
+              <Th>Acciones</Th>
+            </Tr>
+          </Thead>
 
-                const coincide = hl && textoFila.includes(hl);
-                const isHighlighted =
-                  highlightedPedidoId && Number(highlightedPedidoId) === p.id;
+          <Tbody>
+            <AnimatePresence>
+              {pedidosEntrantes.length > 0 ? (
+                pedidosEntrantes.map((p) => {
+                  const textoFila = (
+                    `${p.nombreCorrelativo} ${p.nombreDeu} ` +
+                    `${p.nombreTienda} ` +
+                    `${p.nombreUsuario} ${p.apellidoUsuario}`
+                  ).toLowerCase();
 
-                return (
-                  <MotionTr
-                    id={`pedido-${p.id}`}
-                    key={p.id}
-                    bg={isHighlighted ? hlBg : coincide ? hlBg : undefined}
-                    border={isHighlighted ? "2px solid teal" : undefined}
-                    animation={isHighlighted ? "blink 1s infinite" : undefined}
-                    onClick={isHighlighted ? onClearHighlight : undefined}
-                    cursor={isHighlighted ? "pointer" : "default"}
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Td w="50px">
-                      <Checkbox
-                        size="lg"
-                        borderColor={borderColor}
-                        isChecked={selectedPedidos.includes(p.id)}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          toggleSelect(p.id);
-                        }}
-                      />
-                    </Td>
-                    <Td>{p.id}</Td>
-                    <Td>{`${p.nombreCorrelativo} - ${p.nombreDeu}`}</Td>
-                    <Td>{p.nombreTienda}</Td>
-                    <Td>{`${p.nombreUsuario} ${p.apellidoUsuario}`}</Td>
-                    <Td>
-                      {(() => {
-                        if (!p.fechaOrdenDisplay) return "";
-                        const [year, month, day] = p.fechaOrdenDisplay
-                          .slice(0, 10)
-                          .split("-");
-                        const localDate = new Date(year, month - 1, day);
-                        return format(localDate, "dd MMMM yyyy", { locale: es });
-                      })()}
-                    </Td>
-                    <Td>
-                      <Tooltip label="Ver Detalles" hasArrow>
-                        <Button
-                          colorScheme="blue"
-                          size="sm"
-                          onClick={(e) => {
+                  const coincide = hl && textoFila.includes(hl);
+                  const isHighlighted =
+                    highlightedPedidoId && Number(highlightedPedidoId) === p.id;
+
+                  return (
+                    <MotionTr
+                      id={`pedido-${p.id}`}
+                      key={p.id}
+                      bg={isHighlighted ? hlBg : coincide ? hlBg : undefined}
+                      border={isHighlighted ? "2px solid teal" : undefined}
+                      animation={
+                        isHighlighted ? "blink 1s infinite" : undefined
+                      }
+                      onClick={isHighlighted ? onClearHighlight : undefined}
+                      cursor={isHighlighted ? "pointer" : "default"}
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{
+                        opacity: 0,
+                        scale: 0.9,
+                        transition: { duration: 0.2 },
+                      }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Td w="50px">
+                        <Checkbox
+                          size="lg"
+                          borderColor={borderColor}
+                          isChecked={selectedPedidos.includes(p.id)}
+                          onChange={(e) => {
                             e.stopPropagation();
-                            handleVerDetalles(p);
+                            toggleSelect(p.id);
                           }}
-                        >
-                          Ver Detalles
-                        </Button>
-                      </Tooltip>
-                    </Td>
-                  </MotionTr>
-                );
-              })
-            ) : (
-              <MotionTr
-                key="no-data"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Td colSpan={7} textAlign="center">
-                  No hay pedidos
-                </Td>
-              </MotionTr>
-            )}
-          </AnimatePresence>
-        </Tbody>
-      </Table>
-    </>
+                        />
+                      </Td>
+                      <Td>{p.id}</Td>
+                      <Td>{`${p.nombreCorrelativo} - ${p.nombreDeu}`}</Td>
+                      <Td>{p.nombreTienda}</Td>
+                      <Td>{`${p.nombreUsuario} ${p.apellidoUsuario}`}</Td>
+                      <Td>
+                        {(() => {
+                          if (!p.fechaOrdenDisplay) return "";
+                          const [year, month, day] = p.fechaOrdenDisplay
+                            .slice(0, 10)
+                            .split("-");
+                          const localDate = new Date(year, month - 1, day);
+                          return format(localDate, "dd MMMM yyyy", {
+                            locale: es,
+                          });
+                        })()}
+                      </Td>
+                      <Td>
+                        <Tooltip label="Ver Detalles" hasArrow>
+                          <Button
+                            colorScheme="blue"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleVerDetalles(p);
+                            }}
+                          >
+                            Ver Detalles
+                          </Button>
+                        </Tooltip>
+                      </Td>
+                    </MotionTr>
+                  );
+                })
+              ) : (
+                <MotionTr
+                  key="no-data"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Td colSpan={7} textAlign="center">
+                    No hay pedidos
+                  </Td>
+                </MotionTr>
+              )}
+            </AnimatePresence>
+          </Tbody>
+        </Table>
+      </>
+    </LazyMotion>
   );
 };
 

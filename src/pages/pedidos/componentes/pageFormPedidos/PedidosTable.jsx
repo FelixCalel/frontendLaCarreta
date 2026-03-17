@@ -32,6 +32,7 @@ const PedidosTable = ({
   const boxBg = useColorModeValue("white", "gray.800");
   const boxBorderColor = useColorModeValue("gray.200", "gray.600");
   const tableBg = useColorModeValue("white", "gray.800");
+  const emptyTextColor = useColorModeValue("gray.600", "gray.300");
 
   const pedidosTableContent = isMobile ? (
     <VStack spacing={4} align="stretch">
@@ -56,8 +57,7 @@ const PedidosTable = ({
               {pedido.estadoId === 1 ? "Creado" : "Realizado"}
             </Badge>
           </Stack>
-          <Text>
-          </Text>
+          <Text></Text>
           <HStack spacing={3} mt={2}>
             <Tooltip label="Ver Detalles" hasArrow>
               <IconButton
@@ -72,7 +72,7 @@ const PedidosTable = ({
                   handleToggleDetails(
                     pedido.id,
                     pedido.deudorId,
-                    pedido.tiendaId
+                    pedido.tiendaId,
                   )
                 }
                 colorScheme="blue"
@@ -144,7 +144,7 @@ const PedidosTable = ({
                         handleToggleDetails(
                           pedido.id,
                           pedido.deudorId,
-                          pedido.tiendaId
+                          pedido.tiendaId,
                         )
                       }
                       colorScheme="blue"
@@ -190,9 +190,7 @@ const PedidosTable = ({
   return pedidosUsuario.length > 0 ? (
     pedidosTableContent
   ) : (
-    <Text color={useColorModeValue("gray.600", "gray.300")}>
-      No hay pedidos disponibles
-    </Text>
+    <Text color={emptyTextColor}>No hay pedidos disponibles</Text>
   );
 };
 
@@ -201,13 +199,13 @@ PedidosTable.propTypes = {
     PropTypes.shape({
       id: PropTypes.number.isRequired,
       nombreCiudad: PropTypes.string,
-      nombreCorrelativo: PropTypes.string.isRequired,
+      nombreCorrelativo: PropTypes.string,
       nombreDeu: PropTypes.string,
       nombreTienda: PropTypes.string,
       estadoId: PropTypes.number.isRequired,
       deudorId: PropTypes.number.isRequired,
       tiendaId: PropTypes.number.isRequired,
-    })
+    }),
   ).isRequired,
   isMobile: PropTypes.bool.isRequired,
   isDetailsOpen: PropTypes.number,

@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-
 import {
   Box,
   Button,
@@ -12,87 +10,21 @@ import {
   Link,
   Text,
 } from '@chakra-ui/react';
-import { useDispatch } from 'react-redux';
-import { activateUserChild } from '../../store/auth/thunks';
-// import axios from 'axios';
-
+import { useActivarUsuario } from "./hooks/useActivarUsuario";
 
 export const ActivarUsuarioDep = () => {
-  const url = window.location.href;
-  const tokenMatch = url.match(/\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)$/);
-  const [setError] = useState(false);
-  const [nombres, setNombres] = useState('');
-  const [setToken] = useState('');
-  const [correo_electronico, setCorreoElectronico] = useState('');
-  const [apellidos, setApellidos] = useState('');
-  const [celular, setCelular] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [setEmail] = useState('');
-  const [mensaje, setMensaje] = useState('');
-  const [nuevaClave, setNuevaClave] = useState('');
-  const [confirmarClave, setConfirmarClave] = useState('');
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-
-  const images = [
-   'url("./src/assets/images/fnd_py01.jpg")',
-   'url("./src/assets/images/fnd_py02.jpg")',
-   'url("./src/assets/images/fnd_py03.jpg")',
-   'url("./src/assets/images/fnd_py04.jpg")',
- ];
-
-
- useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCurrentImageIndex((currentImageIndex) => (currentImageIndex + 1) % images.length);
-    }, 5000);
-
-    return () => clearInterval(intervalId);
-  }, [images.length]);
-
-  useEffect(() => {
-    const [, token, correoElectronico, nombres, apellidos] = tokenMatch;
-    const tokenp = token;
-    const correoElectronicop = correoElectronico;
-    const nombresp = decodeURIComponent(nombres);
-    const apellidosp = decodeURIComponent(apellidos);
-
-    setToken(tokenp);
-    setCorreoElectronico(correoElectronicop);
-    setNombres(nombresp);
-    setApellidos(apellidosp);
-  }, []);
-
-  const dispatch = useDispatch();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-   setError(false);
-  if (!nombres || !apellidos || !correo_electronico || !telefono || !celular || !nuevaClave || !confirmarClave) {
-    setError(true);
-    setMensaje('Por favor completa todos los campos.');
-    return;
-  }
-  if (nuevaClave !== confirmarClave) {
-    setError(true);
-    setMensaje('La nueva contraseña y la confirmación no coinciden.');
-    return;
-  }
-    
-    try {
-      const resultAction = await dispatch(activateUserChild({
-        nombres, apellidos, correo_electronico, nuevaClave, telefono, celular
-      }));
-
-      if (activateUserChild.fulfilled.match(resultAction)) {
-        setMensaje(resultAction.payload.message);
-        window.location.href = '/auth/login';
-      } else {
-        setMensaje(resultAction.payload || 'Hubo un error al activar el usuario.');
-      }
-    } catch (error) {
-      setMensaje('Hubo un error inesperado.');
-    }
-  };
+  const {
+    nombres, setNombres,
+    apellidos, setApellidos,
+    correo_electronico, setCorreoElectronico,
+    celular, setCelular,
+    telefono, setTelefono,
+    mensaje,
+    nuevaClave, setNuevaClave,
+    confirmarClave, setConfirmarClave,
+    currentImageIndex, images,
+    handleSubmit
+  } = useActivarUsuario();
 
   return (
     <Flex
@@ -165,7 +97,7 @@ export const ActivarUsuarioDep = () => {
               <Input
                 type="email"
                 placeholder="Ingresa tu correo electrónico"
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setCorreoElectronico(e.target.value)}
                 value={correo_electronico}
               />
             </FormControl> <FormControl id="nuevaContraseña" mb="4" isRequired>
@@ -197,4 +129,3 @@ export const ActivarUsuarioDep = () => {
   );
 };
 
-export default ActivarUsuarioDep;

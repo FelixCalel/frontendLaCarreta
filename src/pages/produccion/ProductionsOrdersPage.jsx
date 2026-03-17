@@ -1,11 +1,4 @@
 import {
-  useState,
-  useMemo,
-  useEffect,
-  useTransition,
-  useCallback,
-} from "react";
-import {
   Box,
   Spinner,
   Text,
@@ -13,265 +6,41 @@ import {
   SimpleGrid,
   Flex,
   Button,
-  Icon,
   useColorModeValue,
   ButtonGroup,
   Tooltip,
-  VStack,
-  Badge,
-  Divider,
   HStack,
 } from "@chakra-ui/react";
-import { CheckCircleIcon, ViewIcon, HamburgerIcon } from "@chakra-ui/icons";
-import { useNavigate, useParams } from "react-router-dom";
-import {
-  useGetPedidosAgrupadosQuery,
-  useProcesarEstado5Mutation,
-} from "../../services/pedidoProductionApi";
+import { ViewIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { useNavigate } from "react-router-dom";
 import { FilterPanel } from "../../components/production/FilterPanel";
 import { OrdersTable } from "../../components/production/OrdersTable";
 import { ConsolidatedOrdersView } from "../../components/production/ConsolidatedOrdersView";
 import AdvanceOrderButton from "../../components/production/AdvanceOrderButton";
 import { UnassignedProductsModal } from "../../components/production/UnassignedProductsModal";
-import { useGetUnassignedOrdersQuery } from "../../services/pedidoProductionApi";
-import { useDisclosure } from "@chakra-ui/react";
+import { EmptyState } from "../../components/production/components/EmptyState";
+import { ProductionOrderCard } from "../../components/production/components/ProductionOrderCard";
+
+
+import { useProductionOrders } from "./hooks/useProductionOrders";
 
 const ProductionOrdersPage = () => {
-  const navigate = useNavigate();
-  const { pedidoId } = useParams();
-  const [countryFilter, setCountryFilter] = useState("");
-  const [itemFilter] = useState("");
-  const [clientFilter, setClientFilter] = useState("");
-  const [stateFilter, setStateFilter] = useState("");
-  const [syncReady, setSyncReady] = useState(false);
-  const [procesarEstado5] = useProcesarEstado5Mutation();
-  const [viewMode, setViewMode] = useState("byOrder");
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
-  const { data: unassignedData = [] } = useGetUnassignedOrdersQuery(undefined, {
-    skip: !syncReady,
-  });
-  const unassignedCount = unassignedData.reduce(
-    (acc, g) => acc + g.items.length,
-    0,
-  );
-
-  useEffect(() => {
-    const runProcess = async () => {
-      try {
-        const result = await procesarEstado5(undefined).unwrap();
-        if (result && result.procesados === 0) {
-          console.log("No hay pedidos en estado 5 para procesar.");
-        }
-      } catch (error) {
-        console.error("Error al intentar procesar el estado 5:", error);
-      } finally {
-        setSyncReady(true);
-      }
-    };
-
-    runProcess();
-  }, [procesarEstado5]);
-
   const {
-    data: agrupados = [],
-    isLoading,
-    error,
-  } = useGetPedidosAgrupadosQuery({ etapaId: 1 }, { skip: !syncReady });
+    navigate, pedidoId,
+    countryFilter, setCountryFilter,
+    clientFilter, setClientFilter,
+    stateFilter, setStateFilter,
+    deuFilter, setDeuFilter,
+    viewMode, setViewMode,
+    isOpen, onOpen, onClose,
+    isLoading, error, syncReady,
+    unassignedCount,
+    filters, filteredGroups, consolidatedItems
+  } = useProductionOrders();
 
   const cardBg = useColorModeValue("white", "gray.700");
   const cardBorder = useColorModeValue("gray.200", "gray.600");
   const cardHoverShadow = useColorModeValue("lg", "dark-lg");
-
-  const mesaGroups = useMemo(
-    () =>
-      agrupados
-        .map((g) => ({
-          pedidoId: g.pedidoId,
-          tienda: g.tienda,
-          pais: g.pais,
-          deudorCodigo: g.deudorCodigo,
-          deudorNombre: g.deudorNombre,
-          items: g.items.map((item) => ({
-            ...item,
-            pedidoId: g.pedidoId,
-            tienda: g.tienda,
-            deudorCodigo: g.deudorCodigo,
-            deudorNombre: g.deudorNombre,
-            cantidadUnidad: Number(item.cantidadUnidad) || 0,
-          })),
-        }))
-        .filter((g) => g.items.length > 0),
-    [agrupados],
-  );
-
-  const allItems = useMemo(
-    () => mesaGroups.flatMap((g) => g.items),
-    [mesaGroups],
-  );
-  const [deuFilter, setDeuFilter] = useState("");
-
-  const [isPending, startTransition] = useTransition();
-
-  // Wrapped setters that use startTransition
-  const handleCountryFilterChange = (value) => {
-    startTransition(() => {
-      setCountryFilter(value);
-    });
-  };
-
-  const handleClientFilterChange = useCallback(
-    (value) => {
-      startTransition(() => {
-        setClientFilter(value);
-      });
-    },
-    [startTransition],
-  );
-
-  const handleStateFilterChange = useCallback(
-    (value) => {
-      startTransition(() => {
-        setStateFilter(value);
-      });
-    },
-    [startTransition],
-  );
-
-  const handleDeuFilterChange = useCallback(
-    (value) => {
-      startTransition(() => {
-        setDeuFilter(value);
-      });
-    },
-    [startTransition],
-  );
-
-  const countries = useMemo(
-    () => Array.from(new Set(allItems.map((i) => i.pais))),
-    [allItems],
-  );
-  const clients = useMemo(
-    () => Array.from(new Set(allItems.map((i) => i.tienda))),
-    [allItems],
-  );
-
-  const deudores = useMemo(
-    () =>
-      Array.from(new Set(allItems.map((i) => i.deudorCodigo)))
-        .filter(Boolean)
-        .sort(),
-    [allItems],
-  );
-
-  const filteredGroups = useMemo(() => {
-    return mesaGroups
-      .filter((g) => {
-        if (!deuFilter) return true;
-        return g.items.some((i) => i.deudorCodigo === deuFilter);
-      })
-      .map((g) => {
-        const filteredItems = g.items
-          .filter((i) => {
-            if (deuFilter && i.deudorCodigo !== deuFilter) return false;
-            if (!itemFilter) return true;
-            return i.productoNombre
-              .toLowerCase()
-              .includes(itemFilter.toLowerCase());
-          })
-          .slice()
-          .sort((a, b) =>
-            a.productoNombre.localeCompare(b.productoNombre, undefined, {
-              sensitivity: "base",
-            }),
-          );
-
-        return {
-          ...g,
-          items: filteredItems,
-        };
-      })
-      .filter((g) => g.items.length > 0)
-      .filter((g) => {
-        if (countryFilter && g.pais !== countryFilter) return false;
-        if (clientFilter && g.tienda !== clientFilter) return false;
-
-        if (stateFilter) {
-          const total = g.items.length;
-          const doneCount = g.items.filter((i) => i.completo).length;
-          const anyProgress = g.items.some((i) => Number(i.cantidad ?? 0) > 0);
-          const groupStatus =
-            doneCount === total
-              ? "Completado"
-              : anyProgress
-                ? "En Proceso"
-                : "Pendiente";
-          if (groupStatus !== stateFilter) return false;
-        }
-
-        return true;
-      })
-      .slice()
-      .sort((a, b) => a.pedidoId - b.pedidoId);
-  }, [
-    mesaGroups,
-    itemFilter,
-    countryFilter,
-    clientFilter,
-    stateFilter,
-    deuFilter,
-  ]);
-
-  const consolidatedItems = useMemo(() => {
-    if (viewMode !== "consolidated") return [];
-
-    const itemsMap = new Map();
-
-    filteredGroups.forEach((g) => {
-      g.items.forEach((item) => {
-        const deuCode = item.deudorCodigo || "";
-        const key = `${deuCode}|${item.productoNombre}`;
-
-        if (itemsMap.has(key)) {
-          const existing = itemsMap.get(key);
-          existing.cantidadUnidad += Number(item.cantidadUnidad || 0);
-          existing.cantidad += Number(item.cantidad || 0);
-          existing.mpUtilizada =
-            (existing.mpUtilizada || 0) + Number(item.mpUtilizada || 0);
-          existing.mpSobrante =
-            (existing.mpSobrante || 0) + Number(item.mpSobrante || 0);
-          existing.basura = (existing.basura || 0) + Number(item.basura || 0);
-          existing.cantidadRechazada =
-            (existing.cantidadRechazada || 0) +
-            Number(item.cantidadRechazada || 0);
-          existing.originalItems.push(item);
-        } else {
-          itemsMap.set(key, {
-            ...item,
-            cantidadUnidad: Number(item.cantidadUnidad || 0),
-            cantidad: Number(item.cantidad || 0),
-            mpUtilizada: Number(item.mpUtilizada || 0),
-            mpSobrante: Number(item.mpSobrante || 0),
-            basura: Number(item.basura || 0),
-            cantidadRechazada: Number(item.cantidadRechazada || 0),
-            originalItems: [item],
-          });
-        }
-      });
-    });
-
-    return Array.from(itemsMap.values()).sort((a, b) => {
-      const deuCompare = (a.deudorCodigo || "").localeCompare(
-        b.deudorCodigo || "",
-        undefined,
-        { sensitivity: "base" },
-      );
-      if (deuCompare !== 0) return deuCompare;
-      return a.productoNombre.localeCompare(b.productoNombre, undefined, {
-        sensitivity: "base",
-      });
-    });
-  }, [filteredGroups, viewMode]);
 
   if (isLoading || !syncReady) {
     return (
@@ -332,12 +101,7 @@ const ProductionOrdersPage = () => {
               label="Ver productos que no tienen área asignada"
               placement="top"
             >
-              <Button
-                colorScheme="orange"
-                variant="solid"
-                onClick={onOpen}
-                size="sm"
-              >
+              <Button colorScheme="orange" variant="solid" onClick={onOpen} size="sm">
                 ⚠️ {unassignedCount} Sin Asignar
               </Button>
             </Tooltip>
@@ -346,138 +110,39 @@ const ProductionOrdersPage = () => {
           <HStack w={{ base: "full", lg: "auto" }}>
             <FilterPanel
               countryFilter={countryFilter}
-              onCountryChange={handleCountryFilterChange}
+              onCountryChange={setCountryFilter}
               clientFilter={clientFilter}
-              onClientChange={handleClientFilterChange}
+              onClientChange={setClientFilter}
               stateFilter={stateFilter}
-              onStateChange={handleStateFilterChange}
-              countries={countries}
-              clients={clients}
+              onStateChange={setStateFilter}
+              countries={filters.countries}
+              clients={filters.clients}
               deuFilter={deuFilter}
-              onDeuChange={handleDeuFilterChange}
-              deudores={deudores}
+              onDeuChange={setDeuFilter}
+              deudores={filters.deudores}
             />
           </HStack>
         </Flex>
         {viewMode === "byOrder" ? (
           filteredGroups.length > 0 ? (
             <SimpleGrid columns={[1, 2, 3, 4, 5]} spacing={6} mt={6}>
-              {filteredGroups.map((g) => {
-                const doneCount = g.items.filter((i) => i.completo).length;
-                const anyProgress = g.items.some(
-                  (i) => Number(i.cantidad ?? 0) > 0,
-                );
-                const allDone = doneCount === g.items.length;
-
-                let statusColor = "yellow.400";
-                if (allDone) {
-                  statusColor = "green.400";
-                } else if (anyProgress) {
-                  statusColor = "blue.400";
-                }
-
-                const deudorCode = g.deudorCodigo || "N/A";
-
-                return (
-                  <Box
-                    key={g.pedidoId}
-                    position="relative"
-                    bg={cardBg}
-                    border="1px solid"
-                    borderColor={cardBorder}
-                    borderRadius="lg"
-                    overflow="hidden"
-                    cursor="pointer"
-                    transition="all 0.2s"
-                    _hover={{
-                      shadow: cardHoverShadow,
-                      transform: "translateY(-2px)",
-                    }}
-                    onClick={() => navigate(`/mesa/produccion/${g.pedidoId}`)}
-                    role="group"
-                  >
-                    <Box h="4px" bg={statusColor} w="100%" />
-                    <Box p={4}>
-                      <Flex justify="space-between" align="start" mb={2}>
-                        <VStack align="start" spacing={0}>
-                          <Text
-                            fontSize="xs"
-                            color="gray.500"
-                            fontWeight="bold"
-                            letterSpacing="wide"
-                            textTransform="uppercase"
-                          >
-                            Pedido #{g.pedidoId}
-                          </Text>
-                          <Heading size="sm" noOfLines={2} title={g.tienda}>
-                            {g.tienda}
-                          </Heading>
-                        </VStack>
-                        <Icon
-                          as={
-                            allDone || anyProgress
-                              ? CheckCircleIcon
-                              : CheckCircleIcon
-                          }
-                          color={statusColor}
-                          boxSize={5}
-                        />
-                      </Flex>
-
-                      <HStack mt={2} mb={3}>
-                        <Badge
-                          colorScheme="blue"
-                          variant="subtle"
-                          fontSize="0.7em"
-                        >
-                          {deudorCode}
-                        </Badge>
-                        <Badge variant="outline" fontSize="0.7em">
-                          {g.pais}
-                        </Badge>
-                      </HStack>
-
-                      <Divider mb={3} borderColor="gray.100" />
-
-                      <Flex justify="space-between" align="center">
-                        <Text fontSize="xs" color="gray.500">
-                          {doneCount} / {g.items.length} Completados
-                        </Text>
-                        <Badge
-                          colorScheme={allDone ? "green" : "gray"}
-                          variant="solid"
-                          borderRadius="full"
-                          px={2}
-                        >
-                          {g.items.length} ÍTEM{g.items.length !== 1 ? "S" : ""}
-                        </Badge>
-                      </Flex>
-                    </Box>
-                  </Box>
-                );
-              })}
+              {filteredGroups.map((g) => (
+                <ProductionOrderCard
+                  key={g.pedidoId}
+                  group={g}
+                  cardBg={cardBg}
+                  cardBorder={cardBorder}
+                  cardHoverShadow={cardHoverShadow}
+                />
+              ))}
             </SimpleGrid>
           ) : (
-            <Flex
-              direction="column"
-              align="center"
-              justify="center"
-              p={10}
-              mt={6}
-              bg={cardBg}
-              borderRadius="lg"
-              border="1px dashed"
-              borderColor={cardBorder}
-            >
-              <Icon as={ViewIcon} boxSize={10} color="gray.400" mb={4} />
-              <Heading size="md" color="gray.500" mb={2}>
-                Sin resultados
-              </Heading>
-              <Text color="gray.500" textAlign="center">
-                No hay pedidos pendientes o no están asignados a tu área en este
-                momento.
-              </Text>
-            </Flex>
+            <EmptyState
+              cardBg={cardBg}
+              cardBorder={cardBorder}
+              heading="Sin resultados"
+              message="No hay pedidos pendientes o no están asignados a tu área en este momento."
+            />
           )
         ) : consolidatedItems.length > 0 ? (
           <ConsolidatedOrdersView
@@ -485,26 +150,12 @@ const ProductionOrdersPage = () => {
             actionLabel="Pasar a Supervisor"
           />
         ) : (
-          <Flex
-            direction="column"
-            align="center"
-            justify="center"
-            p={10}
-            mt={6}
-            bg={cardBg}
-            borderRadius="lg"
-            border="1px dashed"
-            borderColor={cardBorder}
-          >
-            <Icon as={ViewIcon} boxSize={10} color="gray.400" mb={4} />
-            <Heading size="md" color="gray.500" mb={2}>
-              Sin resultados
-            </Heading>
-            <Text color="gray.500" textAlign="center">
-              No hay productos consolidados pendientes o asignados a tu área en
-              este momento.
-            </Text>
-          </Flex>
+          <EmptyState
+            cardBg={cardBg}
+            cardBorder={cardBorder}
+            heading="Sin resultados"
+            message="No hay productos consolidados pendientes o asignados a tu área en este momento."
+          />
         )}
         <UnassignedProductsModal isOpen={isOpen} onClose={onClose} />
       </Box>
@@ -537,5 +188,6 @@ const ProductionOrdersPage = () => {
     </Box>
   );
 };
+
 
 export default ProductionOrdersPage;

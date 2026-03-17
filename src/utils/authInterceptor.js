@@ -3,6 +3,24 @@ import axios from "axios";
 let isRefreshing = false;
 let pendingQueue = [];
 
+const getStoredAccessToken = () =>
+  localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+
+const getStoredRefreshToken = () =>
+  localStorage.getItem("refresh_token") || sessionStorage.getItem("refresh_token");
+
+const setAccessToken = (token) => {
+  if (!token) return;
+  localStorage.setItem("access_token", token);
+  sessionStorage.setItem("access_token", token);
+};
+
+const setRefreshToken = (token) => {
+  if (!token) return;
+  localStorage.setItem("refresh_token", token);
+  sessionStorage.setItem("refresh_token", token);
+};
+
 function processQueue(error, token = null) {
   pendingQueue.forEach((prom) => {
     if (error) {
@@ -14,7 +32,7 @@ function processQueue(error, token = null) {
   pendingQueue = [];
 }
 
-export const performLogout = () => {
+const performLogout = () => {
   const lsKeys = [
     "access_token",
     "refresh_token",
@@ -29,6 +47,12 @@ export const performLogout = () => {
   sessionStorage.removeItem("access_token");
   sessionStorage.removeItem("refresh_token");
 
+  globalThis.dispatchEvent(
+    new CustomEvent("auth:session-expired", {
+      detail: { reason: "SESSION_EXPIRED" },
+    }),
+  );
+
   const currentPath = window.location.pathname;
   if (!currentPath.includes("/login") && !currentPath.includes("/auth")) {
     window.location.href = "/auth/login";
@@ -38,9 +62,7 @@ export const performLogout = () => {
 export const setupAxiosInterceptors = () => {
   axios.interceptors.request.use(
     (config) => {
-      const token =
-        localStorage.getItem("access_token") ||
-        sessionStorage.getItem("access_token");
+      const token = getStoredAccessToken();
       if (token) {
         config.headers = config.headers || {};
         config.headers["Authorization"] = `Bearer ${token}`;
@@ -87,7 +109,12 @@ export const setupAxiosInterceptors = () => {
       isRefreshing = true;
       try {
         const baseUrl = import.meta.env.VITE_API_URL;
-        const storedRefreshToken = localStorage.getItem("refresh_token");
+        const storedRefreshToken = getStoredRefreshToken();
+
+        if (!storedRefreshToken) {
+          throw new Error("NO_REFRESH_TOKEN");
+        }
+
         const resp = await axios.post(
           `${baseUrl}/login/refresh-token`,
           { refreshToken: storedRefreshToken },
@@ -96,12 +123,17 @@ export const setupAxiosInterceptors = () => {
 
         const newAccessToken =
           resp?.data?.accessToken || resp?.data?.access_token;
+        const newRefreshToken =
+          resp?.data?.refreshToken || resp?.data?.refresh_token;
 
         if (!newAccessToken) {
           throw new Error("INVALID_REFRESH_RESPONSE");
         }
 
-        localStorage.setItem("access_token", newAccessToken);
+        setAccessToken(newAccessToken);
+        if (newRefreshToken) {
+          setRefreshToken(newRefreshToken);
+        }
         processQueue(null, newAccessToken);
 
         originalRequest.headers = originalRequest.headers || {};

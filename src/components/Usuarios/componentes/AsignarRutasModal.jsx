@@ -10,7 +10,6 @@ import {
   ModalFooter,
   Button,
   Input,
-  Text,
   InputGroup,
   InputLeftElement,
   Flex,
@@ -20,35 +19,30 @@ import {
 import { FiSearch } from "react-icons/fi";
 import RutaSelector from "./RutaSelector";
 
+const EMPTY_ARRAY = [];
 const AsignarRutasModal = ({
   isOpen,
   onClose,
   usuario,
-  rutas = [], // Rutas disponibles (ya enriquecidas si es necesario)
+  rutas = EMPTY_ARRAY,
   onAssign,
   isLoading = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRoutes, setSelectedRoutes] = useState([]);
+  const [selectedRoutes, setSelectedRoutes] = useState(() =>
+    usuario && usuario.rutas ? usuario.rutas.map((r) => r.id) : [],
+  );
+  const modalHeaderColor = useColorModeValue("teal.600", "teal.200");
 
-  const modalHeaderColor = useColorModeValue("green.600", "green.200");
-
-  // Inicializar rutas seleccionadas cuando cambia el usuario
   useEffect(() => {
-    if (usuario && usuario.rutas) {
-      setSelectedRoutes(usuario.rutas.map((r) => r.id));
-    } else {
-      setSelectedRoutes([]);
-    }
-    setSearchTerm(""); // Limpiar búsqueda al abrir
+    setSelectedRoutes(usuario?.rutas ? usuario.rutas.map((r) => r.id) : []);
   }, [usuario, isOpen]);
 
-  // Filtrar rutas basado en el término de búsqueda
   const filteredRutas = useMemo(() => {
     if (!searchTerm) return rutas;
     const lowerTerm = searchTerm.toLowerCase();
-    return rutas.filter((ruta) => 
-      ruta.nombre.toLowerCase().includes(lowerTerm)
+    return rutas.filter((ruta) =>
+      ruta.nombre.toLowerCase().includes(lowerTerm),
     );
   }, [rutas, searchTerm]);
 
@@ -59,16 +53,14 @@ const AsignarRutasModal = ({
   };
 
   const handleSelectAll = () => {
-    const allIds = filteredRutas.map(r => r.id);
-    // Agregar solo los que no están ya seleccionados
+    const allIds = filteredRutas.map((r) => r.id);
     const newSelected = [...new Set([...selectedRoutes, ...allIds])];
     setSelectedRoutes(newSelected);
   };
 
   const handleDeselectAll = () => {
-    const visibleIds = new Set(filteredRutas.map(r => r.id));
-    // Remover los IDs que están visibles actualmente
-    setSelectedRoutes(prev => prev.filter(id => !visibleIds.has(id)));
+    const visibleIds = new Set(filteredRutas.map((r) => r.id));
+    setSelectedRoutes((prev) => prev.filter((id) => !visibleIds.has(id)));
   };
 
   return (
@@ -93,12 +85,22 @@ const AsignarRutasModal = ({
               />
             </InputGroup>
             <Flex justify="flex-end" gap={2} size="sm">
-                <Button size="xs" onClick={handleSelectAll} colorScheme="blue" variant="ghost">
-                    Seleccionar Visibles
-                </Button>
-                <Button size="xs" onClick={handleDeselectAll} colorScheme="red" variant="ghost">
-                    Deseleccionar Visibles
-                </Button>
+              <Button
+                size="xs"
+                onClick={handleSelectAll}
+                colorScheme="blue"
+                variant="ghost"
+              >
+                Seleccionar Visibles
+              </Button>
+              <Button
+                size="xs"
+                onClick={handleDeselectAll}
+                colorScheme="red"
+                variant="ghost"
+              >
+                Deseleccionar Visibles
+              </Button>
             </Flex>
           </Box>
 

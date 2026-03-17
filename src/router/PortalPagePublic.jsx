@@ -1,8 +1,8 @@
 import { Route, Routes, Navigate } from "react-router-dom";
 import { LoginForm } from "../pages/auth/LoginForm";
-import RecuperarClave from "../pages/auth/RecuperarClave";
-import ResetPassword from "../pages/auth/ResetPassword";
-import VerifyEmail from "../pages/auth/VerifyEmail";
+import { RecuperarClave } from "../pages/auth/RecuperarClave";
+import { ResetPassword } from "../pages/auth/ResetPassword";
+import { VerifyEmail } from "../pages/auth/VerifyEmail";
 import RegisterForm from "../pages/auth/Registro/RegisterForm";
 import { ConfirmacionRegistro } from "../pages/auth/ConfirmacionRegistro";
 import { CambiarClave } from "../pages/auth/CambiarClave";

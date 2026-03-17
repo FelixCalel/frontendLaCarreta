@@ -1,7 +1,7 @@
 import { useToast } from "@chakra-ui/react";
 import { useCallback } from "react";
 
-export const useAuthError = () => {
+const useAuthError = () => {
   const toast = useToast();
 
   const handleAuthError = useCallback(
@@ -85,7 +85,7 @@ export const useModalAuthError = (onClose) => {
   return { handleAuthError };
 };
 
-export const useErrorHandler = () => {
+const useErrorHandler = () => {
   const { handleAuthError } = useAuthError();
   const toast = useToast();
 

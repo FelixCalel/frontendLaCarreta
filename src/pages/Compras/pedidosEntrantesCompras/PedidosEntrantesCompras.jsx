@@ -10,4 +10,3 @@ export const PedidosEntrantesPageCompras = () => {
   );
 };
 
-export default PedidosEntrantesPageCompras;

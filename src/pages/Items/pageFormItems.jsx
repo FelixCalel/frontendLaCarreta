@@ -17,8 +17,11 @@ import {
   Badge,
   Tooltip,
   IconButton,
+  InputGroup,
+  InputLeftElement,
+  Button,
 } from "@chakra-ui/react";
-import { CloseIcon } from "@chakra-ui/icons";
+import { AddIcon, CloseIcon, SearchIcon } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
   tablaItems,
@@ -26,14 +29,30 @@ import {
   addDeudoresItem,
   removeDeudoresItem,
 } from "../../store/items/thunks";
-import { tablaDeudores } from "../../store/Deus/thunks";
+import { obtenerDeudoresActivos } from "../../store/Deus/thunks";
 import { patchItem } from "../../store/items/itemSlice";
 import Pagination from "../../components/pagination";
-import DeudorSelector from "./components/DeudorSelector";
+import { DeudorSelector } from "./components/DeudorSelector.jsx";
 
 const ItemRow = memo(
-  ({ item, handleStatusChange, handleAddDeudor, handleRemoveDeudor }) => {
+  ({
+    item,
+    handleStatusChange,
+    handleAddDeudor,
+    handleRemoveDeudor,
+    ensureDeudoresLoaded,
+    isLoadingDeudores,
+  }) => {
+    const [isSelectorOpen, setIsSelectorOpen] = useState(false);
     const rowHoverBg = useColorModeValue("blue.50", "blue.900");
+    const triggerBorder = useColorModeValue("gray.300", "gray.600");
+    const triggerText = useColorModeValue("gray.500", "gray.400");
+    const triggerHover = useColorModeValue("gray.50", "whiteAlpha.100");
+
+    const handleToggleSelector = () => {
+      if (!isSelectorOpen) ensureDeudoresLoaded();
+      setIsSelectorOpen((prev) => !prev);
+    };
 
     return (
       <Tr _hover={{ backgroundColor: rowHoverBg }}>
@@ -51,15 +70,38 @@ const ItemRow = memo(
         </Td>
         <Td>
           <Flex direction="column" gap={2}>
-            <DeudorSelector
-              onSelect={(deuId) => {
-                if (!item.deudores.some((d) => d.id === deuId)) {
-                  handleAddDeudor(item.id, deuId);
-                }
-              }}
-              onRemove={() => {}}
-              width={{ base: "150px", md: "220px" }}
-            />
+            {isSelectorOpen ? (
+              <DeudorSelector
+                key={`${item.id}-selector`}
+                onSelect={(deuId) => {
+                  if (!item.deudores.some((d) => d.id === deuId)) {
+                    handleAddDeudor(item.id, deuId);
+                  }
+                  setIsSelectorOpen(false);
+                }}
+                onRemove={() => {}}
+                width={{ base: "150px", md: "220px" }}
+              />
+            ) : (
+              <Button
+                leftIcon={<AddIcon />}
+                size="sm"
+                width={{ base: "150px", md: "220px" }}
+                alignSelf="flex-start"
+                justifyContent="flex-start"
+                variant="outline"
+                borderColor={triggerBorder}
+                color={triggerText}
+                fontWeight="normal"
+                bg="transparent"
+                onClick={handleToggleSelector}
+                isLoading={isLoadingDeudores}
+                _hover={{ bg: triggerHover, borderColor: "blue.300" }}
+                _active={{ bg: triggerHover }}
+              >
+                Buscar y agregar deudor...
+              </Button>
+            )}
             <Flex wrap="wrap" gap={1}>
               {item.deudores &&
                 item.deudores.map((deudor) => (
@@ -69,26 +111,35 @@ const ItemRow = memo(
                     key={deudor.id}
                   >
                     <Badge
-                      variant="solid"
-                      colorScheme="teal"
+                      variant="subtle"
+                      colorScheme="blue"
                       display="flex"
                       alignItems="center"
                       justifyContent="space-between"
-                      p={1}
-                      cursor="pointer"
+                      px={2}
+                      py={1}
+                      borderRadius="full"
+                      cursor="default"
                       maxW="300px"
-                      fontSize="sm"
+                      fontSize="xs"
+                      boxShadow="sm"
+                      border="1px solid"
+                      borderColor="blue.200"
+                      _hover={{ borderColor: "blue.400", bg: "blue.50" }}
                     >
-                      <Text isTruncated maxW="250px" fontSize="xs">
+                      <Text isTruncated maxW="220px">
                         {deudor.correlativo} - {deudor.nombre}
                       </Text>
                       <IconButton
                         aria-label="Eliminar deudor"
                         icon={<CloseIcon />}
                         size="xs"
-                        ml={0}
+                        variant="ghost"
+                        ml={1}
                         colorScheme="red"
                         onClick={() => handleRemoveDeudor(item.id, deudor.id)}
+                        borderRadius="full"
+                        _hover={{ bg: "red.100" }}
                       />
                     </Badge>
                   </Tooltip>
@@ -120,6 +171,8 @@ ItemRow.propTypes = {
   handleStatusChange: PropTypes.func.isRequired,
   handleAddDeudor: PropTypes.func.isRequired,
   handleRemoveDeudor: PropTypes.func.isRequired,
+  ensureDeudoresLoaded: PropTypes.func.isRequired,
+  isLoadingDeudores: PropTypes.bool.isRequired,
 };
 
 ItemRow.displayName = "ItemRow";
@@ -129,22 +182,35 @@ const PageItems = () => {
   const { items, totalItems, status, error } = useSelector(
     (state) => state.items,
   );
-  const { deudores: deudoresDisponibles } = useSelector(
+  const { deudores: deudoresDisponibles, status: deudoresStatus } = useSelector(
     (state) => state.deudores,
   );
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchState, setSearchState] = useState({
+    debouncedSearch: "",
+    currentPage: 1,
+  });
   const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [activeDeudorLoaderItemId, setActiveDeudorLoaderItemId] = useState(null);
   const itemsPerPage = 15;
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
-      setCurrentPage(1);
+      setSearchState((prev) => {
+        if (prev.debouncedSearch === searchTerm && prev.currentPage === 1) {
+          return prev;
+        }
+
+        return {
+          debouncedSearch: searchTerm,
+          currentPage: 1,
+        };
+      });
     }, 500);
     return () => clearTimeout(handler);
   }, [searchTerm]);
+
+  const { debouncedSearch, currentPage } = searchState;
 
   useEffect(() => {
     dispatch(
@@ -156,10 +222,6 @@ const PageItems = () => {
       }),
     );
   }, [dispatch, currentPage, debouncedSearch]);
-
-  useEffect(() => {
-    dispatch(tablaDeudores());
-  }, [dispatch]);
 
   const paginatedData = items || [];
 
@@ -219,33 +281,28 @@ const PageItems = () => {
     [dispatch, items],
   );
 
-  if (status === "loading") {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
-        <Spinner size="xl" />
-      </Box>
-    );
-  }
+  const ensureDeudoresLoaded = useCallback(() => {
+    if (deudoresDisponibles?.length > 0 || deudoresStatus === "loading") {
+      return;
+    }
 
-  if (status === "failed") {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
-        <Text fontSize="2xl" color="red.500">
-          Error al cargar los datos: {error}
-        </Text>
-      </Box>
-    );
-  }
+    dispatch(obtenerDeudoresActivos());
+  }, [deudoresDisponibles?.length, deudoresStatus, dispatch]);
+
+  const handleEnsureDeudoresLoaded = useCallback(
+    (itemId) => {
+      if (deudoresDisponibles?.length > 0) return;
+      setActiveDeudorLoaderItemId(itemId);
+      ensureDeudoresLoaded();
+    },
+    [deudoresDisponibles?.length, ensureDeudoresLoaded]
+  );
+
+  useEffect(() => {
+    if (deudoresStatus !== "loading") {
+      setActiveDeudorLoaderItemId(null);
+    }
+  }, [deudoresStatus]);
 
   return (
     <Box
@@ -259,48 +316,85 @@ const PageItems = () => {
         <Text fontSize="2xl" fontWeight="bold" color="blue.600">
           Gestión de Items
         </Text>
-        <Flex gap={4}>
-          <Input
-            placeholder="Buscar por nombre o código"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            width="300px"
-            borderColor="gray.400"
-          />
+        <Flex gap={4} alignItems="center">
+          {status === "loading" && <Spinner size="sm" color="blue.500" />}
+          <InputGroup width="350px">
+            <InputLeftElement pointerEvents="none">
+              <SearchIcon color="gray.400" />
+            </InputLeftElement>
+            <Input
+              placeholder="Buscar por nombre o código"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              borderColor="gray.300"
+              _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px #3182ce" }}
+              borderRadius="lg"
+            />
+          </InputGroup>
         </Flex>
       </Flex>
 
       <Table
         variant="simple"
         bg={tableBg}
-        rounded="md"
-        shadow="lg"
+        rounded="xl"
+        shadow="xl"
         border={`1px solid ${borderColor}`}
         overflowY="visible"
         overflowX="auto"
         position="relative"
+        style={{ borderCollapse: 'separate', borderSpacing: 0 }}
       >
         <Thead bg="blue.600">
           <Tr>
-            <Th color="white">ID</Th>
-            <Th color="white">Nombre</Th>
-            <Th color="white">Código</Th>
-            <Th color="white">Código Almacén</Th>
-            <Th color="white">Cantidad Disponible</Th>
-            <Th color="white">Estado</Th>
-            <Th color="white">Deudor</Th>
+            <Th color="white" py={4} borderTopLeftRadius="xl">ID</Th>
+            <Th color="white" py={4}>Nombre</Th>
+            <Th color="white" py={4}>Código</Th>
+            <Th color="white" py={4}>Código Almacén</Th>
+            <Th color="white" py={4}>Disponible</Th>
+            <Th color="white" py={4}>Estado</Th>
+            <Th color="white" py={4} borderTopRightRadius="xl">Deudor</Th>
           </Tr>
         </Thead>
         <Tbody>
-          {paginatedData.map((item) => (
-            <ItemRow
-              key={item.id}
-              item={item}
-              handleStatusChange={handleStatusChange}
-              handleAddDeudor={handleAddDeudor}
-              handleRemoveDeudor={handleRemoveDeudor}
-            />
-          ))}
+          {status === "loading" && paginatedData.length === 0 ? (
+            <Tr>
+              <Td colSpan={7} textAlign="center" py={10}>
+                <Spinner size="xl" />
+              </Td>
+            </Tr>
+          ) : status === "failed" ? (
+            <Tr>
+              <Td colSpan={7} textAlign="center" py={10}>
+                <Text fontSize="lg" color="red.500">
+                  Error al cargar los datos: {error}
+                </Text>
+              </Td>
+            </Tr>
+          ) : paginatedData.length === 0 ? (
+            <Tr>
+              <Td colSpan={7} textAlign="center" py={10}>
+                <Text fontSize="lg" color="gray.500">
+                  No se encontraron items
+                </Text>
+              </Td>
+            </Tr>
+          ) : (
+            paginatedData.map((item) => (
+              <ItemRow
+                key={item.id}
+                item={item}
+                handleStatusChange={handleStatusChange}
+                handleAddDeudor={handleAddDeudor}
+                handleRemoveDeudor={handleRemoveDeudor}
+                ensureDeudoresLoaded={() => handleEnsureDeudoresLoaded(item.id)}
+                isLoadingDeudores={
+                  deudoresStatus === "loading" &&
+                  activeDeudorLoaderItemId === item.id
+                }
+              />
+            ))
+          )}
         </Tbody>
       </Table>
 
@@ -308,7 +402,7 @@ const PageItems = () => {
         currentPage={currentPage}
         totalItems={totalItems || 0}
         itemsPerPage={itemsPerPage}
-        onPageChange={(page) => setCurrentPage(page)}
+        onPageChange={(page) => setSearchState(prev => ({ ...prev, currentPage: page }))}
       />
     </Box>
   );

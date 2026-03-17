@@ -113,4 +113,3 @@ export const PagePermiso = () => {
     );
 };
 
-export default PagePermiso;

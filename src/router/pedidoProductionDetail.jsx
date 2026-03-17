@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { RootLayout } from "../pages/layouts/RootLayout";
 import { Dashboard } from "../pages";
-import SupervisorPageDetail from "../pages/produccion/supervisor/pageSupervisorDetail";
+import { SupervisorPageDetail } from "../pages/produccion/supervisor/pageSupervisorDetail";
 
 export const productionOrdenDetails = () => {
   return (

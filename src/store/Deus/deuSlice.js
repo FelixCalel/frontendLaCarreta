@@ -139,6 +139,4 @@ const deudoresSlice = createSlice({
   },
 });
 
-export const { limpiarError, limpiarDeudor } = deudoresSlice.actions;
-
 export default deudoresSlice.reducer;

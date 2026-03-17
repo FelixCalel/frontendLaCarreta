@@ -104,6 +104,9 @@ const QApaginaPedido = lazy(() =>
 const QApaginaDetails = lazy(() =>
   import("./QADetails").then((module) => ({ default: module.QApaginaDetails })),
 );
+const historialSapRoute = lazy(() =>
+  import("./HistorialSapRoute").then((module) => ({ default: module.historialSapRoute })),
+);
 
 export const routeComponentMap = {
   "/pais": PaginaPais,
@@ -130,4 +133,5 @@ export const routeComponentMap = {
   "/detalleFabricacion": fabricacionDetailOrder,
   "/aseguramiento": QApaginaPedido,
   "/qa": QApaginaDetails,
+  "/historialSapDetalle": historialSapRoute,
 };

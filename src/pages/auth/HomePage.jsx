@@ -78,33 +78,25 @@ const tips = [
 ];
 
 const HomePage = () => {
-  const [nombreUsuario, setNombreUsuario] = useState("");
-  const [rolNombre, setRolNombre] = useState("Sin rol");
-  const [roleId, setRoleId] = useState(null);
-
   const navigate = useNavigate();
+  const {
+    displayName,
+    roleId: roleIdRedux,
+    user,
+  } = useSelector((state) => state.auth);
 
-  const { displayName, roleId: roleIdRedux, user } = useSelector(
-    (state) => state.auth
-  );
-
-  useEffect(() => {
-    setNombreUsuario(displayName || "Usuario");
-
-    // Prefer dynamic role name from backend user object
-    const dynamicRoleName = user?.role?.nombre;
-    const currentRoleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
-
-    if (dynamicRoleName) {
-      setRolNombre(dynamicRoleName);
-      setRoleId(currentRoleId);
-    } else if (currentRoleId && roleMap[currentRoleId]) {
-      setRolNombre(roleMap[currentRoleId]);
-      setRoleId(currentRoleId);
-    }
-  }, [displayName, roleIdRedux, user]);
-
-  const tipsMemo = useMemo(() => tips, []);
+  const nombreUsuario = displayName || "Usuario";
+  const parsedRoleId =
+    roleIdRedux !== undefined && roleIdRedux !== null && roleIdRedux !== ""
+      ? Number(roleIdRedux)
+      : null;
+  const roleId = Number.isNaN(parsedRoleId) ? null : parsedRoleId;
+  const isRoleZero = roleId === 0;
+  const rolNombre = isRoleZero
+    ? "Sin rol"
+    : user?.role?.nombre ||
+      (roleId !== null && roleId !== undefined ? roleMap[roleId] : undefined) ||
+      "Sin rol";
 
   const pageBg = useColorModeValue("gray.50", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
@@ -165,13 +157,34 @@ const HomePage = () => {
                   </Heading>
 
                   <Text fontSize={{ base: "sm", md: "md" }}>
-                    ¡Nos alegra tenerte de vuelta! Explora el menú lateral para
-                    acceder a las secciones disponibles.
+                    {isRoleZero
+                      ? "Tu cuenta esta activa, pero no tiene permisos asignados todavia."
+                      : "¡Nos alegra tenerte de vuelta! Explora el menú lateral para acceder a las secciones disponibles."}
                   </Text>
                 </VStack>
               </Box>
 
-              {rolNombre === "Sin rol" && (
+              {isRoleZero && (
+                <Alert
+                  status="warning"
+                  variant="subtle"
+                  borderRadius="lg"
+                  borderWidth="1px"
+                  borderColor="yellow.300"
+                >
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle>Acceso pendiente de permisos</AlertTitle>
+                    <AlertDescription maxWidth="sm">
+                      No tienes un rol asignado actualmente. Por favor, contacta
+                      con un administrador para que te asignen un rol y puedas
+                      acceder a todas las funcionalidades del sistema.
+                    </AlertDescription>
+                  </Box>
+                </Alert>
+              )}
+
+              {rolNombre === "Sin rol" && !isRoleZero && (
                 <Alert
                   status="warning"
                   variant="subtle"
@@ -223,7 +236,7 @@ const HomePage = () => {
 
                     <HStack fontSize="xs" color="gray.500">
                       <Icon as={FaRegLightbulb} />
-                      <span>{tipsMemo[0]}</span>
+                      <span>{tips[0]}</span>
                     </HStack>
                   </VStack>
 

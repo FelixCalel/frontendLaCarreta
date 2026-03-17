@@ -38,7 +38,7 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
     if (!selectedAll) {
       const itemsSinProveedor = compras
         .filter(
-          (c) => Array.isArray(c.proveedorId) && c.proveedorId.length === 0
+          (c) => Array.isArray(c.proveedorId) && c.proveedorId.length === 0,
         )
         .map((c) => c.id);
       setSelectedItems(itemsSinProveedor);
@@ -56,11 +56,14 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
     }
   };
 
-  const boxBg = useColorModeValue("white", "gray.700");
-  const textColor = useColorModeValue("gray.800", "white");
-  const tableColorScheme = useColorModeValue("gray", "blue");
-  const headerBg = useColorModeValue("gray.100", "gray.600");
-  const rowHoverBg = useColorModeValue("green.50", "green.900");
+  const boxBg = useColorModeValue("white", "gray.800");
+  const textColor = useColorModeValue("gray.700", "gray.200");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const theadBg = useColorModeValue("green.50", "green.900");
+  const thColor = useColorModeValue("green.700", "green.300");
+  const rowHoverBg = useColorModeValue("gray.50", "gray.700");
+  const numSolicitadoColor = useColorModeValue("cyan.700", "cyan.300");
+  const numAsignadoColor = useColorModeValue("green.600", "green.300");
 
   const sortedCompras = [...compras].sort((a, b) => a.id - b.id);
 
@@ -107,9 +110,9 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
                 proveedorId: selectedProveedorId,
                 cantidad: compra.cantidad || 1,
                 selectedProveedorName: "Nombre del proveedor (opcional)",
-              })
+              }),
             );
-          })
+          }),
         );
 
         toast({
@@ -128,9 +131,9 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
               desasignarProveedor({
                 compraId: id,
                 proveedorId: compra.proveedorId?.[0],
-              })
+              }),
             );
-          })
+          }),
         );
 
         toast({
@@ -206,18 +209,36 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
         </Stack>
       </Box>
 
-      <Table variant="striped" colorScheme={tableColorScheme}>
-        <Thead bg={headerBg}>
+      <Table variant="simple" size="sm">
+        <Thead bg={theadBg}>
           <Tr>
-            <Th>ID</Th>
-            <Th>Item</Th>
-            <Th>Nombre Item</Th>
-            <Th>DEU</Th>
-            <Th>Cantidad Solicitada</Th>
-            <Th>Cantidad Asignada</Th>
-            <Th>Checkbox</Th>
-            <Th>Proveedor</Th>
-            <Th>Posible cantidad abastecida</Th>
+            <Th color={thColor} py={3}>
+              ID
+            </Th>
+            <Th color={thColor} py={3}>
+              Item
+            </Th>
+            <Th color={thColor} py={3}>
+              Nombre Item
+            </Th>
+            <Th color={thColor} py={3}>
+              DEU
+            </Th>
+            <Th color={thColor} py={3} isNumeric>
+              Cantidad Solicitada
+            </Th>
+            <Th color={thColor} py={3} isNumeric>
+              Cantidad Asignada
+            </Th>
+            <Th color={thColor} py={3} textAlign="center">
+              Checkbox
+            </Th>
+            <Th color={thColor} py={3}>
+              Proveedor
+            </Th>
+            <Th color={thColor} py={3} textAlign="center">
+              Planificar
+            </Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -226,31 +247,38 @@ const ComprasTable = ({ compras, onRegistrarProveedor }) => {
               key={compra.id}
               _hover={{
                 bg: rowHoverBg,
-                cursor: "pointer",
-                transition: "background 0.2s",
               }}
+              borderBottom="1px solid"
+              borderColor={borderColor}
+              transition="background 0.2s"
             >
               <Td>{compra.id}</Td>
               <Td>{compra.codigo}</Td>
-              <Td>{compra.nombre}</Td>
+              <Td fontWeight="medium">{compra.nombre}</Td>
               <Td>{`${compra.nombreDeu} - ${compra.nombreCorrelativo}`}</Td>
-              <Td>{compra.cantidad || 0}</Td>
-              <Td>{compra.cantidadAsignada || 0}</Td>
-              <Td>
+              <Td isNumeric fontWeight="bold" color={numSolicitadoColor}>
+                {compra.cantidad || 0}
+              </Td>
+              <Td isNumeric fontWeight="bold" color={numAsignadoColor}>
+                {compra.cantidadAsignada || 0}
+              </Td>
+              <Td textAlign="center">
                 <Checkbox
-                  colorScheme="teal"
+                  colorScheme="green"
+                  size="lg"
                   isChecked={selectedItems.includes(compra.id)}
                   onChange={() => handleCheckboxChange(compra.id)}
                 />
               </Td>
-              <Td>{compra.nombreProveedor || "—"}</Td>
-              <Td>
+              <Td color="gray.500">{compra.nombreProveedor || "—"}</Td>
+              <Td textAlign="center">
                 <Button
                   size="sm"
-                  colorScheme="orange"
+                  colorScheme="green"
+                  variant="outline"
                   onClick={() => onRegistrarProveedor(compra)}
-                  _hover={{ transform: "scale(1.03)" }}
-                  transition="transform 0.2s"
+                  _hover={{ transform: "scale(1.03)", bg: "green.50" }}
+                  transition="all 0.2s"
                 >
                   Planificar
                 </Button>

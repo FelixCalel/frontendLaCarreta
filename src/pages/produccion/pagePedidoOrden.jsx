@@ -9,4 +9,3 @@ export const PagePedidoSuper = () => (
   </Box>
 );
 
-export default PagePedidoSuper;

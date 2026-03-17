@@ -47,4 +47,4 @@ if (typeof window !== "undefined") {
   analytics = getAnalytics(app);
 }
 
-export { app, auth, firestore, analytics };
+export { auth };

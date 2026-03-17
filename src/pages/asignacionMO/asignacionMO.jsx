@@ -94,4 +94,3 @@ export const PageasignacionMO = () => {
   );
 };
 
-export default PageasignacionMO;

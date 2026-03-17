@@ -17,12 +17,13 @@ import { es } from "date-fns/locale";
 const PedidosTable = ({
   pedidos,
   roleId,
+  showSapInfo = false,
   onVerDetalles,
   highlightedPedidoId = null,
   onClearHighlight = () => {},
 }) => {
-  const showSapInfo = roleId === 1 || roleId === 3;
   const blinkBg = useColorModeValue("orange.100", "orange.700");
+  const mobileCardBg = useColorModeValue("white", "gray.700");
 
   return (
     <>
@@ -154,7 +155,7 @@ const PedidosTable = ({
               borderWidth="1px"
               borderRadius="lg"
               overflow="hidden"
-              bg={useColorModeValue("white", "gray.700")}
+              bg={mobileCardBg}
               boxShadow="md"
               id={`pedido-mobile-${pedido.id}`}
               animation={isHighlighted ? "blink 1s infinite" : undefined}
@@ -272,6 +273,7 @@ PedidosTable.propTypes = {
     PropTypes.number,
   ]),
   onClearHighlight: PropTypes.func,
+  showSapInfo: PropTypes.bool,
 };
 
 export default PedidosTable;

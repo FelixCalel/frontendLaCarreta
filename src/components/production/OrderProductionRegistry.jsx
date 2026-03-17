@@ -93,14 +93,7 @@ export const OrderProductionRegistry = ({
         }
       }
 
-      const fieldsToValidate = [
-        "mpUtilizada",
-        "mpSobrante",
-        "basura",
-        "mp1ra",
-        "mp2da",
-        "mp3ra",
-      ];
+      const fieldsToValidate = ["mpUtilizada"];
 
       if (value !== "" && fieldsToValidate.includes(field)) {
         const maxAllowed = Number(order.cantidadUnidad) || 0;

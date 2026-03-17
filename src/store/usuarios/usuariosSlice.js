@@ -4,6 +4,7 @@ import {
   fetchUsuariosMetadata,
   toggleUserStatus,
   assignUserRoutes,
+  updateUserRole,
 } from "./thunks";
 
 export const fetchUsuarios = createAsyncThunk(
@@ -30,7 +31,7 @@ const saveState = (state) => {
   localStorage.setItem("authSlice", JSON.stringify(state));
 };
 
-export const usuariosSlice = createSlice({
+const usuariosSlice = createSlice({
   name: "usuarios",
   initialState: {
     data: [],
@@ -86,10 +87,18 @@ export const usuariosSlice = createSlice({
             state.items[index].rutas = action.payload.rutas;
           }
         }
+      })
+      .addCase(updateUserRole.fulfilled, (state, action) => {
+        if (state.items) {
+          const index = state.items.findIndex(
+            (u) => u.id === action.payload.usuarioId,
+          );
+          if (index !== -1) {
+            state.items[index].roleId = action.payload.rolId;
+          }
+        }
       });
   },
 });
 
 export const usuariosReducer = usuariosSlice.reducer;
-
-export const { setUsuarios } = usuariosSlice.actions;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React from "react";
 import {
   Table,
   Thead,
@@ -26,8 +26,10 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, SearchIcon } from "@chakra-ui/icons";
-import { format } from "date-fns";
+
 import Pagination from "../../../components/pagination";
+
+import { useTiendaTable } from "../hooks/useTiendaTable";
 
 const TiendaTable = ({
   data,
@@ -36,67 +38,29 @@ const TiendaTable = ({
   onToggleStatus,
   isToggling,
 }) => {
-  const [filtroCiudad, setFiltroCiudad] = useState("");
-  const [filtroRuta, setFiltroRuta] = useState("");
-  const [filtroZona, setFiltroZona] = useState("");
-  const [filtroNombre, setFiltroNombre] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filtroCiudad, filtroRuta, filtroZona, filtroNombre]);
-
-  const formatDate = (dateString) => {
-    try {
-      return dateString
-        ? format(new Date(dateString), "dd-MM-yyyy HH:mm")
-        : "-";
-    } catch (error) {
-      return "-";
-    }
-  };
-
-  const filteredData = data.filter((tienda) => {
-    return (
-      (filtroCiudad ? tienda.nombreCiudad === filtroCiudad : true) &&
-      (filtroRuta ? tienda.nombreRuta === filtroRuta : true) &&
-      (filtroZona
-        ? tienda.zona?.toLowerCase().includes(filtroZona.toLowerCase())
-        : true) &&
-      (filtroNombre
-        ? tienda.nombre?.toLowerCase().includes(filtroNombre.toLowerCase())
-        : true)
-    );
-  }).sort((a, b) => {
-    const rutaA = a.nombreRuta || "";
-    const rutaB = b.nombreRuta || "";
-    const numA = parseInt(rutaA.replace(/\D/g, '')) || 0;
-    const numB = parseInt(rutaB.replace(/\D/g, '')) || 0;
-    return numA - numB || rutaA.localeCompare(rutaB);
-  });
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
+  const {
+    filtroCiudad,
+    setFiltroCiudad,
+    filtroRuta,
+    setFiltroRuta,
+    filtroZona,
+    setFiltroZona,
+    filtroNombre,
+    setFiltroNombre,
+    currentPage,
+    itemsPerPage,
+    filteredData,
+    currentItems,
+    handlePageChange,
+    ciudades,
+    rutas,
+  } = useTiendaTable({ data });
 
   const cardBg = useColorModeValue("white", "gray.800");
   const theadBg = useColorModeValue("gray.50", "gray.700");
   const hoverBg = useColorModeValue("gray.50", "gray.700");
   const textColor = useColorModeValue("gray.800", "white");
   const subTextColor = useColorModeValue("gray.600", "gray.400");
-  const ciudades = Array.from(new Set(data.map((t) => t.nombreCiudad))).filter(Boolean);
-  const rutas = Array.from(new Set(data.map((t) => t.nombreRuta)))
-    .filter(Boolean)
-    .sort((a, b) => {
-      const numA = parseInt(a.replace(/\D/g, '')) || 0;
-      const numB = parseInt(b.replace(/\D/g, '')) || 0;
-      return numA - numB || a.localeCompare(b);
-    });
 
   return (
     <Card bg={cardBg} boxShadow="lg" borderRadius="xl" overflow="hidden" mt={0}>
@@ -158,37 +122,76 @@ const TiendaTable = ({
           <Table variant="simple" size="md">
             <Thead bg={theadBg}>
               <Tr>
-                <Th color={subTextColor} fontSize="sm">Nombre</Th>
-                <Th color={subTextColor} fontSize="sm">Ciudad</Th>
-                <Th color={subTextColor} fontSize="sm">Zona</Th>
-                <Th color={subTextColor} fontSize="sm">Ruta</Th>
-                <Th color={subTextColor} fontSize="sm">Deudor</Th>
-                <Th color={subTextColor} fontSize="sm">Desc.</Th>
-                <Th color={subTextColor} fontSize="sm">Estado</Th>
-                <Th color={subTextColor} fontSize="sm">Acciones</Th>
+                <Th color={subTextColor} fontSize="sm">
+                  Nombre
+                </Th>
+                <Th color={subTextColor} fontSize="sm">
+                  Ciudad
+                </Th>
+                <Th color={subTextColor} fontSize="sm">
+                  Zona
+                </Th>
+                <Th color={subTextColor} fontSize="sm">
+                  Ruta
+                </Th>
+                <Th color={subTextColor} fontSize="sm">
+                  Deudor
+                </Th>
+                <Th color={subTextColor} fontSize="sm">
+                  Desc.
+                </Th>
+                <Th color={subTextColor} fontSize="sm">
+                  Estado
+                </Th>
+                <Th color={subTextColor} fontSize="sm">
+                  Acciones
+                </Th>
               </Tr>
             </Thead>
             <Tbody>
               {currentItems.length > 0 ? (
                 currentItems.map((tienda) => (
-                  <Tr key={tienda.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
-                    <Td fontWeight="medium" color={textColor} fontSize="sm">{tienda.nombre}</Td>
-                    <Td color={textColor} fontSize="sm">{tienda.nombreCiudad}</Td>
-                    <Td color={textColor} fontSize="sm">{tienda.zona}</Td>
+                  <Tr
+                    key={tienda.id}
+                    _hover={{ bg: hoverBg }}
+                    transition="background 0.2s"
+                  >
+                    <Td fontWeight="medium" color={textColor} fontSize="sm">
+                      {tienda.nombre}
+                    </Td>
+                    <Td color={textColor} fontSize="sm">
+                      {tienda.nombreCiudad}
+                    </Td>
+                    <Td color={textColor} fontSize="sm">
+                      {tienda.zona}
+                    </Td>
                     <Td>
-                      <Badge colorScheme="blue" variant="subtle" borderRadius="full" px={2} fontSize="xs">
+                      <Badge
+                        colorScheme="blue"
+                        variant="subtle"
+                        borderRadius="full"
+                        px={2}
+                        fontSize="xs"
+                      >
                         {tienda.nombreRuta}
                       </Badge>
                     </Td>
                     <Td fontSize="sm" color={textColor}>
                       {tienda.nombreDeu}
                       {tienda.nombreCorrelativo && (
-                        <Text as="span" color={subTextColor} ml={1} fontSize="xs">
+                        <Text
+                          as="span"
+                          color={subTextColor}
+                          ml={1}
+                          fontSize="xs"
+                        >
                           ({tienda.nombreCorrelativo})
                         </Text>
                       )}
                     </Td>
-                    <Td color={textColor} fontSize="sm">{tienda.descuento}%</Td>
+                    <Td color={textColor} fontSize="sm">
+                      {tienda.descuento}%
+                    </Td>
                     <Td>
                       <Flex align="center" gap={2}>
                         <Switch

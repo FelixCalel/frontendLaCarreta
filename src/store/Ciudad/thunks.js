@@ -23,9 +23,13 @@ export const addNewCiudad = createAsyncThunk(
 
 export const deleteCiudad = createAsyncThunk(
   'ciudades/deleteCiudad',
-  async (id) => {
-    await axios.delete(`${BASE_URL}/ciudad/eliminar/${id}`);
-    return id;
+  async (id, { rejectWithValue }) => {
+    try {
+      await axios.delete(`${BASE_URL}/ciudad/eliminar/${id}`);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Error al eliminar la ciudad');
+    }
   }
 );
 

@@ -21,10 +21,10 @@ export const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [status, setStatus] = useState("verifying");
-  const [message, setMessage] = useState(
-    "Verificando tu correo electrónico..."
-  );
+  const [state, setState] = useState({
+    status: "verifying",
+    message: "Verificando tu correo electrónico...",
+  });
 
   const oobCode = searchParams.get("oobCode");
 
@@ -36,26 +36,34 @@ export const VerifyEmail = () => {
 
     const verifyCode = async () => {
       effectRan.current = true;
+      let nextState = { status: "verifying", message: "Verificando..." };
 
       try {
         const resultAction = await dispatch(verifyEmailCode(oobCode));
 
         if (verifyEmailCode.fulfilled.match(resultAction)) {
-          setStatus("success");
-          setMessage(resultAction.payload.message);
+          nextState = {
+            status: "success",
+            message: resultAction.payload.message,
+          };
 
           setTimeout(() => {
             navigate("/auth/login", { replace: true });
           }, 3000);
         } else {
-          setStatus("error");
-          setMessage(resultAction.payload || "Hubo un error al verificar el correo.");
+          nextState = {
+            status: "error",
+            message: resultAction.payload || "Hubo un error al verificar el correo.",
+          };
         }
       } catch (error) {
         console.error("Verification error:", error);
-        setStatus("error");
-        setMessage("Hubo un error inesperado al verificar el correo.");
+        nextState = {
+          status: "error",
+          message: "Hubo un error inesperado al verificar el correo.",
+        };
       }
+      setState(nextState);
     };
 
     verifyCode();
@@ -97,7 +105,7 @@ export const VerifyEmail = () => {
           textAlign="center"
         >
           <VStack spacing={6}>
-            {status === "verifying" && (
+            {state.status === "verifying" && (
               <>
                 <Spinner size="xl" color="green.400" thickness="4px" />
                 <Heading size="md" color={textColor}>
@@ -106,7 +114,7 @@ export const VerifyEmail = () => {
               </>
             )}
 
-            {status === "success" && (
+            {state.status === "success" && (
               <>
                 <Box
                   p={3}
@@ -121,7 +129,7 @@ export const VerifyEmail = () => {
                   ¡Verificado!
                 </Heading>
                 <Text color={subTextColor} fontSize="md">
-                  {message}
+                  {state.message}
                 </Text>
                 <Text color={subTextColor} fontSize="sm" mt={2}>
                   Redirigiendo al inicio de sesión en unos segundos...
@@ -144,7 +152,7 @@ export const VerifyEmail = () => {
               </>
             )}
 
-            {status === "error" && (
+            {state.status === "error" && (
               <>
                 <Box
                   p={3}
@@ -159,7 +167,7 @@ export const VerifyEmail = () => {
                   Error
                 </Heading>
                 <Text color={subTextColor} fontSize="md">
-                  {message}
+                  {state.message}
                 </Text>
                 <Button
                   w="full"
@@ -183,4 +191,3 @@ export const VerifyEmail = () => {
   );
 };
 
-export default VerifyEmail;

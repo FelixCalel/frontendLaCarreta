@@ -53,9 +53,16 @@ export const fetchMesasDisponiblesThunk = createAsyncThunk(
 
 export const asignarMesaThunk = createAsyncThunk(
   "asignacionAM/asignarMesa",
-  async (data) => {
-    const response = await axios.post(`${BASE_URL}/asignarAM/`, data);
-    return response.data;
+  async (data, thunkAPI) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/asignarAM/`, data);
+      return response.data;
+    } catch (error) {
+      console.error("Error al asignar mesa:", error);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.error || "Error al asignar la mesa",
+      );
+    }
   },
 );
 
@@ -69,13 +76,15 @@ export const fetchAsignacionesThunk = createAsyncThunk(
 
 export const asignarTipoGrupoThunk = createAsyncThunk(
   "asignacionAM/asignar",
-  async (data) => {
+  async (data, thunkAPI) => {
     try {
       const res = await axios.post(`${BASE_URL}/asignarArea/`, data);
       return res.data;
     } catch (error) {
       console.error("Error al asignar tipo de grupo:", error);
-      throw error;
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.error || "Error al asignar",
+      );
     }
   },
 );

@@ -23,9 +23,13 @@ export const addNewPais = createAsyncThunk(
 
 export const deletePais = createAsyncThunk(
   'paises/deletePais',
-  async (id) => {
-    await axios.delete(`${BASE_URL}/pais/eliminar/${id}`);
-    return id;
+  async (id, { rejectWithValue }) => {
+    try {
+      await axios.delete(`${BASE_URL}/pais/eliminar/${id}`);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Error al eliminar el país');
+    }
   }
 );
 

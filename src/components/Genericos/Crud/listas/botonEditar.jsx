@@ -193,4 +193,3 @@ BotonEditar.propTypes = {
   formData: PropTypes.object,
 };
 
-export default BotonEditar;

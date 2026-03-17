@@ -66,8 +66,8 @@ export const UnassignedProductsModal = ({ isOpen, onClose }) => {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {unassignedItems.map((item, idx) => (
-                    <Tr key={`${item.id}-${idx}`}>
+                  {unassignedItems.map((item) => (
+                    <Tr key={item.id}>
                       <Td fontWeight="bold">#{item.pedidoId}</Td>
                       <Td>
                         {item.deudorCodigo

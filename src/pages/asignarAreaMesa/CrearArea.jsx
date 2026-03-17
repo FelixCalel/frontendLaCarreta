@@ -21,6 +21,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { crearAreaThunk } from "../../store/areas/thunks";
 import { fetchUsuarios } from "../../store/usuarios/usuariosSlice";
+import { fetchRoles } from "../../store/usuarios/thunks";
 
 const CrearArea = () => {
   const dispatch = useDispatch();
@@ -30,12 +31,24 @@ const CrearArea = () => {
   const [nombre, setNombre] = useState("");
   const [encargadoId, setEncargadoId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allRoles, setAllRoles] = useState([]);
 
   const { items } = useSelector((state) => state.usuarios);
   const usuarios = items || [];
 
   useEffect(() => {
     dispatch(fetchUsuarios());
+    const getRoles = async () => {
+      try {
+        const resultAction = await dispatch(fetchRoles());
+        if (fetchRoles.fulfilled.match(resultAction)) {
+          setAllRoles(resultAction.payload);
+        }
+      } catch (error) {
+        console.error("Error fetching roles:", error);
+      }
+    };
+    getRoles();
   }, [dispatch]);
 
   const handleSubmit = (e) => {
@@ -95,6 +108,20 @@ const CrearArea = () => {
   const textColor = useColorModeValue("gray.500", "whiteAlpha.700");
   const labelColor = useColorModeValue("gray.700", "whiteAlpha.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
+
+  const rolesPermitidos = [
+    "admin",
+    "supervisor",
+    "supervisor produccion",
+    "supervisor producción",
+    "encargado de area",
+    "encargado de área",
+    "digitador",
+  ];
+
+  const allowedRoleIds = allRoles
+    .filter((r) => rolesPermitidos.includes((r.nombre || "").toLowerCase()))
+    .map((r) => r.id);
 
   return (
     <Box p={{ base: 4, md: 8 }} maxW="800px" mx="auto">
@@ -158,7 +185,9 @@ const CrearArea = () => {
                   color={useColorModeValue("gray.800", "white")}
                 >
                   {(usuarios || [])
-                    .filter((u) => u.estaActivo)
+                    .filter(
+                      (u) => u.estaActivo && allowedRoleIds.includes(u.roleId),
+                    )
                     .map((user) => (
                       <option key={user.id} value={user.id}>
                         {user.nombre} {user.apellido}

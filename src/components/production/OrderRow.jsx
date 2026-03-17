@@ -30,135 +30,47 @@ import { RechazoModal } from "../modals/RechazoModal";
 import { OrderProductionRegistry } from "./OrderProductionRegistry";
 import { OrderWarehouseSelector } from "./OrderWarehouseSelector";
 
+const EMPTY_OBJECT = {};
+const EMPTY_ARRAY = [];
+import { useOrderRow } from "./hooks/useOrderRow";
+
 export const OrderRow = ({
   order,
   isExpanded,
   onToggle,
-  sx = {},
-  almacenes = [],
+  sx = EMPTY_OBJECT,
+  almacenes = EMPTY_ARRAY,
   index = 0,
 }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const toast = useToast();
-  const shouldFetch = isExpanded;
-
-  const { data: rechazoData } = useGetRechazoByPedidoProduccionIdQuery(
-    order.id,
-    {
-      skip: !order.id,
-    },
-  );
-  const rechazoQty = rechazoData?.cantidadRechazada || 0;
-
-  const recetaArg = shouldFetch ? { pedidoId: Number(order.id) } : skipToken;
-
   const {
-    data: receta = [],
-    isLoading: loadingReceta,
-    isSuccess,
-    isError,
-    error,
-  } = useGetRecetaByPedidoQuery(recetaArg);
+    rechazoQty,
+    receta,
+    loadingReceta,
+    isPTMQ,
+    cantidadLocal,
+    faltanteLocal,
+    details,
+    loadingDetalles,
+    completoLocal,
+    handlePTMQToggle,
+    handleUpdateStats,
+    handleCompletoChange,
+    handleSaveRechazo,
+    modalPedidoProduccionId,
+    modalMaxQuantity,
+    modalCurrentMpUtilizada,
+    isOpen,
+    onOpen,
+    onClose,
+    isSavingRechazo,
+  } = useOrderRow(order, isExpanded);
+
   const hasReceta = receta && receta.length > 0;
-  const [updatePedido] = useUpdatePedidoProduccionMutation();
-  const [createRechazo, { isLoading: isCreatingRechazo }] =
-    useCreateRechazoMutation();
-  const [updateRechazo, { isLoading: isUpdatingRechazo }] =
-    useUpdateRechazoMutation();
-  const [isPTMQ, setIsPTMQ] = useState(order.ptmq ?? false);
-  const [cantidadLocal, setCantidadLocal] = useState(
-    Number(order.cantidad) || 0,
-  );
-  const [faltanteLocal, setFaltanteLocal] = useState(
-    (Number(order.cantidadUnidad) || 0) - (Number(order.cantidad) || 0),
-  );
-  const {
-    data: details = [],
-    isLoading: loadingDetalles,
-    refetch: refetchDetalles,
-  } = useGetDetallesYProduccionQuery(shouldFetch ? order.id : skipToken);
-
-  useEffect(() => {
-    if (isSuccess) {
-      console.log("[OrderRow] RECETA OK", receta);
-    }
-    if (isError) {
-      console.error("[OrderRow] RECETA ERROR", error);
-    }
-  }, [isSuccess, isError, receta, error]);
-
-  useEffect(() => {
-    setCantidadLocal((order.cantidad ?? 0) + rechazoQty);
-    setFaltanteLocal(
-      (order.cantidadUnidad ?? 0) - ((order.cantidad ?? 0) + rechazoQty),
-    );
-  }, [order.cantidad, order.cantidadUnidad, rechazoQty]);
-
-  useEffect(() => setIsPTMQ(order.ptmq), [order.ptmq]);
-
-  useEffect(() => {
-    if (shouldFetch) {
-      refetchDetalles?.();
-    }
-  }, [shouldFetch, refetchDetalles]);
-
-  useEffect(() => {
-    if (isSuccess && receta.length === 0 && !order.ptmq) {
-      updatePedido({ id: order.id, data: { ptmq: true } }).catch(() => {});
-    }
-  }, [isSuccess, receta.length, order.ptmq, order.id, updatePedido]);
-
-  const handlePTMQToggle = async (checked) => {
-    try {
-      await updatePedido({ id: order.id, data: { ptmq: checked } }).unwrap();
-      setIsPTMQ(checked);
-    } catch {
-      setIsPTMQ(order.ptmq);
-    }
-  };
-
-  const handleUpdateStats = (newCantidad, newFaltante) => {
-    setCantidadLocal(newCantidad + rechazoQty);
-    setFaltanteLocal(newFaltante);
-  };
-
-  const [completoLocal, setCompletoLocal] = useState(order.completo);
-
-  useEffect(() => {
-    setCompletoLocal(order.completo);
-  }, [order.completo]);
-
-  const handleCompletoChange = (checked) => {
-    setCompletoLocal(checked);
-    updatePedido({ id: order.id, data: { completo: checked } })
-      .unwrap()
-      .catch(() => setCompletoLocal(!checked));
-  };
-
-  const handleSaveRechazo = async ({ formData, existingRechazo }) => {
-    try {
-      if (existingRechazo) {
-        await updateRechazo({
-          id: existingRechazo.id,
-          data: formData,
-          id_pedidoProd: order.id,
-        }).unwrap();
-      } else {
-        await createRechazo({ ...formData, id_pedidoProd: order.id }).unwrap();
-      }
-      onClose();
-    } catch (err) {
-      console.error("Failed to save rechazo:", err);
-    }
-  };
-
-  const stripeColor = useColorModeValue("gray.50", "gray.800");
   const bgOdd = useColorModeValue("white", "gray.900");
   const bgEven = useColorModeValue("gray.100", "gray.800");
   const rowBg = index % 2 === 0 ? bgOdd : bgEven;
 
   const hoverBg = useColorModeValue("gray.200", "gray.600");
-  const panelBg = useColorModeValue("gray.50", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const collapseBg = useColorModeValue("gray.50", "gray.900");
 
@@ -294,7 +206,11 @@ export const OrderRow = ({
               borderBottomWidth="1px"
               borderColor="gray.200"
             >
-              <Flex gap={4} direction={{ base: "column", xl: "row" }}>
+              <Flex
+                gap={4}
+                direction={{ base: "column", md: "row" }}
+                align="flex-start"
+              >
                 <Box width="fit-content">
                   <OrderProductionRegistry
                     order={order}
@@ -302,18 +218,14 @@ export const OrderRow = ({
                     onUpdateStats={handleUpdateStats}
                     onOpenRechazo={onOpen}
                   />
-
-                  <Box>
-                    <OrderDetailsTable
-                      details={details}
-                      isLoading={loadingDetalles}
-                      showPTMQ={!hasReceta}
-                      isPTMQ={isPTMQ}
-                      onTogglePTMQ={handlePTMQToggle}
-                    />
-                  </Box>
+                  <OrderDetailsTable
+                    details={details}
+                    isLoading={loadingDetalles}
+                    showPTMQ={!hasReceta}
+                    isPTMQ={isPTMQ}
+                    onTogglePTMQ={handlePTMQToggle}
+                  />
                 </Box>
-
                 <Box flex="1">{memoizedRecetaTable}</Box>
               </Flex>
             </Box>
@@ -322,12 +234,12 @@ export const OrderRow = ({
             <RechazoModal
               isOpen={isOpen}
               onClose={onClose}
-              pedidoProduccionId={order.id}
+              pedidoProduccionId={modalPedidoProduccionId}
               onSave={handleSaveRechazo}
-              isLoading={isCreatingRechazo || isUpdatingRechazo}
+              isLoading={isSavingRechazo}
               trazabilidadPadre={order.trazabilidad_Prod}
-              maxQuantity={Number(order.cantidadUnidad) || 0}
-              currentMpUtilizada={Number(order.mpUtilizada) || 0}
+              maxQuantity={modalMaxQuantity}
+              currentMpUtilizada={modalCurrentMpUtilizada}
             />
           )}
         </Td>

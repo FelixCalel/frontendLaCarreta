@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { RootLayout } from "../pages/layouts/RootLayout";
 import { Dashboard } from "../pages";
-import PageHistorialPedido from "../pages/pedidos/historial/pageHistorialPedido";
+import { PageHistorialPedido } from "../pages/pedidos/historial/pageHistorialPedido";
 
 export const PaginaHistorialPedido = () => {
   return (

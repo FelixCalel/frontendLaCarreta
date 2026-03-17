@@ -29,12 +29,12 @@ const DetallesModal = ({
   const [cantidadRecibida, setCantidadRecibida] = useState(
     pedido?.pedido_compra || 0
   );
+  const [prevPedidoId, setPrevPedidoId] = useState(pedido?.id);
 
-  useEffect(() => {
-    if (pedido) {
-      setCantidadRecibida(pedido.pedido_compra || 0);
-    }
-  }, [pedido, isOpen]);
+  if (pedido?.id !== prevPedidoId) {
+    setPrevPedidoId(pedido?.id);
+    setCantidadRecibida(pedido?.pedido_compra || 0);
+  }
 
   if (!pedido) {
     return null;

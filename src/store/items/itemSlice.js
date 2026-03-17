@@ -103,4 +103,4 @@ const itemsSlice = createSlice({
 });
 
 export default itemsSlice.reducer;
-export const { setItems, patchItem, upsertMany } = itemsSlice.actions;
+export const { patchItem } = itemsSlice.actions;

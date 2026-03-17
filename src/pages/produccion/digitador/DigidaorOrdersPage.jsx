@@ -1,5 +1,12 @@
 import { useState, useMemo } from "react";
-import { Box, Center, Spinner, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Center,
+  Spinner,
+  Text,
+  useColorModeValue,
+} from "@chakra-ui/react";
+import { FaFileExport } from "react-icons/fa";
 import { useGetPedidosAgrupadosQuery } from "../../../services/pedidoProductionApi";
 import { FilterPanel } from "../../../components/production/FilterPanel";
 import { GroupCardGrid } from "../../../components/production/digitador/DigitadorCardGrid";
@@ -9,28 +16,45 @@ const DigitadorOrdersPage = () => {
     data: groups = [],
     isLoading,
     error,
-  } = useGetPedidosAgrupadosQuery({
-    etapaId: 3,
+  } = useGetPedidosAgrupadosQuery(undefined, {
+    pollingInterval: 5000,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
   });
-
-  const base = useMemo(() => groups, [groups]);
 
   const [term, setTerm] = useState("");
   const [country, setCountry] = useState("");
   const [client, setClient] = useState("");
+  const panelBg = useColorModeValue("white", "gray.800");
+
+  const historyGroups = useMemo(
+    () =>
+      groups
+        .map((g) => ({
+          ...g,
+          items: (g.items || []).filter(
+            (it) =>
+              Number(it?.etapaId) === 4 ||
+              Boolean(it?.docNum) ||
+              Boolean(it?.docEntry),
+          ),
+        }))
+        .filter((g) => g.items.length > 0),
+    [groups],
+  );
 
   const countries = useMemo(
-    () => [...new Set(base.map((g) => g.pais).filter(Boolean))],
-    [base],
+    () => [...new Set(historyGroups.map((g) => g.pais).filter(Boolean))],
+    [historyGroups],
   );
   const clients = useMemo(
-    () => [...new Set(base.map((g) => g.tienda).filter(Boolean))],
-    [base],
+    () => [...new Set(historyGroups.map((g) => g.tienda).filter(Boolean))],
+    [historyGroups],
   );
 
   const filtered = useMemo(
     () =>
-      base.filter((g) => {
+      historyGroups.filter((g) => {
         const byText =
           !term ||
           g.pedidoId.toString().includes(term) ||
@@ -39,7 +63,7 @@ const DigitadorOrdersPage = () => {
         const byClient = !client || g.tienda === client;
         return byText && byCountry && byClient;
       }),
-    [base, term, country, client],
+    [historyGroups, term, country, client],
   );
 
   if (isLoading) {
@@ -60,6 +84,16 @@ const DigitadorOrdersPage = () => {
 
   return (
     <Box p={4}>
+      <Text
+        fontSize="2xl"
+        fontWeight="bold"
+        mb={4}
+        textAlign="center"
+        color="blue.600"
+      >
+        Historial de Exportaciones SAP
+      </Text>
+
       <FilterPanel
         itemFilter={term}
         onItemChange={setTerm}
@@ -72,7 +106,13 @@ const DigitadorOrdersPage = () => {
         clients={clients}
       />
 
-      <GroupCardGrid groups={filtered} />
+      <Box bg={panelBg} borderRadius="md" p={2}>
+        <GroupCardGrid
+          groups={filtered}
+          IconComponent={FaFileExport}
+          forceHistory
+        />
+      </Box>
     </Box>
   );
 };

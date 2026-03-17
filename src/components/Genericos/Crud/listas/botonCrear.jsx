@@ -208,4 +208,3 @@ BotonCrear.propTypes = {
     metadata: PropTypes.arrayOf(PropTypes.object),
 };
 
-export default BotonCrear;

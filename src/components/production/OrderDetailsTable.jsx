@@ -13,8 +13,9 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 
+const EMPTY_ARRAY = [];
 export const OrderDetailsTable = ({
-  details = [],
+  details = EMPTY_ARRAY,
   isLoading,
   showPTMQ = true,
   isPTMQ = false,

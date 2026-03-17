@@ -9,9 +9,11 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import moment from "moment";
 import { fetchConsolidado } from "../../../store/Pedidos/DetallePedidos/thunks";
 import FiltrosPedidos from "./componentes/FiltrosPedidos";
+
+const toYMD = (dateString) =>
+  dateString ? new Date(dateString).toISOString().split("T")[0] : "";
 import ConsolidadoTable from "./componentes/consolidadoTable";
 import DetallesModal from "./componentes/DetallesModal";
 import { selectConsolidadoEstado } from "../../../store/Pedidos/DetallePedidos/detalleOrdenSlice";
@@ -26,6 +28,13 @@ const PedidosEntrantesPage = () => {
 
   const bg = useColorModeValue("white", "gray.800");
   const color = useColorModeValue("gray.800", "white");
+
+  const contBg = useColorModeValue("white", "gray.800");
+  const boxBorder = useColorModeValue("gray.200", "gray.700");
+  const headBorder = useColorModeValue("gray.100", "gray.700");
+  const titleColor = useColorModeValue("green.700", "green.300");
+  const filterBg = useColorModeValue("green.50", "gray.700");
+  const filterBorder = useColorModeValue("green.100", "gray.600");
 
   const {
     data: consolidado = [],
@@ -68,12 +77,12 @@ const PedidosEntrantesPage = () => {
   }
 
   const consolidadosFiltrados = consolidado.filter((c) => {
-    const fechaItem = moment.utc(c.fechaOrden).format("YYYY-MM-DD");
+    const fechaItem = toYMD(c.fechaOrden);
     const okFecha = !filtros.fechaOrden || fechaItem === filtros.fechaOrden;
     const okPal =
       filtros.palabrasClave.length === 0 ||
       filtros.palabrasClave.some((w) =>
-        (c.nombreProducto || "").toLowerCase().includes(w)
+        (c.nombreProducto || "").toLowerCase().includes(w),
       );
     return okFecha && okPal;
   });
@@ -84,22 +93,52 @@ const PedidosEntrantesPage = () => {
   };
 
   return (
-    <Box p={6} bg={bg} color={color} rounded="lg" boxShadow="xl">
-      <Flex justify="space-between" align="center" mb={4}>
-        <Heading size="md">Consolidado de Pedidos</Heading>
-      </Flex>
-      <FiltrosPedidos onAplicarFiltros={setFiltros} />
-      <ConsolidadoTable
-        data={consolidadosFiltrados}
-        status={status}
-        error={error}
-        onVerDetalle={handleVerDetalle}
-      />
-      <DetallesModal
-        isOpen={isOpen}
-        onClose={onClose}
-        pedido={selectedRegistro}
-      />
+    <Box p={4} bg={bg} minH="calc(100vh - 100px)">
+      <Box
+        w="100%"
+        bg={contBg}
+        rounded="xl"
+        boxShadow="md"
+        p={4}
+        borderWidth="1px"
+        borderColor={boxBorder}
+      >
+        <Flex
+          justify="space-between"
+          align="center"
+          mb={4}
+          borderBottomWidth="1px"
+          pb={2}
+          borderColor={headBorder}
+        >
+          <Heading size="md" color={titleColor} fontWeight="bold">
+            Consolidado de Pedidos
+          </Heading>
+        </Flex>
+
+        <Box
+          mb={4}
+          p={3}
+          bg={filterBg}
+          border="1px solid"
+          borderColor={filterBorder}
+          rounded="md"
+        >
+          <FiltrosPedidos onAplicarFiltros={setFiltros} />
+        </Box>
+        <ConsolidadoTable
+          data={consolidadosFiltrados}
+          status={status}
+          error={error}
+          onVerDetalle={handleVerDetalle}
+        />
+        <DetallesModal
+          key={selectedRegistro?.id || "detalles-modal"}
+          isOpen={isOpen}
+          onClose={onClose}
+          pedido={selectedRegistro}
+        />
+      </Box>
     </Box>
   );
 };

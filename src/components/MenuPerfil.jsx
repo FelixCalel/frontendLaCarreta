@@ -34,18 +34,27 @@ export const MenuPerfil = () => {
   const roleId = roleIdRedux?.toString();
   const rolNombre = user?.role?.nombre;
 
-  const getValidValue = (val) => (val && val !== "null" ? val : null);
+  const getValidValue = (val) => {
+    if (val === undefined || val === null) return null;
+    const normalized = String(val).trim();
+    if (!normalized) return null;
+    if (normalized === "null" || normalized === "undefined") return null;
+    return normalized;
+  };
+
+  const contactValue =
+    getValidValue(correo) ||
+    getValidValue(localStorage.getItem("correoUsuario")) ||
+    getValidValue(user?.telefono) ||
+    getValidValue(localStorage.getItem("telefonoUsuario")) ||
+    "Sin contacto";
 
   const userData = {
     nombre:
       getValidValue(displayName) ||
       getValidValue(localStorage.getItem("nombreUsuario")) ||
       "Usuario",
-    correo:
-      getValidValue(correo) ||
-      getValidValue(localStorage.getItem("correoUsuario")) ||
-      getValidValue(user?.telefono) ||
-      "",
+    contacto: contactValue,
     avatar:
       getValidValue(photoURL) ||
       getValidValue(localStorage.getItem("avatar")) ||
@@ -113,7 +122,7 @@ export const MenuPerfil = () => {
                 {userData.nombre || "Nombre Usuario"}
               </Text>
               <Text fontSize="sm" color="whiteAlpha.800">
-                {rolNombre || "Rol"} | {userData.correo || "usuario@correo.com"}
+                {rolNombre || "Rol"} | {userData.contacto}
               </Text>
             </Flex>
 

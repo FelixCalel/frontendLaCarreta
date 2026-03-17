@@ -7,4 +7,3 @@ export const PageDetallePedidoDigitador = () => (
   </Box>
 );
 
-export default PageDetallePedidoDigitador;

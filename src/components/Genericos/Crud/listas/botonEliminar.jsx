@@ -188,4 +188,3 @@ BotonEliminar.propTypes = {
     formData: PropTypes.object.isRequired,
 };
 
-export default BotonEliminar;

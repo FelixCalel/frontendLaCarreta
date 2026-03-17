@@ -14,4 +14,3 @@ export const PageHistorialPedido = () => {
   );
 };
 
-export default PageHistorialPedido;

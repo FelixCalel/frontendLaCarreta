@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
-import TablaDatos from './tablaDatos';
+import { TablaDatos } from './tablaDatos';
 import { Box, Heading, Flex, useColorModeValue } from '@chakra-ui/react';
-import BotonCrear from './botonCrear';
+import { BotonCrear } from './botonCrear';
 import { BuscadorGenerico } from '../Buscador/buscador';  // Importa el buscador genérico
 
 export const ListarDatos = ({ nombre, columnas, datos, nombreBoton, onCrear, renderCustomCell, metadata, onSearch }) => {

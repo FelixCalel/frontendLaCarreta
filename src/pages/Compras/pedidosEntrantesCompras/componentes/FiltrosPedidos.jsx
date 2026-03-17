@@ -13,7 +13,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
-import moment from "moment";
+
 import { SearchIcon } from "@chakra-ui/icons";
 
 const FiltrosPedidos = ({ onAplicarFiltros }) => {
@@ -23,7 +23,7 @@ const FiltrosPedidos = ({ onAplicarFiltros }) => {
 
   const sync = useCallback(
     (f, p) => onAplicarFiltros({ fechaOrden: f, palabrasClave: p }),
-    [onAplicarFiltros]
+    [onAplicarFiltros],
   );
 
   const addPalabra = () => {
@@ -43,16 +43,11 @@ const FiltrosPedidos = ({ onAplicarFiltros }) => {
   };
 
   return (
-    <Box
-      mb={4}
-      bg={useColorModeValue("gray.50", "gray.700")}
-      p={4}
-      borderRadius="md"
-    >
+    <Box>
       <Stack
         as="form"
         direction={{ base: "column", md: "row" }}
-        spacing={4}
+        spacing={3}
         align="flex-end"
         onSubmit={(e) => e.preventDefault()}
       >
@@ -63,9 +58,7 @@ const FiltrosPedidos = ({ onAplicarFiltros }) => {
             type="date"
             value={fecha}
             onChange={(e) => {
-              const f = e.target.value
-                ? moment.utc(e.target.value).format("YYYY-MM-DD")
-                : "";
+              const f = e.target.value;
               setFecha(f);
               sync(f, palabras);
             }}
@@ -98,7 +91,7 @@ const FiltrosPedidos = ({ onAplicarFiltros }) => {
         </FormControl>
 
         <Button
-          colorScheme="blue"
+          colorScheme="green"
           size="sm"
           leftIcon={<SearchIcon />}
           onClick={() => sync(fecha, palabras)}

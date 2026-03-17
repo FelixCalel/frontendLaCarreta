@@ -1,4 +1,4 @@
-import { createSlice, createSelector } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import {
   tablaTienda,
   addNewTienda,
@@ -67,10 +67,5 @@ const tiendaSlice = createSlice({
       });
   },
 });
-
-export const selectOrderedTiendas = createSelector(
-  (state) => state.tiendas.data,
-  (data) => data.slice().sort((a, b) => a.id - b.id)
-);
 
 export default tiendaSlice.reducer;

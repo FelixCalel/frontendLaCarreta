@@ -151,13 +151,3 @@ export type CreateRechazoDto = Omit<Rechazo, "id" | "usuario"> & {
 };
 export type UpdateRechazoDto = Partial<CreateRechazoDto>;
 
-export interface ProdAlmacen {
-  id: number;
-  name: string;
-  create_at: string;
-  update_at: string;
-  create_by: number;
-  update_by?: number;
-  state: boolean;
-  descripcion?: string;
-}

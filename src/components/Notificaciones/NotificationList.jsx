@@ -1,17 +1,28 @@
 import PropTypes from "prop-types";
-import { Box, VStack, Divider, Flex, Icon, Text, useColorModeValue } from "@chakra-ui/react";
+import {
+  Box,
+  VStack,
+  Divider,
+  Flex,
+  Icon,
+  Text,
+  useColorModeValue,
+} from "@chakra-ui/react";
 import { FiBell } from "react-icons/fi";
 import NotificationItem from "./NotificationItem";
 
-const NotificationList = ({ notificaciones, onMarkAsRead, onNotificationClick }) => {
+const NotificationList = ({
+  notificaciones,
+  rolNombre,
+  onMarkAsRead,
+  onNotificationClick,
+}) => {
   const containerBorder = useColorModeValue("gray.200", "gray.700");
   const mutedColor = useColorModeValue("gray.500", "gray.400");
 
-  const unreadNotifications = notificaciones.filter((n) => !n.leido);
-
   return (
     <Box
-      maxH="400px"
+      maxH="320px"
       overflowY="auto"
       css={{
         "&::-webkit-scrollbar": { width: "4px" },
@@ -22,16 +33,17 @@ const NotificationList = ({ notificaciones, onMarkAsRead, onNotificationClick })
         },
       }}
     >
-      {unreadNotifications.length > 0 ? (
+      {notificaciones.length > 0 ? (
         <VStack
           spacing={0}
           align="stretch"
           divider={<Divider borderColor={containerBorder} />}
         >
-          {unreadNotifications.map((notificacion) => (
+          {notificaciones.map((notificacion, index) => (
             <NotificationItem
-              key={notificacion.id || Math.random()}
+              key={notificacion.id ?? `notif-${index}`}
               notificacion={notificacion}
+              rolNombre={rolNombre}
               onMarkAsRead={onMarkAsRead}
               onClick={onNotificationClick}
             />
@@ -42,11 +54,11 @@ const NotificationList = ({ notificaciones, onMarkAsRead, onNotificationClick })
           direction="column"
           align="center"
           justify="center"
-          p={8}
+          p={4}
           color={mutedColor}
         >
-          <Icon as={FiBell} boxSize={10} mb={3} color="gray.300" />
-          <Text fontSize="sm">No tienes notificaciones</Text>
+          <Icon as={FiBell} boxSize={7} mb={2} color="gray.300" />
+          <Text fontSize="xs">No tienes notificaciones</Text>
         </Flex>
       )}
     </Box>
@@ -55,6 +67,7 @@ const NotificationList = ({ notificaciones, onMarkAsRead, onNotificationClick })
 
 NotificationList.propTypes = {
   notificaciones: PropTypes.array.isRequired,
+  rolNombre: PropTypes.string,
   onMarkAsRead: PropTypes.func.isRequired,
   onNotificationClick: PropTypes.func.isRequired,
 };

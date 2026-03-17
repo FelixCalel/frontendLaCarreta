@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { RootLayout } from "../pages/layouts/RootLayout";
 import { Dashboard } from "../pages";
-import PageCiudad from "../pages/ciudad/pageCiudad"; 
+import { PageCiudad } from "../pages/ciudad/pageCiudad"; 
 
 export const PaginaCiudad = () => {
   return (

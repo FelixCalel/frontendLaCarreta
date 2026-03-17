@@ -13,5 +13,4 @@ export const PageDeu= () => {
     )
   }
 
-  export default PageDeu;
   

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -20,54 +20,70 @@ import {
 import PaisSelector from "./PaisSelector";
 
 const RutaModal = ({ isOpen, onClose, initialData, onSave }) => {
-  const [formData, setFormData] = useState({
-    nombre: "",
-    estaActivo: true,
-    paisId: "",
-  });
-  const [errors, setErrors] = useState({});
+  const [state, setState] = useState(() => ({
+    formData: {
+      nombre: "",
+      estaActivo: true,
+      paisId: "",
+    },
+    errors: {},
+  }));
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
+  const [prevProps, setPrevProps] = useState({ isOpen, initialData });
+
+  if (isOpen !== prevProps.isOpen || initialData !== prevProps.initialData) {
+    setPrevProps({ isOpen, initialData });
     if (isOpen) {
-      if (initialData) {
-        setFormData({
+      setState({
+        formData: initialData ? {
           ...initialData,
           paisId: initialData.paisId || "",
-        });
-      } else {
-        setFormData({
+        } : {
           nombre: "",
           estaActivo: true,
           paisId: "",
-        });
-      }
-      setErrors({});
+        },
+        errors: {},
+      });
     }
-  }, [isOpen, initialData]);
+  }
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
+    setState((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      formData: {
+        ...prev.formData,
+        [name]: type === "checkbox" ? checked : value,
+      },
+      errors: {
+        ...prev.errors,
+        [name]: null,
+      },
     }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: null }));
-    }
   };
 
   const handlePaisChange = (paisId) => {
-    setFormData((prev) => ({ ...prev, paisId: parseInt(paisId, 10) }));
-    if (errors.paisId) setErrors((prev) => ({ ...prev, paisId: null }));
+    setState((prev) => ({
+      ...prev,
+      formData: {
+        ...prev.formData,
+        paisId: parseInt(paisId, 10),
+      },
+      errors: {
+        ...prev.errors,
+        paisId: null,
+      },
+    }));
   };
 
   const validateFields = () => {
     let newErrors = {};
-    if (!formData.nombre?.trim()) newErrors.nombre = "El nombre es obligatorio";
-    if (!formData.paisId) newErrors.paisId = "El país es obligatorio";
+    if (!state.formData.nombre?.trim()) newErrors.nombre = "El nombre es obligatorio";
+    if (!state.formData.paisId) newErrors.paisId = "El país es obligatorio";
     
-    setErrors(newErrors);
+    setState(prev => ({ ...prev, errors: newErrors }));
     return Object.keys(newErrors).length === 0;
   };
 
@@ -76,7 +92,7 @@ const RutaModal = ({ isOpen, onClose, initialData, onSave }) => {
 
     setIsSaving(true);
     try {
-      await onSave(formData);
+      await onSave(state.formData);
       onClose();
     } catch (error) {
       console.error("Error saving ruta:", error);
@@ -84,6 +100,8 @@ const RutaModal = ({ isOpen, onClose, initialData, onSave }) => {
       setIsSaving(false);
     }
   };
+
+  const { formData, errors } = state;
 
   const modalBg = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");

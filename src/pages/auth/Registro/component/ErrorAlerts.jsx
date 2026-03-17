@@ -1,7 +1,9 @@
 import { Alert, AlertIcon } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 
-export default function ErrorAlerts({ errors = {} }) {
+const EMPTY_ERRORS = {};
+
+export default function ErrorAlerts({ errors = EMPTY_ERRORS }) {
   if (!errors || Object.keys(errors).length === 0) return null;
 
   return (

@@ -1,4 +1,12 @@
-import { useState, Fragment, useMemo, useCallback, useEffect } from "react";
+import {
+  useState,
+  Fragment,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
+import { useSelector } from "react-redux";
 import PropTypes from "prop-types";
 import {
   Table,
@@ -26,192 +34,38 @@ import {
   Input,
   Center,
 } from "@chakra-ui/react";
-import { useAvanzarMultiEtapaDetalleMutation } from "../../services/pedidoProductionApi";
+import {
+  useAvanzarMultiEtapaDetalleMutation,
+  useExportarOrdenFabricacionSAPMutation,
+} from "../../services/pedidoProductionApi";
 import { ConsolidatedOrderRow } from "./ConsolidatedOrderRow";
+
+import { useConsolidatedOrders } from "./hooks/useConsolidatedOrders";
+import { ConsolidatedActionModal } from "./modals/ConsolidatedActionModal";
 
 export const ConsolidatedOrdersView = ({
   data,
   actionLabel = "Cargar a SAP",
 }) => {
-  const [visibleLimit, setVisibleLimit] = useState(20);
-
-  useEffect(() => {
-    setVisibleLimit(20);
-  }, [data]);
-
-  const visibleData = data.slice(0, visibleLimit);
-  const hasMore = visibleData.length < data.length;
-
-  const loadMore = () => {
-    setVisibleLimit((prev) => Math.min(prev + 50, data.length));
-  };
-
-  const [expandedState, setExpandedState] = useState({});
-  const [selectedItems, setSelectedItems] = useState(new Set());
-  const [comment, setComment] = useState("");
-  const [dateSAP, setDateSAP] = useState("");
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const toast = useToast();
-
-  const [avanzarMultiDetalle, { isLoading: isSending }] =
-    useAvanzarMultiEtapaDetalleMutation();
-
-  const toggleExpansion = useCallback((id) => {
-    setExpandedState((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  }, []);
-
-  const handleSelectAll = useCallback(
-    (e) => {
-      if (e.target.checked) {
-        const allIds = new Set(data.map((item) => item.productoNombre));
-        setSelectedItems(allIds);
-      } else {
-        setSelectedItems(new Set());
-      }
-    },
-    [data],
-  );
-
-  const handleSelectItem = useCallback((id) => {
-    setSelectedItems((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  }, []);
-
-  const handleSendToSap = () => {
-    if (selectedItems.size === 0) {
-      toast({
-        title: "No hay items seleccionados",
-        description: "Por favor seleccione al menos un item para enviar a SAP.",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-      });
-      return;
-    }
-    let existingDate = "";
-    let existingComment = "";
-
-    for (const group of data) {
-      if (selectedItems.has(group.productoNombre)) {
-        const firstItem = group.originalItems[0];
-        if (firstItem) {
-          if (firstItem.fecha_orden_sap) {
-            existingDate = new Date(firstItem.fecha_orden_sap)
-              .toISOString()
-              .split("T")[0];
-          } else if (firstItem.fechaOrden) {
-            existingDate = new Date(firstItem.fechaOrden)
-              .toISOString()
-              .split("T")[0];
-          }
-
-          if (firstItem.comentario_sap) {
-            existingComment = firstItem.comentario_sap;
-          } else if (firstItem.comentario) {
-            existingComment = firstItem.comentario;
-          }
-        }
-        break;
-      }
-    }
-
-    setDateSAP(existingDate || new Date().toISOString().split("T")[0]);
-    setComment(existingComment);
-    onOpen();
-  };
-
-  const confirmSendToSap = async () => {
-    if (!dateSAP) {
-      toast({
-        title: "Falta fecha",
-        description: "Debe seleccionar una fecha de orden.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    const isDigitadorToSAP = actionLabel.toLowerCase().includes("sap");
-    if (isDigitadorToSAP && !comment.trim()) {
-      toast({
-        title: "Comentario obligatorio",
-        description: "Debe ingresar un comentario para el registro en SAP.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    const detailsToSend = [];
-    data.forEach((group) => {
-      if (selectedItems.has(group.productoNombre)) {
-        group.originalItems.forEach((item) => {
-          if (item.id_detallePedido) {
-            detailsToSend.push(item.id_detallePedido);
-          }
-        });
-      }
-    });
-
-    if (detailsToSend.length === 0) {
-      toast({
-        title: "Error",
-        description: "No se encontraron detalles para enviar.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      await avanzarMultiDetalle({
-        detalleOrdenIds: detailsToSend,
-        usuarioId: Number(localStorage.getItem("usuarioId") ?? 1),
-        nuevaEtapaId: 4,
-        comentario: comment || null,
-        fechaOrden: dateSAP,
-        avanzar: !isDigitadorToSAP,
-      }).unwrap();
-
-      toast({
-        title: isDigitadorToSAP
-          ? "Falta integración SAP"
-          : "Movimiento exitoso",
-        description: isDigitadorToSAP
-          ? `Los productos se han guardado, pero AÚN NO han sido enviados a SAP. (Función pendiente)`
-          : `${selectedItems.size} productos (${detailsToSend.length} items) han avanzado a la siguiente etapa.`,
-        status: isDigitadorToSAP ? "warning" : "success",
-        duration: 5000,
-        isClosable: true,
-      });
-      setSelectedItems(new Set());
-      setComment("");
-      setDateSAP("");
-      onClose();
-    } catch (error) {
-      console.error("Error sending to SAP:", error);
-      toast({
-        title: "Error",
-        description: "Hubo un error al enviar a SAP.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-    }
-  };
+  const {
+    visibleData,
+    hasMore,
+    loadMore,
+    expandedState,
+    toggleExpansion,
+    selectedItems,
+    handleSelectAll,
+    handleSelectItem,
+    isOpen,
+    onClose,
+    comment,
+    setComment,
+    dateSAP,
+    setDateSAP,
+    handleSendToSap,
+    confirmSendToSap,
+    isProcessing,
+  } = useConsolidatedOrders(data, actionLabel);
 
   const headerBg = useColorModeValue("gray.100", "gray.700");
   const summaryRowBg = useColorModeValue("gray.50", "gray.900");
@@ -231,63 +85,20 @@ export const ConsolidatedOrdersView = ({
 
   let currentDeu = null;
 
-  const actionButtonText = actionLabel;
-
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent bg={modalBg}>
-          <ModalHeader>{actionButtonText}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Text mb={2} fontWeight="bold">
-              Fecha de Orden (Obligatorio):
-            </Text>
-            <Input
-              type="date"
-              value={dateSAP}
-              onChange={(e) => setDateSAP(e.target.value)}
-              mb={4}
-            />
-            <Text mb={2}>
-              Comentario{" "}
-              {actionLabel.toLowerCase().includes("sap")
-                ? "(Obligatorio para SAP)"
-                : ""}
-              :
-            </Text>
-            <Textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder={
-                actionLabel.toLowerCase().includes("sap")
-                  ? "Ingrese el comentario obligatorio para SAP"
-                  : "Escribe un comentario..."
-              }
-              borderColor={
-                actionLabel.toLowerCase().includes("sap") && !comment.trim()
-                  ? "red.400"
-                  : undefined
-              }
-              mb={3}
-            />
-          </ModalBody>
-          <ModalFooter>
-            <Button mr={3} onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button
-              colorScheme="green"
-              onClick={confirmSendToSap}
-              isLoading={isSending}
-              isDisabled={!dateSAP}
-            >
-              {actionButtonText}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <ConsolidatedActionModal
+        isOpen={isOpen}
+        onClose={onClose}
+        actionButtonText={actionLabel}
+        dateSAP={dateSAP}
+        setDateSAP={setDateSAP}
+        comment={comment}
+        setComment={setComment}
+        confirmSendToSap={confirmSendToSap}
+        isProcessing={isProcessing}
+        modalBg={modalBg}
+      />
 
       <TableContainer
         w="100%"
@@ -334,7 +145,7 @@ export const ConsolidatedOrdersView = ({
             </Tr>
           </Thead>
           <Tbody>
-            {visibleData.map((item, index) => {
+            {visibleData.map((item) => {
               const deuCode = item.deudorCodigo || "";
               const showDeuHeader = currentDeu !== deuCode;
               if (showDeuHeader) {
@@ -381,7 +192,7 @@ export const ConsolidatedOrdersView = ({
       {hasMore && (
         <Center mt={4}>
           <Button onClick={loadMore} size="sm" variant="outline">
-            Cargar más ({data.length - visibleLimit} restantes)
+            Cargar más ({data.length - visibleData.length} restantes)
           </Button>
         </Center>
       )}
@@ -392,7 +203,7 @@ export const ConsolidatedOrdersView = ({
           onClick={handleSendToSap}
           isDisabled={selectedItems.size === 0}
         >
-          {actionButtonText} ({selectedItems.size})
+          {actionLabel} ({selectedItems.size})
         </Button>
       </Flex>
     </>

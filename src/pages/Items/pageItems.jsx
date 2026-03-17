@@ -13,5 +13,4 @@ export const PageItems= () => {
     )
   }
 
-  export default PageItems;
   

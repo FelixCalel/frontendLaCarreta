@@ -19,17 +19,18 @@ import {
 } from "../models/pedidoProduction";
 import { parseNumericFields } from "../utils/data-parser";
 
-export interface ProdAlmacen {
+// Internal types (not exported - only used within this file)
+interface ProdAlmacen {
   id: number | string;
   nombre: string;
 }
 
-export interface UnidadMedida {
+interface UnidadMedida {
   id: number;
   unidad: string;
 }
 
-export interface MotivoSalida {
+interface MotivoSalida {
   id: number;
   nombre: string;
   descripcion?: string;
@@ -59,6 +60,13 @@ export const pedidoProduccionApi = createApi({
   endpoints: (builder) => ({
     getAlmacenes: builder.query<ProdAlmacen[], void>({
       query: () => "/almacen",
+      transformResponse: (response: ProdAlmacen[]) => {
+        return response.slice().sort((a, b) => {
+          const nameA = a.nombre || (a as any).name || "";
+          const nameB = b.nombre || (b as any).name || "";
+          return nameA.localeCompare(nameB, undefined, { sensitivity: "base" });
+        });
+      },
       providesTags: (result) =>
         result
           ? [
@@ -331,6 +339,18 @@ export const pedidoProduccionApi = createApi({
       }),
     }),
 
+    exportarOrdenFabricacionSAP: builder.mutation<
+      any,
+      { dbsap: string; ipsap: string; ids: number[]; fecha: string; comentario: string }
+    >({
+      query: (body) => ({
+        url: "/sap/deus/exportarOrdenFabricacion",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [{ type: "PedidoAgrupado", id: "LIST" }],
+    }),
+
     getRecetaByPedido: builder.query<RecetaLinea[], { pedidoId: number; id_almacen?: number }>({
       query: ({ pedidoId, id_almacen }) => {
         let url = `/receta/pedido/${pedidoId}`;
@@ -432,9 +452,6 @@ export const pedidoProduccionApi = createApi({
 });
 
 export const {
-  useGetPedidoProduccionMetadataQuery,
-  useGetAllPedidosProduccionQuery,
-  useGetPedidoProduccionByIdQuery,
   useGetDetallesYProduccionQuery,
   useUpdatePedidoProduccionMutation,
   useGetPedidosAgrupadosQuery,
@@ -445,8 +462,6 @@ export const {
   useGetRecetaByPedidoQuery,
   useUpdateRecetaLineaMutation,
   useProcesarEstado5Mutation,
-  useGetRechazosQuery,
-  useGetRechazoByIdQuery,
   useCreateRechazoMutation,
   useUpdateRechazoMutation,
   useGetRechazoByPedidoProduccionIdQuery,
@@ -456,5 +471,6 @@ export const {
   useCreateRecetaLineaMutation,
   useLazyGetItemsQuery,
   useLazyGetStockSAPQuery,
+  useExportarOrdenFabricacionSAPMutation,
   useGetMotivosSalidaQuery,
 } = pedidoProduccionApi;

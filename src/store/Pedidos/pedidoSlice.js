@@ -35,10 +35,10 @@ const pedidoSlice = createSlice({
       state.error = null;
     },
     removePedidos: (state, action) => {
-      const idsToRemove = action.payload || [];
-      state.data = state.data.filter(
-        (pedido) => !idsToRemove.includes(pedido.id),
-      );
+      const idsToRemove = Array.isArray(action.payload)
+        ? action.payload
+        : [action.payload];
+      state.data = state.data.filter((p) => !idsToRemove.includes(p.id));
       state.total = state.data.length;
     },
   },

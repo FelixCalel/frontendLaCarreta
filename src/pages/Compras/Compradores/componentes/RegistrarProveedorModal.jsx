@@ -16,11 +16,14 @@ import {
   Divider,
   SimpleGrid,
   Box,
+  Stack,
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
-import { useState, useEffect } from "react";
-import ProveedorSelector from "./proveedorSelector";
+import { useReducer, useEffect } from "react";
 import { useDispatch } from "react-redux";
+import HeaderInfo from "./registrarProveedorComponents/HeaderInfo";
+import ConfigurationGrid from "./registrarProveedorComponents/ConfigurationGrid";
+import CurrentAssignments from "./registrarProveedorComponents/CurrentAssignments";
 import {
   asignarProveedor,
   desasignarProveedor,
@@ -28,47 +31,117 @@ import {
   actualizarFechaIngreso,
 } from "../../../../store/Compras/thunks";
 
+const initialState = {
+  selectedProveedorName: "",
+  proveedoresAsignados: [],
+  selectedProveedorId: null,
+  cantidadFaltante: 0,
+  cantidadPactada: 0,
+  fechaIngreso: "",
+  initialFechaIngreso: "",
+  assigning: false,
+};
+
+function modalReducer(state, action) {
+  switch (action.type) {
+    case "INIT_ITEM":
+      return {
+        ...state,
+        cantidadFaltante: action.payload.faltante,
+        fechaIngreso: action.payload.isoDate,
+        initialFechaIngreso: action.payload.isoDate,
+        proveedoresAsignados: action.payload.proveedores,
+        selectedProveedorName: "",
+        selectedProveedorId: null,
+        cantidadPactada: 0,
+        assigning: false,
+      };
+    case "SET_FIELD":
+      return { ...state, [action.field]: action.value };
+    case "SET_PROVIDER":
+      return {
+        ...state,
+        selectedProveedorId: action.payload.id,
+        selectedProveedorName: action.payload.name,
+      };
+    case "ADD_PROVIDER": {
+      const { id, name, cantidad } = action.payload;
+      const prev = state.proveedoresAsignados;
+      const existingIndex = prev.findIndex((p) => p.proveedorId === id);
+      let newProveedores;
+      if (existingIndex !== -1) {
+        newProveedores = [...prev];
+        newProveedores[existingIndex] = {
+           ...newProveedores[existingIndex],
+           cantidad: newProveedores[existingIndex].cantidad + cantidad
+        };
+      } else {
+        newProveedores = [...prev, { proveedorId: id, nombre: name, cantidad }];
+      }
+      return {
+        ...state,
+        proveedoresAsignados: newProveedores,
+        cantidadFaltante: state.cantidadFaltante - cantidad,
+        cantidadPactada: 0,
+        selectedProveedorId: null,
+        selectedProveedorName: "",
+      };
+    }
+    case "REMOVE_PROVIDER": {
+      const id = action.payload;
+      const eliminado = state.proveedoresAsignados.find((p) => p.proveedorId === id);
+      const cantidadEliminada = eliminado?.cantidad || 0;
+      return {
+        ...state,
+        proveedoresAsignados: state.proveedoresAsignados.filter((p) => p.proveedorId !== id),
+        cantidadFaltante: state.cantidadFaltante + cantidadEliminada,
+      };
+    }
+    case "RESET":
+      return {
+        ...state,
+        cantidadPactada: 0,
+        selectedProveedorId: null,
+      };
+    default:
+      return state;
+  }
+}
+
 const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
-  const [selectedProveedorName, setSelectedProveedorName] = useState("");
-  const [proveedoresAsignados, setProveedoresAsignados] = useState([]);
-  const [selectedProveedorId, setSelectedProveedorId] = useState(null);
-  const [cantidadFaltante, setCantidadFaltante] = useState(0);
-  const [cantidadPactada, setCantidadPactada] = useState(0);
-  const [fechaIngreso, setFechaIngreso] = useState("");
+  const [state, dispatchAction] = useReducer(modalReducer, initialState);
   const dispatch = useDispatch();
   const toast = useToast();
-  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
-    if (item) {
+    if (item && isOpen) {
       const totalAsignado =
         item.proveedoresAsignados?.reduce(
           (acc, prov) => acc + prov.cantidad,
-          0
+          0,
         ) || 0;
       const faltante = Math.max(0, (item.cantidad || 0) - totalAsignado);
-      setCantidadFaltante(faltante);
-
+      
+      let isoDate = new Date().toISOString().slice(0, 10);
       if (item.fechaIngreso) {
         const [dd, mm, yyyy] = item.fechaIngreso.split("/");
         if (dd && mm && yyyy) {
-          const fechaISO = `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(
-            2,
-            "0"
-          )}`;
-          setFechaIngreso(fechaISO);
+          isoDate = `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
         } else {
-          setFechaIngreso(
-            new Date(item.fechaIngreso).toISOString().slice(0, 10)
-          );
+          isoDate = new Date(item.fechaIngreso).toISOString().slice(0, 10);
         }
-      } else {
-        setFechaIngreso(new Date().toISOString().slice(0, 10));
       }
 
-      setProveedoresAsignados(item.proveedoresAsignados || []);
+      dispatchAction({
+        type: "INIT_ITEM",
+        payload: {
+          faltante,
+          isoDate,
+          proveedores: item.proveedoresAsignados || [],
+        },
+      });
     }
-  }, [item]);
+  }, [item, isOpen]);
 
   const showErrorToast = (description) => {
     toast({
@@ -93,81 +166,83 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
   if (!item) return null;
 
   const handleGuardar = async () => {
-    if (!selectedProveedorId || cantidadPactada <= 0) {
+    const hasDateChanged = state.fechaIngreso !== state.initialFechaIngreso;
+    const hasProviderAssignment = state.selectedProveedorId && state.cantidadPactada > 0;
+
+    if (!hasDateChanged && !hasProviderAssignment) {
       showErrorToast(
-        "Debes seleccionar un proveedor y asignar una cantidad válida."
+        "No se detectaron cambios (ni de fecha ni de nuevo proveedor).",
       );
       return;
     }
 
-    if (cantidadPactada > cantidadFaltante) {
+    if (hasProviderAssignment && state.cantidadPactada > state.cantidadFaltante) {
       showErrorToast("La cantidad pactada excede la cantidad faltante.");
       return;
     }
 
-    setAssigning(true);
+    dispatchAction({ type: "SET_FIELD", field: "assigning", value: true });
+
+    let operationsSucceeded = 0;
 
     try {
-      await dispatch(
-        asignarProveedor({
-          compraId: item.id,
-          proveedorId: selectedProveedorId,
-          cantidad: cantidadPactada,
-        })
-      ).unwrap();
+      if (hasDateChanged) {
+        const [yyyy, mm, dd] = state.fechaIngreso.split("-");
+        const ddMmYyyy = `${dd}/${mm}/${yyyy}`;
+        await dispatch(
+          actualizarFechaIngreso({
+            pedidoId: item.id,
+            fechaIngreso: ddMmYyyy,
+          }),
+        ).unwrap();
+        dispatchAction({ type: "SET_FIELD", field: "initialFechaIngreso", value: state.fechaIngreso });
+        operationsSucceeded++;
+      }
 
-      showSuccessToast("Proveedor asignado correctamente.");
+      if (hasProviderAssignment) {
+        await dispatch(
+          asignarProveedor({
+            compraId: item.id,
+            proveedorId: state.selectedProveedorId,
+            cantidad: state.cantidadPactada,
+          }),
+        ).unwrap();
 
-      setProveedoresAsignados((prev) => {
-        const existingIndex = prev.findIndex(
-          (p) => p.proveedorId === selectedProveedorId
-        );
-        if (existingIndex !== -1) {
-          const updatedProveedores = [...prev];
-          updatedProveedores[existingIndex].cantidad += cantidadPactada;
-          return updatedProveedores;
-        }
-        return [
-          ...prev,
-          {
-            proveedorId: selectedProveedorId,
-            nombre: selectedProveedorName,
-            cantidad: cantidadPactada,
+        dispatchAction({
+          type: "ADD_PROVIDER",
+          payload: {
+            id: state.selectedProveedorId,
+            name: state.selectedProveedorName,
+            cantidad: state.cantidadPactada,
           },
-        ];
-      });
+        });
+        operationsSucceeded++;
+      }
 
-      setCantidadFaltante((prev) => prev - cantidadPactada);
-      setCantidadPactada(0);
-      setSelectedProveedorId(null);
-      setSelectedProveedorName("");
-      dispatch(fetchCompras());
-      const roleId = parseInt(localStorage.getItem("roleId") || "0", 10);
-      await dispatch(fetchCompras(roleId));
+      if (operationsSucceeded > 0) {
+        showSuccessToast("Cambios guardados correctamente.");
+        dispatch(fetchCompras());
+        const roleId = parseInt(localStorage.getItem("roleId") || "0", 10);
+        await dispatch(fetchCompras(roleId));
+      }
     } catch (error) {
-      showErrorToast("No se pudo asignar el proveedor.");
+      showErrorToast(
+        error?.message || "Ocurrió un error al guardar los cambios.",
+      );
     } finally {
-      setAssigning(false); // Se quita el loading local
+      dispatchAction({ type: "SET_FIELD", field: "assigning", value: false });
     }
   };
 
   const handleDesasignar = async (proveedorId) => {
     try {
       await dispatch(
-        desasignarProveedor({ compraId: item.id, proveedorId })
+        desasignarProveedor({ compraId: item.id, proveedorId }),
       ).unwrap();
 
       showSuccessToast("Proveedor desasignado correctamente.");
 
-      const eliminado = proveedoresAsignados.find(
-        (p) => p.proveedorId === proveedorId
-      );
-      const cantidadEliminada = eliminado?.cantidad || 0;
-
-      setProveedoresAsignados((prev) =>
-        prev.filter((p) => p.proveedorId !== proveedorId)
-      );
-      setCantidadFaltante((prev) => prev + cantidadEliminada);
+      dispatchAction({ type: "REMOVE_PROVIDER", payload: proveedorId });
 
       dispatch(fetchCompras());
       const roleId = parseInt(localStorage.getItem("roleId") || "0", 10);
@@ -178,135 +253,52 @@ const RegistrarProveedorModal = ({ isOpen, onClose, item }) => {
   };
 
   const handleClose = () => {
-    setCantidadPactada(0);
-    setSelectedProveedorId(null);
+    dispatchAction({ type: "RESET" });
     onClose();
-  };
-
-  const handleFechaIngresoChange = async (e) => {
-    const isoValue = e.target.value;
-    setFechaIngreso(isoValue);
-
-    const [yyyy, mm, dd] = isoValue.split("-");
-    const ddMmYyyy = `${dd}/${mm}/${yyyy}`;
-
-    try {
-      await dispatch(
-        actualizarFechaIngreso({
-          pedidoId: item.id,
-          fechaIngreso: ddMmYyyy,
-        })
-      ).unwrap();
-
-      showSuccessToast("La fecha de ingreso se actualizó correctamente.");
-    } catch (error) {
-      showErrorToast("No se pudo actualizar la fecha de ingreso.");
-    }
   };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      size="lg"
+      size="xl"
       motionPreset="slideInBottom"
       closeOnOverlayClick={false}
     >
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Registrar Proveedor</ModalHeader>
+      <ModalOverlay backdropFilter="blur(3px)" />
+      <ModalContent bg="gray.50">
+        <ModalHeader borderBottom="1px solid" borderColor="gray.200" pb={3}>
+          <Text color="green.700" fontWeight="bold">
+            Planificar Ingreso
+          </Text>
+        </ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
-          <Box mb={4}>
-            <Text fontWeight="bold" fontSize="lg">
-              {item.codigo} - {item.nombre}
-            </Text>
-            <Text color="gray.600" fontSize="sm">
-              Cantidad solicitada: {item.cantidad || 0}
-            </Text>
-          </Box>
 
-          <SimpleGrid columns={[1, 2]} spacing={4} mb={4}>
-            <FormControl>
-              <FormLabel>Fecha de ingreso</FormLabel>
-              <Input
-                type="date"
-                value={fechaIngreso}
-                onChange={handleFechaIngresoChange}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Proveedor</FormLabel>
-              <ProveedorSelector
-                value={selectedProveedorId}
-                onChange={(id, name) => {
-                  setSelectedProveedorId(id);
-                  setSelectedProveedorName(name);
-                }}
-              />
-            </FormControl>
-          </SimpleGrid>
-
-          <FormControl mb={2}>
-            <FormLabel>Cantidad pactada</FormLabel>
-            <Input
-              type="number"
-              min={1}
-              max={cantidadFaltante}
-              value={cantidadPactada}
-              onChange={(e) => setCantidadPactada(Number(e.target.value))}
-            />
-          </FormControl>
-          <Text fontWeight="semibold" fontSize="sm" mb={4}>
-            Cantidad faltante: {cantidadFaltante}
-          </Text>
-
-          <Divider mb={4} />
-
-          <Text fontWeight="bold" mb={2}>
-            Proveedores asignados:
-          </Text>
-          {proveedoresAsignados.length > 0 ? (
-            proveedoresAsignados.map((prov) => (
-              <Flex
-                key={prov.proveedorId}
-                justify="space-between"
-                p={2}
-                bg="gray.50"
-                borderRadius="md"
-                mt={2}
-                alignItems="center"
-              >
-                <Text fontSize="sm">
-                  {prov.nombre}: {prov.cantidad}
-                </Text>
-                <Button
-                  colorScheme="red"
-                  size="xs"
-                  onClick={() => handleDesasignar(prov.proveedorId)}
-                >
-                  Eliminar
-                </Button>
-              </Flex>
-            ))
-          ) : (
-            <Text color="gray.500" fontSize="sm">
-              Ningún proveedor asignado
-            </Text>
-          )}
+        <ModalBody py={6}>
+          <HeaderInfo item={item} />
+          <ConfigurationGrid state={state} dispatchAction={dispatchAction} />
+          <Divider mb={5} />
+          <CurrentAssignments
+            proveedoresAsignados={state.proveedoresAsignados}
+            handleDesasignar={handleDesasignar}
+          />
         </ModalBody>
 
-        <ModalFooter>
-          <Button
-            colorScheme="blue"
-            onClick={handleGuardar}
-            mr={3}
-            isLoading={assigning}
-          >
-            Guardar
+        <ModalFooter
+          borderTop="1px solid"
+          borderColor="gray.200"
+          bg="white"
+          borderBottomRadius="md"
+        >
+          <Button variant="ghost" mr={3} onClick={handleClose}>
+            Cancelar
           </Button>
-          <Button variant="ghost" onClick={handleClose}>
-            Cerrar
+          <Button
+            colorScheme="green"
+            onClick={handleGuardar}
+            isLoading={state.assigning}
+          >
+            Guardar Cambios
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -329,7 +321,7 @@ RegistrarProveedorModal.propTypes = {
         proveedorId: PropTypes.number,
         nombre: PropTypes.string,
         cantidad: PropTypes.number,
-      })
+      }),
     ),
   }),
 };

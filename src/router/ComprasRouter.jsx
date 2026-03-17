@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { RootLayout } from "../pages/layouts/RootLayout";
 import { Dashboard } from "../pages";
-import PedidosEntrantesPageCompras from "../pages/Compras/pedidosEntrantesCompras/PedidosEntrantesCompras";
+import { PedidosEntrantesPageCompras } from "../pages/Compras/pedidosEntrantesCompras/PedidosEntrantesCompras";
 
  
 export const PaginaPedidoCompras = () => {

@@ -28,6 +28,7 @@ export const ModalEditGeneric = ({ isOpen, onClose, selectedData, metadata, onSu
                 <ModalCloseButton />
                 <ModalBody>
                     <FormularioNuevoEditar
+                        key={selectedData.id || "edit-form"}
                         formData={selectedData}
                         metadata={filteredMetadata}
                         onClose={onClose}
@@ -39,4 +40,3 @@ export const ModalEditGeneric = ({ isOpen, onClose, selectedData, metadata, onSu
     );
 };
 
-export default ModalEditGeneric;

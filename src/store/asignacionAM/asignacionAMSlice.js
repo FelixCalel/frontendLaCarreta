@@ -18,6 +18,8 @@ const asignacionAMSlice = createSlice({
   name: "asignacionAM",
   initialState: {
     mesasAsignadas: [],
+    mesasActivas: [],
+    mesasDisponibles: [],
     asignaciones: [],
     productos: [],
     usuariosEncargados: [],

@@ -4,14 +4,28 @@ import { CheckIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import { FaTruckLoading } from "react-icons/fa";
 
-const countStage2 = (items) => items.filter((it) => it.etapaId === 3).length;
+const countStage = (items, stageId) =>
+  items.filter((it) => it.etapaId === stageId).length;
 
-export const GroupCard = ({ group }) => {
+export const GroupCard = ({ group, IconComponent, title }) => {
   const { pedidoId, tienda, pais, items } = group;
   const navigate = useNavigate();
-  const stage2Items = countStage2(items);
-  const allStage2Complete = items
-    .filter((it) => it.etapaId === 3)
+
+  // Pick first item's SAP info if available
+  const docNum = items[0]?.docNum;
+  const docEntry = items[0]?.docEntry;
+  const currentEtapaId = items[0]?.etapaId ?? 3;
+  const isHistory =
+    group.forceHistory ||
+    currentEtapaId === 4 ||
+    Boolean(docNum) ||
+    Boolean(docEntry);
+
+  const stageItemsCount = isHistory
+    ? items.length
+    : countStage(items, currentEtapaId);
+  const allComplete = items
+    .filter((it) => it.etapaId === currentEtapaId)
     .every((it) => it.completo);
   const cardBg = useColorModeValue("gray.100", "gray.700");
   const hoverBg = useColorModeValue("gray.200", "gray.600");
@@ -24,7 +38,13 @@ export const GroupCard = ({ group }) => {
       bg={cardBg}
       borderRadius="md"
       cursor="pointer"
-      onClick={() => navigate(`/detalleFabricacion/${pedidoId}`)}
+      onClick={() =>
+        navigate(
+          isHistory
+            ? `/digitador/orden/pedido/historial/${pedidoId}`
+            : `/detalleFabricacion/${pedidoId}`,
+        )
+      }
       _hover={{
         bg: hoverBg,
         transform: "translateY(-2px)",
@@ -33,7 +53,7 @@ export const GroupCard = ({ group }) => {
       transition="all 0.15s"
       position="relative"
     >
-      {allStage2Complete && (
+      {allComplete && (
         <Icon
           as={CheckIcon}
           bg={accent}
@@ -58,11 +78,15 @@ export const GroupCard = ({ group }) => {
         borderRadius="sm"
         mb={3}
       >
-        <Icon as={FaTruckLoading} boxSize={8} color="gray.500" />
+        <Icon
+          as={IconComponent || FaTruckLoading}
+          boxSize={8}
+          color="gray.500"
+        />
       </Box>
 
       <Text fontWeight="bold" noOfLines={1}>
-        Pedido&nbsp;#{pedidoId}
+        {title || `Pedido #${pedidoId}`}
       </Text>
       <Text fontSize="sm" color="gray.600" noOfLines={1}>
         {tienda}
@@ -71,8 +95,15 @@ export const GroupCard = ({ group }) => {
         {pais}
       </Text>
 
-      <Badge mt={2} px={2} colorScheme="green">
-        {stage2Items} {stage2Items === 1 ? "ítem" : "ítems"} en etapa&nbsp;3
+      {docNum && (
+        <Text fontSize="xs" fontWeight="bold" color="blue.500" mt={1}>
+          SAP: {docNum} {docEntry ? `(${docEntry})` : ""}
+        </Text>
+      )}
+
+      <Badge mt={2} px={2} colorScheme={isHistory ? "blue" : "green"}>
+        {stageItemsCount} {stageItemsCount === 1 ? "ítem" : "ítems"}{" "}
+        {isHistory ? "🟢 Exportado SAP" : `en etapa ${currentEtapaId}`}
       </Badge>
     </Box>
   );
@@ -84,5 +115,8 @@ GroupCard.propTypes = {
     tienda: PropTypes.string.isRequired,
     pais: PropTypes.string.isRequired,
     items: PropTypes.array.isRequired,
+    forceHistory: PropTypes.bool,
   }).isRequired,
+  IconComponent: PropTypes.elementType,
+  title: PropTypes.string,
 };

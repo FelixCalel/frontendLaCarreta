@@ -12,31 +12,20 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 export const getNotificaciones = (usuarioId) => {
   return async (dispatch, getState) => {
     if (!usuarioId) return;
-    
+
     dispatch(startLoadingNotificaciones());
     const { token } = getState().auth;
+    const fallbackToken =
+      localStorage.getItem("access_token") || localStorage.getItem("token");
+    const authToken = token || fallbackToken;
 
     try {
       const response = await axios.get(`${BASE_URL}/notificaciones`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
       });
 
       if (Array.isArray(response.data)) {
-        const uniqueNotifications = [];
-        const seenPedidoIds = new Set();
-
-        response.data.forEach((notif) => {
-          if (notif.pedidoId) {
-            if (!seenPedidoIds.has(notif.pedidoId)) {
-              seenPedidoIds.add(notif.pedidoId);
-              uniqueNotifications.push(notif);
-            }
-          } else {
-            uniqueNotifications.push(notif);
-          }
-        });
-
-        dispatch(setNotificaciones(uniqueNotifications));
+        dispatch(setNotificaciones(response.data));
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -49,14 +38,17 @@ export const markAsRead = (id) => {
   return async (dispatch, getState) => {
     if (!id) return;
     const { token } = getState().auth;
+    const fallbackToken =
+      localStorage.getItem("access_token") || localStorage.getItem("token");
+    const authToken = token || fallbackToken;
 
     try {
       await axios.patch(
         `${BASE_URL}/notificaciones/${id}/leido`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+        },
       );
       dispatch(markRead(id));
     } catch (error) {
@@ -68,14 +60,17 @@ export const markAsRead = (id) => {
 export const markAllAsRead = () => {
   return async (dispatch, getState) => {
     const { token } = getState().auth;
+    const fallbackToken =
+      localStorage.getItem("access_token") || localStorage.getItem("token");
+    const authToken = token || fallbackToken;
 
     try {
       await axios.patch(
         `${BASE_URL}/notificaciones/marcar-todas/leidas`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+        },
       );
       dispatch(markAllRead());
     } catch (error) {

@@ -9,7 +9,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import PropTypes from "prop-types";
-import moment from "moment";
+
 import { SearchIcon } from "@chakra-ui/icons";
 
 const FiltrosCompras = ({ onAplicarFiltros }) => {
@@ -49,9 +49,7 @@ const FiltrosCompras = ({ onAplicarFiltros }) => {
             size="sm"
             type="date"
             value={fechaOrden}
-            onChange={(e) =>
-              setFechaOrden(moment.utc(e.target.value).format("YYYY-MM-DD"))
-            }
+            onChange={(e) => setFechaOrden(e.target.value)}
           />
         </FormControl>
 

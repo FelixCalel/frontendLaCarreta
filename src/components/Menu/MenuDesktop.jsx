@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Box,
   Flex,
@@ -10,8 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { HamburgerIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchModulos } from "../../store/RolPermisoUsuario/thunks";
+import { useSelector } from "react-redux";
 import iconCatalog from "../Iconos/IconCatalog";
 import MenuItem from "./MenuItem";
 
@@ -24,6 +23,8 @@ const agruparModulos = (data) => {
   const modulosAgrupados = {};
 
   data.forEach((entry) => {
+    if (!entry?.modulo?.id || !entry?.opcion?.id) return;
+
     const moduloId = entry.modulo.id;
     const IconoModulo = iconCatalog[entry.modulo.icono];
     const IconoOpcion = iconCatalog[entry.opcion.icono];
@@ -38,12 +39,19 @@ const agruparModulos = (data) => {
       };
     }
 
-    modulosAgrupados[moduloId].opciones.push({
-      id: entry.opcion.id,
-      nombre: entry.opcion.nombre,
-      ruta: entry.opcion.ruta,
-      icono: IconoOpcion,
-    });
+    const opcionId = Number(entry.opcion.id);
+    const yaExiste = modulosAgrupados[moduloId].opciones.some(
+      (opcion) => Number(opcion.id) === opcionId,
+    );
+
+    if (!yaExiste) {
+      modulosAgrupados[moduloId].opciones.push({
+        id: entry.opcion.id,
+        nombre: entry.opcion.nombre,
+        ruta: entry.opcion.ruta,
+        icono: IconoOpcion,
+      });
+    }
   });
 
   return Object.values(modulosAgrupados);
@@ -51,37 +59,26 @@ const agruparModulos = (data) => {
 
 const MenuDesktop = () => {
   const location = useLocation();
-  const dispatch = useDispatch();
   const { modulos, loading } = useSelector((state) => state.modulos);
   const [isExpanded, setIsExpanded] = useState(false);
   const [openMenus, setOpenMenus] = useState({});
   const menuRef = useRef(null);
 
-  // Colores VERDES
   const sidebarBg = useColorModeValue("white", "gray.900");
   const sidebarBgGradient = useColorModeValue(
     "linear(to-b, white, gray.50)",
-    "linear(to-b, gray.900, gray.800)"
+    "linear(to-b, gray.900, gray.800)",
   );
   const sidebarBorder = useColorModeValue("gray.200", "gray.700");
   const sidebarShadow = useColorModeValue(
     "2px 0 10px rgba(0, 0, 0, 0.05)",
-    "2px 0 10px rgba(0, 0, 0, 0.3)"
+    "2px 0 10px rgba(0, 0, 0, 0.3)",
   );
   const scrollbarThumb = useColorModeValue("#CBD5E0", "#4A5568");
   const scrollbarThumbHover = useColorModeValue("#A0AEC0", "#718096");
   const hoverBg = useColorModeValue("green.50", "green.900");
   const indicatorBg = useColorModeValue("green.400", "green.600");
 
-  const { uid } = useSelector((state) => state.auth);
-
-  useEffect(() => {
-    if (uid) {
-      dispatch(fetchModulos(uid));
-    }
-  }, [dispatch, uid]);
-
-  // Cerrar menú al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -106,7 +103,9 @@ const MenuDesktop = () => {
     }
   };
 
-  if (loading) {
+  const hasModulos = Array.isArray(modulos) && modulos.length > 0;
+
+  if (loading && !hasModulos) {
     return (
       <Box
         w="70px"
@@ -126,8 +125,13 @@ const MenuDesktop = () => {
       >
         <SkeletonCircle size="10" />
         <VStack spacing={4} w="full" px={2}>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} height="40px" width="40px" borderRadius="md" />
+          {[1, 2, 3, 4, 5].map((skeletonId) => (
+            <Skeleton
+              key={`skeleton-${skeletonId}`}
+              height="40px"
+              width="40px"
+              borderRadius="md"
+            />
           ))}
         </VStack>
       </Box>
@@ -146,10 +150,17 @@ const MenuDesktop = () => {
     return null;
   }
 
-  // Filtrar opciones con rutas dinámicas
   modulosAgrupados.forEach((m) => {
     m.opciones = m.opciones.filter((op) => !op.ruta?.includes(":"));
   });
+
+  const modulosRender = modulosAgrupados.filter(
+    (modulo) => Array.isArray(modulo.opciones) && modulo.opciones.length > 0,
+  );
+
+  if (!modulosRender.length) {
+    return null;
+  }
 
   return (
     <Box
@@ -170,7 +181,7 @@ const MenuDesktop = () => {
       overflowY="auto"
       css={{
         "&::-webkit-scrollbar": {
-          width: "6px",
+          inlineSize: "6px",
         },
         "&::-webkit-scrollbar-track": {
           background: "transparent",
@@ -221,9 +232,8 @@ const MenuDesktop = () => {
         />
       </Flex>
 
-      {/* Contenido del menú */}
       <VStack align="stretch" spacing={2} px={2}>
-        {modulosAgrupados.map((modulo) => (
+        {modulosRender.map((modulo) => (
           <MenuItem
             key={modulo.id}
             item={modulo}
@@ -237,7 +247,6 @@ const MenuDesktop = () => {
         ))}
       </VStack>
 
-      {/* Indicador visual en la parte inferior */}
       <Box
         position="absolute"
         bottom={4}

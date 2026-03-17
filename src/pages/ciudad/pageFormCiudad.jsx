@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text, Button, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Input, FormControl, FormLabel, FormErrorMessage, Switch, Select, IconButton } from '@chakra-ui/react';
+import { Table, Thead, Tbody, Tr, Th, Td, Box, Spinner, Text, Button, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Input, FormControl, FormLabel, FormErrorMessage, Switch, Select, IconButton, useToast } from '@chakra-ui/react';
 import { EditIcon } from '@chakra-ui/icons';
 import { format } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,6 +12,7 @@ const PageFormCiudad = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentCiudad, setCurrentCiudad] = useState({ id: '', nombre: '', estaActivo: true, paisId: '' });
   const [errors, setErrors] = useState({});
+  const toast = useToast();
 
   useEffect(() => {
     if (status === 'idle') {
@@ -57,9 +58,25 @@ const PageFormCiudad = () => {
   };
 
   const handleDelete = (id) => {
-    dispatch(deleteCiudad(id)).then(() => {
-      dispatch(tablaCiudad());
-    });
+    dispatch(deleteCiudad(id)).unwrap()
+      .then(() => {
+        toast({
+          title: "Ciudad eliminada",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        dispatch(tablaCiudad());
+      })
+      .catch((err) => {
+        toast({
+          title: "Error al eliminar",
+          description: err,
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      });
   };
 
   const handleToggleStatus = (id, estaActivo) => {

@@ -11,4 +11,3 @@ export const PageTienda = () => {
     )
 }
 
-export default PageTienda;

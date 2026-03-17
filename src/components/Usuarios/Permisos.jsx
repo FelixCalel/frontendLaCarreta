@@ -1,244 +1,39 @@
-import { useEffect, useState } from "react";
-import {
-  Box,
-  Flex,
-  Heading,
-  VStack,
-  HStack,
-  Button,
-  useToast,
-  useColorModeValue,
-  Select,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Switch,
-  Text,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
-  Icon,
-} from "@chakra-ui/react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchModulosTabla } from "../../store/Modulos/thunks";
-import { fetchPermisos } from "../../store/Permisos/thunks";
-import {
-  fetchPermisosRoles,
-  createasignacionPermisosRoles,
-  deleteasignacionPermisosRoles,
-  fetchAsignacionMO,
-} from "../../store/AsignarPermisosAroles/thunks";
-import { fetchrole } from "../../store/PaginaRole/thunks";
-import { fetchOpciones } from "../../store/Opciones/thunks";
-import { fetchModulos } from "../../store/RolPermisoUsuario/thunks";
-import iconCatalog from "./../Iconos/IconCatalog";
+import { VStack, Heading, Button } from "@chakra-ui/react";
+import { PermisosHeader } from "./PermisosComps/PermisosHeader";
+import { PermisosMatrix } from "./PermisosComps/PermisosMatrix";
+import { PermisosSuccessDialog } from "./PermisosComps/PermisosSuccessDialog";
+import { usePermisosState } from "./hooks/usePermisosState";
 
 export const Permisos = () => {
-  const dispatch = useDispatch();
-  const toast = useToast();
-  const { uid } = useSelector((state) => state.auth);
-  const { modulosTabla = [] } = useSelector((state) => state.modulos);
-  const { Permisos = [] } = useSelector((state) => state.Permisos);
-  const { roles = [] } = useSelector((state) => state.roles);
-  const { opciones = [] } = useSelector((state) => state.opciones);
-  const { asignacionMO = [] } = useSelector((state) => state.PermisosRoles);
-  const [permisosRoles, setPermisosRoles] = useState([]);
-  const [selectedModulo, setSelectedModulo] = useState(null);
-  const [selectedOpcion, setSelectedOpcion] = useState(null);
-  const [accessMatrix, setAccessMatrix] = useState({});
-  const [hasChanges, setHasChanges] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [dialogRef] = useState();
-
-  const bgColor = useColorModeValue("#f9f9f9", "#1A202C");
-  const tableHeaderBg = useColorModeValue("#e5e5e5", "#1A202C");
-  const tableRowBg = useColorModeValue("#ffffff", "#2D3748");
-  const tableRowBgAlt = useColorModeValue("#f7f7f7", "#3E4A5A");
-  const tableBgColor = useColorModeValue("#ffffff", "#2D3748");
-  const textColor = useColorModeValue("#1c1c1e", "#f1f1f1");
-
-  useEffect(() => {
-    dispatch(fetchModulosTabla());
-    dispatch(fetchPermisos());
-    dispatch(fetchrole());
-    dispatch(fetchOpciones());
-    dispatch(fetchAsignacionMO());
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (selectedModulo && selectedOpcion) {
-      dispatch(fetchPermisosRoles({ selectedModulo, selectedOpcion }))
-        .then((response) => {
-          const permisosRolesData = response.payload || [];
-          setPermisosRoles(permisosRolesData);
-
-          const matrix = {};
-          roles.forEach((role) => {
-            matrix[role.id] = { nombre: role.nombre, permisos: {} };
-            Permisos.forEach((permiso) => {
-              const isAssigned = permisosRolesData.some(
-                (pr) =>
-                  pr.role_id === role.id &&
-                  parseInt(pr.modulo_id) === parseInt(selectedModulo) &&
-                  parseInt(pr.opcion_id) === parseInt(selectedOpcion) &&
-                  parseInt(pr.permiso_id) === parseInt(permiso.id)
-              );
-              matrix[role.id].permisos[permiso.nombre] = {
-                isAssigned: isAssigned,
-                id: isAssigned
-                  ? permisosRolesData.find(
-                      (pr) =>
-                        pr.permiso_id === permiso.id && pr.role_id === role.id
-                    )?.id
-                  : null,
-              };
-            });
-          });
-          setAccessMatrix(matrix);
-        })
-        .catch((error) =>
-          console.error("Error al obtener permisosRoles:", error)
-        );
-    }
-  }, [selectedModulo, selectedOpcion, dispatch, Permisos, roles]);
-
-  const handleAccessChange = (permisoNombre, roleId) => {
-    setAccessMatrix((prevMatrix) => {
-      const currentAssignedState =
-        prevMatrix[roleId]?.permisos?.[permisoNombre]?.isAssigned || false;
-      const updatedMatrix = {
-        ...prevMatrix,
-        [roleId]: {
-          ...prevMatrix[roleId],
-          permisos: {
-            ...prevMatrix[roleId].permisos,
-            [permisoNombre]: {
-              ...prevMatrix[roleId].permisos[permisoNombre],
-              isAssigned: !currentAssignedState,
-            },
-          },
-        },
-      };
-      return updatedMatrix;
-    });
-    setHasChanges(true);
-  };
-
-  const handleSaveChanges = async () => {
-    setIsSaving(true);
-    try {
-      console.log("Iniciando la operación de guardado...");
-
-      const createPayload = [];
-      const deletePayload = [];
-      const permisosCreados = [];
-      const permisosEliminados = [];
-
-      Object.keys(accessMatrix).forEach((roleId) => {
-        const role = accessMatrix[roleId];
-        Permisos.forEach((permiso) => {
-          const permisoState = role.permisos[permiso.nombre];
-
-          console.log(
-            `Revisando permiso: ${permiso.nombre} para el rol: ${roleId}`
-          );
-          console.log("Estado del permiso:", permisoState.isAssigned);
-
-          if (permisoState.isAssigned && !permisoState.id) {
-            createPayload.push({
-              role_id: parseInt(roleId),
-              modulo_id: parseInt(selectedModulo),
-              opcion_id: parseInt(selectedOpcion),
-              permiso_id: parseInt(permiso.id),
-              created_by: 1,
-              updated_by: 1,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            });
-            permisosCreados.push(permiso.nombre);
-          } else if (!permisoState.isAssigned && permisoState.id) {
-            const permisoExistente = permisosRoles.find(
-              (pr) =>
-                pr.role_id === parseInt(roleId) &&
-                pr.modulo_id === parseInt(selectedModulo) &&
-                pr.opcion_id === parseInt(selectedOpcion) &&
-                pr.permiso_id === parseInt(permiso.id)
-            );
-
-            if (permisoExistente) {
-              console.log(`Eliminar permiso con id: ${permisoExistente.id}`);
-              deletePayload.push(permisoExistente.id);
-              permisosEliminados.push(permiso.nombre);
-            }
-          }
-        });
-      });
-
-      console.log("Permisos a crear:", createPayload);
-      console.log("Permisos a eliminar:", permisosEliminados);
-
-      if (createPayload.length === 0 && deletePayload.length === 0) {
-        throw new Error("No hay cambios para guardar.");
-      }
-
-      if (deletePayload.length > 0) {
-        await Promise.all(
-          deletePayload.map((id) =>
-            dispatch(deleteasignacionPermisosRoles(id)).unwrap()
-          )
-        );
-        console.log("Permisos eliminados exitosamente:", permisosEliminados);
-      }
-
-      if (createPayload.length > 0) {
-        await dispatch(
-          createasignacionPermisosRoles({
-            accessMatrix: createPayload,
-            selectedModulo,
-            selectedOpcion,
-            Permisos,
-          })
-        ).unwrap();
-        console.log("Permisos creados exitosamente:", permisosCreados);
-      }
-
-      if (uid) {
-        console.log("Dispatching fetchModulos for uid:", uid);
-        dispatch(fetchModulos(uid))
-          .then((res) => console.log("fetchModulos result:", res))
-          .catch((err) => console.error("fetchModulos error:", err));
-      } else {
-        console.warn("UID is missing, cannot refresh modules dynamically.");
-      }
-
-      setIsDialogOpen(true);
-    } catch (error) {
-      toast({
-        title: "Error al guardar permisos.",
-        description:
-          error.message || "Hubo un problema al guardar los permisos.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-      console.error("Error al guardar permisos:", error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const getArray = (data) => {
-    if (Array.isArray(data)) return data;
-    if (data && Array.isArray(data.data)) return data.data;
-    return [];
-  };
+  const {
+    modulosTabla,
+    permisosList,
+    roles,
+    opciones,
+    asignacionMO,
+    selectedModulo,
+    selectedOpcion,
+    accessMatrix,
+    hasChanges,
+    isSaving,
+    isDialogOpen,
+    setState,
+    handleAccessChange,
+    handleSaveChanges,
+    dialogRef,
+    bgColor,
+    optionBgColor,
+    optionTextColor,
+    tableHeaderBg,
+    tableRowBg,
+    tableRowBgAlt,
+    tableBgColor,
+    textColor,
+    selectBg,
+    selectBorderBg,
+    optBg,
+    optColor,
+  } = usePermisosState();
 
   return (
     <VStack
@@ -260,143 +55,42 @@ export const Permisos = () => {
         Gestión de Permisos
       </Heading>
 
-      <HStack spacing={8} align="center" justify="center" w="100%" mb={6}>
-        <Flex align="center" justify="center" w="50%">
-          <Text fontWeight="bold" color={textColor} mr={2}>
-            Módulo:
-          </Text>
-          <Select
-            placeholder="Selecciona un módulo"
-            onChange={(e) => setSelectedModulo(e.target.value)}
-            bg={useColorModeValue("white", "gray.700")}
-            borderColor={useColorModeValue("#673ab7", "gray.600")}
-            color={textColor}
-            borderRadius="md"
-            w="450px"
-            _hover={{ borderColor: "#512da8" }}
-            _focus={{ borderColor: "#311b92", boxShadow: "0 0 5px #673ab7" }}
-          >
-            {getArray(modulosTabla)
-              .slice()
-              .sort((a, b) => a.nombre.localeCompare(b.nombre))
-              .map((modulo) => {
-                const IconComponent = iconCatalog[modulo.icono];
-
-                return (
-                  <option
-                    key={modulo.id}
-                    value={modulo.id}
-                    style={{
-                      backgroundColor: useColorModeValue("white", "#2D3748"),
-                      color: useColorModeValue("black", "white"),
-                    }}
-                  >
-                    {modulo.nombre}
-                  </option>
-                );
-              })}
-          </Select>
-        </Flex>
-
-        <Flex align="center" justify="center" w="50%">
-          <Text fontWeight="bold" color={textColor} mr={2}>
-            Opción:
-          </Text>
-          <Select
-            placeholder="Selecciona una opción"
-            value={selectedOpcion || ""}
-            onChange={(e) => setSelectedOpcion(e.target.value)}
-            bg={useColorModeValue("white", "gray.700")}
-            border="1px solid"
-            borderColor={useColorModeValue("#673ab7", "gray.600")}
-            color={textColor}
-            borderRadius="md"
-            w="450px"
-            fontWeight="bold"
-            transition="all 0.2s ease-in-out"
-            _hover={{ borderColor: "#512da8" }}
-            _focus={{ borderColor: "#311b92", boxShadow: "0 0 5px #673ab7" }}
-            isDisabled={!selectedModulo}
-          >
-            {getArray(opciones)
-              .filter((opcion) =>
-                getArray(asignacionMO).some(
-                  (a) =>
-                    Number(a.modulo_id) === Number(selectedModulo) &&
-                    Number(a.opcion_id) === Number(opcion.id)
-                )
-              )
-              .sort((a, b) => a.nombre.localeCompare(b.nombre))
-              .map((opcion) => {
-                const IconComponent = iconCatalog[opcion.icono];
-
-                return (
-                  <option
-                    key={opcion.id}
-                    value={opcion.id}
-                    style={{
-                      backgroundColor: useColorModeValue("white", "#2D3748"),
-                      color: useColorModeValue("black", "white"),
-                    }}
-                  >
-                    {opcion.nombre}
-                  </option>
-                );
-              })}
-          </Select>
-        </Flex>
-      </HStack>
+      <PermisosHeader
+        modulosTabla={modulosTabla}
+        selectedModulo={selectedModulo}
+        onModuloChange={(val) =>
+          setState({
+            selectedModulo: val,
+            selectedOpcion: null,
+            accessMatrix: {},
+          })
+        }
+        selectedOpcion={selectedOpcion}
+        onOpcionChange={(val) => setState({ selectedOpcion: val })}
+        opciones={opciones}
+        asignacionMO={asignacionMO}
+        textColor={textColor}
+        selectBg={selectBg}
+        selectBorderBg={selectBorderBg}
+        optBg={optBg}
+        optColor={optColor}
+        optionBgColor={optionBgColor}
+        optionTextColor={optionTextColor}
+      />
 
       {selectedOpcion && (
-        <Box
-          overflowX="auto"
-          borderRadius="lg"
-          boxShadow="lg"
-          border="0.5px solid"
-          borderColor={useColorModeValue("#673ab7", "gray.600")}
-        >
-          <Table variant="simple" borderRadius="md" bg={tableBgColor}>
-            <Thead bg={tableHeaderBg}>
-              <Tr>
-                <Th color={textColor}>Roles</Th>
-                {Permisos.slice()
-                  .sort((a, b) => a.nombre.localeCompare(b.nombre))
-                  .map((permiso) => (
-                    <Th key={permiso.id} color={textColor}>
-                      {permiso.nombre}
-                    </Th>
-                  ))}
-              </Tr>
-            </Thead>
-            <Tbody>
-              {roles
-                .slice()
-                .sort((a, b) => a.nombre.localeCompare(b.nombre))
-                .map((role, index) => (
-                  <Tr
-                    key={role.id}
-                    bg={index % 2 === 0 ? tableRowBg : tableRowBgAlt}
-                  >
-                    <Td color={textColor}>{role.nombre}</Td>
-                    {Permisos.map((permiso) => (
-                      <Td key={permiso.id}>
-                        <Switch
-                          isChecked={
-                            accessMatrix[role.id]?.permisos?.[permiso.nombre]
-                              ?.isAssigned || false
-                          }
-                          onChange={() =>
-                            handleAccessChange(permiso.nombre, role.id)
-                          }
-                          colorScheme="green"
-                        />
-                      </Td>
-                    ))}
-                  </Tr>
-                ))}
-            </Tbody>
-          </Table>
-        </Box>
+        <PermisosMatrix
+          Permisos={permisosList}
+          roles={roles}
+          accessMatrix={accessMatrix}
+          onAccessChange={handleAccessChange}
+          textColor={textColor}
+          tableBgColor={tableBgColor}
+          tableHeaderBg={tableHeaderBg}
+          tableRowBg={tableRowBg}
+          tableRowBgAlt={tableRowBgAlt}
+          selectBorderBg={selectBorderBg}
+        />
       )}
 
       {hasChanges && (
@@ -417,36 +111,11 @@ export const Permisos = () => {
         </Button>
       )}
 
-      <AlertDialog
+      <PermisosSuccessDialog
         isOpen={isDialogOpen}
-        leastDestructiveRef={dialogRef}
-        onClose={() => setIsDialogOpen(false)}
-        isCentered
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Cambios guardados
-            </AlertDialogHeader>
-
-            <AlertDialogBody>
-              Los permisos se han guardado exitosamente.
-            </AlertDialogBody>
-
-            <AlertDialogFooter>
-              <Button
-                colorScheme="green"
-                onClick={() => {
-                  setIsDialogOpen(false);
-                }}
-                ml={3}
-              >
-                Aceptar
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
+        onClose={() => setState({ isDialogOpen: false })}
+        dialogRef={dialogRef}
+      />
     </VStack>
   );
 };

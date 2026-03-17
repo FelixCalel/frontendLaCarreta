@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import {
   Box,
   Center,
@@ -19,8 +20,15 @@ import { FaFileUpload } from "react-icons/fa";
 import { useGetPedidosAgrupadosQuery } from "../../../services/pedidoProductionApi";
 import { GroupCardGrid } from "../../../components/production/digitador/FabricacionCardGrid";
 import { ConsolidatedOrdersView } from "../../../components/production/ConsolidatedOrdersView";
+import { tablaEmpresa, tablaPais } from "../../../store/Empresa/thunks";
 
 const DigitadorFabricacionOrdersPage = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(tablaEmpresa());
+    dispatch(tablaPais());
+  }, [dispatch]);
   const {
     data: groups = [],
     isLoading,
@@ -63,19 +71,43 @@ const DigitadorFabricacionOrdersPage = () => {
   const [viewMode, setViewMode] = useState("byOrder");
   const bgColor = useColorModeValue("white", "gray.800");
 
-  const filtered = useMemo(
-    () =>
-      base.filter((g) => {
-        const byText = !term || g.pedidoId.toString().includes(term);
+  const filtered = useMemo(() => {
+    const txt = term.toLowerCase();
+    return base
+      .map((g) => {
+        const orderLevelMatch =
+          !term ||
+          g.pedidoId.toString().includes(txt) ||
+          (g.deudorCodigo || "").toLowerCase().includes(txt) ||
+          (g.deudorNombre || "").toLowerCase().includes(txt) ||
+          (g.tienda || "").toLowerCase().includes(txt);
+
+        const filteredItems = g.items.filter((i) => {
+          const itemStatus = i.completo ? "Completado" : "Pendiente";
+          const matchStatus =
+            !status || g.estado === status || itemStatus === status;
+          const matchText =
+            orderLevelMatch ||
+            (i.productoNombre || "").toLowerCase().includes(txt);
+          return matchStatus && matchText;
+        });
+
+        return {
+          ...g,
+          items: filteredItems,
+        };
+      })
+      .filter((g) => {
+        if (g.items.length === 0) return false;
+
         const byDate =
           !date ||
           (g.fechaEntrega &&
             new Date(g.fechaEntrega).toISOString().slice(0, 10) === date);
-        const byStatus = !status || g.estado === status;
-        return byText && byDate && byStatus;
-      }),
-    [base, term, date, status],
-  );
+
+        return byDate;
+      });
+  }, [base, term, date, status]);
 
   const consolidatedItems = useMemo(() => {
     if (viewMode !== "consolidated") return [];
@@ -84,7 +116,6 @@ const DigitadorFabricacionOrdersPage = () => {
     const itemsMap = new Map();
 
     allFilteredItems.forEach((item) => {
-      // Agrupar por código DEU Y producto
       const deuCode = item.deudorCodigo || "";
       const key = `${deuCode}|${item.productoNombre}`;
       if (itemsMap.has(key)) {
@@ -108,7 +139,6 @@ const DigitadorFabricacionOrdersPage = () => {
       }
     });
 
-    // Ordenar primero por código DEU, luego por producto
     return Array.from(itemsMap.values()).sort((a, b) => {
       const deuCompare = (a.deudorCodigo || "").localeCompare(
         b.deudorCodigo || "",

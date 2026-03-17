@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   Flex,
   Input,
@@ -15,29 +15,23 @@ import {
 import { FiSearch, FiX } from "react-icons/fi";
 import PropTypes from "prop-types";
 
+const EMPTY_ARRAY = [];
 const SearchBar = ({
   placeholder,
   onSearch,
-  suggestions = [],
+  suggestions = EMPTY_ARRAY,
   onSuggestionClick,
   initialValue = "",
 }) => {
-  const [query, setQuery] = useState(initialValue);
-
-  useEffect(() => {
-    setQuery(initialValue);
-  }, [initialValue]);
-
   const handleInputChange = (e) => {
     const newValue = e.target.value;
-    setQuery(newValue);
     onSearch(newValue);
   };
 
   const handleClear = () => {
-    setQuery("");
     onSearch("");
   };
+
 
   const inputBg = useColorModeValue("white", "gray.800");
   const inputColor = useColorModeValue("gray.800", "white");
@@ -46,6 +40,7 @@ const SearchBar = ({
   const suggestionsHoverBg = useColorModeValue("blue.50", "blue.600");
   const focusBorderColor = useColorModeValue("blue.500", "blue.300");
   const shadow = useColorModeValue("md", "dark-lg");
+  const listBorderColor = useColorModeValue("gray.100", "gray.600");
 
   return (
     <Box position="relative" width="100%" maxW="600px" mx="auto">
@@ -57,7 +52,7 @@ const SearchBar = ({
           <Input
             type="text"
             placeholder={placeholder || "Buscar..."}
-            value={query}
+            value={initialValue}
             onChange={handleInputChange}
             focusBorderColor={focusBorderColor}
             bg={inputBg}
@@ -69,7 +64,7 @@ const SearchBar = ({
             transition="all 0.2s"
             pr="3rem"
           />
-          {query && (
+          {initialValue && (
             <InputRightElement>
               <IconButton
                 aria-label="Limpiar búsqueda"
@@ -99,7 +94,7 @@ const SearchBar = ({
             maxHeight="300px"
             overflowY="auto"
             border="1px solid"
-            borderColor={useColorModeValue("gray.100", "gray.600")}
+            borderColor={listBorderColor}
           >
             <List spacing={0}>
               {suggestions.slice(0, 5).map((item, index) => (
@@ -109,8 +104,10 @@ const SearchBar = ({
                   cursor="pointer"
                   _hover={{ bg: suggestionsHoverBg }}
                   onClick={() => onSuggestionClick(item)}
-                  borderBottomWidth={index === suggestions.length - 1 ? 0 : "1px"}
-                  borderColor={useColorModeValue("gray.100", "gray.600")}
+                  borderBottomWidth={
+                    index === suggestions.length - 1 ? 0 : "1px"
+                  }
+                  borderColor={listBorderColor}
                   transition="background-color 0.2s"
                 >
                   {item.label}

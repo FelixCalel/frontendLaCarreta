@@ -20,7 +20,7 @@ export const fetchRoles = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error al obtener roles");
     }
-  }
+  },
 );
 
 export const toggleUserStatus = createAsyncThunk(
@@ -31,13 +31,15 @@ export const toggleUserStatus = createAsyncThunk(
         `${BASE_URL}/usuarios/estado/${usuarioId}`,
         {
           estaActivo: !estaActivo,
-        }
+        },
       );
       return response.data.usuario;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Error al actualizar estado");
+      return rejectWithValue(
+        error.response?.data || "Error al actualizar estado",
+      );
     }
-  }
+  },
 );
 
 export const assignUserRoutes = createAsyncThunk(
@@ -46,7 +48,7 @@ export const assignUserRoutes = createAsyncThunk(
     try {
       const { data } = await axios.post(
         `${BASE_URL}/usuarios/${usuarioId}/asignar-ruta`,
-        { rutaId: selectedRoutes }
+        { rutaId: selectedRoutes },
       );
 
       const currentUid = Number(localStorage.getItem("usuarioId") ?? 0);
@@ -61,7 +63,7 @@ export const assignUserRoutes = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error al asignar rutas");
     }
-  }
+  },
 );
 
 export const updateUserRole = createAsyncThunk(
@@ -75,7 +77,7 @@ export const updateUserRole = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error al actualizar rol");
     }
-  }
+  },
 );
 export const createUser = createAsyncThunk(
   "usuarios/createUser",
@@ -86,13 +88,13 @@ export const createUser = createAsyncThunk(
         return response.usuario;
       } else {
         return rejectWithValue(
-          response.errorMessage || "Error al crear usuario"
+          response.errorMessage || "Error al crear usuario",
         );
       }
     } catch (error) {
       return rejectWithValue(error.message || "Error inesperado");
     }
-  }
+  },
 );
 
 export const fetchUsuariosMetadata = createAsyncThunk(
@@ -102,17 +104,32 @@ export const fetchUsuariosMetadata = createAsyncThunk(
       return [
         { name: "nombres", label: "Nombres", type: "text", required: true },
         { name: "apellidos", label: "Apellidos", type: "text", required: true },
-        { name: "correo_electronico", label: "Correo Electrónico", type: "email", required: true },
-        { name: "password", label: "Contraseña", type: "password", required: true },
+        {
+          name: "correo_electronico",
+          label: "Correo Electrónico",
+          type: "email",
+          required: true,
+        },
+        {
+          name: "password",
+          label: "Contraseña",
+          type: "password",
+          required: true,
+        },
         { name: "nit", label: "NIT", type: "text", required: false },
-        { name: "nombre_empresa", label: "Nombre Empresa", type: "text", required: false },
+        {
+          name: "nombre_empresa",
+          label: "Nombre Empresa",
+          type: "text",
+          required: false,
+        },
         { name: "paisId", label: "País", type: "number", required: true },
         { name: "roleId", label: "Rol", type: "number", required: true },
       ];
     } catch (error) {
       return rejectWithValue("Error al obtener metadatos");
     }
-  }
+  },
 );
 export const fetchUsuarioById = createAsyncThunk(
   "usuarios/fetchUsuarioById",
@@ -122,8 +139,8 @@ export const fetchUsuarioById = createAsyncThunk(
       return response.data.usuario;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data || "Error al obtener usuario"
+        error.response?.data || "Error al obtener usuario",
       );
     }
-  }
+  },
 );

@@ -135,12 +135,22 @@ export const togglePedidoStatus = createAsyncThunk(
 
       const body = {
         estadoId,
-        comentarioDisplay: comentarioDisplay ?? "",
-        comentario: comentario ?? "",
+        comentarioDisplay,
+        comentario,
         fechaOrdenDisplay: toYMD(fechaOrdenDisplay),
       };
 
-      Object.keys(body).forEach((k) => body[k] === undefined && delete body[k]);
+      Object.keys(body).forEach((k) => {
+        const value = body[k];
+        if (value === undefined || value === null) {
+          delete body[k];
+          return;
+        }
+
+        if (typeof value === "string" && value.trim() === "") {
+          delete body[k];
+        }
+      });
 
       const { data } = await axios.patch(
         `${BASE_URL}/form/pedidos/actualizar-estado/${id}`,

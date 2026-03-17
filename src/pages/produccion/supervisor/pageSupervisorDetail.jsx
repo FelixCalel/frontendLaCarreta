@@ -7,4 +7,3 @@ export const SupervisorPageDetail = () => (
   </Box>
 );
 
-export default SupervisorPageDetail;

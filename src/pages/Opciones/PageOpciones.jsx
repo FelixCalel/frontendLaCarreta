@@ -22,33 +22,50 @@ export const PageOpciones = () => {
     (state) => state.opciones,
   );
 
+  const getArray = (data) => {
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.data)) return data.data;
+    return [];
+  };
+
   useEffect(() => {
     dispatch(fetchOpciones());
     dispatch(fetchMetadataOpciones());
   }, [dispatch]);
 
   useEffect(() => {
-    if (opciones && opciones.length > 0) {
-      const datosFiltrados = opciones
+    const opcionesArray = getArray(opciones);
+    if (opcionesArray.length > 0) {
+      const datosFiltrados = opcionesArray
         .filter((opcion) =>
           opcion.nombre.toLowerCase().includes(filtroBusqueda.toLowerCase()),
         )
-        .map((opcion) => ({
-          ...opcion,
-          estado: opcion.estado ? "Activo" : "Inactivo",
-        }));
+        .map((opcion) => ({ ...opcion }));
       setDatosConIconos(datosFiltrados);
+    } else {
+      setDatosConIconos([]);
     }
   }, [opciones, filtroBusqueda]);
 
   useEffect(() => {
-    if (metadata && metadata.length > 0) {
-      const metadataTransformada = metadata.map((item) => ({
+    const metadataArray = getArray(metadata);
+    if (metadataArray.length > 0) {
+      const metadataTransformada = metadataArray.map((item) => ({
         ...item,
       }));
       setMetadataProcesada(metadataTransformada);
     }
   }, [metadata]);
+
+  const metadataFallbackOpciones = [
+    { name: "nombre", type: "text", label: "Nombre" },
+    { name: "descripcion", type: "text", label: "Descripción" },
+    { name: "icono", type: "text", label: "Ícono" },
+    { name: "estado", type: "boolean", label: "Estado" },
+  ];
+
+  const metadataParaForm =
+    metadataProcesada.length > 0 ? metadataProcesada : metadataFallbackOpciones;
 
   if (loading) {
     return <Spinner />;
@@ -57,7 +74,7 @@ export const PageOpciones = () => {
     return <p>Error: {error}</p>;
   }
 
-  if (!opciones || opciones.length === 0) {
+  if (!getArray(opciones).length) {
     return <p>No hay Opciones disponibles.</p>;
   }
 
@@ -85,18 +102,21 @@ export const PageOpciones = () => {
         datos={datosConIconos}
         nombreBoton="Crear Opción"
         onCrear={() => console.log("Creando nueva opción")}
-        metadata={metadataProcesada.length > 0 ? metadataProcesada : []}
+        metadata={metadataParaForm}
         onSearch={setFiltroBusqueda}
         renderCustomCell={(columnKey, rowData) => {
           if (columnKey === "icono") {
             return renderIcono(rowData.icono);
+          }
+          if (columnKey === "estado") {
+            return rowData.estado ? "Activo" : "Inactivo";
           }
           if (columnKey === "acciones") {
             return (
               <>
                 <BotonEditar
                   nombreBoton="Editar Opción"
-                  metadata={metadataProcesada}
+                  metadata={metadataParaForm}
                   formData={rowData}
                 />
                 <BotonEliminar
@@ -112,5 +132,3 @@ export const PageOpciones = () => {
     </Box>
   );
 };
-
-export default PageOpciones;

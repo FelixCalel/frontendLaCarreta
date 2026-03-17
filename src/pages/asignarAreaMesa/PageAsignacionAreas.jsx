@@ -16,6 +16,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { fetchAreas } from "../../store/areas/thunks";
 import { fetchUsuarios } from "../../store/usuarios/usuariosSlice";
+import {
+  fetchMesasAsignadasThunk,
+  fetchAsignacionesThunk,
+} from "../../store/asignacionAM/thunks";
 import { MdAdd, MdWorkspaces, MdChevronRight } from "react-icons/md";
 
 const PageAsignacionAreas = () => {
@@ -89,6 +93,14 @@ const PageAsignacionAreas = () => {
   const pathParts = location.pathname.split("/");
   const activeAreaId = pathParts[pathParts.length - 1];
 
+  const handleAreaClick = (areaId) => {
+    if (!areaId) return;
+
+    dispatch(fetchMesasAsignadasThunk(areaId));
+    dispatch(fetchAsignacionesThunk(areaId));
+    navigate(`/asignacion-areas/${areaId}`);
+  };
+
   return (
     <HStack flex="1" spacing={0} alignItems="stretch" bg={mainBg}>
       <Box
@@ -143,7 +155,7 @@ const PageAsignacionAreas = () => {
                     _hover={{
                       bg: isActive ? activeHoverBg : inactiveHoverBg,
                     }}
-                    onClick={() => navigate(`/asignacion-areas/${area.id}`)}
+                    onClick={() => handleAreaClick(area.id)}
                     transition="all 0.2s"
                   >
                     <Flex justify="space-between" align="center">

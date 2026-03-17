@@ -25,70 +25,82 @@ import RutaSelector from "./RutaSelector";
 import DeuSelector from "./DeuSelector";
 
 const TiendaModal = ({ isOpen, onClose, initialData, onSave }) => {
-  const [formData, setFormData] = useState({
-    nombre: "",
-    descuento: 0,
-    estaActivo: true,
-    deudorId: "",
-    ciudadId: "",
-    zona: "",
-    rutaId: "",
-    deudorCorrelativo: "",
-    nombreDeu: "",
-  });
-  const [errors, setErrors] = useState({});
+  const [state, setState] = useState(() => ({
+    formData: {
+      nombre: "",
+      descuento: 0,
+      estaActivo: true,
+      deudorId: "",
+      ciudadId: "",
+      zona: "",
+      rutaId: "",
+      deudorCorrelativo: "",
+      nombreDeu: "",
+    },
+    errors: {},
+  }));
   const [isSaving, setIsSaving] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
-    if (isOpen) {
-      if (initialData) {
-        setFormData({
-          ...initialData,
-          zona: initialData.zona || "",
-          ciudadId: initialData.ciudadId?.toString() || "",
-          rutaId: initialData.rutaId?.toString() || "",
-          deudorId: initialData.deudorId || "",
-          deudorCorrelativo: initialData.nombreCorrelativo || "",
-          nombreDeu: initialData.nombreDeu || "",
-          estaActivo: initialData.estaActivo !== undefined ? initialData.estaActivo : true,
-        });
-      } else {
-        setFormData({
-          nombre: "",
-          descuento: 0,
-          estaActivo: true,
-          deudorId: "",
-          ciudadId: "",
-          zona: "",
-          rutaId: "",
-          deudorCorrelativo: "",
-          nombreDeu: "",
-        });
-      }
-      setErrors({});
-    }
+    if (!isOpen) return;
+
+    setState((prev) => ({
+      ...prev,
+      errors: {},
+      formData: initialData ? {
+        ...initialData,
+        zona: initialData.zona || "",
+        ciudadId: initialData.ciudadId?.toString() || "",
+        rutaId: initialData.rutaId?.toString() || "",
+        deudorId: initialData.deudorId || "",
+        deudorCorrelativo: initialData.nombreCorrelativo || "",
+        nombreDeu: initialData.nombreDeu || "",
+        estaActivo: initialData.estaActivo !== undefined ? initialData.estaActivo : true,
+      } : {
+        nombre: "",
+        descuento: 0,
+        estaActivo: true,
+        deudorId: "",
+        ciudadId: "",
+        zona: "",
+        rutaId: "",
+        deudorCorrelativo: "",
+        nombreDeu: "",
+      },
+    }));
   }, [isOpen, initialData]);
 
+  const { formData, errors } = state;
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
+    setState((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      formData: {
+        ...prev.formData,
+        [name]: type === "checkbox" ? checked : value,
+      },
+      errors: {
+        ...prev.errors,
+        [name]: null,
+      },
     }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: null }));
-    }
   };
 
   const handleDeudorSelect = (deudor) => {
-    setFormData((prev) => ({
+    setState((prev) => ({
       ...prev,
-      deudorId: deudor?.id || null,
-      deudorCorrelativo: deudor?.correlativo || null,
-      nombreDeu: deudor?.nombre || null,
+      formData: {
+        ...prev.formData,
+        deudorId: deudor?.id || null,
+        deudorCorrelativo: deudor?.correlativo || null,
+        nombreDeu: deudor?.nombre || null,
+      },
+      errors: {
+        ...prev.errors,
+        deudorId: null,
+      },
     }));
-    if (errors.deudorId) setErrors((prev) => ({ ...prev, deudorId: null }));
   };
 
   const validateFields = () => {
@@ -101,7 +113,7 @@ const TiendaModal = ({ isOpen, onClose, initialData, onSave }) => {
     if (!formData.ciudadId) newErrors.ciudadId = "La ciudad es obligatoria";
     if (!formData.rutaId) newErrors.rutaId = "La ruta es obligatoria";
     
-    setErrors(newErrors);
+    setState((prev) => ({ ...prev, errors: newErrors }));
     return Object.keys(newErrors).length === 0;
   };
 

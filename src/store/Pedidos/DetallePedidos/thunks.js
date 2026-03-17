@@ -137,51 +137,17 @@ export const getDetalleOrdenByPedidoId = createAsyncThunk(
 );
 
 export const getPedidoModeloByUsuarioId = createAsyncThunk(
-  "detalleOrden/fetchPedidoModeloByUsuarioId",
-  async ({ deudorId, pedidoId, tiendaId }, { rejectWithValue }) => {
-    console.log("Valores enviados al thunk:", { deudorId, pedidoId, tiendaId });
-
-    deudorId = Number(deudorId);
-    pedidoId = Number(pedidoId);
-    tiendaId = Number(tiendaId);
-
-    console.log("Parámetros después de la conversión:", {
-      deudorId,
-      pedidoId,
-      tiendaId,
-    });
-
-    if (isNaN(deudorId) || isNaN(pedidoId) || isNaN(tiendaId)) {
-      console.error("Error: Uno de los IDs no es un número válido.");
-      return rejectWithValue("Uno de los IDs no es un número válido.");
-    }
-
-    try {
-      const url = `${BASE_URL}/detalle/pedido/pedidoModelo/${deudorId}/${pedidoId}/${tiendaId}`;
-      console.log("URL solicitada:", url);
-
-      const response = await axios.get(url);
-
-      const data = response.data;
-      console.log("Datos recibidos del backend:", data);
-
-      if (Array.isArray(data)) {
-        data.sort((a, b) => a.id - b.id);
-      }
-
-      console.log("Datos recibidos del backend:", data);
-      return data;
-    } catch (error) {
-      console.error("Error al obtener pedidos modelo:", error);
-
-      return rejectWithValue(
-        error.response?.data || "Error desconocido en la API"
-      );
-    }
+  "detalleOrden/getPedidoModeloByUsuarioId",
+  async ({ deudorId, pedidoId, tiendaId }) => {
+    const response = await axios.get(
+      `${BASE_URL}/detalle/pedido/pedidoModelo/${deudorId}/${pedidoId}/${tiendaId}`
+    );
+    return response.data;
   }
 );
 
-export const actualizarFechaOrden = createAsyncThunk(
+
+const actualizarFechaOrden = createAsyncThunk(
   "detalleOrden/actualizarFechaOrden",
   async ({ pedidoId, fechaOrden, comentario }) => {
     try {
