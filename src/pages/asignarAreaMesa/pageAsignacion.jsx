@@ -45,10 +45,12 @@ const PageAsignacion = () => {
   const dispatch = useDispatch();
 
   const { areas, loading: areasLoading } = useSelector((state) => state.areas);
-  const { items, status: usuariosStatus } = useSelector(
-    (state) => state.usuarios,
-  );
-  const usuarios = items || [];
+  const { items, status: usuariosStatus } = useSelector((state) => state.usuarios);
+  const { usuariosEncargados } = useSelector((state) => state.AsignacionAreaMesa);
+  const usuarios =
+    Array.isArray(usuariosEncargados) && usuariosEncargados.length > 0
+      ? usuariosEncargados
+      : items || [];
   const usuariosLoading = usuariosStatus === "loading";
 
   const area = useMemo(

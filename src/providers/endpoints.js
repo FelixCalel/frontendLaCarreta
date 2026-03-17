@@ -149,12 +149,15 @@ function isAuthenticated() {
 
 export const listUsuarios = async (data) => {
   const usuarioData = { id: data.id };
+  const usuarioIdFromStorage = localStorage.getItem("usuarioId");
   const userDataString = localStorage.getItem("userData");
   const userData = userDataString ? JSON.parse(userDataString) : null;
 
   if (!usuarioData.id) {
     if (userData && userData.id) {
       usuarioData.id = parseInt(userData.id);
+    } else if (usuarioIdFromStorage) {
+      usuarioData.id = parseInt(usuarioIdFromStorage);
     } else {
       console.error("No user ID found in arguments or localStorage");
       return { ok: false, error: "No user ID found" };

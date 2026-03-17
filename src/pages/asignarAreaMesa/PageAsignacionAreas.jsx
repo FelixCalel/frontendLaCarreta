@@ -19,6 +19,7 @@ import { fetchUsuarios } from "../../store/usuarios/usuariosSlice";
 import {
   fetchMesasAsignadasThunk,
   fetchAsignacionesThunk,
+  fetchUsuariosEncargadosThunk,
 } from "../../store/asignacionAM/thunks";
 import { MdAdd, MdWorkspaces, MdChevronRight } from "react-icons/md";
 
@@ -28,17 +29,23 @@ const PageAsignacionAreas = () => {
   const location = useLocation();
 
   const { areas, loading: areasLoading } = useSelector((state) => state.areas);
-  const { items, status: usuariosStatus } = useSelector(
-    (state) => state.usuarios,
-  );
-  const usuarios = items || [];
+  const { items, status: usuariosStatus } = useSelector((state) => state.usuarios);
+  const { usuariosEncargados } = useSelector((state) => state.AsignacionAreaMesa);
+  const usuarios =
+    Array.isArray(usuariosEncargados) && usuariosEncargados.length > 0
+      ? usuariosEncargados
+      : items || [];
   const usuariosLoading = usuariosStatus === "loading";
 
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     const loadInitials = async () => {
-      await Promise.all([dispatch(fetchAreas()), dispatch(fetchUsuarios())]);
+      await Promise.all([
+        dispatch(fetchAreas()),
+        dispatch(fetchUsuarios()),
+        dispatch(fetchUsuariosEncargadosThunk()),
+      ]);
       setIsInitialLoad(false);
     };
     loadInitials();

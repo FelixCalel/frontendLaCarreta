@@ -70,7 +70,7 @@ export const fetchAsignacionesThunk = createAsyncThunk(
   "asignacionAM/fetchAsignaciones",
   async (areaId) => {
     const res = await axios.get(`${BASE_URL}/asignarArea/${areaId}`);
-    return res.data.filter((a) => a.state === true);
+    return Array.isArray(res.data) ? res.data : [];
   },
 );
 
