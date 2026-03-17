@@ -10,6 +10,7 @@ export const AuthWrapper = ({ children }) => {
   const inFlightRef = useRef(false);
   const lastResolvedUidRef = useRef(null);
   const lastAuthFingerprintRef = useRef("");
+  const hiddenSinceRef = useRef(null);
 
   useEffect(() => {
     const token =
@@ -42,7 +43,7 @@ export const AuthWrapper = ({ children }) => {
         if (isCancelled) return;
 
         const now = Date.now();
-        const minGapMs = 45 * 1000;
+        const minGapMs = 90 * 1000;
         if (!force && now - lastRevalidateAtRef.current < minGapMs) return;
         if (inFlightRef.current) return;
 
@@ -111,17 +112,22 @@ export const AuthWrapper = ({ children }) => {
         3 * 60 * 1000,
       );
 
-      let focusTimer = null;
-      const onFocus = () => {
-        if (focusTimer) clearTimeout(focusTimer);
-        focusTimer = setTimeout(() => {
-          fetchData({ syncModules: false });
-        }, 250);
-      };
-
       const onVisible = () => {
+        if (document.visibilityState === "hidden") {
+          hiddenSinceRef.current = Date.now();
+          return;
+        }
+
         if (document.visibilityState === "visible") {
-          fetchData({ syncModules: false });
+          const now = Date.now();
+          const hiddenFor = hiddenSinceRef.current
+            ? now - hiddenSinceRef.current
+            : 0;
+          hiddenSinceRef.current = null;
+
+          if (hiddenFor >= 10 * 1000) {
+            fetchData({ syncModules: false });
+          }
         }
       };
 
@@ -133,7 +139,6 @@ export const AuthWrapper = ({ children }) => {
         }
       };
 
-      window.addEventListener("focus", onFocus);
       document.addEventListener("visibilitychange", onVisible);
       window.addEventListener("online", onOnline);
       window.addEventListener("auth:session-expired", onSessionExpired);
@@ -141,9 +146,7 @@ export const AuthWrapper = ({ children }) => {
       return () => {
         isCancelled = true;
         if (retryTimer) clearTimeout(retryTimer);
-        if (focusTimer) clearTimeout(focusTimer);
         clearInterval(interval);
-        window.removeEventListener("focus", onFocus);
         document.removeEventListener("visibilitychange", onVisible);
         window.removeEventListener("online", onOnline);
         window.removeEventListener("auth:session-expired", onSessionExpired);
