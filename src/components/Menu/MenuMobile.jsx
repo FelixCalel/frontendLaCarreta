@@ -10,8 +10,7 @@ import { keyframes } from "@emotion/react";
 import { CloseIcon } from "@chakra-ui/icons";
 import { FaBars } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchModulos } from "../../store/RolPermisoUsuario/thunks";
+import { useSelector } from "react-redux";
 import iconCatalog from "../Iconos/IconCatalog";
 import MenuItem from "./MenuItem";
 
@@ -61,7 +60,6 @@ const agruparModulos = (data) => {
 
 const MenuMobile = () => {
   const location = useLocation();
-  const dispatch = useDispatch();
   const { modulos, loading } = useSelector((state) => state.modulos);
   const [isOpen, setIsOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState({});
@@ -72,13 +70,6 @@ const MenuMobile = () => {
   const headerBorderColor = useColorModeValue("gray.200", "gray.700");
   const menuTitleColor = useColorModeValue("green.600", "green.400");
   const closeButtonHoverBg = useColorModeValue("green.50", "green.900");
-
-  useEffect(() => {
-    const UsuarioId = localStorage.getItem("usuarioId");
-    if (UsuarioId) {
-      dispatch(fetchModulos(UsuarioId));
-    }
-  }, [dispatch]);
 
   useEffect(() => {
     setIsOpen(false);
@@ -96,7 +87,9 @@ const MenuMobile = () => {
     };
   }, [isOpen]);
 
-  if (loading) {
+  const hasModulos = Array.isArray(modulos) && modulos.length > 0;
+
+  if (loading && !hasModulos) {
     return (
       <Skeleton
         height="40px"

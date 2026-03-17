@@ -5,7 +5,6 @@ import { useToast, useDisclosure, useSteps } from "@chakra-ui/react";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import {
   registerUser,
-  sendSMSCode,
   verifyRegistrationPhone,
 } from "../../../../middleware/api";
 import { tablaPais } from "../../../../store/pais/thunks";
@@ -23,6 +22,11 @@ export const useRegisterForm = () => {
   const { data: paises } = useSelector((state) => state.paises);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isMethodChoiceOpen,
+    onOpen: onMethodChoiceOpen,
+    onClose: onMethodChoiceClose,
+  } = useDisclosure();
 
   const { activeStep, goToNext, goToPrevious } = useSteps({
     index: 0,
@@ -76,7 +80,21 @@ export const useRegisterForm = () => {
 
   const { executeRecaptcha } = useGoogleReCaptcha();
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (forcedVerificationMethod = null) => {
+    const emailRx = /^\S+@\S+\.\S+$/;
+    const { contact, telefono, ...rest } = formData;
+    const pais = paises.find((p) => p.id == formData.paisId);
+    let dial = (pais?.dialCode || "").replace(/\s/g, "");
+    if (dial && !dial.startsWith("+")) dial = "+" + dial;
+
+    const isEmailRegistration = emailRx.test(contact);
+    const normalizedPhone = dial ? dial + telefono.replace(/\D+/g, "") : null;
+
+    if (isEmailRegistration && normalizedPhone && !forcedVerificationMethod) {
+      onMethodChoiceOpen();
+      return;
+    }
+
     setIsLoading(true);
     setRecaptchaStatus("loading");
     if (!executeRecaptcha) {
@@ -93,41 +111,75 @@ export const useRegisterForm = () => {
     }
     setRecaptchaStatus("success");
 
-    const emailRx = /^\S+@\S+\.\S+$/;
-    const { contact, telefono, ...rest } = formData;
-    const pais = paises.find((p) => p.id == formData.paisId);
-    let dial = (pais?.dialCode || "").replace(/\s/g, "");
-    if (dial && !dial.startsWith("+")) dial = "+" + dial;
+    if (isEmailRegistration) {
+      const selectedVerificationMethod =
+        forcedVerificationMethod === "sms" && normalizedPhone ? "sms" : "email";
 
-    if (emailRx.test(contact)) {
-      const payload = { ...rest, correo: contact.trim().toLowerCase(), telefono: dial ? dial + telefono.replace(/\D+/g, "") : null, captchaToken: token };
+      const payload = {
+        ...rest,
+        correo: contact.trim().toLowerCase(),
+        telefono: normalizedPhone,
+        verificationMethod: selectedVerificationMethod,
+        captchaToken: token,
+      };
+
       const res = await registerUser(payload);
       setIsLoading(false);
+
       if (res.ok) {
-        toast({ title: "¡Éxito!", status: "success" });
-        navigate("/auth/login");
+        if (selectedVerificationMethod === "sms" && normalizedPhone) {
+          setPendingPhone(normalizedPhone);
+          onOpen();
+          toast({ title: "Código SMS enviado", status: "success" });
+        } else {
+          toast({ title: "Revisa tu correo para verificar la cuenta", status: "success" });
+          navigate("/auth/login");
+        }
       } else setErrors({ general: res.errorMessage });
+
     } else if (dial) {
       const phone = dial + contact.replace(/\D+/g, "");
-      const res = await registerUser({ ...rest, correo: null, telefono: phone, captchaToken: token });
+      const res = await registerUser({
+        ...rest,
+        correo: null,
+        telefono: phone,
+        verificationMethod: "sms",
+        captchaToken: token,
+      });
       if (!res.ok) {
         setErrors({ general: res.errorMessage });
         setIsLoading(false);
         return;
       }
-      const smsToken = await executeRecaptcha("register");
-      const sms = await sendSMSCode(phone, smsToken);
+
       setIsLoading(false);
-      if (sms.ok) {
-        setPendingPhone(phone);
-        onOpen();
-      } else setErrors({ general: sms.errorMessage });
+      setPendingPhone(phone);
+      onOpen();
+      toast({ title: "Código SMS enviado", status: "success" });
+    } else {
+      setIsLoading(false);
+      setErrors({ general: "Formato de contacto inválido." });
     }
   };
 
+  const handleChooseVerificationMethod = (method) => {
+    onMethodChoiceClose();
+    handleSubmit(method);
+  };
+
   const handleVerifySMS = async (code) => {
+    if (isLoading) return;
+
+    const normalizedCode = String(code ?? verifyCode)
+      .replace(/\D/g, "")
+      .slice(0, 6);
+
+    if (normalizedCode.length !== 6) {
+      return;
+    }
+
     setIsLoading(true);
-    const res = await verifyRegistrationPhone(pendingPhone, (code || verifyCode).trim());
+    const res = await verifyRegistrationPhone(pendingPhone, normalizedCode);
     setIsLoading(false);
     if (res.ok) {
       toast({ title: "Verificado", status: "success" });
@@ -141,5 +193,6 @@ export const useRegisterForm = () => {
     formData, setFormData, handleChange,
     errors, isLoading, recaptchaStatus,
     isOpen, onClose, pendingPhone, verifyCode, setVerifyCode, handleVerifySMS
+    , isMethodChoiceOpen, onMethodChoiceClose, handleChooseVerificationMethod
   };
 };

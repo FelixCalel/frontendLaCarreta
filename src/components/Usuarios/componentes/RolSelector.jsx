@@ -15,7 +15,6 @@ import { useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
 import { updateUserRole } from "../../../store/usuarios/thunks";
-import { fetchUsuarios } from "../../../store/usuarios/usuariosSlice";
 
 const roleEmojis = {
   admin: "👑",
@@ -63,7 +62,6 @@ const RolSelector = ({ usuarioId, currentRoleId, roles }) => {
           duration: 3000,
           isClosable: true,
         });
-        dispatch(fetchUsuarios());
       } else {
         toast({
           title: "Error al actualizar rol",

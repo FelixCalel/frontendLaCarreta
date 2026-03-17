@@ -86,8 +86,17 @@ const HomePage = () => {
   } = useSelector((state) => state.auth);
 
   const nombreUsuario = displayName || "Usuario";
-  const roleId = roleIdRedux ? parseInt(roleIdRedux, 10) : null;
-  const rolNombre = user?.role?.nombre || (roleId && roleMap[roleId]) || "Sin rol";
+  const parsedRoleId =
+    roleIdRedux !== undefined && roleIdRedux !== null && roleIdRedux !== ""
+      ? Number(roleIdRedux)
+      : null;
+  const roleId = Number.isNaN(parsedRoleId) ? null : parsedRoleId;
+  const isRoleZero = roleId === 0;
+  const rolNombre = isRoleZero
+    ? "Sin rol"
+    : user?.role?.nombre ||
+      (roleId !== null && roleId !== undefined ? roleMap[roleId] : undefined) ||
+      "Sin rol";
 
   const pageBg = useColorModeValue("gray.50", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
@@ -148,13 +157,34 @@ const HomePage = () => {
                   </Heading>
 
                   <Text fontSize={{ base: "sm", md: "md" }}>
-                    ¡Nos alegra tenerte de vuelta! Explora el menú lateral para
-                    acceder a las secciones disponibles.
+                    {isRoleZero
+                      ? "Tu cuenta esta activa, pero no tiene permisos asignados todavia."
+                      : "¡Nos alegra tenerte de vuelta! Explora el menú lateral para acceder a las secciones disponibles."}
                   </Text>
                 </VStack>
               </Box>
 
-              {rolNombre === "Sin rol" && (
+              {isRoleZero && (
+                <Alert
+                  status="warning"
+                  variant="subtle"
+                  borderRadius="lg"
+                  borderWidth="1px"
+                  borderColor="yellow.300"
+                >
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle>Acceso pendiente de permisos</AlertTitle>
+                    <AlertDescription maxWidth="sm">
+                      No tienes un rol asignado actualmente. Por favor, contacta
+                      con un administrador para que te asignen un rol y puedas
+                      acceder a todas las funcionalidades del sistema.
+                    </AlertDescription>
+                  </Box>
+                </Alert>
+              )}
+
+              {rolNombre === "Sin rol" && !isRoleZero && (
                 <Alert
                   status="warning"
                   variant="subtle"

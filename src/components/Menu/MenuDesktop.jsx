@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Box,
   Flex,
@@ -10,8 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { HamburgerIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchModulos } from "../../store/RolPermisoUsuario/thunks";
+import { useSelector } from "react-redux";
 import iconCatalog from "../Iconos/IconCatalog";
 import MenuItem from "./MenuItem";
 
@@ -60,7 +59,6 @@ const agruparModulos = (data) => {
 
 const MenuDesktop = () => {
   const location = useLocation();
-  const dispatch = useDispatch();
   const { modulos, loading } = useSelector((state) => state.modulos);
   const [isExpanded, setIsExpanded] = useState(false);
   const [openMenus, setOpenMenus] = useState({});
@@ -80,12 +78,6 @@ const MenuDesktop = () => {
   const scrollbarThumbHover = useColorModeValue("#A0AEC0", "#718096");
   const hoverBg = useColorModeValue("green.50", "green.900");
   const indicatorBg = useColorModeValue("green.400", "green.600");
-
-  const { uid } = useSelector((state) => state.auth);
-
-  useLayoutEffect(() => {
-    uid && dispatch(fetchModulos(uid));
-  }, [dispatch, uid]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -111,7 +103,9 @@ const MenuDesktop = () => {
     }
   };
 
-  if (loading) {
+  const hasModulos = Array.isArray(modulos) && modulos.length > 0;
+
+  if (loading && !hasModulos) {
     return (
       <Box
         w="70px"

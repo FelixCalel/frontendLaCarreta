@@ -16,6 +16,13 @@ import {
   StepDescription,
   HStack,
   VStack,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
 } from "@chakra-ui/react";
 import Step1Account from "./component/Step1Account";
 import Step2Contact from "./component/Step2Contact";
@@ -38,7 +45,8 @@ const RegisterForm = () => {
     navigate, activeStep, goToPrevious, handleNext,
     formData, setFormData, handleChange,
     errors, isLoading, recaptchaStatus,
-    isOpen, onClose, pendingPhone, verifyCode, setVerifyCode, handleVerifySMS
+    isOpen, onClose, pendingPhone, verifyCode, setVerifyCode, handleVerifySMS,
+    isMethodChoiceOpen, onMethodChoiceClose, handleChooseVerificationMethod,
   } = useRegisterForm();
 
   return (
@@ -109,6 +117,27 @@ const RegisterForm = () => {
           verifyCode={verifyCode} setVerifyCode={setVerifyCode}
           handleVerifySMS={handleVerifySMS} isLoading={isLoading}
         />
+
+        <Modal isOpen={isMethodChoiceOpen} onClose={onMethodChoiceClose} isCentered>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Elige método de verificación</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              Detectamos correo y teléfono. ¿Cómo deseas verificar tu cuenta?
+            </ModalBody>
+            <ModalFooter>
+              <HStack w="full" justify="space-between">
+                <Button variant="outline" onClick={() => handleChooseVerificationMethod("email")}>
+                  Verificar por correo
+                </Button>
+                <Button colorScheme="green" onClick={() => handleChooseVerificationMethod("sms")}>
+                  Verificar por SMS
+                </Button>
+              </HStack>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </Stack>
     </Box>
   );

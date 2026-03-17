@@ -11,6 +11,8 @@ import {
   updateUser,
 } from "./authSlice";
 import { clearPedidos } from "../Pedidos/pedidoSlice";
+import { clearModulosState } from "../Modulos/modulosSlice";
+import { fetchModulos } from "../RolPermisoUsuario/thunks";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import {
@@ -21,6 +23,25 @@ import {
 import { auth } from "../../middleware/firebase-config";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
+const TRUST_TOKENS_BY_IDENTIFIER_KEY = "trust_tokens_by_identifier";
+
+const loadTrustTokensByIdentifier = () => {
+  try {
+    const parsed = JSON.parse(
+      localStorage.getItem(TRUST_TOKENS_BY_IDENTIFIER_KEY) || "{}",
+    );
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (_error) {
+    return {};
+  }
+};
+
+const saveTrustTokenForIdentifier = (identifierKey, token) => {
+  if (!identifierKey || !token) return;
+  const current = loadTrustTokensByIdentifier();
+  current[identifierKey] = token;
+  localStorage.setItem(TRUST_TOKENS_BY_IDENTIFIER_KEY, JSON.stringify(current));
+};
 
 const checkingAuthentication = () => {
   return async (dispatch) => {
@@ -139,14 +160,23 @@ const obtenerDatosLogeado = () => {
 export const startLogin = createAsyncThunk(
   "auth/startLogin",
   async (
-    { identifier, contrasena, captchaToken },
+    {
+      identifier,
+      identifierKey,
+      contrasena,
+      captchaToken,
+      trustToken: requestTrustToken,
+    },
     { rejectWithValue, dispatch },
   ) => {
     try {
+      dispatch(clearModulosState());
+
       const resp = await axios.post(`${BASE_URL}/usuarios/login`, {
         identifier,
         contrasena,
         captchaToken,
+        trustToken: requestTrustToken,
       });
 
       if (resp.data.status === "2fa_required") {
@@ -155,8 +185,14 @@ export const startLogin = createAsyncThunk(
 
       // De lo contrario, iniciar sesión normalmente
       const { token, usuario } = resp.data;
+      const normalizedCorreo =
+        usuario?.correo_electronico ?? usuario?.correo ?? null;
+      const normalizedTelefono =
+        usuario?.telefono ?? usuario?.telefono_celular ?? null;
       const refreshToken =
         resp.data.refreshToken || resp.data.refresh_token || null;
+      const storedTrustToken =
+        resp.data.trustToken || resp.data.trust_token || refreshToken || null;
       localStorage.setItem("access_token", token);
       sessionStorage.setItem("access_token", token);
       localStorage.setItem("token", token);
@@ -164,18 +200,33 @@ export const startLogin = createAsyncThunk(
         localStorage.setItem("refresh_token", refreshToken);
         sessionStorage.setItem("refresh_token", refreshToken);
       }
+      if (storedTrustToken) {
+        localStorage.setItem("trust_token", storedTrustToken);
+        sessionStorage.setItem("trust_token", storedTrustToken);
+        saveTrustTokenForIdentifier(identifierKey, storedTrustToken);
+      }
       localStorage.setItem("usuarioId", usuario.id);
       localStorage.setItem("roleId", usuario.roleId);
       localStorage.setItem(
         "nombreUsuario",
         `${usuario.nombres} ${usuario.apellidos}`,
       );
-      localStorage.setItem("correoUsuario", usuario.correo_electronico);
+      if (normalizedCorreo) {
+        localStorage.setItem("correoUsuario", normalizedCorreo);
+      } else {
+        localStorage.removeItem("correoUsuario");
+      }
+      if (normalizedTelefono) {
+        localStorage.setItem("telefonoUsuario", normalizedTelefono);
+      } else {
+        localStorage.removeItem("telefonoUsuario");
+      }
       localStorage.setItem("isAuthenticated", "true");
 
       const payload = {
         uid: usuario.id,
-        correo: usuario.correo_electronico,
+        correo: normalizedCorreo,
+        telefono: normalizedTelefono,
         displayName: `${usuario.nombres} ${usuario.apellidos}`,
         photoURL: usuario.avatar || null,
         token: token,
@@ -186,6 +237,9 @@ export const startLogin = createAsyncThunk(
       };
 
       dispatch(login(payload));
+      if (usuario?.id) {
+        dispatch(fetchModulos(usuario.id));
+      }
       return payload;
     } catch (error) {
       console.error("Login thunk error:", error);
@@ -202,16 +256,24 @@ export const startLogin = createAsyncThunk(
 
 export const startVerifyLogin = createAsyncThunk(
   "auth/startVerifyLogin",
-  async ({ userId, code }, { rejectWithValue, dispatch }) => {
+  async ({ userId, code, identifierKey }, { rejectWithValue, dispatch }) => {
     try {
+      dispatch(clearModulosState());
+
       const resp = await axios.post(`${BASE_URL}/usuarios/verify-login`, {
         userId,
         code,
       });
 
       const { token, usuario } = resp.data;
+      const normalizedCorreo =
+        usuario?.correo_electronico ?? usuario?.correo ?? null;
+      const normalizedTelefono =
+        usuario?.telefono ?? usuario?.telefono_celular ?? null;
       const refreshToken =
         resp.data.refreshToken || resp.data.refresh_token || null;
+      const trustToken =
+        resp.data.trustToken || resp.data.trust_token || refreshToken || null;
       localStorage.setItem("access_token", token);
       sessionStorage.setItem("access_token", token);
       localStorage.setItem("token", token);
@@ -219,18 +281,33 @@ export const startVerifyLogin = createAsyncThunk(
         localStorage.setItem("refresh_token", refreshToken);
         sessionStorage.setItem("refresh_token", refreshToken);
       }
+      if (trustToken) {
+        localStorage.setItem("trust_token", trustToken);
+        sessionStorage.setItem("trust_token", trustToken);
+        saveTrustTokenForIdentifier(identifierKey, trustToken);
+      }
       localStorage.setItem("usuarioId", usuario.id);
       localStorage.setItem("roleId", usuario.roleId);
       localStorage.setItem(
         "nombreUsuario",
         `${usuario.nombres} ${usuario.apellidos}`,
       );
-      localStorage.setItem("correoUsuario", usuario.correo_electronico);
+      if (normalizedCorreo) {
+        localStorage.setItem("correoUsuario", normalizedCorreo);
+      } else {
+        localStorage.removeItem("correoUsuario");
+      }
+      if (normalizedTelefono) {
+        localStorage.setItem("telefonoUsuario", normalizedTelefono);
+      } else {
+        localStorage.removeItem("telefonoUsuario");
+      }
       localStorage.setItem("isAuthenticated", "true");
 
       const payload = {
         uid: usuario.id,
-        correo: usuario.correo_electronico,
+        correo: normalizedCorreo,
+        telefono: normalizedTelefono,
         displayName: `${usuario.nombres} ${usuario.apellidos}`,
         photoURL: usuario.avatar || null,
         token: token,
@@ -241,6 +318,9 @@ export const startVerifyLogin = createAsyncThunk(
       };
 
       dispatch(login(payload));
+      if (usuario?.id) {
+        dispatch(fetchModulos(usuario.id));
+      }
       return payload;
     } catch (error) {
       return rejectWithValue(
@@ -282,6 +362,13 @@ export const fetchCurrentUser = createAsyncThunk(
         }
         if (me.correo) {
           localStorage.setItem("correoUsuario", me.correo);
+        } else {
+          localStorage.removeItem("correoUsuario");
+        }
+        if (me.telefono) {
+          localStorage.setItem("telefonoUsuario", me.telefono);
+        } else {
+          localStorage.removeItem("telefonoUsuario");
         }
         if (me.avatar) {
           localStorage.setItem("avatar", me.avatar);
@@ -325,9 +412,17 @@ export const verifyEmailCode = createAsyncThunk(
 
       if (email) {
         try {
-          await axios.post(`${BASE_URL}/usuarios/sync-verification`, {
+          const { data } = await axios.post(`${BASE_URL}/usuarios/sync-verification`, {
             email,
           });
+
+          const syncTrustToken = data?.trustToken || data?.trust_token || null;
+          if (syncTrustToken) {
+            const identifierKey = String(email).trim().toLowerCase();
+            localStorage.setItem("trust_token", syncTrustToken);
+            sessionStorage.setItem("trust_token", syncTrustToken);
+            saveTrustTokenForIdentifier(identifierKey, syncTrustToken);
+          }
         } catch (syncError) {
           console.error("Error syncing verification with backend:", syncError);
         }
@@ -407,6 +502,7 @@ export const startLogout = createAsyncThunk(
       "roleId",
       "nombreUsuario",
       "correoUsuario",
+      "telefonoUsuario",
       "authSlice",
       "userData",
     ];
@@ -414,6 +510,7 @@ export const startLogout = createAsyncThunk(
     sessionStorage.removeItem("access_token");
     sessionStorage.removeItem("refresh_token");
     dispatch(clearPedidos());
+    dispatch(clearModulosState());
     dispatch(logout());
   },
 );

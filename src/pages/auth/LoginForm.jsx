@@ -110,6 +110,9 @@ export const LoginForm = () => {
                   w={12}
                   h={14}
                   fontSize="2xl"
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   rounded="lg"
                   _focus={{ borderColor: "green.400", boxShadow: "outline" }}
                 />
@@ -117,6 +120,9 @@ export const LoginForm = () => {
                   w={12}
                   h={14}
                   fontSize="2xl"
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   rounded="lg"
                   _focus={{ borderColor: "green.400", boxShadow: "outline" }}
                 />
@@ -124,6 +130,9 @@ export const LoginForm = () => {
                   w={12}
                   h={14}
                   fontSize="2xl"
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   rounded="lg"
                   _focus={{ borderColor: "green.400", boxShadow: "outline" }}
                 />
@@ -131,6 +140,9 @@ export const LoginForm = () => {
                   w={12}
                   h={14}
                   fontSize="2xl"
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   rounded="lg"
                   _focus={{ borderColor: "green.400", boxShadow: "outline" }}
                 />
@@ -138,6 +150,9 @@ export const LoginForm = () => {
                   w={12}
                   h={14}
                   fontSize="2xl"
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   rounded="lg"
                   _focus={{ borderColor: "green.400", boxShadow: "outline" }}
                 />
@@ -145,13 +160,16 @@ export const LoginForm = () => {
                   w={12}
                   h={14}
                   fontSize="2xl"
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   rounded="lg"
                   _focus={{ borderColor: "green.400", boxShadow: "outline" }}
                 />
               </PinInput>
             </HStack>
             <Text fontSize="xs" color="gray.500" mt={2} textAlign="center">
-              Detectando código automáticamente...
+              Autodetección disponible en móviles compatibles.
             </Text>
           </ModalBody>
           <ModalFooter>

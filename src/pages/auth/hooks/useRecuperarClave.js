@@ -25,19 +25,36 @@ export const useRecuperarClave = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (step === 2 && "OTPCredential" in window) {
-      const ac = new AbortController();
+    if (step !== 2) return;
+
+    const applyOtpCandidate = (value, autoSubmit = false) => {
+      const code = String(value || "")
+        .replace(/\D/g, "")
+        .slice(0, 6);
+
+      if (code.length !== 6) return false;
+
+      setOtp(code);
+      if (autoSubmit) {
+        verifyCode(code);
+      }
+      return true;
+    };
+
+    const ac = new AbortController();
+
+    if ("OTPCredential" in window && navigator.credentials?.get) {
       navigator.credentials
         .get({ otp: { transport: ["sms"] }, signal: ac.signal })
         .then((otp) => {
-          if (otp) {
-            setOtp(otp.code);
-            verifyCode(otp.code);
-          }
+          if (otp?.code) applyOtpCandidate(otp.code, true);
         })
-        .catch((err) => console.log("WebOTP Error:", err));
-      return () => ac.abort();
+        .catch(() => {});
     }
+
+    return () => {
+      ac.abort();
+    };
   }, [step]);
 
   const isEmail = (input) => /\S+@\S+\.\S+/.test(input);
@@ -68,9 +85,14 @@ export const useRecuperarClave = () => {
   };
 
   const verifyCode = async (code) => {
+    const normalizedCode = String(code || "").replace(/\D/g, "").slice(0, 6);
+    if (normalizedCode.length !== 6) {
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const resultAction = await dispatch(verifySmsRecovery({ telefono: identifier, code }));
+      const resultAction = await dispatch(verifySmsRecovery({ telefono: identifier, code: normalizedCode }));
       if (verifySmsRecovery.fulfilled.match(resultAction)) {
         setResetToken(resultAction.payload.token);
         setStep(3);

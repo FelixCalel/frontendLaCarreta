@@ -4,6 +4,7 @@ import {
   fetchUsuariosMetadata,
   toggleUserStatus,
   assignUserRoutes,
+  updateUserRole,
 } from "./thunks";
 
 export const fetchUsuarios = createAsyncThunk(
@@ -84,6 +85,16 @@ const usuariosSlice = createSlice({
           );
           if (index !== -1) {
             state.items[index].rutas = action.payload.rutas;
+          }
+        }
+      })
+      .addCase(updateUserRole.fulfilled, (state, action) => {
+        if (state.items) {
+          const index = state.items.findIndex(
+            (u) => u.id === action.payload.usuarioId,
+          );
+          if (index !== -1) {
+            state.items[index].roleId = action.payload.rolId;
           }
         }
       });

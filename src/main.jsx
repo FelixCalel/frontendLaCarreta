@@ -22,24 +22,22 @@ const root = createRoot(container);
 import { HelmetProvider } from 'react-helmet-async';
 
 root.render(
-  <React.StrictMode>
-    <GlobalErrorBoundary>
-      <HelmetProvider>
-        <Provider store={store}>
-          <AuthProvider>
-          <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-          <ChakraProvider theme={theme}>
-            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <SearchProvider>
-                <AuthWrapper>
-                  <App />
-                </AuthWrapper>
-              </SearchProvider>
-            </BrowserRouter>
-          </ChakraProvider>
-        </AuthProvider>
-      </Provider>
-      </HelmetProvider>
-    </GlobalErrorBoundary>
-  </React.StrictMode>
+  <GlobalErrorBoundary>
+    <HelmetProvider>
+      <Provider store={store}>
+        <AuthProvider>
+        <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+        <ChakraProvider theme={theme}>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <SearchProvider>
+              <AuthWrapper>
+                <App />
+              </AuthWrapper>
+            </SearchProvider>
+          </BrowserRouter>
+        </ChakraProvider>
+      </AuthProvider>
+    </Provider>
+    </HelmetProvider>
+  </GlobalErrorBoundary>
 );
