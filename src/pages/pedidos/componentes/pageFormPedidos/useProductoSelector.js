@@ -1,8 +1,14 @@
-import { useState, useEffect, useMemo, useDeferredValue } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { tablaItems } from "../../../../store/items/thunks";
+import {
+  useState,
+  useEffect,
+  useDeferredValue,
+  useRef,
+} from "react";
+import axios from "axios";
 
 const CHUNK_SIZE = 20;
+const PAGE_SIZE = 100;
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const normalizeText = (value) =>
   String(value ?? "")
@@ -10,66 +16,142 @@ const normalizeText = (value) =>
     .normalize("NFD")
     .replaceAll(/[\u0300-\u036f]/g, "");
 
-export const useProductoSelector = (deudorId, onSelect, reset) => {
-  const dispatch = useDispatch();
+export const useProductoSelector = (
+  deudorId,
+  pedidoId,
+  tiendaId,
+  onSelect,
+  reset
+) => {
   const [inputValue, setInputValue] = useState("");
   const deferredQuery = useDeferredValue(inputValue);
   const [selectedItem, setSelectedItem] = useState(null);
   const [error, setError] = useState("");
-  const [visibleItems, setVisibleItems] = useState([]);
+  const [sourceItems, setSourceItems] = useState([]);
   const [renderItems, setRenderItems] = useState([]);
-
-  const itemsAll = useSelector((state) => state.items.items);
-  const itemsStatus = useSelector((state) => state.items.status);
+  const [pageState, setPageState] = useState({ page: 1, totalItems: 0 });
+  const [isLoading, setIsLoading] = useState(false);
+  const onSelectRef = useRef(onSelect);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
-    if (
-      itemsStatus === "idle" ||
-      (itemsStatus === "failed" && !itemsAll?.length)
-    ) {
-      dispatch(tablaItems({ pageSize: 10000 }));
-    }
-  }, [dispatch, itemsAll?.length, itemsStatus]);
+    onSelectRef.current = onSelect;
+  }, [onSelect]);
 
-  const sourceItems = useMemo(() => {
+  const fetchItemsByDeudor = async ({ page, append }) => {
     const deuId = Number(deudorId) || null;
-    if (!deuId) return [];
+    if (!deuId) {
+      setSourceItems([]);
+      setRenderItems([]);
+      setPageState({ page: 1, totalItems: 0 });
+      return;
+    }
 
-    return (Array.isArray(itemsAll) ? itemsAll : [])
-      .filter((item) => {
-        const hasDeudor = item?.deudores?.some(
-          (deudor) => Number(deudor?.id) === deuId
+    const requestId = ++requestIdRef.current;
+    setIsLoading(true);
+    try {
+      let items = [];
+      let totalItems = 0;
+      let usedNewEndpoint = false;
+
+      try {
+        const response = await axios.get(
+          `${BASE_URL}/items/activos/deudor/${deuId}`,
+          {
+            params: {
+              search: deferredQuery.trim(),
+              page,
+              pageSize: PAGE_SIZE,
+            },
+          }
         );
-        const singleDeudorId = Number(item?.deuId ?? item?.deudor?.id ?? 0);
-        return hasDeudor || singleDeudorId === deuId;
-      })
-      .filter((item) => Boolean(item?.estaActivo));
-  }, [itemsAll, deudorId]);
+
+        usedNewEndpoint = true;
+        items = Array.isArray(response?.data?.items) ? response.data.items : [];
+        totalItems = Number(response?.data?.totalItems ?? 0);
+      } catch {
+        usedNewEndpoint = false;
+      }
+
+      const canUseLegacyFallback =
+        !append &&
+        page === 1 &&
+        !deferredQuery.trim() &&
+        Number(pedidoId) > 0 &&
+        Number(tiendaId) > 0;
+
+      if (
+        canUseLegacyFallback &&
+        (!usedNewEndpoint || (usedNewEndpoint && items.length === 0))
+      ) {
+        const legacyResponse = await axios.get(
+          `${BASE_URL}/detalle/pedido/pedidoModelo/${deuId}/${Number(
+            pedidoId
+          )}/${Number(tiendaId)}`
+        );
+
+        const legacyItems = Array.isArray(legacyResponse?.data)
+          ? legacyResponse.data
+          : [];
+
+        items = legacyItems.map((item) => ({
+          id: item?.productoId ?? item?.id,
+          nombre: item?.nombreProducto ?? item?.nombre ?? "",
+          codigo: item?.codigo ?? "",
+          cantidadDisponible: Number(item?.cantidadDisponible ?? 0),
+        }));
+        totalItems = items.length;
+      }
+
+      if (requestId !== requestIdRef.current) return;
+
+      setPageState({ page, totalItems });
+      setSourceItems((prev) => {
+        if (!append) return items;
+
+        const existingIds = new Set(prev.map((item) => item.id));
+        const merged = [...prev];
+        items.forEach((item) => {
+          if (!existingIds.has(item.id)) {
+            merged.push(item);
+          }
+        });
+        return merged;
+      });
+    } catch {
+      if (requestId !== requestIdRef.current) return;
+      if (!append) {
+        setSourceItems([]);
+        setPageState({ page: 1, totalItems: 0 });
+      }
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
-    setVisibleItems(sourceItems.slice(0, CHUNK_SIZE));
-  }, [sourceItems]);
+    fetchItemsByDeudor({ page: 1, append: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deudorId, deferredQuery, pedidoId, tiendaId]);
 
   useEffect(() => {
     setInputValue("");
     setSelectedItem(null);
     setError("");
+    onSelectRef.current("", "", 0, "");
   }, [reset, deudorId]);
 
   useEffect(() => {
     const term = normalizeText(deferredQuery.trim());
     if (!term) {
-      setRenderItems(visibleItems);
+      setRenderItems(sourceItems.slice(0, CHUNK_SIZE * pageState.page));
       return;
     }
 
-    const matches = sourceItems.filter(
-      (item) =>
-        normalizeText(item?.nombre ?? item?.nombreProducto).includes(term) ||
-        normalizeText(item?.codigo).includes(term)
-    );
-    setRenderItems(matches.slice(0, 200));
-  }, [deferredQuery, sourceItems, visibleItems]);
+    setRenderItems(sourceItems.slice(0, CHUNK_SIZE * pageState.page));
+  }, [deferredQuery, sourceItems, pageState.page]);
 
   const handleSelectItem = (item) => {
     const nombre = item?.nombre ?? item?.nombreProducto ?? "";
@@ -78,24 +160,23 @@ export const useProductoSelector = (deudorId, onSelect, reset) => {
 
     setInputValue(nombre);
     setSelectedItem(item);
-    onSelect(item?.id, nombre, cantidadDisponible, codigo);
+    onSelectRef.current(item?.id, nombre, cantidadDisponible, codigo);
     setError(cantidadDisponible === 0 ? "Cantidad disponible: 0" : "");
   };
 
   const loadMoreItems = () => {
-    if (visibleItems.length < sourceItems.length) {
-      const next = Math.min(
-        visibleItems.length + CHUNK_SIZE,
-        sourceItems.length
-      );
-      setVisibleItems(sourceItems.slice(0, next));
-    }
+    if (isLoading) return;
+    if (sourceItems.length >= pageState.totalItems) return;
+
+    const nextPage = pageState.page + 1;
+    fetchItemsByDeudor({ page: nextPage, append: true });
   };
 
   const handleClearInput = () => {
     setInputValue("");
     setSelectedItem(null);
     setError("");
+    onSelectRef.current("", "", 0, "");
   };
 
   return {

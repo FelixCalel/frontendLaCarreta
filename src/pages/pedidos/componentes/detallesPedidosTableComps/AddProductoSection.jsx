@@ -5,6 +5,8 @@ import ProductoSelector from "../pageFormPedidos/productoSelector";
 import CantidadInput from "../pageFormPedidos/cantidadInput";
 
 export const AddProductoSection = ({
+  pedidoId,
+  tiendaId,
   deudorId,
   addBoxBgColor,
   resetFields,
@@ -33,6 +35,8 @@ export const AddProductoSection = ({
         <Box flex="1" minW={0} position="relative">
           <ProductoSelector
             deudorId={Number(deudorId)}
+            pedidoId={Number(pedidoId) || undefined}
+            tiendaId={Number(tiendaId) || undefined}
             onSelect={(
               productoId,
               nombreProducto,
@@ -82,6 +86,8 @@ export const AddProductoSection = ({
 };
 
 AddProductoSection.propTypes = {
+  pedidoId: PropTypes.number,
+  tiendaId: PropTypes.number,
   deudorId: PropTypes.number.isRequired,
   addBoxBgColor: PropTypes.string.isRequired,
   resetFields: PropTypes.bool.isRequired,

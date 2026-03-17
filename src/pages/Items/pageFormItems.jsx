@@ -19,8 +19,9 @@ import {
   IconButton,
   InputGroup,
   InputLeftElement,
+  Button,
 } from "@chakra-ui/react";
-import { CloseIcon, SearchIcon } from "@chakra-ui/icons";
+import { AddIcon, CloseIcon, SearchIcon } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
   tablaItems,
@@ -28,14 +29,30 @@ import {
   addDeudoresItem,
   removeDeudoresItem,
 } from "../../store/items/thunks";
-import { tablaDeudores } from "../../store/Deus/thunks";
+import { obtenerDeudoresActivos } from "../../store/Deus/thunks";
 import { patchItem } from "../../store/items/itemSlice";
 import Pagination from "../../components/pagination";
-import DeudorSelector from "./components/DeudorSelector";
+import { DeudorSelector } from "./components/DeudorSelector.jsx";
 
 const ItemRow = memo(
-  ({ item, handleStatusChange, handleAddDeudor, handleRemoveDeudor }) => {
+  ({
+    item,
+    handleStatusChange,
+    handleAddDeudor,
+    handleRemoveDeudor,
+    ensureDeudoresLoaded,
+    isLoadingDeudores,
+  }) => {
+    const [isSelectorOpen, setIsSelectorOpen] = useState(false);
     const rowHoverBg = useColorModeValue("blue.50", "blue.900");
+    const triggerBorder = useColorModeValue("gray.300", "gray.600");
+    const triggerText = useColorModeValue("gray.500", "gray.400");
+    const triggerHover = useColorModeValue("gray.50", "whiteAlpha.100");
+
+    const handleToggleSelector = () => {
+      if (!isSelectorOpen) ensureDeudoresLoaded();
+      setIsSelectorOpen((prev) => !prev);
+    };
 
     return (
       <Tr _hover={{ backgroundColor: rowHoverBg }}>
@@ -53,16 +70,38 @@ const ItemRow = memo(
         </Td>
         <Td>
           <Flex direction="column" gap={2}>
-            <DeudorSelector
-              key={`${item.id}-selector`}
-              onSelect={(deuId) => {
-                if (!item.deudores.some((d) => d.id === deuId)) {
-                  handleAddDeudor(item.id, deuId);
-                }
-              }}
-              onRemove={() => {}}
-              width={{ base: "150px", md: "220px" }}
-            />
+            {isSelectorOpen ? (
+              <DeudorSelector
+                key={`${item.id}-selector`}
+                onSelect={(deuId) => {
+                  if (!item.deudores.some((d) => d.id === deuId)) {
+                    handleAddDeudor(item.id, deuId);
+                  }
+                  setIsSelectorOpen(false);
+                }}
+                onRemove={() => {}}
+                width={{ base: "150px", md: "220px" }}
+              />
+            ) : (
+              <Button
+                leftIcon={<AddIcon />}
+                size="sm"
+                width={{ base: "150px", md: "220px" }}
+                alignSelf="flex-start"
+                justifyContent="flex-start"
+                variant="outline"
+                borderColor={triggerBorder}
+                color={triggerText}
+                fontWeight="normal"
+                bg="transparent"
+                onClick={handleToggleSelector}
+                isLoading={isLoadingDeudores}
+                _hover={{ bg: triggerHover, borderColor: "blue.300" }}
+                _active={{ bg: triggerHover }}
+              >
+                Buscar y agregar deudor...
+              </Button>
+            )}
             <Flex wrap="wrap" gap={1}>
               {item.deudores &&
                 item.deudores.map((deudor) => (
@@ -132,6 +171,8 @@ ItemRow.propTypes = {
   handleStatusChange: PropTypes.func.isRequired,
   handleAddDeudor: PropTypes.func.isRequired,
   handleRemoveDeudor: PropTypes.func.isRequired,
+  ensureDeudoresLoaded: PropTypes.func.isRequired,
+  isLoadingDeudores: PropTypes.bool.isRequired,
 };
 
 ItemRow.displayName = "ItemRow";
@@ -141,7 +182,7 @@ const PageItems = () => {
   const { items, totalItems, status, error } = useSelector(
     (state) => state.items,
   );
-  const { deudores: deudoresDisponibles } = useSelector(
+  const { deudores: deudoresDisponibles, status: deudoresStatus } = useSelector(
     (state) => state.deudores,
   );
 
@@ -150,13 +191,20 @@ const PageItems = () => {
     currentPage: 1,
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeDeudorLoaderItemId, setActiveDeudorLoaderItemId] = useState(null);
   const itemsPerPage = 15;
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setSearchState({
-        debouncedSearch: searchTerm,
-        currentPage: 1,
+      setSearchState((prev) => {
+        if (prev.debouncedSearch === searchTerm && prev.currentPage === 1) {
+          return prev;
+        }
+
+        return {
+          debouncedSearch: searchTerm,
+          currentPage: 1,
+        };
       });
     }, 500);
     return () => clearTimeout(handler);
@@ -174,10 +222,6 @@ const PageItems = () => {
       }),
     );
   }, [dispatch, currentPage, debouncedSearch]);
-
-  useEffect(() => {
-    dispatch(tablaDeudores());
-  }, [dispatch]);
 
   const paginatedData = items || [];
 
@@ -236,6 +280,29 @@ const PageItems = () => {
     },
     [dispatch, items],
   );
+
+  const ensureDeudoresLoaded = useCallback(() => {
+    if (deudoresDisponibles?.length > 0 || deudoresStatus === "loading") {
+      return;
+    }
+
+    dispatch(obtenerDeudoresActivos());
+  }, [deudoresDisponibles?.length, deudoresStatus, dispatch]);
+
+  const handleEnsureDeudoresLoaded = useCallback(
+    (itemId) => {
+      if (deudoresDisponibles?.length > 0) return;
+      setActiveDeudorLoaderItemId(itemId);
+      ensureDeudoresLoaded();
+    },
+    [deudoresDisponibles?.length, ensureDeudoresLoaded]
+  );
+
+  useEffect(() => {
+    if (deudoresStatus !== "loading") {
+      setActiveDeudorLoaderItemId(null);
+    }
+  }, [deudoresStatus]);
 
   return (
     <Box
@@ -320,6 +387,11 @@ const PageItems = () => {
                 handleStatusChange={handleStatusChange}
                 handleAddDeudor={handleAddDeudor}
                 handleRemoveDeudor={handleRemoveDeudor}
+                ensureDeudoresLoaded={() => handleEnsureDeudoresLoaded(item.id)}
+                isLoadingDeudores={
+                  deudoresStatus === "loading" &&
+                  activeDeudorLoaderItemId === item.id
+                }
               />
             ))
           )}

@@ -84,6 +84,8 @@ const ProductosTable = ({ pedidoId, deudorId, tiendaId }) => {
         )}
 
         <AddProductoSection
+          pedidoId={pedidoId}
+          tiendaId={tiendaId}
           newProducto={newProducto}
           setNewProducto={setNewProducto}
           handleAddProducto={onAddProducto}

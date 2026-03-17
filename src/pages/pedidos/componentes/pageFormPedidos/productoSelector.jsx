@@ -17,7 +17,7 @@ import {
 import PropTypes from "prop-types";
 import { useProductoSelector } from "./useProductoSelector";
 
-const ProductoSelector = ({ deudorId, onSelect, reset }) => {
+const ProductoSelector = ({ deudorId, pedidoId, tiendaId, onSelect, reset }) => {
   const {
     inputValue,
     setInputValue,
@@ -27,7 +27,7 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
     handleSelectItem,
     loadMoreItems,
     handleClearInput,
-  } = useProductoSelector(deudorId, onSelect, reset);
+  } = useProductoSelector(deudorId, pedidoId, tiendaId, onSelect, reset);
 
   const listBg = useColorModeValue("white", "gray.800");
   const listBorderColor = useColorModeValue("gray.200", "gray.600");
@@ -134,6 +134,8 @@ const ProductoSelector = ({ deudorId, onSelect, reset }) => {
 
 ProductoSelector.propTypes = {
   deudorId: PropTypes.number,
+  pedidoId: PropTypes.number,
+  tiendaId: PropTypes.number,
   onSelect: PropTypes.func.isRequired,
   reset: PropTypes.bool,
 };

@@ -155,8 +155,15 @@ export const startLogin = createAsyncThunk(
 
       // De lo contrario, iniciar sesión normalmente
       const { token, usuario } = resp.data;
+      const refreshToken =
+        resp.data.refreshToken || resp.data.refresh_token || null;
       localStorage.setItem("access_token", token);
+      sessionStorage.setItem("access_token", token);
       localStorage.setItem("token", token);
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
+        sessionStorage.setItem("refresh_token", refreshToken);
+      }
       localStorage.setItem("usuarioId", usuario.id);
       localStorage.setItem("roleId", usuario.roleId);
       localStorage.setItem(
@@ -203,8 +210,15 @@ export const startVerifyLogin = createAsyncThunk(
       });
 
       const { token, usuario } = resp.data;
+      const refreshToken =
+        resp.data.refreshToken || resp.data.refresh_token || null;
       localStorage.setItem("access_token", token);
+      sessionStorage.setItem("access_token", token);
       localStorage.setItem("token", token);
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
+        sessionStorage.setItem("refresh_token", refreshToken);
+      }
       localStorage.setItem("usuarioId", usuario.id);
       localStorage.setItem("roleId", usuario.roleId);
       localStorage.setItem(
@@ -247,7 +261,14 @@ export const fetchCurrentUser = createAsyncThunk(
 
       if (data.token) {
         localStorage.setItem("access_token", data.token);
+        sessionStorage.setItem("access_token", data.token);
         localStorage.setItem("token", data.token);
+      }
+
+      if (data.refreshToken || data.refresh_token) {
+        const rt = data.refreshToken || data.refresh_token;
+        localStorage.setItem("refresh_token", rt);
+        sessionStorage.setItem("refresh_token", rt);
       }
 
       if (me) {

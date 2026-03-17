@@ -66,7 +66,6 @@ const MenuDesktop = () => {
   const [openMenus, setOpenMenus] = useState({});
   const menuRef = useRef(null);
 
-  // Colores VERDES
   const sidebarBg = useColorModeValue("white", "gray.900");
   const sidebarBgGradient = useColorModeValue(
     "linear(to-b, white, gray.50)",
@@ -84,14 +83,10 @@ const MenuDesktop = () => {
 
   const { uid } = useSelector((state) => state.auth);
 
-  // Cargar módulos cuando cambia el UID
   useLayoutEffect(() => {
-    if (uid) {
-      dispatch(fetchModulos(uid));
-    }
+    uid && dispatch(fetchModulos(uid));
   }, [dispatch, uid]);
 
-  // Cerrar menú al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -161,7 +156,6 @@ const MenuDesktop = () => {
     return null;
   }
 
-  // Filtrar opciones con rutas dinámicas
   modulosAgrupados.forEach((m) => {
     m.opciones = m.opciones.filter((op) => !op.ruta?.includes(":"));
   });
@@ -244,7 +238,6 @@ const MenuDesktop = () => {
         />
       </Flex>
 
-      {/* Contenido del menú */}
       <VStack align="stretch" spacing={2} px={2}>
         {modulosRender.map((modulo) => (
           <MenuItem
@@ -260,7 +253,6 @@ const MenuDesktop = () => {
         ))}
       </VStack>
 
-      {/* Indicador visual en la parte inferior */}
       <Box
         position="absolute"
         bottom={4}

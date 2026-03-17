@@ -20,10 +20,11 @@ import {
 
 const CHUNK_SIZE = 10;
 
-const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
+export const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
   const deudoresAll = useSelector((state) => state.deudores.deudores || []);
   const [inputValue, setInputValue] = useState(() => initialValue);
   const [renderItems, setRenderItems] = useState([]);
+  const inputRef = useRef(null);
 
   const listBg = useColorModeValue("white", "gray.800");
   const listBorderColor = useColorModeValue("gray.200", "gray.600");
@@ -42,6 +43,14 @@ const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
   useEffect(() => {
     setRenderItems(baseItems.slice(0, CHUNK_SIZE));
   }, [baseItems]);
+
+  useEffect(() => {
+    const timerId = globalThis.setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
+
+    return () => globalThis.clearTimeout(timerId);
+  }, []);
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
@@ -66,6 +75,7 @@ const DeudorSelector = ({ onSelect, initialValue = "", width }) => {
           <AutoComplete openOnFocus>
             <InputGroup size="xs">
               <AutoCompleteInput
+                ref={inputRef}
                 variant="outline"
                 placeholder="Buscar y agregar deudor..."
                 value={inputValue}

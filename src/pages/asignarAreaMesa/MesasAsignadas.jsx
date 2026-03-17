@@ -55,9 +55,7 @@ const MesasAsignadas = ({ areaId }) => {
   }, [dispatch]);
 
   useLayoutEffect(() => {
-    if (areaId) {
-      dispatch(fetchMesasAsignadasThunk(areaId));
-    }
+    areaId && dispatch(fetchMesasAsignadasThunk(areaId));
   }, [dispatch, areaId]);
 
   const getNombreMesa = (mesaId) => {

@@ -248,7 +248,7 @@ export const useProductosTable = (pedidoId, deudorId, tiendaId) => {
         return { ...prev, productos: newList };
       });
 
-      setResetFields(true);
+      setResetFields((prev) => !prev);
       setNewProducto({
         productoId: "",
         nombreProducto: "",
