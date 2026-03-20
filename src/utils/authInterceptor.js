@@ -85,7 +85,6 @@ export const setupAxiosInterceptors = () => {
       const url = (originalRequest.url || "").toString();
       if (
         url.includes("/login/refresh-token") ||
-        url.includes("/usuarios/exchange-token") ||
         url.includes("/login")
       ) {
         return Promise.reject(error);
