@@ -4,13 +4,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "clean": "rimraf dist",
-    "start": "npm run build && vite preview"
+    "start": "pnpm build && vite preview"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
@@ -32,6 +33,7 @@
     "framer-motion": "^11.5.6",
     "jwt-decode": "^4.0.0",
     "localforage": "^1.10.0",
+    "lodash": "^4.17.23",
     "match-sorter": "^6.3.4",
     "moment": "^2.30.1",
     "nodemailer": "^6.9.14",
