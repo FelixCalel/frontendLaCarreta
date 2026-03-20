@@ -18,6 +18,7 @@ import SearchBar from "./component/searchBar";
 import { useSearch } from "./component/SearchContext";
 import { useDispatch } from "react-redux";
 import { setTheme } from "../store/settings/settingsSlice";
+import logoLaCarreta from "../assets/images/LogoLaCarreta.png";
 
 export default function NavBar() {
   const { isOpen, onToggle, onClose } = useDisclosure();
@@ -51,7 +52,7 @@ export default function NavBar() {
       <Box display="flex" alignItems="center">
         <Link to="/auth/home">
           <Image
-            src="/images/LogoLaCarreta.png"
+            src={logoLaCarreta}
             alt="La Carreta"
             objectFit="contain"
             width={{ base: "40px", md: "60px", lg: "80px" }}
