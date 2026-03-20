@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -23,6 +23,12 @@ const OTPVerificationModal = ({
   handleVerifySMS,
   isLoading,
 }) => {
+  const handleVerifySMSRef = useRef(handleVerifySMS);
+
+  useEffect(() => {
+    handleVerifySMSRef.current = handleVerifySMS;
+  }, [handleVerifySMS]);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -34,7 +40,7 @@ const OTPVerificationModal = ({
       if (code.length !== 6) return false;
 
       setVerifyCode(code);
-      setTimeout(() => handleVerifySMS(code), 0);
+      setTimeout(() => handleVerifySMSRef.current(code), 0);
       return true;
     };
 
@@ -55,7 +61,7 @@ const OTPVerificationModal = ({
     return () => {
       ac.abort();
     };
-  }, [isOpen, setVerifyCode, handleVerifySMS]);
+  }, [isOpen, setVerifyCode]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered>

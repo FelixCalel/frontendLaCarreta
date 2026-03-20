@@ -15,12 +15,6 @@ import { clearModulosState } from "../Modulos/modulosSlice";
 import { fetchModulos } from "../RolPermisoUsuario/thunks";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import {
-  signInWithEmailAndPassword,
-  checkActionCode,
-  applyActionCode,
-} from "firebase/auth";
-import { auth } from "../../middleware/firebase-config";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 const TRUST_TOKENS_BY_IDENTIFIER_KEY = "trust_tokens_by_identifier";
@@ -405,39 +399,32 @@ export const verifyEmailCode = createAsyncThunk(
   "auth/verifyEmailCode",
   async (oobCode, { rejectWithValue }) => {
     try {
-      const info = await checkActionCode(auth, oobCode);
-      const email = info.data.email;
+      const { data } = await axios.get(
+        `${BASE_URL}/usuarios/validate-email/${encodeURIComponent(oobCode)}`,
+      );
 
-      await applyActionCode(auth, oobCode);
-
-      if (email) {
-        try {
-          const { data } = await axios.post(`${BASE_URL}/usuarios/sync-verification`, {
-            email,
-          });
-
-          const syncTrustToken = data?.trustToken || data?.trust_token || null;
-          if (syncTrustToken) {
-            const identifierKey = String(email).trim().toLowerCase();
-            localStorage.setItem("trust_token", syncTrustToken);
-            sessionStorage.setItem("trust_token", syncTrustToken);
-            saveTrustTokenForIdentifier(identifierKey, syncTrustToken);
-          }
-        } catch (syncError) {
-          console.error("Error syncing verification with backend:", syncError);
+      const email = data?.email || null;
+      const syncTrustToken = data?.trustToken || data?.trust_token || null;
+      if (syncTrustToken) {
+        localStorage.setItem("trust_token", syncTrustToken);
+        sessionStorage.setItem("trust_token", syncTrustToken);
+        if (email) {
+          const identifierKey = String(email).trim().toLowerCase();
+          saveTrustTokenForIdentifier(identifierKey, syncTrustToken);
         }
       }
       return {
         success: true,
-        message: "¡Tu correo ha sido verificado exitosamente!",
+        message: data?.message || "¡Tu correo ha sido verificado exitosamente!",
       };
     } catch (error) {
       console.error("Verification error:", error);
       let errorMessage = "Hubo un error al verificar el correo.";
-      if (error.code === "auth/expired-action-code") {
-        errorMessage = "El enlace ha expirado. Por favor solicita uno nuevo.";
-      } else if (error.code === "auth/invalid-action-code") {
-        errorMessage = "El enlace no es válido o ya fue utilizado.";
+      if (axios.isAxiosError(error)) {
+        errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          errorMessage;
       }
       return rejectWithValue(errorMessage);
     }
@@ -472,10 +459,9 @@ export const sendPasswordResetEmail = createAsyncThunk(
 
 export const resetPasswordWithToken = createAsyncThunk(
   "auth/resetPasswordWithToken",
-  async ({ token, correo_electronico, clave }, { rejectWithValue }) => {
+  async ({ token, clave }, { rejectWithValue }) => {
     try {
       await axios.post(`${BASE_URL}/usuarios/recuperar-clave`, {
-        correo: correo_electronico,
         token,
         clave,
       });

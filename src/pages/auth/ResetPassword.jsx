@@ -16,8 +16,6 @@ import {
   InputRightElement,
 } from "@chakra-ui/react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { confirmPasswordReset, checkActionCode } from "firebase/auth";
-import { auth } from "../../middleware/firebase-config";
 import { useDispatch } from "react-redux";
 import { resetPasswordWithToken } from "../../store/auth/thunks";
 import { FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
@@ -77,18 +75,9 @@ export const ResetPassword = () => {
     setIsLoading(true);
 
     try {
-      // 1. Get email from the code
-      const info = await checkActionCode(auth, oobCode);
-      const email = info["data"]["email"];
-
-      // 2. Update Firebase
-      await confirmPasswordReset(auth, oobCode, newPassword);
-
-      // 3. Update Backend (Postgres)
       const resultAction = await dispatch(
         resetPasswordWithToken({
-          correo_electronico: email,
-          token: "firebase-verified", // Backend ignores token for this endpoint, acts as trusted update
+          token: oobCode,
           clave: newPassword,
         })
       );
@@ -110,12 +99,8 @@ export const ResetPassword = () => {
       navigate("/auth/login");
     } catch (error) {
       let errorMessage = "Hubo un error al restablecer la contraseña.";
-      if (error.code === "auth/expired-action-code") {
-        errorMessage = "El enlace ha expirado. Por favor solicita uno nuevo.";
-      } else if (error.code === "auth/invalid-action-code") {
-        errorMessage = "El enlace no es válido.";
-      } else if (error.code === "auth/weak-password") {
-        errorMessage = "La contraseña es muy débil.";
+      if (error instanceof Error && error.message) {
+        errorMessage = error.message;
       }
 
       toast({
