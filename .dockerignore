@@ -1,5 +1,11 @@
 node_modules
 dist
+dev-dist
 .git
-.vscode
-*.log
+.gitignore
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage
+.DS_Store

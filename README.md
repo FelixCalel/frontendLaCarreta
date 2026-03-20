@@ -35,7 +35,7 @@ cd Frontend_La_Carreta
 Ejecuta el siguiente comando para instalar todas las dependencias necesarias:
 
 ```sh
-$ npm install
+$ pnpm install
 ```
 
 ### 📄 3️⃣ Configurar Variables de Entorno
@@ -62,7 +62,7 @@ VITE_MEASUREMENT_ID="G-1PT1PHSMMS"
 Después de la configuración, inicia el frontend con:
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 El servidor de desarrollo estará disponible en **[http://localhost:5179](http://localhost:5179)**.
@@ -70,13 +70,13 @@ El servidor de desarrollo estará disponible en **[http://localhost:5179](http:/
 Para compilar el código para producción, usa:
 
 ```sh
-npm run build
+pnpm build
 ```
 
 Para previsualizar la compilación antes de desplegar:
 
 ```sh
-npm run preview
+pnpm preview
 ```
 
 ## 📂 **Estructura del Proyecto**
@@ -137,7 +137,7 @@ El frontend usa **Firebase** para autenticación en ciertas funcionalidades y **
 ✔ **Usar ESLint** para mantener un código limpio:
 
 ```sh
-$ npm run lint
+$ pnpm lint
 ```
 
 ✔ **Seguir la estructura modular** para una mejor escalabilidad.
