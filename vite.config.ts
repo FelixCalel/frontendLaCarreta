@@ -20,10 +20,6 @@ export default defineConfig(({ mode }) => {
             host: env.HOST,
             port: Number(env.PORT),
         },
-        esbuild: {
-            drop: mode === "production" ? ["console", "debugger"] : [],
-        },
-
         plugins: [
             react(),
             viteCompression(),

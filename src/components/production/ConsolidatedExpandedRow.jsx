@@ -82,13 +82,14 @@ export const ConsolidatedExpandedRow = memo(
     }, [item.originalItems]);
 
     const [localValues, setLocalValues] = useState(initialLocalValues);
+    const serializedInitialValues = useMemo(
+      () => JSON.stringify(initialLocalValues),
+      [initialLocalValues],
+    );
 
-    const [prevInitialLocalValues, setPrevInitialLocalValues] =
-      useState(initialLocalValues);
-    if (initialLocalValues !== prevInitialLocalValues) {
-      setPrevInitialLocalValues(initialLocalValues);
+    useEffect(() => {
       setLocalValues(initialLocalValues);
-    }
+    }, [serializedInitialValues, initialLocalValues]);
 
     const handleUpdate = useCallback(
       async (field, value) => {
@@ -243,6 +244,12 @@ export const ConsolidatedExpandedRow = memo(
       () => debounce(handleUpdate, 500),
       [handleUpdate],
     );
+
+    useEffect(() => {
+      return () => {
+        debouncedUpdate.cancel();
+      };
+    }, [debouncedUpdate]);
 
     const inputBg = useColorModeValue("gray.50", "gray.700");
     const boxBg = useColorModeValue("gray.50", "gray.900");
