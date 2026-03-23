@@ -80,3 +80,4 @@ dist-ssr
 
 # Dev build artifacts
 dev-dist
+pnpm-lock.yaml
