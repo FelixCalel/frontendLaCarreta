@@ -43,7 +43,7 @@ export const fetchOpciones = createAsyncThunk(
   "areas/fetchOpciones",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/opciones/`);
+      const response = await axios.get(`${BASE_URL}/opciones/`);
       return response.data;
     } catch (error) {
       return rejectWithValue(

@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import PropTypes from 'prop-types';
+import logoLaCarreta from '../assets/images/LogoLaCarreta.png';
 
 const SEO = ({
   title = "Inicio",
@@ -7,6 +8,8 @@ const SEO = ({
   name = "La Carreta",
   type = "website",
 }) => {
+  const logoUrl = `${window.location.origin}${logoLaCarreta}`;
+
   return (
     <Helmet>
       {/* Standard metadata tags */}
@@ -33,7 +36,7 @@ const SEO = ({
           "@type": "Organization",
           "name": "La Carreta",
           "url": "https://app.lacarreta.com.gt",
-          "logo": "https://app.lacarreta.com.gt/images/logo.png",
+          "logo": logoUrl,
           "sameAs": [
             "https://www.facebook.com/lacarretagt",
             "https://www.instagram.com/lacarretagt"

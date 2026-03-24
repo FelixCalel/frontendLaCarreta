@@ -15,7 +15,7 @@ export const fetchRoles = createAsyncThunk(
     }
 
     try {
-      const response = await axios.get(`${BASE_URL}/api/roles/listar`);
+      const response = await axios.get(`${BASE_URL}/roles/listar`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error al obtener roles");

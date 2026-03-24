@@ -81,15 +81,18 @@ export const ConsolidatedExpandedRow = memo(
       return vals;
     }, [item.originalItems]);
 
-    const [localValues, setLocalValues] = useState(initialLocalValues);
+    const [localValuesState, setLocalValuesState] = useState(() => ({
+      sourceKey: JSON.stringify(initialLocalValues),
+      values: initialLocalValues,
+    }));
     const serializedInitialValues = useMemo(
       () => JSON.stringify(initialLocalValues),
       [initialLocalValues],
     );
-
-    useEffect(() => {
-      setLocalValues(initialLocalValues);
-    }, [serializedInitialValues, initialLocalValues]);
+    const localValues =
+      localValuesState.sourceKey === serializedInitialValues
+        ? localValuesState.values
+        : initialLocalValues;
 
     const handleUpdate = useCallback(
       async (field, value) => {
@@ -351,10 +354,20 @@ export const ConsolidatedExpandedRow = memo(
                           onChange={(e) => {
                             if (!isReadOnly) {
                               const v = e.target.value;
-                              setLocalValues((prev) => ({
-                                ...prev,
-                                [field]: v,
-                              }));
+                              setLocalValuesState((prev) => {
+                                const baseValues =
+                                  prev.sourceKey === serializedInitialValues
+                                    ? prev.values
+                                    : initialLocalValues;
+
+                                return {
+                                  sourceKey: serializedInitialValues,
+                                  values: {
+                                    ...baseValues,
+                                    [field]: v,
+                                  },
+                                };
+                              });
                               debouncedUpdate(field, v);
                             }
                           }}

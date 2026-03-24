@@ -133,4 +133,3 @@ DeudorSelector.propTypes = {
   width: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
 };
 
-export default DeudorSelector;

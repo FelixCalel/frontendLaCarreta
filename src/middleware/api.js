@@ -14,21 +14,6 @@ export const registerUser = async (userData) => {
   }
 };
 
-export const sendSMSCode = async (phone, captchaToken) => {
-  try {
-    const response = await axios.post(`${BASE_URL}/sms/send`, {
-      to: phone,
-      captchaToken,
-    });
-    return { ok: true, data: response.data };
-  } catch (error) {
-    return {
-      ok: false,
-      errorMessage: error.response?.data?.message || error.message || "Error al enviar SMS",
-    };
-  }
-};
-
 export const verifyRegistrationPhone = async (phone, code) => {
   try {
     const response = await axios.post(`${BASE_URL}/sms/verify`, {

@@ -1,7 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// Definimos la URL de la API, asegurándonos de que está correctamente configurada.
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const fetchPermisosRoles = createAsyncThunk(
@@ -9,7 +8,7 @@ export const fetchPermisosRoles = createAsyncThunk(
   async (params, thunkAPI) => {
     try {
       const { selectedModulo, selectedOpcion } = params || {};
-      const response = await axios.get(`${BASE_URL}/api/asignarRMOP/`);
+      const response = await axios.get(`${BASE_URL}/asignarRMOP/`);
 
       const asignaciones = Array.isArray(response.data) ? response.data : [];
 
@@ -34,8 +33,8 @@ export const fetchPermisosRolesMetadata = createAsyncThunk(
   "PermisosRoles/fetchPermisosRolesMetadata",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/asignarRMOP/metadata`);
-      return response.data; // Asegúrate de que los datos retornados sean correctos
+      const response = await axios.get(`${BASE_URL}/asignarRMOP/metadata`);
+      return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
         error.response ? error.response.data : error.message,
@@ -48,7 +47,6 @@ export const createasignacionPermisosRoles = createAsyncThunk(
   "permisos/createasignacionPermisosRoles",
   async ({ accessMatrix }, thunkAPI) => {
     try {
-      // Asegúrate de que los datos en `createPayload` tengan el tipo de dato correcto
       const createPayload = accessMatrix.map((item) => ({
         role_id: Number(item.role_id),
         modulo_id: Number(item.modulo_id),
@@ -67,7 +65,7 @@ export const createasignacionPermisosRoles = createAsyncThunk(
 
       if (createPayload.length > 0) {
         const response = await axios.post(
-          `${BASE_URL}/api/asignarRMOP/crear`,
+          `${BASE_URL}/asignarRMOP/crear`,
           createPayload,
           {
             headers: {
@@ -91,7 +89,7 @@ export const deleteasignacionPermisosRoles = createAsyncThunk(
   async (id, thunkAPI) => {
     try {
       const response = await axios.delete(
-        `${BASE_URL}/api/asignarRMOP/eliminar/${id}`,
+        `${BASE_URL}/asignarRMOP/eliminar/${id}`,
       );
       return response.data;
     } catch (error) {
@@ -101,12 +99,11 @@ export const deleteasignacionPermisosRoles = createAsyncThunk(
   },
 );
 
-// En tu archivo de thunks
 export const fetchAsignacionMO = createAsyncThunk(
   "asignacionMO/fetchAsignacionMO",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/asignacionMO/`);
+      const response = await axios.get(`${BASE_URL}/asignacionMO/`);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useReducer, useMemo, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import {
   Box,
@@ -21,6 +21,31 @@ import { useGetPedidosAgrupadosQuery } from "../../../services/pedidoProductionA
 import { GroupCardGrid } from "../../../components/production/digitador/FabricacionCardGrid";
 import { ConsolidatedOrdersView } from "../../../components/production/ConsolidatedOrdersView";
 import { tablaEmpresa, tablaPais } from "../../../store/Empresa/thunks";
+
+const initialUiState = {
+  term: "",
+  dateMode: "all",
+  dateFilter: "",
+  status: "",
+  viewMode: "byOrder",
+};
+
+function uiReducer(state, action) {
+  switch (action.type) {
+    case "setTerm":
+      return { ...state, term: action.payload };
+    case "setDateMode":
+      return { ...state, dateMode: action.payload };
+    case "setDateFilter":
+      return { ...state, dateFilter: action.payload };
+    case "setStatus":
+      return { ...state, status: action.payload };
+    case "setViewMode":
+      return { ...state, viewMode: action.payload };
+    default:
+      return state;
+  }
+}
 
 const DigitadorFabricacionOrdersPage = () => {
   const toDateKey = (value) => {
@@ -77,11 +102,8 @@ const DigitadorFabricacionOrdersPage = () => {
     [groups],
   );
 
-  const [term, setTerm] = useState("");
-  const [dateMode, setDateMode] = useState("all");
-  const [dateFilter, setDateFilter] = useState("");
-  const [status, setStatus] = useState("");
-  const [viewMode, setViewMode] = useState("byOrder");
+  const [ui, dispatchUi] = useReducer(uiReducer, initialUiState);
+  const { term, dateMode, dateFilter, status, viewMode } = ui;
   const bgColor = useColorModeValue("white", "gray.800");
 
   const filtered = useMemo(() => {
@@ -200,13 +222,13 @@ const DigitadorFabricacionOrdersPage = () => {
       <Flex justify="center" mb={4}>
         <ButtonGroup isAttached variant="outline">
           <Button
-            onClick={() => setViewMode("byOrder")}
+            onClick={() => dispatchUi({ type: "setViewMode", payload: "byOrder" })}
             isActive={viewMode === "byOrder"}
           >
             Por Pedido
           </Button>
           <Button
-            onClick={() => setViewMode("consolidated")}
+            onClick={() => dispatchUi({ type: "setViewMode", payload: "consolidated" })}
             isActive={viewMode === "consolidated"}
           >
             Consolidado
@@ -230,13 +252,13 @@ const DigitadorFabricacionOrdersPage = () => {
           <Input
             placeholder="DEU"
             value={term}
-            onChange={(e) => setTerm(e.target.value)}
+            onChange={(e) => dispatchUi({ type: "setTerm", payload: e.target.value })}
           />
         </InputGroup>
 
         <Select
           value={dateMode}
-          onChange={(e) => setDateMode(e.target.value)}
+          onChange={(e) => dispatchUi({ type: "setDateMode", payload: e.target.value })}
           maxW="210px"
         >
           <option value="today">Fecha: Hoy</option>
@@ -249,7 +271,7 @@ const DigitadorFabricacionOrdersPage = () => {
             type="date"
             placeholder="Fecha del pedido"
             value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
+            onChange={(e) => dispatchUi({ type: "setDateFilter", payload: e.target.value })}
             maxW="200px"
           />
         )}
@@ -257,7 +279,7 @@ const DigitadorFabricacionOrdersPage = () => {
         <Select
           placeholder="Estado"
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(e) => dispatchUi({ type: "setStatus", payload: e.target.value })}
           maxW="200px"
         >
           <option value="Pendiente">Pendiente</option>

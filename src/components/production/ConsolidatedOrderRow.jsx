@@ -60,11 +60,17 @@ export const ConsolidatedOrderRow = memo(
       return "";
     }, [primaryOrder, almacenes]);
 
-    const [almacenId, setAlmacenId] = useState(defaultAlmacenId);
+    const sourceOrderId = primaryOrder?.id ?? null;
+    const sourceAlmacenKey = `${sourceOrderId}|${defaultAlmacenId}`;
+    const [almacenDraft, setAlmacenDraft] = useState(() => ({
+      sourceKey: sourceAlmacenKey,
+      value: defaultAlmacenId,
+    }));
 
-    useEffect(() => {
-      setAlmacenId(defaultAlmacenId);
-    }, [defaultAlmacenId]);
+    const almacenId =
+      almacenDraft.sourceKey === sourceAlmacenKey
+        ? almacenDraft.value
+        : defaultAlmacenId;
 
     const rechazoQty = useMemo(
       () =>
@@ -110,17 +116,21 @@ export const ConsolidatedOrderRow = memo(
       };
     }, [debouncedTrazabilidadUpdate]);
 
-    const [localTrazabilidad, setLocalTrazabilidad] = useState(
-      primaryOrder?.trazabilidad_Prod || "",
-    );
+    const remoteTrazabilidad = primaryOrder?.trazabilidad_Prod || "";
+    const sourceTrazabilidadKey = `${sourceOrderId}|${remoteTrazabilidad}`;
+    const [trazabilidadDraft, setTrazabilidadDraft] = useState(() => ({
+      sourceKey: sourceTrazabilidadKey,
+      value: remoteTrazabilidad,
+    }));
 
-    useEffect(() => {
-      setLocalTrazabilidad(primaryOrder?.trazabilidad_Prod || "");
-    }, [primaryOrder?.trazabilidad_Prod]);
+    const localTrazabilidad =
+      trazabilidadDraft.sourceKey === sourceTrazabilidadKey
+        ? trazabilidadDraft.value
+        : remoteTrazabilidad;
 
     const handleTrazabilidadChange = (e) => {
       const val = e.target.value;
-      setLocalTrazabilidad(val);
+      setTrazabilidadDraft({ sourceKey: sourceTrazabilidadKey, value: val });
       debouncedTrazabilidadUpdate(val);
     };
 
@@ -156,7 +166,7 @@ export const ConsolidatedOrderRow = memo(
     };
 
     const handleAlmacenChange = async (newId) => {
-      setAlmacenId(newId);
+      setAlmacenDraft({ sourceKey: sourceAlmacenKey, value: newId });
       const idsToUpdate = item.originalItems.map((subItem) => subItem.id);
 
       try {
@@ -166,9 +176,7 @@ export const ConsolidatedOrderRow = memo(
         }).unwrap();
       } catch (err) {
         console.error("Error updating warehouse:", err);
-        setAlmacenId(
-          primaryOrder?.id_almacen ? String(primaryOrder.id_almacen) : "",
-        );
+        setAlmacenDraft({ sourceKey: sourceAlmacenKey, value: defaultAlmacenId });
         toast({
           title: "Error",
           description: "No se pudo actualizar el almacén",
