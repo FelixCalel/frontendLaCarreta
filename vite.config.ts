@@ -6,11 +6,24 @@ import path from 'path';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), "");
+    const proxyTarget = env.VITE_PROXY_TARGET
+        ;
 
     return {
         server: {
             host: env.HOST,
             port: Number(env.PORT),
+            proxy: {
+                '/api': {
+                    target: proxyTarget,
+                    changeOrigin: true,
+                },
+                '/ws': {
+                    target: proxyTarget,
+                    changeOrigin: true,
+                    ws: true,
+                }
+            },
             hmr: {
                 host: mode === "production" ? env.HOST : "localhost",
                 protocol: "ws",
@@ -24,7 +37,8 @@ export default defineConfig(({ mode }) => {
             react(),
             viteCompression(),
             VitePWA({
-                registerType: "prompt",
+                registerType: "autoUpdate",
+                selfDestroying: true,
                 includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
                 devOptions: {
                     enabled: true,

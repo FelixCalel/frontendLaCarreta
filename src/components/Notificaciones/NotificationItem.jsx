@@ -67,7 +67,7 @@ const getStyleByEstado = (estadoId) => {
   return null;
 };
 
-export const NotificationItem = ({
+const NotificationItem = ({
   notificacion,
   rolNombre,
   onMarkAsRead,

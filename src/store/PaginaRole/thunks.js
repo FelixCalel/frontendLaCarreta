@@ -7,7 +7,7 @@ export const fetchrole = createAsyncThunk(
   "role/fetchrole",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/roles/listar`);
+      const response = await axios.get(`${BASE_URL}/roles/listar`);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -21,8 +21,8 @@ export const fetchRolesMetadata = createAsyncThunk(
   "Roles/fetchRolesMetadata",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/roles/metadata`);
-      return response.data; // Asegúrate de que los datos retornados sean correctos
+      const response = await axios.get(`${BASE_URL}/roles/metadata`);
+      return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
         error.response ? error.response.data : error.message,
@@ -48,7 +48,7 @@ export const createRol = createAsyncThunk(
 
       console.log("Datos enviados al servidor para crear el rol:", Rol);
 
-      const response = await axios.post(`${BASE_URL}/api/roles/crear`, Rol);
+      const response = await axios.post(`${BASE_URL}/roles/crear`, Rol);
       return response.data;
     } catch (error) {
       console.error("Error al crear el rol:", error);
@@ -64,7 +64,7 @@ export const deleteRol = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const response = await axios.delete(
-        `${BASE_URL}/api/roles/eliminar/${id}`,
+        `${BASE_URL}/roles/eliminar/${id}`,
       );
       return response.data;
     } catch (error) {
@@ -81,7 +81,7 @@ export const updateRol = createAsyncThunk(
   "Roles/updateRol",
   async (RolData, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`${BASE_URL}/api/roles/update`, RolData);
+      const response = await axios.put(`${BASE_URL}/roles/update`, RolData);
       return response.data;
     } catch (error) {
       if (error.response && error.response.data) {

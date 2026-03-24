@@ -15,7 +15,7 @@ export const fetchModulos = createAsyncThunk(
       }
 
       const response = await axios.get(
-        `${BASE_URL}/api/asignarRMOP/modulosPermisos/${auth.uid}`,
+        `${BASE_URL}/asignarRMOP/modulosPermisos/${auth.uid}`,
       );
       return response.data;
     } catch (error) {
@@ -30,7 +30,7 @@ export const fetchModulosTabla = createAsyncThunk(
   "modulos/fetchModulosTabla",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/modulos/`);
+      const response = await axios.get(`${BASE_URL}/modulos/`);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -44,7 +44,7 @@ export const fetchMetadataModulos = createAsyncThunk(
   "modulos/fetchMetadataModulos",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/modulos/metadata`);
+      const response = await axios.get(`${BASE_URL}/modulos/metadata`);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -71,7 +71,7 @@ export const createModulo = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `${BASE_URL}/api/modulos/crear`,
+        `${BASE_URL}/modulos/crear`,
         modulo,
       );
       return response.data;
@@ -88,7 +88,7 @@ export const updateModulo = createAsyncThunk(
   async (moduloData, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `${BASE_URL}/api/modulos/update`,
+        `${BASE_URL}/modulos/update`,
         moduloData,
       );
       return response.data;
@@ -107,7 +107,7 @@ export const deleteModulo = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const response = await axios.delete(
-        `${BASE_URL}/api/modulos/eliminar/${id}`,
+        `${BASE_URL}/modulos/eliminar/${id}`,
       );
       return response.data;
     } catch (error) {
