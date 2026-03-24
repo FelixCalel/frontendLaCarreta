@@ -128,10 +128,10 @@ export const OrderProductionRegistry = ({
     setIsTyping(false);
 
     let rawValue = prodFields[field];
-    if (rawValue === "") rawValue = 0;
+    if (rawValue === "" && field !== "trazabilidad_Prod") rawValue = 0;
 
     const validatedValue =
-      field === "trazabilidad_Prod" ? rawValue : Number(rawValue);
+      field === "trazabilidad_Prod" ? String(rawValue ?? "").trim() : Number(rawValue);
     const updateData = { [field]: validatedValue };
 
     if (field === "mpUtilizada") {

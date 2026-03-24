@@ -8,12 +8,26 @@ import {
 } from "../../../services/pedidoProductionApi";
 
 export const useProductionOrders = () => {
+  const toDateKey = (value) => {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const todayKey = toDateKey(new Date());
+
   const navigate = useNavigate();
   const { pedidoId } = useParams();
   const [countryFilter, setCountryFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
   const [deuFilter, setDeuFilter] = useState("");
+  const [dateMode, setDateMode] = useState("all");
+  const [dateFilter, setDateFilter] = useState("");
   const [syncReady, setSyncReady] = useState(false);
   const [viewMode, setViewMode] = useState("byOrder");
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -48,6 +62,8 @@ export const useProductionOrders = () => {
   }), [allItems]);
 
   const filteredGroups = useMemo(() => {
+    const selectedDate = dateMode === "today" ? todayKey : dateFilter;
+
     return mesaGroups
       .filter((g) => !deuFilter || g.items.some((i) => i.deudorCodigo === deuFilter))
       .map((g) => ({
@@ -65,10 +81,26 @@ export const useProductionOrders = () => {
           const status = done === total ? "Completado" : progress ? "En Proceso" : "Pendiente";
           if (status !== stateFilter) return false;
         }
+
+        if (dateMode !== "all") {
+          if (!selectedDate) return true;
+          const groupDate = toDateKey(g.items?.[0]?.fechaPedido);
+          if (!groupDate || groupDate !== selectedDate) return false;
+        }
+
         return true;
       })
       .sort((a, b) => a.pedidoId - b.pedidoId);
-  }, [mesaGroups, countryFilter, clientFilter, stateFilter, deuFilter]);
+  }, [
+    mesaGroups,
+    countryFilter,
+    clientFilter,
+    stateFilter,
+    deuFilter,
+    dateMode,
+    dateFilter,
+    todayKey,
+  ]);
 
   const consolidatedItems = useMemo(() => {
     if (viewMode !== "consolidated") return [];
@@ -95,6 +127,8 @@ export const useProductionOrders = () => {
     clientFilter, setClientFilter: (v) => startTransition(() => setClientFilter(v)),
     stateFilter, setStateFilter: (v) => startTransition(() => setStateFilter(v)),
     deuFilter, setDeuFilter: (v) => startTransition(() => setDeuFilter(v)),
+    dateMode, setDateMode: (v) => startTransition(() => setDateMode(v)),
+    dateFilter, setDateFilter: (v) => startTransition(() => setDateFilter(v)),
     viewMode, setViewMode,
     isOpen, onOpen, onClose,
     isLoading, error, syncReady,

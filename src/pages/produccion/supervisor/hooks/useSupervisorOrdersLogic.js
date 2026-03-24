@@ -1,7 +1,19 @@
 import { useMemo } from "react";
 
 export const useSupervisorOrdersLogic = ({ agrupados, filters, viewMode }) => {
-  const { itemFilter, countryFilter, clientFilter, stateFilter } = filters;
+  const { itemFilter, countryFilter, clientFilter, stateFilter, dateMode, dateFilter } = filters;
+
+  const toDateKey = (value) => {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const todayKey = toDateKey(new Date());
 
   const pedidoGroups = useMemo(
     () =>
@@ -49,6 +61,8 @@ export const useSupervisorOrdersLogic = ({ agrupados, filters, viewMode }) => {
   );
 
   const filteredGroups = useMemo(() => {
+    const selectedDate = dateMode === "today" ? todayKey : dateFilter;
+
     return pedidoGroups
       .map((g) => {
         const filteredItems = g.items
@@ -88,11 +102,26 @@ export const useSupervisorOrdersLogic = ({ agrupados, filters, viewMode }) => {
           if (groupStatus !== stateFilter) return false;
         }
 
+        if (dateMode !== "all") {
+          if (!selectedDate) return true;
+          const groupDate = toDateKey(g.items?.[0]?.fechaPedido);
+          if (!groupDate || groupDate !== selectedDate) return false;
+        }
+
         return true;
       })
       .slice()
       .sort((a, b) => a.pedidoId - b.pedidoId);
-  }, [pedidoGroups, itemFilter, countryFilter, clientFilter, stateFilter]);
+  }, [
+    pedidoGroups,
+    itemFilter,
+    countryFilter,
+    clientFilter,
+    stateFilter,
+    dateMode,
+    dateFilter,
+    todayKey,
+  ]);
 
   const consolidatedItems = useMemo(() => {
     if (viewMode !== "consolidated") return [];

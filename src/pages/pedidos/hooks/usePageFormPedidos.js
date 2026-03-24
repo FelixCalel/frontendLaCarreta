@@ -141,6 +141,41 @@ export const usePageFormPedidos = () => {
     return errs;
   };
 
+  const warnIfPedidoDuplicadoHoy = (tiendaIdValue) => {
+    const tiendaIdNumber = toNumberOrZero(tiendaIdValue);
+    if (!tiendaIdNumber) return false;
+
+    const today = new Date().toISOString().split("T")[0];
+    const hasDuplicado = pedidos.some((pedido) => {
+      const pedidoFecha = toYMD(pedido?.creadoEl);
+      return (
+        toNumberOrZero(pedido?.usuarioId) === usuarioId &&
+        toNumberOrZero(pedido?.tiendaId) === tiendaIdNumber &&
+        pedidoFecha === today
+      );
+    });
+
+    if (hasDuplicado) {
+      console.warn(
+        "Pedido duplicado detectado: se permite continuar con la creacion/copia."
+      );
+
+      const toastId = `pedido-duplicado-${tiendaIdNumber}`;
+      if (!toast.isActive(toastId)) {
+        toast({
+          id: toastId,
+          title: "Pedido duplicado",
+          description: "Ya existe un pedido de hoy para esa tienda.",
+          status: "warning",
+          duration: 3800,
+          isClosable: true,
+        });
+      }
+    }
+
+    return hasDuplicado;
+  };
+
   const copiarUltimoPedido = async (tiendaId) => {
     try {
       setIsLoading(true);
@@ -149,6 +184,8 @@ export const usePageFormPedidos = () => {
         (tienda) => tienda.id === tiendaIdNumber
       );
       if (!tiendaSel) return;
+
+      warnIfPedidoDuplicadoHoy(tiendaIdNumber);
 
       const { pedido } = await dispatch(
         copiarDetallesUltimoPedido({
@@ -194,30 +231,11 @@ export const usePageFormPedidos = () => {
         return;
       }
 
-      const today = new Date().toISOString().split("T")[0];
       const tId = toNumberOrZero(
         currentPedido.tiendaId || currentPedido.tiendaId2
       );
 
-      const hasDuplicado = pedidos.some((pedido) => {
-        const pedidoFecha = toYMD(pedido?.creadoEl);
-        return (
-          toNumberOrZero(pedido?.usuarioId) === usuarioId &&
-          toNumberOrZero(pedido?.tiendaId) === tId &&
-          pedidoFecha === today
-        );
-      });
-
-      if (hasDuplicado) {
-        toast({
-          title: "Pedido duplicado",
-          description: "Ya existe un pedido de hoy para esa tienda.",
-          status: "warning",
-          duration: 2800,
-          isClosable: true,
-        });
-        return;
-      }
+      warnIfPedidoDuplicadoHoy(tId);
 
       setIsLoading(true);
       const saved = await dispatch(

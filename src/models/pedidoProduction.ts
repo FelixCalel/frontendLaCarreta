@@ -43,6 +43,7 @@ export interface PedidoProduccion {
   deudorCodigo: string;
   deudorNombre: string;
   unidadMedida: string;
+  fechaPedido?: string | null;
 }
 
 export interface DetalleProduccion {

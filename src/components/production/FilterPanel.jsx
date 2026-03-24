@@ -1,4 +1,4 @@
-import { Flex, Select, Box, useColorModeValue } from "@chakra-ui/react";
+import { Flex, Select, Box, Input, useColorModeValue } from "@chakra-ui/react";
 import PropTypes from "prop-types";
 
 const EMPTY_ARRAY = [];
@@ -14,6 +14,10 @@ export const FilterPanel = ({
   deuFilter = "",
   onDeuChange,
   deudores = EMPTY_ARRAY,
+  dateMode = "all",
+  onDateModeChange,
+  dateFilter = "",
+  onDateFilterChange,
 }) => {
   const fieldBg = useColorModeValue("white", "gray.700");
   const fieldBorder = useColorModeValue("gray.300", "gray.600");
@@ -81,6 +85,31 @@ export const FilterPanel = ({
         </Select>
       </Box>
 
+      {/* <Box>
+        <Select
+          {...commonProps}
+          maxW="170px"
+          value={dateMode}
+          onChange={(e) => onDateModeChange?.(e.target.value)}
+        >
+          <option value="today">Fecha: Hoy</option>
+          <option value="all">Fecha: Todas</option>
+          <option value="custom">Fecha: Personalizada</option>
+        </Select>
+      </Box> */}
+
+      {dateMode === "custom" && (
+        <Box>
+          <Input
+            type="date"
+            {...commonProps}
+            maxW="170px"
+            value={dateFilter}
+            onChange={(e) => onDateFilterChange?.(e.target.value)}
+          />
+        </Box>
+      )}
+
       <Box>
         <Select
           {...commonProps}
@@ -110,4 +139,8 @@ FilterPanel.propTypes = {
   deuFilter: PropTypes.string,
   onDeuChange: PropTypes.func,
   deudores: PropTypes.arrayOf(PropTypes.string),
+  dateMode: PropTypes.oneOf(["today", "all", "custom"]),
+  onDateModeChange: PropTypes.func,
+  dateFilter: PropTypes.string,
+  onDateFilterChange: PropTypes.func,
 };

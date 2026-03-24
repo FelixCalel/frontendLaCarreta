@@ -1,12 +1,49 @@
+import { lazy } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
-import { LoginForm } from "../pages/auth/LoginForm";
-import { RecuperarClave } from "../pages/auth/RecuperarClave";
-import { ResetPassword } from "../pages/auth/ResetPassword";
-import { VerifyEmail } from "../pages/auth/VerifyEmail";
-import RegisterForm from "../pages/auth/Registro/RegisterForm";
-import { ConfirmacionRegistro } from "../pages/auth/ConfirmacionRegistro";
-import { CambiarClave } from "../pages/auth/CambiarClave";
-import { ActivarUsuarioDep } from "../pages/auth";
+
+const LoginForm = lazy(() =>
+  import("../pages/auth/LoginForm").then((module) => ({
+    default: module.LoginForm,
+  })),
+);
+
+const RecuperarClave = lazy(() =>
+  import("../pages/auth/RecuperarClave").then((module) => ({
+    default: module.RecuperarClave,
+  })),
+);
+
+const ResetPassword = lazy(() =>
+  import("../pages/auth/ResetPassword").then((module) => ({
+    default: module.ResetPassword,
+  })),
+);
+
+const VerifyEmail = lazy(() =>
+  import("../pages/auth/VerifyEmail").then((module) => ({
+    default: module.VerifyEmail,
+  })),
+);
+
+const RegisterForm = lazy(() => import("../pages/auth/Registro/RegisterForm"));
+
+const ConfirmacionRegistro = lazy(() =>
+  import("../pages/auth/ConfirmacionRegistro").then((module) => ({
+    default: module.ConfirmacionRegistro,
+  })),
+);
+
+const CambiarClave = lazy(() =>
+  import("../pages/auth/CambiarClave").then((module) => ({
+    default: module.CambiarClave,
+  })),
+);
+
+const ActivarUsuarioDep = lazy(() =>
+  import("../pages/auth").then((module) => ({
+    default: module.ActivarUsuarioDep,
+  })),
+);
 
 export const PortalPagePublic = () => (
   <Routes>
