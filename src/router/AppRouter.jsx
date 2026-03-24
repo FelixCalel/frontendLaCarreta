@@ -1,15 +1,29 @@
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, lazy } from "react";
 import { useSelector } from "react-redux";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { PortalRouter } from "./PortalRouter";
 import { PrivateRoute } from "./PrivateRoute";
 import { PublicRoute } from "./PublicRoute";
-import { PortalPagePublic } from "./PortalPagePublic";
 import CheckingAuth from "../ui/components/CheckingAuth";
-import HomePage from "../pages/auth/HomePage";
-import { ResetPassword } from "../pages/auth/ResetPassword";
 import { routeComponentMap } from "./routeComponentMap";
 import { Box, Spinner } from "@chakra-ui/react";
+
+const PortalRouter = lazy(() =>
+  import("./PortalRouter").then((module) => ({ default: module.PortalRouter })),
+);
+
+const PortalPagePublic = lazy(() =>
+  import("./PortalPagePublic").then((module) => ({
+    default: module.PortalPagePublic,
+  })),
+);
+
+const HomePage = lazy(() => import("../pages/auth/HomePage"));
+
+const ResetPassword = lazy(() =>
+  import("../pages/auth/ResetPassword").then((module) => ({
+    default: module.ResetPassword,
+  })),
+);
 
 const LoadingSpinner = () => (
   <Box display="flex" justifyContent="center" alignItems="center" h="100vh">
