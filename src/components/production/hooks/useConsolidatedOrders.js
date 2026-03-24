@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useToast, useDisclosure } from "@chakra-ui/react";
 import {
@@ -7,13 +7,19 @@ import {
 } from "../../../services/pedidoProductionApi";
 
 export const useConsolidatedOrders = (data, actionLabel) => {
+  const getGroupKey = useCallback(
+    (group) => `${group.deudorCodigo || ""}|${group.productoNombre || ""}`,
+    [],
+  );
+
   const [visibleLimit, setVisibleLimit] = useState(20);
-  const prevData = useRef(data);
-  
-  if (data !== prevData.current) {
-    prevData.current = data;
-    setVisibleLimit(20);
-  }
+
+  useEffect(() => {
+    setVisibleLimit((prev) => {
+      if (data.length === 0) return 20;
+      return Math.min(Math.max(prev, 20), data.length);
+    });
+  }, [data.length]);
 
   const loadMore = () => {
     setVisibleLimit((prev) => Math.min(prev + 50, data.length));
@@ -38,11 +44,11 @@ export const useConsolidatedOrders = (data, actionLabel) => {
 
   const handleSelectAll = useCallback((e) => {
     if (e.target.checked) {
-      setSelectedItems(new Set(data.map((item) => item.productoNombre)));
+      setSelectedItems(new Set(data.map((item) => getGroupKey(item))));
     } else {
       setSelectedItems(new Set());
     }
-  }, [data]);
+  }, [data, getGroupKey]);
 
   const handleSelectItem = useCallback((id) => {
     setSelectedItems((prev) => {
@@ -59,7 +65,7 @@ export const useConsolidatedOrders = (data, actionLabel) => {
     let existingComment = "";
 
     for (const group of data) {
-      if (selectedItems.has(group.productoNombre)) {
+      if (selectedItems.has(getGroupKey(group))) {
         const firstItem = group.originalItems[0];
         if (firstItem) {
           existingDate = (firstItem.fecha_orden_sap || firstItem.fechaOrden)?.split("T")[0] || "";
@@ -81,7 +87,7 @@ export const useConsolidatedOrders = (data, actionLabel) => {
     const detailsToSend = [];
     const pedidoIds = new Set();
     data.forEach((group) => {
-      if (selectedItems.has(group.productoNombre)) {
+      if (selectedItems.has(getGroupKey(group))) {
         group.originalItems.forEach((item) => {
           if (item.id_detallePedido) detailsToSend.push(item.id_detallePedido);
           if (item.id) pedidoIds.add(item.id);

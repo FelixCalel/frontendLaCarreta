@@ -20,7 +20,6 @@ import {
 } from "@chakra-ui/react";
 import { ChevronRightIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import {
-  useUpdatePedidoProduccionMutation,
   useUpdateMultiplePedidosProduccionMutation,
   useGetRechazoByPedidoProduccionIdQuery,
   useGetAlmacenesQuery,
@@ -39,14 +38,12 @@ export const ConsolidatedOrderRow = memo(
     summaryRowHoverBg,
     summaryRowBorderColor,
   }) => {
-    const [updatePedido] = useUpdatePedidoProduccionMutation();
     const [updateMultiplePedidos] =
       useUpdateMultiplePedidosProduccionMutation();
     const { data: almacenes = [] } = useGetAlmacenesQuery();
     const toast = useToast();
 
     const primaryOrder = item.originalItems[0];
-    const pedidoId = primaryOrder?.id;
 
     const defaultAlmacenId = useMemo(() => {
       if (primaryOrder?.id_almacen) return String(primaryOrder.id_almacen);
@@ -65,12 +62,9 @@ export const ConsolidatedOrderRow = memo(
 
     const [almacenId, setAlmacenId] = useState(defaultAlmacenId);
 
-    const [prevDefaultAlmacenId, setPrevDefaultAlmacenId] =
-      useState(defaultAlmacenId);
-    if (defaultAlmacenId !== prevDefaultAlmacenId) {
-      setPrevDefaultAlmacenId(defaultAlmacenId);
+    useEffect(() => {
       setAlmacenId(defaultAlmacenId);
-    }
+    }, [defaultAlmacenId]);
 
     const rechazoQty = useMemo(
       () =>
@@ -82,23 +76,27 @@ export const ConsolidatedOrderRow = memo(
     );
 
     const handleTrazabilidadUpdate = useCallback(
-      (value) => {
-        if (!pedidoId) return;
-        updatePedido({
-          id: pedidoId,
-          data: { trazabilidad_Prod: value },
-        })
-          .unwrap()
-          .catch((err) => {
-            console.error("Error updating trazabilidad:", err);
-            toast({
-              title: "Error",
-              description: "No se pudo actualizar la trazabilidad",
-              status: "error",
-            });
+      async (value) => {
+        const idsToUpdate = item.originalItems.map((subItem) => subItem.id);
+        if (idsToUpdate.length === 0) return;
+
+        const normalizedValue = String(value ?? "").trim();
+
+        try {
+          await updateMultiplePedidos({
+            ids: idsToUpdate,
+            data: { trazabilidad_Prod: normalizedValue },
+          }).unwrap();
+        } catch (err) {
+          console.error("Error updating consolidated trazabilidad:", err);
+          toast({
+            title: "Error",
+            description: "No se pudo actualizar la trazabilidad",
+            status: "error",
           });
+        }
       },
-      [pedidoId, updatePedido, toast],
+      [item.originalItems, updateMultiplePedidos, toast],
     );
 
     const debouncedTrazabilidadUpdate = useMemo(
@@ -106,17 +104,19 @@ export const ConsolidatedOrderRow = memo(
       [handleTrazabilidadUpdate],
     );
 
+    useEffect(() => {
+      return () => {
+        debouncedTrazabilidadUpdate.cancel();
+      };
+    }, [debouncedTrazabilidadUpdate]);
+
     const [localTrazabilidad, setLocalTrazabilidad] = useState(
       primaryOrder?.trazabilidad_Prod || "",
     );
 
-    const [prevTrazabilidad, setPrevTrazabilidad] = useState(
-      primaryOrder?.trazabilidad_Prod,
-    );
-    if (primaryOrder?.trazabilidad_Prod !== prevTrazabilidad) {
-      setPrevTrazabilidad(primaryOrder?.trazabilidad_Prod);
+    useEffect(() => {
       setLocalTrazabilidad(primaryOrder?.trazabilidad_Prod || "");
-    }
+    }, [primaryOrder?.trazabilidad_Prod]);
 
     const handleTrazabilidadChange = (e) => {
       const val = e.target.value;
@@ -193,7 +193,7 @@ export const ConsolidatedOrderRow = memo(
           <Td w="36px" px={2} py={2}>
             <Checkbox
               isChecked={isSelected}
-              onChange={() => onToggleSelection(item.productoNombre)}
+              onChange={() => onToggleSelection(`${item.deudorCodigo || ""}|${item.productoNombre}`)}
               size="md"
               colorScheme="green"
               borderColor="gray.500"

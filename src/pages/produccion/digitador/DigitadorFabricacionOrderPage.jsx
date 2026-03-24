@@ -23,6 +23,18 @@ import { ConsolidatedOrdersView } from "../../../components/production/Consolida
 import { tablaEmpresa, tablaPais } from "../../../store/Empresa/thunks";
 
 const DigitadorFabricacionOrdersPage = () => {
+  const toDateKey = (value) => {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const todayKey = toDateKey(new Date());
+
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -66,12 +78,14 @@ const DigitadorFabricacionOrdersPage = () => {
   );
 
   const [term, setTerm] = useState("");
-  const [date, setDate] = useState("");
+  const [dateMode, setDateMode] = useState("all");
+  const [dateFilter, setDateFilter] = useState("");
   const [status, setStatus] = useState("");
   const [viewMode, setViewMode] = useState("byOrder");
   const bgColor = useColorModeValue("white", "gray.800");
 
   const filtered = useMemo(() => {
+    const selectedDate = dateMode === "today" ? todayKey : dateFilter;
     const txt = term.toLowerCase();
     return base
       .map((g) => {
@@ -100,14 +114,19 @@ const DigitadorFabricacionOrdersPage = () => {
       .filter((g) => {
         if (g.items.length === 0) return false;
 
-        const byDate =
-          !date ||
-          (g.fechaEntrega &&
-            new Date(g.fechaEntrega).toISOString().slice(0, 10) === date);
+        let byDate = true;
+        if (dateMode !== "all") {
+          if (!selectedDate) {
+            byDate = true;
+          } else {
+            const groupDate = toDateKey(g.items?.[0]?.fechaPedido);
+            byDate = !!groupDate && groupDate === selectedDate;
+          }
+        }
 
         return byDate;
       });
-  }, [base, term, date, status]);
+  }, [base, term, status, dateMode, dateFilter, todayKey]);
 
   const consolidatedItems = useMemo(() => {
     if (viewMode !== "consolidated") return [];
@@ -215,13 +234,25 @@ const DigitadorFabricacionOrdersPage = () => {
           />
         </InputGroup>
 
-        <Input
-          type="date"
-          placeholder="Fecha de entrega"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          maxW="200px"
-        />
+        <Select
+          value={dateMode}
+          onChange={(e) => setDateMode(e.target.value)}
+          maxW="210px"
+        >
+          <option value="today">Fecha: Hoy</option>
+          <option value="all">Fecha: Todas</option>
+          <option value="custom">Fecha: Personalizada</option>
+        </Select>
+
+        {dateMode === "custom" && (
+          <Input
+            type="date"
+            placeholder="Fecha del pedido"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            maxW="200px"
+          />
+        )}
 
         <Select
           placeholder="Estado"

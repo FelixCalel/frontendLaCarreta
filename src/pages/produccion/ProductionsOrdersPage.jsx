@@ -31,6 +31,8 @@ const ProductionOrdersPage = () => {
     clientFilter, setClientFilter,
     stateFilter, setStateFilter,
     deuFilter, setDeuFilter,
+    dateMode, setDateMode,
+    dateFilter, setDateFilter,
     viewMode, setViewMode,
     isOpen, onOpen, onClose,
     isLoading, error, syncReady,
@@ -120,6 +122,10 @@ const ProductionOrdersPage = () => {
               deuFilter={deuFilter}
               onDeuChange={setDeuFilter}
               deudores={filters.deudores}
+              dateMode={dateMode}
+              onDateModeChange={setDateMode}
+              dateFilter={dateFilter}
+              onDateFilterChange={setDateFilter}
             />
           </HStack>
         </Flex>
@@ -144,17 +150,10 @@ const ProductionOrdersPage = () => {
               message="No hay pedidos pendientes o no están asignados a tu área en este momento."
             />
           )
-        ) : consolidatedItems.length > 0 ? (
+        ) : (
           <ConsolidatedOrdersView
             data={consolidatedItems}
             actionLabel="Pasar a Supervisor"
-          />
-        ) : (
-          <EmptyState
-            cardBg={cardBg}
-            cardBorder={cardBorder}
-            heading="Sin resultados"
-            message="No hay productos consolidados pendientes o asignados a tu área en este momento."
           />
         )}
         <UnassignedProductsModal isOpen={isOpen} onClose={onClose} />

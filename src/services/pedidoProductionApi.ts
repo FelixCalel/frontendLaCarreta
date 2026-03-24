@@ -122,7 +122,10 @@ export const pedidoProduccionApi = createApi({
         body: data,
       }),
       async onQueryStarted({ id, data }, { dispatch, queryFulfilled }) {
-        const patchResults = [{ etapaId: 1 }, { etapaId: 2 }, { etapaId: 3 }].map((arg) =>
+        const patchArgs = [undefined, { etapaId: 1 }, { etapaId: 2 }, { etapaId: 3 }] as
+          Array<{ etapaId?: number; completed?: boolean } | void>;
+
+        const patchResults = patchArgs.map((arg) =>
           dispatch(
             pedidoProduccionApi.util.updateQueryData(
               "getPedidosAgrupados",
@@ -135,9 +138,9 @@ export const pedidoProduccionApi = createApi({
                     break;
                   }
                 }
-              }
-            )
-          )
+              },
+            ),
+          ),
         );
         try {
           await queryFulfilled;
@@ -145,10 +148,7 @@ export const pedidoProduccionApi = createApi({
           patchResults.forEach(pr => pr.undo());
         }
       },
-      invalidatesTags: (result, error, { id }) => [
-        { type: "PedidoProduccion" as const, id },
-        { type: "PedidoProduccion" as const, id: "LIST" },
-      ],
+      invalidatesTags: [],
     }),
 
     updateMultiplePedidosProduccion: builder.mutation<void, { ids: number[]; data: UpdatePedidoDto }>({
@@ -158,26 +158,25 @@ export const pedidoProduccionApi = createApi({
         body: { ids, data },
       }),
       async onQueryStarted({ ids, data }, { dispatch, queryFulfilled }) {
-        if (data.completo === undefined) return;
+        const patchArgs = [undefined, { etapaId: 1 }, { etapaId: 2 }, { etapaId: 3 }] as
+          Array<{ etapaId?: number; completed?: boolean } | void>;
 
-        const patchResults = [{ etapaId: 1 }, { etapaId: 2 }, { etapaId: 3 }].map((arg) =>
+        const patchResults = patchArgs.map((arg) =>
           dispatch(
             pedidoProduccionApi.util.updateQueryData(
               "getPedidosAgrupados",
               arg,
               (draft: PedidoAgrupado[]) => {
-                if (data.completo !== undefined) {
-                  draft.forEach(group => {
-                    group.items.forEach(item => {
-                      if (ids.includes(item.id)) {
-                        item.completo = data.completo!;
-                      }
-                    });
+                draft.forEach(group => {
+                  group.items.forEach(item => {
+                    if (ids.includes(item.id)) {
+                      Object.assign(item, data);
+                    }
                   });
-                }
-              }
-            )
-          )
+                });
+              },
+            ),
+          ),
         );
         try {
           await queryFulfilled;
@@ -185,10 +184,7 @@ export const pedidoProduccionApi = createApi({
           patchResults.forEach(pr => pr.undo());
         }
       },
-      invalidatesTags: [
-        { type: "PedidoProduccion", id: "LIST" },
-        { type: "PedidoAgrupado", id: "LIST" },
-      ],
+      invalidatesTags: [],
     }),
 
     getUnassignedOrders: builder.query<PedidoAgrupado[], void>({

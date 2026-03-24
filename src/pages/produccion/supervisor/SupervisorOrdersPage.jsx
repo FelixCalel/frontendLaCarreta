@@ -50,6 +50,8 @@ const SupervisorOrdersPage = () => {
     countryFilter, setCountryFilter,
     clientFilter, setClientFilter,
     stateFilter, setStateFilter,
+    dateMode, setDateMode,
+    dateFilter, setDateFilter,
     viewMode, setViewMode,
     isOpen, onOpen, onClose,
     unassignedCount,
@@ -133,6 +135,10 @@ const SupervisorOrdersPage = () => {
               onStateChange={setStateFilter}
               countries={countries}
               clients={clients}
+              dateMode={dateMode}
+              onDateModeChange={setDateMode}
+              dateFilter={dateFilter}
+              onDateFilterChange={setDateFilter}
             />
           </Box>
         </Flex>

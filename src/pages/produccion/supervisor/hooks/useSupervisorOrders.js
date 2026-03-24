@@ -16,6 +16,8 @@ export const useSupervisorOrders = ( pedidoId ) => {
   const [itemFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
+  const [dateMode, setDateMode] = useState("all");
+  const [dateFilter, setDateFilter] = useState("");
   const [syncReady, setSyncReady] = useState(false);
   const [procesarEstado5] = useProcesarEstado5Mutation();
   const [viewMode, setViewMode] = useState("byOrder");
@@ -54,7 +56,7 @@ export const useSupervisorOrders = ( pedidoId ) => {
 
   const { filteredGroups, consolidatedItems, countries, clients } = useSupervisorOrdersLogic({
     agrupados,
-    filters: { itemFilter, countryFilter, clientFilter, stateFilter },
+    filters: { itemFilter, countryFilter, clientFilter, stateFilter, dateMode, dateFilter },
     viewMode,
   });
 
@@ -67,6 +69,8 @@ export const useSupervisorOrders = ( pedidoId ) => {
     countryFilter, setCountryFilter,
     clientFilter, setClientFilter,
     stateFilter, setStateFilter,
+    dateMode, setDateMode,
+    dateFilter, setDateFilter,
     viewMode, setViewMode,
     isOpen, onOpen, onClose,
     unassignedCount,
