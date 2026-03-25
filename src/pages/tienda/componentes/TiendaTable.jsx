@@ -87,8 +87,8 @@ const TiendaTable = ({
             borderRadius="full"
             _focus={{ borderColor: "green.400" }}
           >
-            {ciudades.map((c) => (
-              <option key={c} value={c}>
+            {ciudades.map((c, idx) => (
+              <option key={`ciudad-${c}-${idx}`} value={c}>
                 {c}
               </option>
             ))}
@@ -101,8 +101,8 @@ const TiendaTable = ({
             borderRadius="full"
             _focus={{ borderColor: "green.400" }}
           >
-            {rutas.map((r) => (
-              <option key={r} value={r}>
+            {rutas.map((r, idx) => (
+              <option key={`ruta-${r}-${idx}`} value={r}>
                 {r}
               </option>
             ))}
@@ -150,9 +150,9 @@ const TiendaTable = ({
             </Thead>
             <Tbody>
               {currentItems.length > 0 ? (
-                currentItems.map((tienda) => (
+                currentItems.map((tienda, idx) => (
                   <Tr
-                    key={tienda.id}
+                    key={`tienda-${tienda.id ?? "sin-id"}-${idx}`}
                     _hover={{ bg: hoverBg }}
                     transition="background 0.2s"
                   >
