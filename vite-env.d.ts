@@ -1,6 +1,9 @@
 /// <reference types="vite-plugin-pwa/client" />
 interface ImportMetaEnv {
     readonly VITE_API_URL: string;
+    readonly VITE_PROXY_TARGET?: string;
+    readonly VITE_HMR_HOST?: string;
+    readonly VITE_HMR_PROTOCOL?: string;
     readonly VITE_WEBSOCKET_URL: string;
     readonly VITE_WS_URL: string;
     readonly HOST: string;
