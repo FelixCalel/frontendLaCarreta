@@ -36,6 +36,16 @@ interface MotivoSalida {
   descripcion?: string;
 }
 
+interface MesaActivaAsignada {
+  idAsignacionMesa: number;
+  areaId: number;
+  areaNombre: string;
+  mesaId: number;
+  mesaNombre: string;
+  encargadoId: number | null;
+  encargadoNombre: string;
+}
+
 export const pedidoProduccionApi = createApi({
   reducerPath: "pedidoProduccionApi",
   baseQuery: fetchBaseQuery({
@@ -200,6 +210,40 @@ export const pedidoProduccionApi = createApi({
             { type: "PedidoProduccion", id: "LIST" },
           ]
           : [{ type: "PedidoAgrupado", id: "LIST" }, { type: "PedidoProduccion", id: "LIST" }],
+    }),
+
+    assignProductToArea: builder.mutation<
+      { message?: string; id?: number },
+      { id_area: number; productoId: number; create_by: number; state?: boolean }
+    >({
+      query: ({ id_area, productoId, create_by, state = true }) => ({
+        url: "/asignarArea",
+        method: "POST",
+        body: { id_area, productoId, create_by, state },
+      }),
+      invalidatesTags: [
+        { type: "PedidoAgrupado", id: "LIST" },
+        { type: "PedidoProduccion", id: "LIST" },
+      ],
+    }),
+
+    unassignProductFromArea: builder.mutation<
+      { message?: string; id?: number },
+      { id: number; update_by: number; state?: boolean }
+    >({
+      query: ({ id, update_by, state = false }) => ({
+        url: `/asignarArea/${id}`,
+        method: "PUT",
+        body: { update_by, state },
+      }),
+      invalidatesTags: [
+        { type: "PedidoAgrupado", id: "LIST" },
+        { type: "PedidoProduccion", id: "LIST" },
+      ],
+    }),
+
+    getActiveMesaAssignments: builder.query<MesaActivaAsignada[], void>({
+      query: () => "/asignarAM/activos",
     }),
 
     getMotivosSalida: builder.query<MotivoSalida[], void>({
@@ -452,6 +496,9 @@ export const {
   useUpdatePedidoProduccionMutation,
   useGetPedidosAgrupadosQuery,
   useGetUnassignedOrdersQuery,
+  useAssignProductToAreaMutation,
+  useUnassignProductFromAreaMutation,
+  useGetActiveMesaAssignmentsQuery,
   useAvanzarEtapaMutation,
   useAvanzarEtapaDetalleMutation,
   useAvanzarMultiEtapaDetalleMutation,

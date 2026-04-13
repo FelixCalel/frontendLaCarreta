@@ -37,7 +37,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { tablaEmpresa, tablaPais } from "../../../store/Empresa/thunks";
 import { selectRecetasState } from "../../../store/Empresa";
 import AdvanceOrderButton from "../../../components/production/AdvanceOrderButton";
-import { UnassignedProductsModal } from "../../../components/production/UnassignedProductsModal";
+import { UnassignedProductsModalSupervisor } from "../../../components/production/UnassignedProductsModalSupervisor";
 import { useSupervisorOrdersLogic } from "./hooks/useSupervisorOrdersLogic";
 
 import { useSupervisorOrders } from "./hooks/useSupervisorOrders";
@@ -156,7 +156,7 @@ const SupervisorOrdersPage = () => {
         ) : (
           <ConsolidatedOrdersView data={consolidatedItems} actionLabel="Pasar a Digitador" />
         )}
-        <UnassignedProductsModal isOpen={isOpen} onClose={onClose} />
+        <UnassignedProductsModalSupervisor isOpen={isOpen} onClose={onClose} />
       </Box>
     );
   }

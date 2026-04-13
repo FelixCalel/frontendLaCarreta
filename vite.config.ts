@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import viteCompression from 'vite-plugin-compression';
 import path from 'path';
+import fs from 'fs';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), "");
@@ -59,6 +60,13 @@ export default defineConfig(({ mode }) => {
             port: Number(env.PORT),
         },
         plugins: [
+            {
+                name: 'ensure-dist-dir',
+                apply: 'build',
+                buildStart() {
+                    fs.mkdirSync(path.resolve(process.cwd(), 'dist'), { recursive: true });
+                },
+            },
             react(),
             viteCompression(),
             VitePWA({
@@ -66,7 +74,7 @@ export default defineConfig(({ mode }) => {
                 selfDestroying: true,
                 includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
                 devOptions: {
-                    enabled: true,
+                    enabled: mode === "development",
                 },
                 manifest: {
                     name: "Portal La Carreta",

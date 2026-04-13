@@ -119,4 +119,6 @@ export type GetQaGroupedParams = {
     includeProveedor?: boolean;
     proveedorId?: number;
     loteId?: number;
+    estadoId?: number;
+    etapaId?: number;
 };

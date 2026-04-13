@@ -9,6 +9,7 @@ export interface Metadata {
 
 export interface PedidoProduccion {
   id: number;
+  productoId?: number;
   id_asigArea: number;
   cantidadUnidad: number | null;
   id_unidadMedida: number;

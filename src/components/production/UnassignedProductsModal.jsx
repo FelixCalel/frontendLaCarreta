@@ -21,8 +21,7 @@ import {
 import { useGetUnassignedOrdersQuery } from "../../services/pedidoProductionApi";
 
 export const UnassignedProductsModal = ({ isOpen, onClose }) => {
-  const { data: unassignedGroups = [], isLoading } =
-    useGetUnassignedOrdersQuery();
+  const { data: unassignedGroups = [], isLoading } = useGetUnassignedOrdersQuery();
   const theadBg = useColorModeValue("gray.50", "gray.700");
 
   const unassignedItems = unassignedGroups.flatMap((g) =>
@@ -43,15 +42,15 @@ export const UnassignedProductsModal = ({ isOpen, onClose }) => {
           <Text fontWeight="bold">⚠️ Productos Sin Asignar en Mesa</Text>
         </ModalHeader>
         <ModalCloseButton color="white" />
+
         <ModalBody p={0}>
           {isLoading ? (
             <Text p={6} textAlign="center">
-              Cargando productos huérfanos...
+              Cargando productos huerfanos...
             </Text>
           ) : unassignedItems.length === 0 ? (
             <Text p={6} textAlign="center">
-              No hay productos sin asignar en esta etapa. Todo está fluyendo
-              bien.
+              No hay productos sin asignar en esta etapa. Todo esta fluyendo bien.
             </Text>
           ) : (
             <Box maxH="60vh" overflowY="auto">
@@ -75,9 +74,7 @@ export const UnassignedProductsModal = ({ isOpen, onClose }) => {
                           : item.tienda}
                       </Td>
                       <Td>
-                        <Text fontWeight="semibold">
-                          {item.itemCode || "N/A"}
-                        </Text>
+                        <Text fontWeight="semibold">{item.itemCode || "N/A"}</Text>
                         <Text fontSize="xs" color="gray.500">
                           {item.productoNombre || "N/A"}
                         </Text>
@@ -94,7 +91,7 @@ export const UnassignedProductsModal = ({ isOpen, onClose }) => {
                         )}
                       </Td>
                       <Td>
-                        <Badge colorScheme="red">Falta Asignar Área</Badge>
+                        <Badge colorScheme="red">Falta Asignar Area</Badge>
                       </Td>
                     </Tr>
                   ))}
@@ -103,6 +100,7 @@ export const UnassignedProductsModal = ({ isOpen, onClose }) => {
             </Box>
           )}
         </ModalBody>
+
         <ModalFooter>
           <Button colorScheme="blue" mr={3} onClick={onClose}>
             Cerrar

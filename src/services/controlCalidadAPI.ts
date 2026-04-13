@@ -17,6 +17,19 @@ export const qaApi = createApi({
     reducerPath: 'qaApi',
     baseQuery: fetchBaseQuery({
         baseUrl: import.meta.env.VITE_API_URL,
+        prepareHeaders: (headers, { getState }) => {
+            const stateToken = (getState() as any)?.auth?.token;
+            const storageToken = typeof window !== 'undefined'
+                ? (localStorage.getItem('access_token') || sessionStorage.getItem('access_token'))
+                : null;
+            const token = stateToken || storageToken;
+
+            if (token) {
+                headers.set('Authorization', `Bearer ${token}`);
+            }
+
+            return headers;
+        },
     }),
     tagTypes: ['QaPedido', 'Muestreo', 'QaGrouped'],
     endpoints: (builder) => ({
@@ -29,6 +42,8 @@ export const qaApi = createApi({
                     includeProveedor: params?.includeProveedor,
                     proveedorId: params?.proveedorId,
                     loteId: params?.loteId,
+                    estadoId: params?.estadoId,
+                    etapaId: params?.etapaId,
                 },
             }),
             transformResponse: (resp: unknown) => {
